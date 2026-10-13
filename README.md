@@ -146,6 +146,7 @@ hardware.
 | `build/bin/museum_tests` (also `ctest --test-dir build`; build it with `tools/build.sh cna-3d-museum museum_tests`) | catalogue validity, unique keys and numbers, door symmetry, graph connectivity of every floor, spawn and cell lookup, exhibit registry, missing assets |
 | `cna-3d-museum --validate` | the same structure checks without a window; the museum also runs them at every start-up and logs any `INVALID:` problem |
 | `tools/tour.sh [-f FRAMES] [-p] [ROOM...]` | visits **every** room (or those named), prints engine statistics, exit status 0 only if nothing threw; `-p` also operates every control of every room through its whole range |
+| `tools/leak_check.sh` | tours every room once and three times: peak memory and registered textures must not grow |
 | `tools/nav_test.sh` | rides the elevator to every floor, opens the directory, and checks the arrival floor |
 | `tools/renderer_check.sh [RENDERER...]` | runs the floor 9 *Renderer Validation* self-checks on each renderer and prints a PASS/FAIL matrix |
 | `tools/reference.sh capture\|compare` | visual regression: renders the named reference views and compares them with stored images |
