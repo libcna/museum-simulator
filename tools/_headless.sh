@@ -1,0 +1,31 @@
+# Shared helper, sourced by run.sh and shot.sh.
+#
+# museum_headless OUT_LOG ARGS...
+#   Runs the museum on a private virtual X display (never the live desktop) with software GL and a dummy
+#   audio driver unless the caller already chose otherwise, writes everything to OUT_LOG and returns the
+#   museum's own exit status (124 = timed out). Nothing is swallowed: a crash is a nonzero return.
+#
+# Environment: MUSEUM_BIN (binary), MUSEUM_TIMEOUT (seconds, default 300), MUSEUM_AUDIO=real (do not force
+#   the dummy audio driver), CNA_GRAPHICS_RENDERER (pick a renderer in a multi-renderer build),
+#   MUSEUM_SCREEN (Xvfb screen, default 1920x1080x24).
+museum_root() { cd "$(dirname "${BASH_SOURCE[1]}")/.." && pwd; }
+
+museum_headless() {
+  local log=$1; shift
+  local root; root=$(museum_root)
+  local bin=${MUSEUM_BIN:-$root/${BUILD_DIR:-build}/bin/cna-3d-museum}
+  if [ ! -x "$bin" ]; then
+    echo "error: $bin not found; run tools/build.sh first" >&2
+    return 2
+  fi
+  command -v xvfb-run >/dev/null 2>&1 || { echo "error: xvfb-run is required (package xvfb)" >&2; return 2; }
+  mkdir -p "$(dirname "$log")"
+  local audio=dummy
+  [ "${MUSEUM_AUDIO:-dummy}" = real ] && audio=
+  env ${audio:+SDL_AUDIODRIVER=$audio} LIBGL_ALWAYS_SOFTWARE=1 \
+    timeout "${MUSEUM_TIMEOUT:-300}" \
+    xvfb-run -a -s "-screen 0 ${MUSEUM_SCREEN:-1920x1080x24}" "$bin" "$@" > "$log" 2>&1
+  local status=$?
+  grep -v '^\[INFO\]' "$log"
+  return $status
+}
