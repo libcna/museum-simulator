@@ -19,6 +19,8 @@
 #include "Microsoft/Xna/Framework/GameTime.hpp"
 #include "Microsoft/Xna/Framework/GraphicsDeviceManager.hpp"
 #include "Microsoft/Xna/Framework/Graphics/GraphicsAdapter.hpp"
+#include "Microsoft/Xna/Framework/Graphics/GraphicsDeviceStatus.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PresentInterval.hpp"
 #include "Microsoft/Xna/Framework/Graphics/PresentationParameters.hpp"
 #include "Rendering/LiveScreen.hpp"
 #include "Rendering/QuadDraw.hpp"
@@ -140,6 +142,14 @@ public:
                 p.AddHeading("Presentation parameters (live)");
                 p.AddReadout("Back buffer", [this] { return BackBufferText(); });
                 p.AddReadout("Depth / stencil", [this] { return std::to_string(static_cast<int>(S().device->getPresentationParametersProperty().getDepthStencilFormatProperty())) + " (DepthFormat)"; });
+                p.AddReadout("PresentInterval", [this] {
+                    static const char* names[] = {"Default", "One (vsync)", "Two", "Immediate"};
+                    return std::string(names[std::clamp(static_cast<int>(S().device->getPresentationParametersProperty().getPresentationIntervalProperty()), 0, 3)]);
+                });
+                p.AddReadout("GraphicsDeviceStatus", [this] {
+                    static const char* names[] = {"Normal", "Lost", "NotReset"};
+                    return std::string(names[std::clamp(static_cast<int>(S().device->getGraphicsDeviceStatusProperty()), 0, 2)]);
+                });
                 p.AddReadout("Viewport", [this] { return ViewportText(); });
                 p.AddReadout("Window client bounds", [this] {
                     const Rectangle r = S().game->getWindowProperty().getClientBoundsProperty();

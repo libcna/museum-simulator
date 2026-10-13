@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 31 wings, 223 exhibit rooms (5 open to the sky), 284 walkable cells in all.
+10 floors, 31 wings, 226 exhibit rooms (5 open to the sky), 287 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -76,7 +76,7 @@ The application model, the maths of games, geometry tests and cameras
 | 1.1.01 | `app-lifecycle` | Game Lifecycle | XNA 4.0 | Game, GameTime, Game.IsFixedTimeStep, Game.TargetElapsedTime |
 | 1.1.02 | `app-gametime` | GameTime and Frame Rate | XNA 4.0 | GameTime.ElapsedGameTime, GameTime.TotalGameTime |
 | 1.1.03 | `app-device` | Device and Renderer Report | XNA 4.0 | GraphicsDevice, GraphicsAdapter, GraphicsCapability, RendererCapabilityProfile, PresentationParameters |
-| 1.1.04 | `app-viewport` | Back Buffer, Viewport and Fullscreen | XNA 4.0 | GraphicsDeviceManager, PresentationParameters, Viewport, GameWindow.ClientBounds |
+| 1.1.04 | `app-viewport` | Back Buffer, Viewport and Fullscreen | XNA 4.0 | GraphicsDeviceManager, PresentationParameters, PresentInterval, GraphicsDeviceStatus, Viewport, GameWindow.ClientBounds |
 | 1.1.05 | `app-content` | Content Lifetime | XNA 4.0 | ContentManager, ContentManager.Load, ContentManager.Unload, ContentLoadException, Texture2D |
 | 1.1.06 | `app-components` | Game Components | XNA 4.0 | GameComponent, DrawableGameComponent, Game.Components |
 | 1.1.07 | `app-services` | Game Services | XNA 4.0 | GameServiceContainer, GameServiceContainer.AddService, GameServiceContainer.GetService, GameServiceContainer.RemoveService, Game.Services |
@@ -113,7 +113,7 @@ The application model, the maths of games, geometry tests and cameras
 | 1.4.03 | `quat-axis` | Axis and Angle | XNA 4.0 | Quaternion.CreateFromAxisAngle, Quaternion.Concatenate, Quaternion.Inverse |
 | 1.4.04 | `curve-easing` | Easing Functions | XNA 4.0 | MathHelper.Lerp, MathHelper.SmoothStep, MathHelper.Hermite, MathHelper.CatmullRom |
 | 1.4.05 | `curve-spline` | Splines | XNA 4.0 | Vector3.CatmullRom |
-| 1.4.06 | `curve-class` | The Curve Class | XNA 4.0 | Curve, CurveKey, CurveLoopType, CurveTangent |
+| 1.4.06 | `curve-class` | The Curve Class | XNA 4.0 | Curve, CurveKey, CurveLoopType, CurveTangent, CurveContinuity, CurveKeyCollection |
 | 1.4.07 | `curve-barycentric` | Barycentric Coordinates | XNA 4.0 | Vector3.Barycentric |
 
 **Collision and Geometry** - BoundingBox, BoundingSphere, BoundingFrustum, Plane and Ray
@@ -203,6 +203,7 @@ Vertex data, buffers, primitives and textures
 | 3.1.06 | `geo-index32` | 32-Bit Indices | XNA 4.0 | IndexBuffer, IndexElementSize |
 | 3.1.07 | `geo-manybuffers` | Many Small Buffers | XNA 4.0 | VertexBuffer, GraphicsDevice.DrawIndexedPrimitives |
 | 3.1.08 | `geo-instancing` | Hardware Instancing | XNA 4.0 | VertexBufferBinding, GraphicsDevice.DrawInstancedPrimitives, GraphicsCapability.Instancing |
+| 3.1.09 | `geo-dynindex` | Dynamic Index Buffers | XNA 4.0 | DynamicIndexBuffer, SetDataOptions.Discard, GraphicsDevice.DrawIndexedPrimitives, IndexBuffer |
 
 **Textures** - Mip levels, filters, addressing, UVs, formats, alpha, cube and volume textures
 
@@ -311,9 +312,10 @@ glTF models and their effects, procedural and skeletal animation, particle syste
 | 6.1.06 | `model-bounds` | Bounding Volumes | CNA extension | ModelMesh.BoundingSphere, Model.BoundingSphereEXT, BoundingSphere.Transform |
 | 6.1.07 | `model-effects` | Swapping Effects | CNA extension | ModelMeshPart.Effect, BasicEffect, PbrEffect |
 | 6.1.08 | `model-report` | Import Report | CNA extension | GltfImportReportEXT, GltfImportDiagnosticEXT |
-| 6.1.09 | `model-morph` | Morph Targets | CNA extension | MorphTargetDataEXT, SetMorphWeightsEXT, EvaluateMorphWeightsEXT, ModelMeshPart.Tag |
-| 6.1.10 | `model-variants` | Material Variants | CNA extension | Model.MaterialVariantEXT, Model.MaterialVariantNamesEXT, PbrEffect |
-| 6.1.11 | `model-ibl` | Image-Based Lighting | CNA extension | ImageBasedLightEXT, PbrEffect.ImageBasedLight, TextureCube, PbrEffect.MetallicFactor, PbrEffect.RoughnessFactor |
+| 6.1.09 | `model-material` | PBR Material Maps | CNA extension | PbrEffect.NormalMap, PbrEffect.EmissiveMap, TextureTransformEXT, AlphaModeEXT, PbrEffect.AlphaCutoff |
+| 6.1.10 | `model-morph` | Morph Targets | CNA extension | MorphTargetDataEXT, SetMorphWeightsEXT, EvaluateMorphWeightsEXT, ModelMeshPart.Tag |
+| 6.1.11 | `model-variants` | Material Variants | CNA extension | Model.MaterialVariantEXT, Model.MaterialVariantNamesEXT, PbrEffect |
+| 6.1.12 | `model-ibl` | Image-Based Lighting | CNA extension | ImageBasedLightEXT, PbrEffect.ImageBasedLight, TextureCube, PbrEffect.MetallicFactor, PbrEffect.RoughnessFactor |
 
 **Animation Complex** - Procedural animation: motion built from maths and matrix hierarchies
 
@@ -400,9 +402,10 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 | 8.2.03 | `cx-depth` | Colour Depth Effect | CNA extension | CNA::Graphics::DepthEffect, DepthEffectMode, DitherMode |
 | 8.2.04 | `cx-ascii` | ASCII Post-Process | CNA extension | CNA::Graphics::AsciiPostProcessEffect, AsciiQuantizeMode |
 | 8.2.05 | `cx-package` | Shader Packages | CNA extension | CNA::Graphics::ShaderPackageEXT, ShaderPackageEXT.selectFor, ShaderCodeEXT, ShaderEffect(device, package), ShaderLanguageEXT |
-| 8.2.06 | `cx-stats` | Engine Statistics | CNA extension | CNA::Diagnostics::GetProvider, Snapshot.metrics, Snapshot.resources, SetRuntimeMode |
-| 8.2.07 | `cx-points` | Point Lists | CNA extension | PrimitiveType.PointListEXT, GraphicsDevice.DrawUserPrimitives, GraphicsDevice.SetStringMarkerEXT |
-| 8.2.08 | `cx-devices` | Device Extensions | CNA extension | CNA::Devices::SystemInfo, CNA::Devices::Locale, CNA::Devices::PowerInfo, CNA::Devices::DisplayInfo |
+| 8.2.06 | `cx-shadow` | Shadow Mapping | CNA extension | IShadowReceiverEXT, BasicEffect.ShadowMapEXT, BasicEffect.LightViewProjectionEXT, BasicEffect.ShadowDepthBiasEXT, BasicEffect.ShadowFilterRadiusEXT, ShaderEffect, Matrix.CreateOrthographic |
+| 8.2.07 | `cx-stats` | Engine Statistics | CNA extension | CNA::Diagnostics::GetProvider, Snapshot.metrics, Snapshot.resources, SetRuntimeMode |
+| 8.2.08 | `cx-points` | Point Lists | CNA extension | PrimitiveType.PointListEXT, GraphicsDevice.DrawUserPrimitives, GraphicsDevice.SetStringMarkerEXT |
+| 8.2.09 | `cx-devices` | Device Extensions | CNA extension | CNA::Devices::SystemInfo, CNA::Devices::Locale, CNA::Devices::PowerInfo, CNA::Devices::DisplayInfo |
 
 **Platform and Renderer** - The window, the display adapter, the active renderer and the platform, as CNA reports them
 

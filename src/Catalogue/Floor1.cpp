@@ -103,7 +103,7 @@ WingSpec RotationWing()
         Lab("curve-easing", "Easing Functions", "MathHelper.Lerp, SmoothStep, Hermite and CatmullRom graphed side by side", "curves", "easing",
             {"MathHelper.Lerp", "MathHelper.SmoothStep", "MathHelper.Hermite", "MathHelper.CatmullRom"}),
         Lab("curve-spline", "Splines", "Vector3.CatmullRom through four control points with a rider", "curves", "spline", {"Vector3.CatmullRom"}),
-        Lab("curve-class", "The Curve Class", "Curve, CurveKey, tangents and loop types", "curves", "curve", {"Curve", "CurveKey", "CurveLoopType", "CurveTangent"}),
+        Lab("curve-class", "The Curve Class", "Curve, CurveKey, tangents, continuity and loop types", "curves", "curve", {"Curve", "CurveKey", "CurveLoopType", "CurveTangent", "CurveContinuity", "CurveKeyCollection"}),
         Lab("curve-barycentric", "Barycentric Coordinates", "Vector3.Barycentric weights inside a triangle", "curves", "barycentric", {"Vector3.Barycentric"}),
     };
     return w;
@@ -179,7 +179,7 @@ WingSpec AppWing()
         Lab("app-device", "Device and Renderer Report", "The live GraphicsDevice, adapter, GraphicsCapability list and renderer capability profile", "applab", "device",
             {"GraphicsDevice", "GraphicsAdapter", "GraphicsCapability", "RendererCapabilityProfile", "PresentationParameters"}),
         Lab("app-viewport", "Back Buffer, Viewport and Fullscreen", "GraphicsDeviceManager.ApplyChanges: resolution, fullscreen and vertical sync at run time", "applab", "viewport",
-            {"GraphicsDeviceManager", "PresentationParameters", "Viewport", "GameWindow.ClientBounds"}),
+            {"GraphicsDeviceManager", "PresentationParameters", "PresentInterval", "GraphicsDeviceStatus", "Viewport", "GameWindow.ClientBounds"}),
         Lab("app-content", "Content Lifetime", "ContentManager.Load, caching, Unload and ContentLoadException with your own manager", "applab", "content",
             {"ContentManager", "ContentManager.Load", "ContentManager.Unload", "ContentLoadException", "Texture2D"}),
         Lab("app-components", "Game Components", "GameComponent and DrawableGameComponent with UpdateOrder, DrawOrder, Enabled and Visible", "applab", "components",

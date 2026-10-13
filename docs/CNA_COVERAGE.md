@@ -17,6 +17,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Texture2D (mips, filter, address, formats, dynamic), TextureCube, Texture3D | floor 3 | covered |
 | BasicEffect (all features), AlphaTestEffect, DualTextureEffect, EnvironmentMapEffect | floors 3-4 | covered |
 | Punctual point/spot lights (CNAEXT) | floor 4 | covered |
+| Shadow mapping with `IShadowReceiverEXT` (no cascades yet) | floor 8 | covered |
 | ShaderEffect (GLSL source at run time) | floor 4 *Shader Lab* | covered; run-time shader source only (no compiled effects) |
 | RasterizerState, DepthStencilState (incl. stencil), BlendState, SamplerState | floor 5 | covered |
 | RenderTarget2D, MRT, float formats, mirrors, multisampling, OcclusionQuery | floor 5 | covered |
@@ -46,10 +47,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-397 distinct API names are claimed by at least one room.
+412 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
+| AlphaModeEXT | `model-material` |
 | AlphaTestEffect | `tex-alpha`, `rv-effects` |
 | AnimationPlayer | `model-skinned` |
 | ApplyClipToBonesEXT | `model-rigid` |
@@ -68,8 +70,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BasicEffect.FogEnabled | `be-fog`, `rv-shading`, `rf-telescope` |
 | BasicEffect.FogEnd | `be-fog` |
 | BasicEffect.FogStart | `be-fog` |
+| BasicEffect.LightViewProjectionEXT | `cx-shadow` |
 | BasicEffect.LightingEnabled | `be-lights` |
 | BasicEffect.PreferPerPixelLighting | `be-perpixel` |
+| BasicEffect.ShadowDepthBiasEXT | `cx-shadow` |
+| BasicEffect.ShadowFilterRadiusEXT | `cx-shadow` |
+| BasicEffect.ShadowMapEXT | `cx-shadow` |
 | BasicEffect.SpecularColor | `be-material` |
 | BasicEffect.SpecularPower | `be-material` |
 | BasicEffect.Texture | `pf-state` |
@@ -131,7 +137,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CubeMapFace | `tex-cube` |
 | CullMode | `rs-cull` |
 | Curve | `curve-class` |
+| CurveContinuity | `curve-class` |
 | CurveKey | `curve-class` |
+| CurveKeyCollection | `curve-class` |
 | CurveLoopType | `curve-class` |
 | CurveTangent | `curve-class` |
 | DebugDraw.addBox | `cx-debugdraw` |
@@ -156,6 +164,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | DrawableGameComponent | `app-components` |
 | DualTextureEffect | `be-dual`, `rv-effects` |
 | DualTextureEffect.Texture2 | `be-dual` |
+| DynamicIndexBuffer | `geo-dynindex` |
 | DynamicSoundEffectInstance | `au-synth` |
 | DynamicSoundEffectInstance.SubmitBuffer | `au-synth` |
 | DynamicVertexBuffer | `sky`, `particles`, `geo-dynamic`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `rf-garden`, `rf-weather` |
@@ -209,7 +218,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsCapability.OcclusionQuery | `rs-occlusion` |
 | GraphicsCapability.WireFrame | `rs-fill` |
 | GraphicsDevice | `info`, `app-device` |
-| GraphicsDevice.DrawIndexedPrimitives | `geo-indexed`, `geo-manybuffers`, `pf-objects` |
+| GraphicsDevice.DrawIndexedPrimitives | `geo-indexed`, `geo-manybuffers`, `geo-dynindex`, `pf-objects` |
 | GraphicsDevice.DrawInstancedPrimitives | `geo-instancing`, `pf-objects` |
 | GraphicsDevice.DrawPrimitives | `geo-indexed` |
 | GraphicsDevice.DrawUserPrimitives | `geo-triangle`, `geo-primitives`, `cx-points`, `pf-buffers`, `pf-particles`, `rv-geometry` |
@@ -224,11 +233,13 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT | `rt-formats` |
 | GraphicsDevice.Viewport | `cam-split`, `rv-geometry` |
 | GraphicsDeviceManager | `app-viewport` |
+| GraphicsDeviceStatus | `app-viewport` |
 | GraphicsResource.Dispose | `ct-lifetime` |
 | GraphicsResource.Disposing | `ct-lifetime` |
 | GraphicsResource.IsDisposed | `ct-cache`, `ct-lifetime` |
+| IShadowReceiverEXT | `cx-shadow` |
 | ImageBasedLightEXT | `model-ibl` |
-| IndexBuffer | `particles`, `geo-indexed`, `geo-procedural`, `geo-index32`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic` |
+| IndexBuffer | `particles`, `geo-indexed`, `geo-procedural`, `geo-index32`, `geo-dynindex`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic` |
 | IndexElementSize | `geo-index32` |
 | InputDevices.GetMiceEXT | `in-devices` |
 | Joysticks.GetCapabilitiesEXT | `in-joystick` |
@@ -251,7 +262,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Matrix | `models`, `animation` |
 | Matrix.CreateFromQuaternion | `quat-euler` |
 | Matrix.CreateLookAt | `mat-view`, `cam-orbit`, `cam-chase`, `cam-topdown`, `cam-mirror`, `rt-mirror`, `rv-camera`, `rf-deck`, `rf-telescope`, `vr-index` |
-| Matrix.CreateOrthographic | `mat-ortho`, `cam-topdown`, `rv-camera` |
+| Matrix.CreateOrthographic | `mat-ortho`, `cam-topdown`, `cx-shadow`, `rv-camera` |
 | Matrix.CreatePerspectiveFieldOfView | `mat-perspective`, `mat-ortho`, `col-frustum`, `cam-security`, `cam-fov`, `cam-clip`, `rv-camera`, `rf-telescope` |
 | Matrix.CreateRotationX | `quat-euler`, `an-gyroscope` |
 | Matrix.CreateRotationY | `mat-order`, `an-gears`, `an-gyroscope` |
@@ -298,9 +309,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | PackedVector.Bgra4444 | `tex-formats` |
 | PackedVector.HalfVector4 | `tex-formats` |
 | PbrEffect | `model-pbr`, `model-effects`, `model-variants` |
+| PbrEffect.AlphaCutoff | `model-material` |
 | PbrEffect.EmissiveFactor | `model-pbr` |
+| PbrEffect.EmissiveMap | `model-material` |
 | PbrEffect.ImageBasedLight | `model-ibl` |
 | PbrEffect.MetallicFactor | `model-pbr`, `model-ibl` |
+| PbrEffect.NormalMap | `model-material` |
 | PbrEffect.RoughnessFactor | `model-pbr`, `model-ibl` |
 | Plane | `vec-reflect`, `col-ray-plane` |
 | Plane.DotCoordinate | `col-plane-box` |
@@ -310,6 +324,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | PlayerIndex | `in-players` |
 | Power.GetInfoEXT | `in-devices` |
 | PreferPerPixelLighting | `lighting` |
+| PresentInterval | `app-viewport` |
 | PresentationParameters | `app-device`, `app-viewport`, `pl-adapter` |
 | PrimitiveType | `geo-primitives` |
 | PrimitiveType.LineList | `rf-weather` |
@@ -358,11 +373,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SamplerStateCollection | `materials` |
 | Sensors.GetSensorsEXT | `in-devices` |
 | SetDataOptions | `geo-dynamic` |
-| SetDataOptions.Discard | `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `pf-buffers`, `rf-weather` |
+| SetDataOptions.Discard | `geo-dynindex`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `pf-buffers`, `rf-weather` |
 | SetMorphWeightsEXT | `model-morph` |
 | SetRuntimeMode | `cx-stats` |
 | ShaderCodeEXT | `cx-package` |
-| ShaderEffect | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave`, `rt-mrt` |
+| ShaderEffect | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave`, `rt-mrt`, `cx-shadow` |
 | ShaderEffect(device, package) | `cx-package` |
 | ShaderEffect.SetUniformFloat | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave` |
 | ShaderLanguageEXT | `cx-package` |
@@ -416,6 +431,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | TextureAddressMode | `sprite-sampler`, `tex-address`, `rv-sampling` |
 | TextureCube | `tex-cube`, `model-ibl` |
 | TextureFilter | `sprite-sampler`, `rv-sampling` |
+| TextureTransformEXT | `model-material` |
 | TitleContainer.OpenStream | `ct-storage` |
 | TouchPanel.EnabledGestures | `in-touch` |
 | TouchPanel.GetState | `in-touch`, `in-devices` |

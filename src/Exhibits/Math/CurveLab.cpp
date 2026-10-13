@@ -7,6 +7,7 @@
 #include "Exhibits/ExhibitKit.hpp"
 #include "Exhibits/Math/MathKit.hpp"
 #include "Microsoft/Xna/Framework/Curve.hpp"
+#include "Microsoft/Xna/Framework/CurveContinuity.hpp"
 #include "Microsoft/Xna/Framework/CurveKey.hpp"
 
 using namespace Microsoft::Xna::Framework;
@@ -59,6 +60,7 @@ public:
                     static constexpr CurveTangent kTan[] = {CurveTangent::Smooth, CurveTangent::Linear, CurveTangent::Flat};
                     curve_.ComputeTangents(kTan[v]);
                 });
+                p.AddToggle("Key 1 continuity: Step", false, [this](bool v) { curve_.getKeysProperty()[1].setContinuityProperty(v ? CurveContinuity::Step : CurveContinuity::Smooth); });
                 p.AddToggle("Animate position", true, [this](bool v) { auto_ = v; });
                 p.AddSlider("Position", 0.0f, 8.0f, pos_, [this](float v) { pos_ = v; auto_ = false; }, "%.2f");
                 p.AddHeading("Curve.Evaluate");
