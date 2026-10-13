@@ -12,6 +12,9 @@ std::unique_ptr<Exhibit> CreateExhibit(const RoomDef& room, Services& services)
         case RoomId::RenderTarget: return MakeRenderTargetRoom(room, services);
         case RoomId::Particles: return MakeParticleRoom(room, services);
         case RoomId::Models: return MakeModelGallery(room, services);
+        case RoomId::Animation: return MakeAnimationRoom(room, services);
+        case RoomId::Sky: return MakeSkyRoom(room, services);
+        case RoomId::Audio: return MakeAudioRoom(room, services);
         default: return nullptr;
     }
 }

@@ -95,6 +95,7 @@ void MuseumGame::LoadContent()
 
     sky_ = std::make_unique<SkyDome>(services_, timeOfDay_);
     services_.sky = sky_.get();
+    services_.timeOfDay = &timeOfDay_;
     world_ = std::make_unique<MuseumWorld>(services_);
     world_->Build();
     hud_ = std::make_unique<Hud>(services_);

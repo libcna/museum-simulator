@@ -13,3 +13,6 @@ std::unique_ptr<Exhibit> MakeRenderStateRoom(const RoomDef& room, Services& serv
 std::unique_ptr<Exhibit> MakeRenderTargetRoom(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeParticleRoom(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeModelGallery(const RoomDef& room, Services& services);
+std::unique_ptr<Exhibit> MakeAnimationRoom(const RoomDef& room, Services& services);
+std::unique_ptr<Exhibit> MakeSkyRoom(const RoomDef& room, Services& services);
+std::unique_ptr<Exhibit> MakeAudioRoom(const RoomDef& room, Services& services);

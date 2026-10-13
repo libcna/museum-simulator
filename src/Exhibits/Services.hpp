@@ -18,6 +18,7 @@ class TextureLibrary;
 class ModelLibrary;
 class Shapes;
 class SkyDome;
+class TimeOfDay;
 
 /** Per-frame numbers shown on the Information Hall screens and the F3 overlay. */
 struct FrameStats {
@@ -41,6 +42,7 @@ struct Services {
     EffectBank* effects = nullptr;
     Shapes* shapes = nullptr;
     SkyDome* sky = nullptr;
+    TimeOfDay* timeOfDay = nullptr;
     SignFactory* signs = nullptr;
     AudioSystem* audio = nullptr;
     Microsoft::Xna::Framework::Graphics::SpriteBatch* sprites = nullptr;

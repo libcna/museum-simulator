@@ -1,9 +1,10 @@
 # HANDOFF
 
 ## Status
-- Done: Lobby, Info, Models, Materials, Lighting, RenderStates, RenderTarget, Particles.
-- In progress: Animation, Sky, Audio rooms (`CreateExhibit` returns nullptr for them until added).
-- `TimeOfDay` is owned by `MuseumGame` and not yet exposed to exhibits (Sky room needs it via `Services`).
+- All 11 rooms are implemented and render (screenshots checked with tools/shot.sh).
+- Sky room: the clock is driven by `TimeOfDay` (exposed as `Services::timeOfDay`); console buttons change hour and speed; a sundial shadow follows the sun.
+- Audio room: four looping 3D speakers + a one-shot bell. Audio playback itself is only verified with the dummy driver (no real listening test yet).
+- Ideas: day/night screenshots of the Sky room, scripted smoke test of every interactable, collision check in the new rooms.
 
 ## Build / run
 See README.md. Build trees: only `build/` (shared ccache `/rv/cnaccache`).
