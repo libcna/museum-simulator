@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "Diagnostics/Log.hpp"
 #include "Microsoft/Xna/Framework/Color.hpp"
 #include "Microsoft/Xna/Framework/Vector3.hpp"
 #include "Microsoft/Xna/Framework/Graphics/SpriteFont.hpp"
