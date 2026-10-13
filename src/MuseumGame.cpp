@@ -102,6 +102,8 @@ void MuseumGame::LoadContent()
     world_ = std::make_unique<MuseumWorld>(services_, *museum_);
     hud_ = std::make_unique<Hud>(services_);
     services_.travelToFloor = [this](int floor) { StartRide(floor); };
+    services_.openDirectory = [this] { OpenDirectory(); };
+    directory_ = std::make_unique<DirectoryScreen>(services_);
 
     PlayerController::Settings settings;
     settings.mouseSensitivity = options_.mouseSensitivity;
@@ -142,6 +144,7 @@ void MuseumGame::UnloadContent()
 {
     if (player_ && player_->MouseCaptured()) player_->SetMouseCaptured(false, 0, 0);
     // Release in reverse dependency order; GPU resources must go before the device does.
+    directory_.reset();
     hud_.reset();
     world_.reset();
     sky_.reset();
@@ -200,11 +203,25 @@ void MuseumGame::UpdateRide(float dt)
 void MuseumGame::SetPaused(bool paused)
 {
     paused_ = paused;
-    setIsMouseVisibleProperty(paused);
+    ApplyMouseMode();
+}
+
+// The pointer is captured for looking around, and free whenever a menu (pause, directory) is up.
+void MuseumGame::ApplyMouseMode()
+{
+    const bool menu = paused_ || (directory_ && directory_->IsOpen());
+    setIsMouseVisibleProperty(menu);
     if (player_) {
         const auto& vp = getGraphicsDeviceProperty().getViewportProperty();
-        player_->SetMouseCaptured(!paused, vp.getWidthProperty(), vp.getHeightProperty());
+        player_->SetMouseCaptured(!menu, vp.getWidthProperty(), vp.getHeightProperty());
     }
+}
+
+void MuseumGame::OpenDirectory()
+{
+    if (!directory_ || paused_ || ride_.active) return;
+    directory_->Open(museum_->FloorAt(camera_.Position().Y), shownCell_);
+    ApplyMouseMode();
 }
 
 void MuseumGame::HandleSystemKeys()
@@ -212,7 +229,8 @@ void MuseumGame::HandleSystemKeys()
     if (input_.Pressed(Keys::Escape) || input_.PadPressed(&GamePadButtons::getStartProperty)) SetPaused(!paused_);
     if (input_.Pressed(Keys::F1) || input_.Pressed(Keys::H)) showHelp_ = !showHelp_;
     if (input_.Pressed(Keys::F3)) showStats_ = !showStats_;
-    if (input_.Pressed(Keys::M) && !paused_) showMap_ = !showMap_;
+    if ((input_.Pressed(Keys::M) || input_.Pressed(Keys::Tab)) && !paused_ && !directory_->IsOpen()) OpenDirectory();
+    if (input_.Pressed(Keys::N) && !paused_ && !directory_->IsOpen()) showMap_ = !showMap_;
     if (input_.Pressed(Keys::F2)) audio_->SetMuted(!audio_->Muted());
     if (input_.Pressed(Keys::F11)) {
         graphics_.ToggleFullScreen();
@@ -277,6 +295,20 @@ void MuseumGame::Update(GameTime& gameTime)
     wasActive_ = active;
 
     RunScript();
+
+    if (directory_->IsOpen()) {
+        const auto& vp = getGraphicsDeviceProperty().getViewportProperty();
+        const DirectoryScreen::Result r = directory_->Update(input_, discovered_, vp.getWidthProperty(), vp.getHeightProperty());
+        if (r.close) {
+            directory_->Close();
+            ApplyMouseMode();
+        }
+        if (r.travelTo) TeleportToCell(*r.travelTo);
+        audio_->Update();
+        hud_->Update(dt);
+        if (options_.maxFrames > 0 && frame_ >= options_.maxFrames) Exit();
+        return;
+    }
 
     if (ride_.active) UpdateRide(dt);
     if (!paused_ && ride_.active) {
@@ -379,6 +411,9 @@ void MuseumGame::Draw(const GameTime&)
         hud.bannerAlpha = bannerAge_ < 4.0f ? std::clamp(std::min(bannerAge_ * 3.0f, (4.0f - bannerAge_) * 1.5f), 0.0f, 1.0f) : 0.0f;
     }
     hud_->Draw(hud);
+    if (directory_->IsOpen()) {
+        directory_->Draw(discovered_, hud.floor, shownCell_, camera_.Position(), camera_.Yaw(), vp.getWidthProperty(), vp.getHeightProperty());
+    }
 
     if (!pendingShot_.empty()) {
         SaveScreenshot(pendingShot_);
@@ -434,6 +469,10 @@ void MuseumGame::RunScript()
         } else if (op == "floor") {
             const int f = std::atoi(arg.c_str());
             if (f >= 0 && f < static_cast<int>(museum_->floors.size())) TeleportToCell(museum_->floors[static_cast<std::size_t>(f)].hub);
+        } else if (op == "directory") {
+            if (arg == "close") directory_->Close();
+            else OpenDirectory();
+            ApplyMouseMode();
         } else if (op == "ride") {
             StartRide(std::atoi(arg.c_str()));
         } else if (op == "pos") {

@@ -20,6 +20,7 @@
 #include "Rendering/SignFactory.hpp"
 #include "Rendering/SkyDome.hpp"
 #include "Rendering/TextureLibrary.hpp"
+#include "UI/DirectoryScreen.hpp"
 #include "UI/Hud.hpp"
 #include "World/MuseumWorld.hpp"
 
@@ -47,6 +48,8 @@ private:
     void UpdateFrameStats(float dt);
     void RunScript();
     void StartRide(int floor);
+    void OpenDirectory();
+    void ApplyMouseMode();
     void UpdateRide(float dt);
     void SaveScreenshot(const std::string& path);
 
@@ -69,6 +72,7 @@ private:
     std::unique_ptr<SkyDome> sky_;
     std::unique_ptr<MuseumWorld> world_;
     std::unique_ptr<Hud> hud_;
+    std::unique_ptr<DirectoryScreen> directory_;
 
     FirstPersonCamera camera_;
     std::unique_ptr<PlayerController> player_;
@@ -80,7 +84,7 @@ private:
     bool wasActive_ = true;
     bool showHelp_ = false;
     bool showStats_ = false;
-    bool showMap_ = false;
+    bool showMap_ = true;
     float sensitivityScale_ = 1.0f;
     const MuseumPlan* museum_ = nullptr;
     int shownCell_ = -1;

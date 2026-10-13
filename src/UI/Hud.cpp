@@ -103,8 +103,8 @@ void Hud::DrawHelp(int w, int h)
         "W A S D / arrows   walk            Mouse   look around",
         "Shift   walk faster                 E / Left click   interact",
         "Esc   pause menu                    F1 / H   this help",
-        "M   museum map                      F3   statistics",
-        "F11   fullscreen                    R   return to the entrance",
+        "M / Tab   directory and map            F3   statistics",
+        "F11   fullscreen                    R   return to the entrance        N   minimap on/off",
         "F2   mute audio                     [ ]   mouse sensitivity",
         "Gamepad: left stick walk, right stick look, A interact, Start pause",
     };

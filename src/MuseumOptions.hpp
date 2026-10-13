@@ -25,6 +25,8 @@ struct MuseumOptions {
     float fixedTimeStep = 0.0f;         // >0: advance the simulation by this many seconds per frame
     std::string script;                 // semicolon-separated test actions, see MuseumGame::RunScript
     bool showHelp = false;
+    bool validate = false;              // check the catalogue (no window) and exit with the result
+    bool inventory = false;             // print the museum's counts as JSON (no window) and exit
 
     static MuseumOptions Parse(int argc, char** argv);
     static const char* Usage();

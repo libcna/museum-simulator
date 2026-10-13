@@ -27,13 +27,14 @@ const char* MuseumOptions::Usage()
         "  --sensitivity F           mouse sensitivity multiplier (default 1.0)\n"
         "  --volume F                master volume 0..1\n"
         "  --no-audio                do not load or play any sound\n"
-        "  --room ID                 start in a room: lobby, info, models, materials, lighting,\n"
-        "                            renderstates, rendertarget, particles, animation, sky, audio\n"
+        "  --room KEY                start in a room by its key (see docs/MUSEUM_MAP.md), e.g. lighting\n"
         "  --pos X,Y,Z --yaw DEG --pitch DEG   start pose (metres, degrees)\n"
         "  --frames N                exit after N frames\n"
         "  --screenshot FILE.png [--screenshot-frame N]   save the back buffer and exit\n"
         "  --fixed-step SECONDS      advance the simulation by a fixed step per frame\n"
-        "  --script \"a;b;c\"          scripted test actions (see HANDOFF.md)\n";
+        "  --script \"a;b;c\"          scripted test actions (see src/MuseumGame.cpp, RunScript)\n"
+        "  --validate                check the museum's structure (no window); exit status 1 if invalid\n"
+        "  --inventory               print the museum's counts as JSON (no window)\n";
 }
 
 MuseumOptions MuseumOptions::Parse(int argc, char** argv)
@@ -62,6 +63,8 @@ MuseumOptions MuseumOptions::Parse(int argc, char** argv)
         else if (Match(a, "--screenshot", v, i, argc, argv)) o.screenshotPath = v;
         else if (Match(a, "--fixed-step", v, i, argc, argv)) o.fixedTimeStep = static_cast<float>(std::atof(v));
         else if (Match(a, "--script", v, i, argc, argv)) o.script = v;
+        else if (!std::strcmp(a, "--validate")) o.validate = true;
+        else if (!std::strcmp(a, "--inventory")) o.inventory = true;
         else if (!std::strcmp(a, "--help") || !std::strcmp(a, "-h")) o.showHelp = true;
         else std::fprintf(stderr, "cna-3d-museum: ignoring unknown option '%s'\n", a);
     }

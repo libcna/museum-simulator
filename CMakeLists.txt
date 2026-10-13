@@ -114,3 +114,10 @@ add_custom_command(TARGET cna-3d-museum POST_BUILD
 if(WIN32 AND COMMAND cna_copy_sdl_runtime)
     cna_copy_sdl_runtime(cna-3d-museum)
 endif()
+
+# --- tests ---------------------------------------------------------------------------------------
+# Structural tests of the museum's data (no window or graphics device needed): ctest --test-dir build
+include(CTest)
+add_executable(museum_tests EXCLUDE_FROM_ALL tests/museum_tests.cpp)
+target_link_libraries(museum_tests PRIVATE museum_core)
+add_test(NAME museum_structure COMMAND museum_tests)
