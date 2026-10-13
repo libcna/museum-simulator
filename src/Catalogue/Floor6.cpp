@@ -79,6 +79,41 @@ WingSpec ModelWing()
     return w;
 }
 
+WingSpec AnimationWing()
+{
+    WingSpec w;
+    w.name = "Animation Complex";
+    w.tagline = "Procedural animation: motion built from maths and matrix hierarchies";
+    w.theme = "machine";
+    w.accent = {0.55f, 0.85f, 0.75f};
+    w.spineSide = Wall::West;
+    const auto an = [](const char* key, const char* title, const char* subtitle, const char* mode, std::vector<std::string> apis) {
+        RoomSpec r;
+        r.key = key;
+        r.title = title;
+        r.subtitle = subtitle;
+        r.exhibit = "anim-lab";
+        r.params = {{"mode", mode}};
+        r.width = 13;
+        r.depth = 13;
+        r.height = 5.5f;
+        r.theme = "machine";
+        r.apis = std::move(apis);
+        return r;
+    };
+    w.rooms = {
+        an("an-pendulum", "Pendulum Wave", "Eight pendulums whose periods step evenly, from a formula or by integration", "pendulum", {"MathHelper", "GameTime", "Vector3"}),
+        an("an-clock", "A Clock", "Hour, minute and second hands as nested rotations driven by the time of day", "clock", {"Matrix.CreateRotationZ", "Matrix.Multiply"}),
+        an("an-gears", "Meshing Gears", "Gear ratios as rotation matrices, with an adjustable tooth count", "gears", {"Matrix.CreateRotationY", "Matrix.Multiply", "MeshBuilder"}),
+        an("an-conveyor", "Conveyor", "Scrolling texture coordinates, crates riding the belt and a swept gate counter", "conveyor", {"VertexPositionColorTexture", "SamplerState.LinearWrap", "BoundingBox"}),
+        an("an-doors", "Proximity Doors", "Doors that open as you approach, with Lerp against SmoothStep easing", "doors", {"MathHelper.Lerp", "MathHelper.SmoothStep", "Vector3.Distance"}),
+        an("an-kinetic", "Kinetic Sculpture", "Sixty rods whose phase depends on position: waves, twists and Lissajous figures", "kinetic", {"Matrix.CreateRotationZ", "Matrix.Multiply"}),
+        an("an-gyroscope", "Gyroscope", "Three nested rings: child transforms composed with their parents", "gyroscope", {"Matrix.CreateRotationX", "Matrix.CreateRotationY", "Matrix.CreateRotationZ"}),
+        an("an-walker", "A Walking Figure", "Forward kinematics: hips, thighs and shins swinging without any stored animation", "walker", {"Matrix.Multiply", "Matrix.CreateRotationZ", "MathHelper.WrapAngle"}),
+    };
+    return w;
+}
+
 }  // namespace
 
 FloorSpec MakeFloor6()
@@ -90,6 +125,7 @@ FloorSpec MakeFloor6()
     f.theme = "concourse";
     f.accent = {1.0f, 0.55f, 0.25f};
     f.wings.push_back(ModelWing());
+    f.wings.push_back(AnimationWing());
     f.wings.push_back(ParticleWing());
     return f;
 }
