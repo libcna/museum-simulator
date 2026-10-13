@@ -4,6 +4,8 @@
 - All 11 rooms are implemented and render (screenshots checked with tools/shot.sh).
 - Sky room: the clock is driven by `TimeOfDay` (exposed as `Services::timeOfDay`); console buttons change hour and speed; a sundial shadow follows the sun.
 - Audio room: four looping 3D speakers + a one-shot bell. Audio playback itself is only verified with the dummy driver (no real listening test yet).
+- Known limitation: Sky room walls/floor use baked vertex lighting, so they stay bright at night; only dynamic objects (sculpture, sundial shadow) follow the sun.
+- Script tip: `tools/run.sh "pos:...;look:-90,-15;e;..."` presses E on the focused item (yaw -90 faces +X).
 - Ideas: day/night screenshots of the Sky room, scripted smoke test of every interactable, collision check in the new rooms.
 
 ## Build / run
