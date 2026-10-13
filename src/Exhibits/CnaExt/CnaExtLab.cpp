@@ -28,6 +28,8 @@
 #include "CNA/Graphics/CRTEffect.hpp"
 #include "CNA/Graphics/DebugDraw.hpp"
 #include "CNA/Graphics/DepthEffect.hpp"
+#include "CNA/Graphics/ShaderPackageEXT.hpp"
+#include "Microsoft/Xna/Framework/Graphics/ShaderEffect.hpp"
 #endif
 #ifdef CNA_DEVICES
 #include "CNA/Devices/DisplayInfo.hpp"
@@ -44,12 +46,12 @@ using namespace Microsoft::Xna::Framework::Graphics;
 
 namespace {
 
-enum class Mode { DebugDraw, Crt, Depth, Ascii, Stats, Points, Devices };
+enum class Mode { DebugDraw, Crt, Depth, Ascii, Stats, Points, Devices, Package };
 
 Mode ParseMode(const std::string& s)
 {
     static const std::pair<const char*, Mode> table[] = {{"crt", Mode::Crt},     {"depth", Mode::Depth}, {"ascii", Mode::Ascii},
-                                                         {"stats", Mode::Stats}, {"points", Mode::Points}, {"devices", Mode::Devices}};
+                                                         {"stats", Mode::Stats}, {"points", Mode::Points}, {"devices", Mode::Devices}, {"package", Mode::Package}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
     return Mode::DebugDraw;
@@ -102,6 +104,12 @@ public:
                 p.AddSlider("Points", 1000.0f, 60000.0f, static_cast<float>(pointCount_), [this](float v) { pointCount_ = static_cast<int>(v); Regenerate(); }, "%.0f", 1000.0f);
                 p.AddToggle("Animate", true, [this](bool v) { animate_ = v; });
                 p.AddReadout("Primitives (engine counter)", [this] { return pointsMetric_; });
+                break;
+            case Mode::Package:
+                p.AddChoice("Variants in the package", {"GLSL ES and GLSL desktop", "GLSL ES only", "GLSL desktop only", "HLSL and MSL only"}, 0, [this](int v) { packageChoice_ = v; packageDirty_ = true; });
+                p.AddSlider("Tint amount", 0.0f, 1.0f, tint_, [this](float v) { tint_ = v; });
+                p.AddReadout("Selected variant", [this] { return selectedLabel_; });
+                p.AddReadout("This renderer's dialect", [this] { return std::string(S().device->GetShaderDialectEXT() == CNA::ShaderDialectEXT::GlslDesktop ? "GLSL desktop" : (S().device->GetShaderDialectEXT() == CNA::ShaderDialectEXT::GlslEs ? "GLSL ES" : "other")); });
                 break;
             case Mode::Devices:
                 p.AddReadout("Compiled in", [] {
@@ -165,7 +173,7 @@ public:
     void RenderOffscreen(const DrawContext& ctx) override
     {
         if (!scene_ || !screen_) return;
-        const bool post = mode_ == Mode::Crt || mode_ == Mode::Depth || mode_ == Mode::Ascii;
+        const bool post = mode_ == Mode::Crt || mode_ == Mode::Depth || mode_ == Mode::Ascii || mode_ == Mode::Package;
         if (post) {
             const float a = time_ * 0.35f;
             const Vector3 c = R().centre;
@@ -194,7 +202,7 @@ protected:
         if (S().font == nullptr) return;
         Texture2D& white = *S().whiteTexture;
         const auto text = [&](const std::string& t, float x, float y, Color c, float s = 0.7f) { sb.DrawString(*S().font, t, Vector2(x, y), c, 0.0f, Vector2(0, 0), s, SpriteEffects::None, 0.0f); };
-        const bool post = mode_ == Mode::Crt || mode_ == Mode::Depth || mode_ == Mode::Ascii;
+        const bool post = mode_ == Mode::Crt || mode_ == Mode::Depth || mode_ == Mode::Ascii || mode_ == Mode::Package;
         if (post) {
             DrawPost(sb, white);
             return;
@@ -246,6 +254,7 @@ private:
             case Mode::Crt:
             case Mode::Depth:
             case Mode::Ascii:
+            case Mode::Package:
 #ifdef CNA_CNAEXT
                 return true;
 #else
@@ -267,7 +276,7 @@ private:
 
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"DebugDraw", "CRTEffect", "DepthEffect", "AsciiPostProcessEffect", "Engine statistics", "Point lists and debug markers", "Device extensions"};
+        static const char* t[] = {"DebugDraw", "CRTEffect", "DepthEffect", "AsciiPostProcessEffect", "Engine statistics", "Point lists and debug markers", "Device extensions", "Shader packages"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
@@ -279,6 +288,7 @@ private:
             case Mode::Ascii: return {"AsciiPostProcessEffect draws a texture as text: each cell becomes a character chosen from its brightness,", "in black and white or in colour. It owns its font atlas and SpriteBatch; you only hand it the source texture."};
             case Mode::Stats: return {"CNA counts its own work: draw calls, primitives, state changes, sprite submissions and every live graphics", "resource with its size. Pick Off to stop counting (the numbers freeze); this museum builds CNA with STATS."};
             case Mode::Points: return {"PrimitiveType.PointListEXT is a CNA extension: each vertex is one point, so a particle cloud or a star field", "is one draw call with no quads. All points here are submitted at once with DrawUserPrimitives."};
+            case Mode::Package: return {"A ShaderPackageEXT carries the same shader in several languages. selectFor(device) picks the variant this renderer", "can run, or reports why none can, and ShaderEffect(device, package) builds the effect from it: one asset, many renderers."};
             default: return {"CNA_DEVICES adds queries beyond XNA 4.0: power, locale, CPU and memory, display scale and safe area. Some report", "unsupported on a desktop; the museum shows exactly what each call returns on this machine."};
         }
     }
@@ -310,6 +320,18 @@ private:
                 sb.Begin(SpriteSortMode::Deferred, &BlendState::Opaque, &SamplerState::PointClamp, nullptr, nullptr, depth_.get());
                 sb.Draw(*scene_->Texture(), full, Color::White);
                 sb.End();
+            } else if (mode_ == Mode::Package) {
+                BuildPackage();
+                if (packageEffect_ && packageEffect_->IsEffectValid()) {
+                    packageEffect_->Apply();
+                    packageEffect_->SetUniformFloat("uAmount", tint_);
+                    sb.Begin(SpriteSortMode::Deferred, &BlendState::Opaque, &SamplerState::LinearClamp, nullptr, nullptr, packageEffect_.get());
+                    sb.Draw(*scene_->Texture(), full, Color::White);
+                    sb.End();
+                } else {
+                    failed = true;
+                    error_ = packageNote_;
+                }
             } else if (mode_ == Mode::Ascii && ascii_) {
                 ascii_->setCellSize(cell_, cell_ * 2);
                 ascii_->setQuantizeMode(asciiColor_ ? CNA::Graphics::AsciiQuantizeMode::Color : CNA::Graphics::AsciiQuantizeMode::BlackWhite);
@@ -322,6 +344,19 @@ private:
             failed = true;
             error_ = e.what();
         }
+        if (mode_ == Mode::Package) {
+            sb.Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::LinearClamp, nullptr, nullptr);
+            if (failed) sb.Draw(*scene_->Texture(), Rectangle(0, 0, 960, 540), Color::White);
+            sb.Draw(white, Rectangle(0, 0, 960, 40 + 22 * static_cast<int>(packageLines_.size()) + 24), Color(0, 0, 0, 190));
+            sb.DrawString(*S().font, "ShaderPackageEXT variants (" + packageNote_ + ")", Vector2(14, 8), Color(255, 226, 150, 255), 0.0f, Vector2(0, 0), 0.7f, SpriteEffects::None, 0.0f);
+            float ly = 40.0f;
+            for (const std::string& l : packageLines_) {
+                sb.DrawString(*S().font, l, Vector2(24, ly), Color(230, 235, 245, 255), 0.0f, Vector2(0, 0), 0.55f, SpriteEffects::None, 0.0f);
+                ly += 22.0f;
+            }
+            sb.End();
+            return;
+        }
         if (failed) {
             sb.Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::LinearClamp, nullptr, nullptr);
             sb.Draw(*scene_->Texture(), Rectangle(0, 0, 960, 540), Color::White);
@@ -332,6 +367,80 @@ private:
 #else
         (void)sb;
         (void)white;
+#endif
+    }
+
+    // --- shader packages ------------------------------------------------------------------------------
+    static const char* Vertex(bool es)
+    {
+        static const std::string esSrc = R"(#version 300 es
+layout(location = 0) in vec2 aPos;
+layout(location = 1) in vec2 aTexCoord;
+layout(location = 2) in vec4 aColor;
+uniform mat4 projection;
+out vec2 vTexCoord;
+out vec4 vColor;
+void main() {
+    gl_Position = projection * vec4(aPos, 0.0, 1.0);
+    vTexCoord = aTexCoord;
+    vColor = aColor;
+}
+)";
+        static const std::string desktopSrc = "#version 330 core\n" + esSrc.substr(esSrc.find('\n') + 1);
+        return es ? esSrc.c_str() : desktopSrc.c_str();
+    }
+    static std::string Fragment(bool es)
+    {
+        const std::string body = R"(
+in vec2 vTexCoord;
+in vec4 vColor;
+uniform sampler2D texture1;
+uniform float uAmount;
+out vec4 FragColor;
+void main() {
+    vec4 c = texture(texture1, vTexCoord) * vColor;
+    FragColor = vec4(mix(c.rgb, c.rgb * vec3(1.0, 0.55, 0.25), uAmount), c.a);   // warm tint
+}
+)";
+        return es ? "#version 300 es\nprecision highp float;" + body : "#version 330 core\n" + body;
+    }
+    void BuildPackage()
+    {
+#ifdef CNA_CNAEXT
+        if (!packageDirty_) return;
+        packageDirty_ = false;
+        packageEffect_.reset();
+        packageLines_.clear();
+        using CNA::ShaderLanguageEXT;
+        using CNA::ShaderStageEXT;
+        using CNA::Graphics::ShaderCodeEXT;
+        std::vector<ShaderCodeEXT> variants;
+        const bool es = packageChoice_ == 0 || packageChoice_ == 1, desktop = packageChoice_ == 0 || packageChoice_ == 2, other = packageChoice_ == 3;
+        if (es) {
+            variants.emplace_back(ShaderLanguageEXT::GlslEs, ShaderStageEXT::Vertex, "main", "tint.vert (GLSL ES 3.00)", std::string(Vertex(true)));
+            variants.emplace_back(ShaderLanguageEXT::GlslEs, ShaderStageEXT::Fragment, "main", "tint.frag (GLSL ES 3.00)", Fragment(true));
+        }
+        if (desktop) {
+            variants.emplace_back(ShaderLanguageEXT::GlslDesktop, ShaderStageEXT::Vertex, "main", "tint.vert (GLSL 3.30)", std::string(Vertex(false)));
+            variants.emplace_back(ShaderLanguageEXT::GlslDesktop, ShaderStageEXT::Fragment, "main", "tint.frag (GLSL 3.30)", Fragment(false));
+        }
+        if (other) {
+            variants.emplace_back(ShaderLanguageEXT::Hlsl, ShaderStageEXT::Vertex, "main", "tint.vs.hlsl", std::string("float4 main() : SV_Position { return 0; }"));
+            variants.emplace_back(ShaderLanguageEXT::Hlsl, ShaderStageEXT::Fragment, "main", "tint.ps.hlsl", std::string("float4 main() : SV_Target { return 1; }"));
+            variants.emplace_back(ShaderLanguageEXT::Msl, ShaderStageEXT::Fragment, "main", "tint.metal", std::string("fragment float4 main0() { return float4(1); }"));
+        }
+        CNA::Graphics::ShaderPackageEXT package(variants, {ShaderStageEXT::Vertex, ShaderStageEXT::Fragment});
+        try {
+            const auto selection = package.selectFor(*S().device);
+            selectedLabel_ = selection.isUsable() ? std::string(selection.getLanguage() == ShaderLanguageEXT::GlslEs ? "GLSL ES" : (selection.getLanguage() == ShaderLanguageEXT::GlslDesktop ? "GLSL desktop" : "other")) : std::string("none usable");
+            packageNote_ = selection.isUsable() ? std::string("selected ") + selectedLabel_ : selection.getDiagnostic();
+            for (const ShaderCodeEXT& v : package.getVariants())
+                packageLines_.push_back(std::string(v.getLanguage() == ShaderLanguageEXT::GlslEs ? "GLSL ES     " : (v.getLanguage() == ShaderLanguageEXT::GlslDesktop ? "GLSL desktop" : (v.getLanguage() == ShaderLanguageEXT::Hlsl ? "HLSL        " : "MSL         "))) + "  " + v.getSourceLabel() + "  " + std::to_string(v.getPayloadByteSize()) + " bytes");
+            if (selection.isUsable()) packageEffect_ = std::make_unique<ShaderEffect>(*S().device, package);
+        } catch (const std::exception& e) {
+            packageNote_ = e.what();
+            selectedLabel_ = "error";
+        }
 #endif
     }
 
@@ -492,6 +601,12 @@ private:
 
     Mode mode_;
     std::unique_ptr<MiniView> scene_;
+    int packageChoice_ = 0;
+    bool packageDirty_ = true;
+    float tint_ = 0.8f;
+    std::string selectedLabel_ = "-", packageNote_;
+    std::vector<std::string> packageLines_;
+    std::unique_ptr<ShaderEffect> packageEffect_;
     std::string error_;
     float time_ = 0.0f, sampleTimer_ = 0.0f;
     bool animate_ = true;

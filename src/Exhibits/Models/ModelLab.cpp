@@ -15,6 +15,7 @@
 #include "Microsoft/Xna/Framework/Graphics/BasicEffect.hpp"
 #include "Microsoft/Xna/Framework/Graphics/GltfImportReportEXT.hpp"
 #include "Microsoft/Xna/Framework/Graphics/Model.hpp"
+#include "Microsoft/Xna/Framework/Graphics/MorphTargetEXT.hpp"
 #include "Microsoft/Xna/Framework/Graphics/ModelBone.hpp"
 #include "Microsoft/Xna/Framework/Graphics/ModelMesh.hpp"
 #include "Microsoft/Xna/Framework/Graphics/ModelMeshPart.hpp"
@@ -30,12 +31,12 @@ using namespace MathKit;
 
 namespace {
 
-enum class Mode { Info, Pbr, Rigid, Skinned, Instances, Bounds, Effects, Report, Ibl };
+enum class Mode { Info, Pbr, Rigid, Skinned, Instances, Bounds, Effects, Report, Ibl, Morph, Variants };
 
 Mode ParseMode(const std::string& s)
 {
     static const std::pair<const char*, Mode> table[] = {{"pbr", Mode::Pbr}, {"rigid", Mode::Rigid}, {"skinned", Mode::Skinned}, {"instances", Mode::Instances},
-                                                         {"bounds", Mode::Bounds}, {"effects", Mode::Effects}, {"report", Mode::Report}, {"ibl", Mode::Ibl}};
+                                                         {"bounds", Mode::Bounds}, {"effects", Mode::Effects}, {"report", Mode::Report}, {"ibl", Mode::Ibl}, {"morph", Mode::Morph}, {"variants", Mode::Variants}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
     return Mode::Info;
@@ -47,7 +48,7 @@ class ModelLab final : public Exhibit {
 public:
     ModelLab(const RoomDef& room, Services& services) : Exhibit(room, services), mode_(ParseMode(room.params.Get("mode"))), gizmos_(services)
     {
-        name_ = room.params.Get("model", mode_ == Mode::Rigid ? "robot" : (mode_ == Mode::Skinned ? "tentacle" : "knot"));
+        name_ = room.params.Get("model", mode_ == Mode::Rigid ? "robot" : (mode_ == Mode::Skinned ? "tentacle" : (mode_ == Mode::Morph ? "morph" : (mode_ == Mode::Variants ? "variants" : "knot"))));
     }
 
     void BuildStatic(RoomBuilder& b) override
@@ -101,6 +102,19 @@ public:
                 p.AddChoice("Effect on every part", {"Original (PbrEffect)", "BasicEffect, lit", "BasicEffect, unlit"}, 0, [this](int v) { effectChoice_ = v; ApplyEffects(); });
                 p.AddReadout("ModelMeshPart.Effect", [this] { return EffectName(); });
                 break;
+            case Mode::Morph:
+                p.AddToggle("Play the glTF weight track", true, [this](bool v) { play_ = v; });
+                p.AddSlider("Weight of target 0: squash", 0.0f, 1.0f, morphWeights_[0], [this](float v) { morphWeights_[0] = v; play_ = false; morphDirty_ = true; });
+                p.AddSlider("Weight of target 1: spikes", 0.0f, 1.0f, morphWeights_[1], [this](float v) { morphWeights_[1] = v; play_ = false; morphDirty_ = true; });
+                p.AddReadout("Morph targets", [this] { return morph_ != nullptr ? std::to_string(morph_->PositionDeltas.size()) + " (positions and normals)" : std::string("none found"); });
+                p.AddReadout("Weight track", [this] { return morph_ != nullptr ? std::to_string(morph_->WeightTrack.Keys.size()) + " keys" : std::string("-"); });
+                break;
+            case Mode::Variants:
+                p.AddChoice("Material variant", {"gold", "red plastic", "blue rubber", "brushed steel"}, 0, [this](int v) { variant_ = v; variantDirty_ = true; });
+                p.AddSlider("Spin", 0.0f, 2.0f, spin_, [this](float v) { spin_ = v; });
+                p.AddReadout("Variants in the file", [this] { return model_ ? std::to_string(model_->getMaterialVariantNamesEXTProperty().size()) : std::string("-"); });
+                p.AddReadout("Active variant index", [this] { return model_ ? std::to_string(model_->getMaterialVariantEXTProperty()) : std::string("-"); });
+                break;
             case Mode::Ibl:
                 p.AddChoice("Model", {"sphere", "torus", "knot", "vase"}, 0, [this](int v) { static const char* n[] = {"sphere", "torus", "knot", "vase"}; name_ = n[v]; Reload(); });
                 p.AddChoice("Environment", {"Sky", "Sunset", "Studio"}, 0, [this](int v) { env_ = v; iblDirty_ = true; });
@@ -140,6 +154,33 @@ public:
             if (play_) clock_ = std::fmod(clock_ + ctx.dt * speed_, std::max(0.1f, clipLength_));
             ApplyClipToBonesEXT(*model_, *clip_, System::TimeSpan::FromSeconds(clock_));
         }
+        if (mode_ == Mode::Morph && morph_ != nullptr && morphPart_ != nullptr) {
+            if (play_) {
+                clock_ = std::fmod(clock_ + ctx.dt, 4.0f);
+                morphWeights_ = EvaluateMorphWeightsEXT(morph_->WeightTrack, static_cast<double>(clock_));
+                morphWeights_.resize(2, 0.0f);
+                morphDirty_ = true;
+            }
+            if (morphDirty_) {
+                try { SetMorphWeightsEXT(*morphPart_, morphWeights_); } catch (const std::exception& e) { Museum::Log("models", "morph: %s", e.what()); }
+                morphDirty_ = false;
+            }
+        }
+        if (mode_ == Mode::Variants && model_ && variantDirty_) {
+            try {
+                model_->setMaterialVariantEXTProperty(variant_);
+                for (ModelMesh* mesh : model_->getMeshesProperty())
+                    for (int i = 0; i < mesh->getMeshPartsProperty().getCountProperty(); ++i)
+                        if (auto* pbr = dynamic_cast<PbrEffect*>(mesh->getMeshPartsProperty()[i]->getEffectProperty())) {
+                            pbr->EnableDefaultLighting();
+                            if (!ibl_.irradiance) ibl_ = ProceduralIbl::Build(*S().device, 0);   // metals need an environment to reflect
+                            pbr->setImageBasedLightEXT(ibl_.Light(0.8f));
+                        }
+            } catch (const std::exception& e) {
+                Museum::Log("models", "variant: %s", e.what());
+            }
+            variantDirty_ = false;
+        }
         if (mode_ == Mode::Skinned && player_ && play_) player_->Update(System::TimeSpan::FromSeconds(ctx.dt * speed_), true, true);
         if (mode_ == Mode::Skinned && player_ && model_) {
             for (ModelMesh* mesh : model_->getMeshesProperty())
@@ -160,7 +201,7 @@ public:
             case Mode::Report: break;
             default: {
                 const float scale = FitScale();
-                const Matrix world = Matrix::CreateScale(scale) * Matrix::CreateRotationY(mode_ == Mode::Rigid || mode_ == Mode::Skinned ? spin_t_ * 0.4f : spin_t_) * Matrix::CreateTranslation(o + Vector3(0, mode_ == Mode::Skinned || mode_ == Mode::Rigid ? 0.0f : 1.3f, 0));
+                const Matrix world = Matrix::CreateScale(scale) * (mode_ == Mode::Variants ? Matrix::CreateRotationX(MathHelper::ToRadians(62.0f)) : Matrix::getIdentityProperty()) * Matrix::CreateRotationY(mode_ == Mode::Rigid || mode_ == Mode::Skinned ? spin_t_ * 0.4f : spin_t_) * Matrix::CreateTranslation(o + Vector3(0, mode_ == Mode::Skinned || mode_ == Mode::Rigid ? 0.0f : 1.3f, 0));
                 if (mode_ == Mode::Pbr) ConfigurePbr();
                 if (mode_ == Mode::Ibl) ConfigureIbl(ctx);
                 DrawModel(ctx, world);
@@ -176,7 +217,7 @@ public:
 private:
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"Loading a glTF model", "PbrEffect: metallic and roughness", "Rigid animation from a glTF clip", "Skinned animation", "Many model instances", "Model and mesh bounds", "Swapping a model's effects", "The glTF import report", "Image-based lighting"};
+        static const char* t[] = {"Loading a glTF model", "PbrEffect: metallic and roughness", "Rigid animation from a glTF clip", "Skinned animation", "Many model instances", "Model and mesh bounds", "Swapping a model's effects", "The glTF import report", "Image-based lighting", "Morph targets", "Material variants"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
@@ -189,6 +230,8 @@ private:
             case Mode::Instances: return {"Drawing a model many times is one Model.Draw per copy. BoundingFrustum.Contains on the model's bounding", "sphere skips copies you cannot see: stand in the room and look away to watch the drawn count drop."};
             case Mode::Bounds: return {"Every Model has a merged BoundingSphere (CNA extension) and every ModelMesh its own: the standard inputs for", "culling and picking. Spheres are in model space, so they are transformed by the world matrix to draw."};
             case Mode::Effects: return {"A ModelMeshPart's Effect can be replaced: here every part is switched between its PbrEffect and a", "BasicEffect (lit or flat). The geometry never changes; only how it is shaded does."};
+            case Mode::Morph: return {"A glTF mesh can carry morph targets: per-vertex position and normal deltas blended by weights. CNA keeps them in the", "mesh part's Tag (MorphTargetDataEXT); SetMorphWeightsEXT re-uploads the blended vertices, EvaluateMorphWeightsEXT reads the file's animation."};
+            case Mode::Variants: return {"KHR_materials_variants lets one glTF mesh carry several looks. CNA exposes their names and the active index on the", "Model (CNA extension); switching swaps the effects of the mesh parts: no geometry or file is reloaded."};
             case Mode::Ibl: return {"ImageBasedLightEXT gives PbrEffect a whole environment instead of a few lights: an irradiance cube for diffuse", "light, a prefiltered specular cube whose mip is the roughness, and a BRDF table. All three are generated in code here."};
             default: return {"CNA reports what the glTF importer did: counts of nodes, skins and clips, plus a diagnostic for anything", "approximated, generated or dropped. Nothing is lost silently: pick a model and read its report."};
         }
@@ -231,6 +274,15 @@ private:
                 if (auto* sk = dynamic_cast<SkinnedPbrEffect*>(fx)) sk->EnableDefaultLighting();
                 if (auto* basic = dynamic_cast<BasicEffect*>(fx)) basic->EnableDefaultLighting();
             }
+        morph_ = nullptr;
+        morphPart_ = nullptr;
+        for (ModelMesh* mesh : model_->getMeshesProperty())
+            for (int i = 0; i < mesh->getMeshPartsProperty().getCountProperty(); ++i)
+                if (auto* md = dynamic_cast<MorphTargetDataEXT*>(mesh->getMeshPartsProperty()[i]->getTagProperty())) {
+                    morph_ = md;
+                    morphPart_ = mesh->getMeshPartsProperty()[i];
+                }
+        variantDirty_ = true;
         originals_.clear();
         for (ModelMesh* mesh : model_->getMeshesProperty())
             for (int i = 0; i < mesh->getMeshPartsProperty().getCountProperty(); ++i) originals_.push_back(mesh->getMeshPartsProperty()[i]->getEffectProperty());
@@ -420,6 +472,11 @@ private:
     }
 
     Mode mode_;
+    MorphTargetDataEXT* morph_ = nullptr;
+    ModelMeshPart* morphPart_ = nullptr;
+    std::vector<float> morphWeights_ = {0.0f, 0.0f};
+    bool morphDirty_ = true, variantDirty_ = true;
+    int variant_ = 0;
     ProceduralIbl ibl_;
     int env_ = 0;
     bool iblOn_ = true, iblDirty_ = true;

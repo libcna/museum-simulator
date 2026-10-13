@@ -20,12 +20,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ShaderEffect (GLSL source at run time) | floor 4 *Shader Lab* | covered; run-time shader source only (no compiled effects) |
 | RasterizerState, DepthStencilState (incl. stencil), BlendState, SamplerState | floor 5 | covered |
 | RenderTarget2D, MRT, float formats, mirrors, multisampling, OcclusionQuery | floor 5 | covered |
-| glTF models, PbrEffect, image-based lighting, rigid and skinned animation, instancing, import report | floor 6 | covered |
+| glTF models, PbrEffect, image-based lighting, morph targets, material variants, rigid and skinned animation, instancing, import report | floor 6 | covered |
 | Particle systems (application code on CNA dynamic buffers) | floor 6 | covered |
 | SoundEffect, instances, 3D audio, DynamicSoundEffectInstance, Song/MediaPlayer, Microphone | floor 7 | covered |
 | Keyboard, Mouse (relative mode, cursors), GamePad (+ keyboard emulation), PlayerIndex slots, TextInputEXT, Clipboard, Joysticks, TouchPanel gestures, devices | floor 7 | covered; every room works with no pad, joystick or touch screen |
 | ContentManager (cache, Unload, loose formats, failures), cna-content (.cnb/.xnb), TitleContainer, StorageDevice | floor 8 | covered |
-| DebugDraw, CRTEffect, DepthEffect, AsciiPostProcessEffect (CNA_CNAEXT) | floor 8 | covered |
+| DebugDraw, CRTEffect, DepthEffect, AsciiPostProcessEffect, ShaderPackageEXT (CNA_CNAEXT) | floor 8 | covered |
 | Diagnostics counters and resource list (CNA_DIAGNOSTICS=STATS) | floors 8-9 | covered |
 | CNA_DEVICES: SystemInfo, Locale, PowerInfo, DisplayInfo | floor 8 | covered |
 | Renderer capability profile, platform capabilities, GraphicsAdapter | floor 8 | covered |
@@ -36,7 +36,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 
 | Feature | Status |
 |---|---|
-| `ShaderPackageEXT`, `SkinnedEffect` (the glTF skinned models use `SkinnedPbrEffect`), morph targets and material variants, `ResourceContentManager`, haptic effects (devices are listed, none played) | planned: see HANDOFF.md |
+| `SkinnedEffect` (the glTF skinned models use `SkinnedPbrEffect`), `ResourceContentManager`, haptic effects (devices are listed, none played) | planned: see HANDOFF.md |
 | Video playback (`VideoPlayer`) | not implemented: needs CNA_ENABLE_VIDEO (FFmpeg), which this build leaves off |
 | GamerServices, Net (network sessions), avatars | not implemented: networking and online services are outside the museum's scope |
 | `FileDialog`, `MessageBox`, `SystemTray`, `UrlLauncher`, `Camera` (CNA_DEVICES) | not implemented: they open real dialogs or hardware; the room reports whether each is supported |
@@ -46,7 +46,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-386 distinct API names are claimed by at least one room.
+397 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -109,6 +109,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CNA::Graphics::CRTEffect | `cx-crt` |
 | CNA::Graphics::DebugDraw | `cx-debugdraw` |
 | CNA::Graphics::DepthEffect | `cx-depth` |
+| CNA::Graphics::ShaderPackageEXT | `cx-package` |
 | CRTMaskType | `cx-crt` |
 | Clipboard.GetTextEXT | `in-text` |
 | Clipboard.SetTextEXT | `in-text` |
@@ -166,6 +167,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | EffectTechnique | `be-model` |
 | EnableDefaultLighting | `lighting` |
 | EnvironmentMapEffect | `tex-cube` |
+| EvaluateMorphWeightsEXT | `model-morph` |
 | Game | `info`, `app-lifecycle` |
 | Game.Activated | `pl-window` |
 | Game.Components | `app-components` |
@@ -272,12 +274,16 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Model.BoundingSphereEXT | `model-load`, `model-instances`, `model-bounds` |
 | Model.CopyAbsoluteBoneTransformsTo | `model-rigid` |
 | Model.Draw | `model-instances` |
+| Model.MaterialVariantEXT | `model-variants` |
+| Model.MaterialVariantNamesEXT | `model-variants` |
 | ModelAnimationsEXT | `model-rigid` |
 | ModelBone | `model-rigid` |
 | ModelMesh | `models`, `model-load` |
 | ModelMesh.BoundingSphere | `model-bounds` |
 | ModelMeshPart | `model-load` |
 | ModelMeshPart.Effect | `model-effects` |
+| ModelMeshPart.Tag | `model-morph` |
+| MorphTargetDataEXT | `model-morph` |
 | Mouse.GetState | `in-mouse` |
 | Mouse.IsRelativeMouseModeEXT | `in-mouse` |
 | Mouse.SetCursor | `in-mouse` |
@@ -291,7 +297,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | PackedVector.Bgr565 | `tex-formats` |
 | PackedVector.Bgra4444 | `tex-formats` |
 | PackedVector.HalfVector4 | `tex-formats` |
-| PbrEffect | `model-pbr`, `model-effects` |
+| PbrEffect | `model-pbr`, `model-effects`, `model-variants` |
 | PbrEffect.EmissiveFactor | `model-pbr` |
 | PbrEffect.ImageBasedLight | `model-ibl` |
 | PbrEffect.MetallicFactor | `model-pbr`, `model-ibl` |
@@ -353,9 +359,14 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Sensors.GetSensorsEXT | `in-devices` |
 | SetDataOptions | `geo-dynamic` |
 | SetDataOptions.Discard | `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `pf-buffers`, `rf-weather` |
+| SetMorphWeightsEXT | `model-morph` |
 | SetRuntimeMode | `cx-stats` |
+| ShaderCodeEXT | `cx-package` |
 | ShaderEffect | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave`, `rt-mrt` |
+| ShaderEffect(device, package) | `cx-package` |
 | ShaderEffect.SetUniformFloat | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave` |
+| ShaderLanguageEXT | `cx-package` |
+| ShaderPackageEXT.selectFor | `cx-package` |
 | SkinnedPbrEffect.SetBoneTransforms | `model-skinned` |
 | SkinningData | `model-skinned` |
 | Snapshot.metrics | `cx-stats` |

@@ -956,6 +956,92 @@ def build_tentacle():
                           "animations": [{"name": "wave", "samplers": samplers, "channels": channels}]})
 
 
+def build_morph():
+    """A UV sphere with two morph targets (squash, spikes) and a weight animation: glTF `targets` and `weights`."""
+    m = sphere_mesh(0.5, 40, 24)
+    orient_triangles(m)
+    base = m.pos
+    squash = [(p[0] * 1.55, p[1] * 0.3, p[2] * 1.55) for p in base]
+
+    def spike(p, n):
+        th = math.atan2(p[2], p[0])
+        ph = math.acos(max(-1.0, min(1.0, p[1] / 0.5)))
+        d = 0.2 * max(0.0, math.sin(7 * th)) * math.sin(5 * ph) ** 2
+        return (p[0] + n[0] * d, p[1] + n[1] * d, p[2] + n[2] * d)
+
+    spikes = [spike(p, n) for p, n in zip(base, m.nrm)]
+
+    def smooth_normals(positions):
+        acc = [[0.0, 0.0, 0.0] for _ in positions]
+        for i in range(0, len(m.idx), 3):
+            a, b, c = m.idx[i], m.idx[i + 1], m.idx[i + 2]
+            e1 = [positions[b][k] - positions[a][k] for k in range(3)]
+            e2 = [positions[c][k] - positions[a][k] for k in range(3)]
+            fn = (e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0])
+            for v in (a, b, c):
+                for k in range(3):
+                    acc[v][k] += fn[k]
+        out = []
+        for v, n0 in zip(acc, m.nrm):
+            l = math.sqrt(sum(x * x for x in v)) or 1.0
+            n = [x / l for x in v]
+            if sum(n[k] * n0[k] for k in range(3)) < 0:   # keep the orientation of the original normal
+                n = [-x for x in n]
+            out.append(tuple(n))
+        return out
+
+    # Target normals are the smooth normals of the deformed shape, stored as deltas from the base normals.
+    base_n = smooth_normals(base)
+    deltas = []
+    for target in (squash, spikes):
+        tn = smooth_normals(target)
+        deltas.append(([tuple(t[k] - b[k] for k in range(3)) for t, b in zip(target, base)], [tuple(a[k] - b[k] for k in range(3)) for a, b in zip(tn, base_n)]))
+    g = GltfDoc()
+    pa = g.accessor(b"".join(struct.pack("<3f", *p) for p in base), 5126, len(base), "VEC3", 34962,
+                    ([min(p[k] for p in base) for k in range(3)], [max(p[k] for p in base) for k in range(3)]))
+    na = g.accessor(b"".join(struct.pack("<3f", *n) for n in base_n), 5126, len(base_n), "VEC3", 34962)
+    ua = g.accessor(b"".join(struct.pack("<2f", *t) for t in m.uv), 5126, len(m.uv), "VEC2", 34962)
+    ia = g.accessor(b"".join(struct.pack("<H", i) for i in m.idx), 5123, len(m.idx), "SCALAR", 34963)
+    targets = []
+    for dp, dn in deltas:
+        tp = g.accessor(b"".join(struct.pack("<3f", *d) for d in dp), 5126, len(dp), "VEC3", 34962,
+                        ([min(d[k] for d in dp) for k in range(3)], [max(d[k] for d in dp) for k in range(3)]))
+        tn = g.accessor(b"".join(struct.pack("<3f", *d) for d in dn), 5126, len(dn), "VEC3", 34962)
+        targets.append({"POSITION": tp, "NORMAL": tn})
+    times = [i * 0.25 for i in range(17)]   # 4 s loop
+    weights = []
+    for t in times:
+        a = t / 4 * math.tau
+        weights += [max(0.0, math.sin(a)), max(0.0, math.sin(a - math.pi / 2) * 0.5 + 0.5) * (1 if t > 1 else 0) * max(0.0, math.cos(a))]
+    ta = g.accessor(b"".join(struct.pack("<f", x) for x in times), 5126, len(times), "SCALAR", None, ([times[0]], [times[-1]]))
+    wa = g.accessor(b"".join(struct.pack("<f", x) for x in weights), 5126, len(weights), "SCALAR")
+    g.finish("morph", {"scene": 0, "scenes": [{"nodes": [0]}], "nodes": [{"name": "morphSphere", "mesh": 0}],
+                       "meshes": [{"name": "morphSphere", "weights": [0.0, 0.0], "extras": {"targetNames": ["squash", "spikes"]},
+                                   "primitives": [{"attributes": {"POSITION": pa, "NORMAL": na, "TEXCOORD_0": ua}, "indices": ia, "material": 0, "targets": targets}]}],
+                       "materials": [{"name": "clay", "pbrMetallicRoughness": {"baseColorFactor": [0.85, 0.55, 0.4, 1.0], "metallicFactor": 0.0, "roughnessFactor": 0.55}}],
+                       "animations": [{"name": "breathe", "samplers": [{"input": ta, "output": wa, "interpolation": "LINEAR"}], "channels": [{"sampler": 0, "target": {"node": 0, "path": "weights"}}]}]})
+
+
+def build_variants():
+    """KHR_materials_variants: one mesh, four named looks chosen at run time."""
+    m = torus_mesh(0.36, 0.17, 48, 24)
+    orient_triangles(m)
+    g = GltfDoc()
+    pa = g.accessor(b"".join(struct.pack("<3f", *p) for p in m.pos), 5126, len(m.pos), "VEC3", 34962,
+                    ([min(p[k] for p in m.pos) for k in range(3)], [max(p[k] for p in m.pos) for k in range(3)]))
+    na = g.accessor(b"".join(struct.pack("<3f", *n) for n in m.nrm), 5126, len(m.nrm), "VEC3", 34962)
+    ua = g.accessor(b"".join(struct.pack("<2f", *t) for t in m.uv), 5126, len(m.uv), "VEC2", 34962)
+    ia = g.accessor(b"".join(struct.pack("<H", i) for i in m.idx), 5123, len(m.idx), "SCALAR", 34963)
+    looks = [("gold", (1.0, 0.77, 0.34), 1.0, 0.25), ("red plastic", (0.8, 0.08, 0.08), 0.0, 0.35), ("blue rubber", (0.12, 0.25, 0.8), 0.0, 0.95), ("brushed steel", (0.78, 0.78, 0.8), 1.0, 0.55)]
+    materials = [{"name": n, "pbrMetallicRoughness": {"baseColorFactor": list(c) + [1.0], "metallicFactor": mt, "roughnessFactor": r}} for n, c, mt, r in looks]
+    g.finish("variants", {"scene": 0, "scenes": [{"nodes": [0]}], "nodes": [{"name": "ring", "mesh": 0}],
+                          "extensionsUsed": ["KHR_materials_variants"],
+                          "extensions": {"KHR_materials_variants": {"variants": [{"name": n} for n, *_ in looks]}},
+                          "meshes": [{"primitives": [{"attributes": {"POSITION": pa, "NORMAL": na, "TEXCOORD_0": ua}, "indices": ia, "material": 0,
+                                                      "extensions": {"KHR_materials_variants": {"mappings": [{"material": i, "variants": [i]} for i in range(len(looks))]}}}]}],
+                          "materials": materials})
+
+
 # ----------------------------------------------------------------------------
 # Audio
 # ----------------------------------------------------------------------------
@@ -1121,6 +1207,8 @@ def main():
     build_models()
     build_robot()
     build_tentacle()
+    build_morph()
+    build_variants()
     for fn in (audio_ambience, audio_tone, audio_drums, audio_arpeggio, audio_chirp, audio_step,
                audio_click, audio_splash, audio_fire, audio_spark):
         fn()

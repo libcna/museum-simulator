@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 31 wings, 220 exhibit rooms (5 open to the sky), 281 walkable cells in all.
+10 floors, 31 wings, 223 exhibit rooms (5 open to the sky), 284 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -311,7 +311,9 @@ glTF models and their effects, procedural and skeletal animation, particle syste
 | 6.1.06 | `model-bounds` | Bounding Volumes | CNA extension | ModelMesh.BoundingSphere, Model.BoundingSphereEXT, BoundingSphere.Transform |
 | 6.1.07 | `model-effects` | Swapping Effects | CNA extension | ModelMeshPart.Effect, BasicEffect, PbrEffect |
 | 6.1.08 | `model-report` | Import Report | CNA extension | GltfImportReportEXT, GltfImportDiagnosticEXT |
-| 6.1.09 | `model-ibl` | Image-Based Lighting | CNA extension | ImageBasedLightEXT, PbrEffect.ImageBasedLight, TextureCube, PbrEffect.MetallicFactor, PbrEffect.RoughnessFactor |
+| 6.1.09 | `model-morph` | Morph Targets | CNA extension | MorphTargetDataEXT, SetMorphWeightsEXT, EvaluateMorphWeightsEXT, ModelMeshPart.Tag |
+| 6.1.10 | `model-variants` | Material Variants | CNA extension | Model.MaterialVariantEXT, Model.MaterialVariantNamesEXT, PbrEffect |
+| 6.1.11 | `model-ibl` | Image-Based Lighting | CNA extension | ImageBasedLightEXT, PbrEffect.ImageBasedLight, TextureCube, PbrEffect.MetallicFactor, PbrEffect.RoughnessFactor |
 
 **Animation Complex** - Procedural animation: motion built from maths and matrix hierarchies
 
@@ -397,9 +399,10 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 | 8.2.02 | `cx-crt` | CRT Effect | CNA extension | CNA::Graphics::CRTEffect, CRTMaskType, SpriteBatch.Begin(effect) |
 | 8.2.03 | `cx-depth` | Colour Depth Effect | CNA extension | CNA::Graphics::DepthEffect, DepthEffectMode, DitherMode |
 | 8.2.04 | `cx-ascii` | ASCII Post-Process | CNA extension | CNA::Graphics::AsciiPostProcessEffect, AsciiQuantizeMode |
-| 8.2.05 | `cx-stats` | Engine Statistics | CNA extension | CNA::Diagnostics::GetProvider, Snapshot.metrics, Snapshot.resources, SetRuntimeMode |
-| 8.2.06 | `cx-points` | Point Lists | CNA extension | PrimitiveType.PointListEXT, GraphicsDevice.DrawUserPrimitives, GraphicsDevice.SetStringMarkerEXT |
-| 8.2.07 | `cx-devices` | Device Extensions | CNA extension | CNA::Devices::SystemInfo, CNA::Devices::Locale, CNA::Devices::PowerInfo, CNA::Devices::DisplayInfo |
+| 8.2.05 | `cx-package` | Shader Packages | CNA extension | CNA::Graphics::ShaderPackageEXT, ShaderPackageEXT.selectFor, ShaderCodeEXT, ShaderEffect(device, package), ShaderLanguageEXT |
+| 8.2.06 | `cx-stats` | Engine Statistics | CNA extension | CNA::Diagnostics::GetProvider, Snapshot.metrics, Snapshot.resources, SetRuntimeMode |
+| 8.2.07 | `cx-points` | Point Lists | CNA extension | PrimitiveType.PointListEXT, GraphicsDevice.DrawUserPrimitives, GraphicsDevice.SetStringMarkerEXT |
+| 8.2.08 | `cx-devices` | Device Extensions | CNA extension | CNA::Devices::SystemInfo, CNA::Devices::Locale, CNA::Devices::PowerInfo, CNA::Devices::DisplayInfo |
 
 **Platform and Renderer** - The window, the display adapter, the active renderer and the platform, as CNA reports them
 
