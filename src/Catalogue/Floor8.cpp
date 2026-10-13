@@ -38,6 +38,42 @@ WingSpec ContentWing()
     return w;
 }
 
+
+WingSpec CnaWing()
+{
+    WingSpec w;
+    w.name = "CNA Extensions";
+    w.tagline = "What CNA adds to XNA 4.0: DebugDraw, post-process effects, engine statistics, point lists and device queries";
+    w.theme = "futuristic";
+    w.accent = {0.35f, 0.80f, 0.55f};
+    w.spineSide = Wall::East;
+    const auto cx = [](const char* key, const char* title, const char* subtitle, const char* mode, std::vector<std::string> apis) {
+        RoomSpec r;
+        r.key = key;
+        r.title = title;
+        r.subtitle = subtitle;
+        r.exhibit = "cnaext-lab";
+        r.params = {{"mode", mode}};
+        r.width = 13;
+        r.depth = 13;
+        r.height = 5.0f;
+        r.theme = "futuristic";
+        r.apis = std::move(apis);
+        r.origin = ApiOrigin::CnaExtension;
+        return r;
+    };
+    w.rooms = {
+        cx("cx-debugdraw", "DebugDraw", "Wire boxes, spheres, frusta and lines batched into one call", "debugdraw", {"CNA::Graphics::DebugDraw", "DebugDraw.addBox", "DebugDraw.addSphere", "DebugDraw.addFrustum", "DebugDraw.setDepthTested"}),
+        cx("cx-crt", "CRT Effect", "Scanlines, curvature, vignette and a phosphor mask as a SpriteBatch effect", "crt", {"CNA::Graphics::CRTEffect", "CRTMaskType", "SpriteBatch.Begin(effect)"}),
+        cx("cx-depth", "Colour Depth Effect", "16-bit, 8-bit, grayscale and palette looks with ordered dithering", "depth", {"CNA::Graphics::DepthEffect", "DepthEffectMode", "DitherMode"}),
+        cx("cx-ascii", "ASCII Post-Process", "A texture redrawn as text, in black and white or colour", "ascii", {"CNA::Graphics::AsciiPostProcessEffect", "AsciiQuantizeMode"}),
+        cx("cx-stats", "Engine Statistics", "Draw calls, primitives, state changes and every live graphics resource", "stats", {"CNA::Diagnostics::GetProvider", "Snapshot.metrics", "Snapshot.resources", "SetRuntimeMode"}),
+        cx("cx-points", "Point Lists", "PrimitiveType::PointListEXT and debug string markers", "points", {"PrimitiveType.PointListEXT", "GraphicsDevice.DrawUserPrimitives", "GraphicsDevice.SetStringMarkerEXT"}),
+        cx("cx-devices", "Device Extensions", "Power, locale, CPU and memory, display scale and safe area", "devices", {"CNA::Devices::SystemInfo", "CNA::Devices::Locale", "CNA::Devices::PowerInfo", "CNA::Devices::DisplayInfo"}),
+    };
+    return w;
+}
+
 }  // namespace
 
 FloorSpec MakeFloor8()
@@ -49,5 +85,6 @@ FloorSpec MakeFloor8()
     f.theme = "concourse";
     f.accent = {0.35f, 0.80f, 0.55f};
     f.wings.push_back(ContentWing());
+    f.wings.push_back(CnaWing());
     return f;
 }
