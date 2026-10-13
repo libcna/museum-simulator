@@ -19,7 +19,10 @@
 #include "Microsoft/Xna/Framework/Graphics/ModelBone.hpp"
 #include "Microsoft/Xna/Framework/Graphics/ModelMesh.hpp"
 #include "Microsoft/Xna/Framework/Graphics/ModelMeshPart.hpp"
+#include "Microsoft/Xna/Framework/Graphics/AlphaModeEXT.hpp"
 #include "Microsoft/Xna/Framework/Graphics/PbrEffect.hpp"
+#include "Microsoft/Xna/Framework/Graphics/TextureTransformEXT.hpp"
+#include "Rendering/TextureLibrary.hpp"
 #include "Microsoft/Xna/Framework/Graphics/SkinnedPbrEffect.hpp"
 #include "Exhibits/Models/ProceduralIbl.hpp"
 #include "Rendering/EffectBank.hpp"
@@ -31,12 +34,12 @@ using namespace MathKit;
 
 namespace {
 
-enum class Mode { Info, Pbr, Rigid, Skinned, Instances, Bounds, Effects, Report, Ibl, Morph, Variants };
+enum class Mode { Info, Pbr, Rigid, Skinned, Instances, Bounds, Effects, Report, Ibl, Morph, Variants, Material };
 
 Mode ParseMode(const std::string& s)
 {
     static const std::pair<const char*, Mode> table[] = {{"pbr", Mode::Pbr}, {"rigid", Mode::Rigid}, {"skinned", Mode::Skinned}, {"instances", Mode::Instances},
-                                                         {"bounds", Mode::Bounds}, {"effects", Mode::Effects}, {"report", Mode::Report}, {"ibl", Mode::Ibl}, {"morph", Mode::Morph}, {"variants", Mode::Variants}};
+                                                         {"bounds", Mode::Bounds}, {"effects", Mode::Effects}, {"report", Mode::Report}, {"ibl", Mode::Ibl}, {"morph", Mode::Morph}, {"variants", Mode::Variants}, {"material", Mode::Material}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
     return Mode::Info;
@@ -101,6 +104,17 @@ public:
             case Mode::Effects:
                 p.AddChoice("Effect on every part", {"Original (PbrEffect)", "BasicEffect, lit", "BasicEffect, unlit"}, 0, [this](int v) { effectChoice_ = v; ApplyEffects(); });
                 p.AddReadout("ModelMeshPart.Effect", [this] { return EffectName(); });
+                break;
+            case Mode::Material:
+                p.AddChoice("Base colour texture", {"brick", "coin (has alpha)", "checker"}, 0, [this](int v) { texture_ = v; });
+                p.AddToggle("Normal map (generated in code)", true, [this](bool v) { normalOn_ = v; });
+                p.AddToggle("Emissive map (circuit)", false, [this](bool v) { emissiveOn_ = v; });
+                p.AddSlider("Texture offset U", -1.0f, 1.0f, uvOffset_[0], [this](float v) { uvOffset_[0] = v; });
+                p.AddSlider("Texture offset V", -1.0f, 1.0f, uvOffset_[1], [this](float v) { uvOffset_[1] = v; });
+                p.AddSlider("Texture scale", 0.25f, 4.0f, uvScale_, [this](float v) { uvScale_ = v; });
+                p.AddSlider("Texture rotation (degrees)", 0.0f, 360.0f, uvRotation_, [this](float v) { uvRotation_ = v; }, "%.0f", 1.0f);
+                p.AddChoice("Alpha mode (CNAEXT)", {"Opaque", "Mask", "Blend"}, 0, [this](int v) { alphaMode_ = v; });
+                p.AddSlider("Alpha cutoff (Mask)", 0.05f, 0.95f, cutoff_, [this](float v) { cutoff_ = v; });
                 break;
             case Mode::Morph:
                 p.AddToggle("Play the glTF weight track", true, [this](bool v) { play_ = v; });
@@ -204,6 +218,7 @@ public:
                 const Matrix world = Matrix::CreateScale(scale) * (mode_ == Mode::Variants ? Matrix::CreateRotationX(MathHelper::ToRadians(62.0f)) : Matrix::getIdentityProperty()) * Matrix::CreateRotationY(mode_ == Mode::Rigid || mode_ == Mode::Skinned ? spin_t_ * 0.4f : spin_t_) * Matrix::CreateTranslation(o + Vector3(0, mode_ == Mode::Skinned || mode_ == Mode::Rigid ? 0.0f : 1.3f, 0));
                 if (mode_ == Mode::Pbr) ConfigurePbr();
                 if (mode_ == Mode::Ibl) ConfigureIbl(ctx);
+                if (mode_ == Mode::Material) ConfigureMaterial(ctx);
                 DrawModel(ctx, world);
                 if (mode_ == Mode::Rigid) DrawBones(ctx, world);
                 if (mode_ == Mode::Skinned && skeleton_ && player_) DrawSkeleton(ctx, world);
@@ -217,7 +232,7 @@ public:
 private:
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"Loading a glTF model", "PbrEffect: metallic and roughness", "Rigid animation from a glTF clip", "Skinned animation", "Many model instances", "Model and mesh bounds", "Swapping a model's effects", "The glTF import report", "Image-based lighting", "Morph targets", "Material variants"};
+        static const char* t[] = {"Loading a glTF model", "PbrEffect: metallic and roughness", "Rigid animation from a glTF clip", "Skinned animation", "Many model instances", "Model and mesh bounds", "Swapping a model's effects", "The glTF import report", "Image-based lighting", "Morph targets", "Material variants", "PBR material maps"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
@@ -230,6 +245,7 @@ private:
             case Mode::Instances: return {"Drawing a model many times is one Model.Draw per copy. BoundingFrustum.Contains on the model's bounding", "sphere skips copies you cannot see: stand in the room and look away to watch the drawn count drop."};
             case Mode::Bounds: return {"Every Model has a merged BoundingSphere (CNA extension) and every ModelMesh its own: the standard inputs for", "culling and picking. Spheres are in model space, so they are transformed by the world matrix to draw."};
             case Mode::Effects: return {"A ModelMeshPart's Effect can be replaced: here every part is switched between its PbrEffect and a", "BasicEffect (lit or flat). The geometry never changes; only how it is shaded does."};
+            case Mode::Material: return {"PbrEffect takes a base colour map, a normal map, an emissive map and (CNA extension) a texture transform that", "offsets, scales and rotates the UVs of every map, plus an alpha mode: Opaque, Mask (cut-out) or Blend. The sphere shows each at once."};
             case Mode::Morph: return {"A glTF mesh can carry morph targets: per-vertex position and normal deltas blended by weights. CNA keeps them in the", "mesh part's Tag (MorphTargetDataEXT); SetMorphWeightsEXT re-uploads the blended vertices, EvaluateMorphWeightsEXT reads the file's animation."};
             case Mode::Variants: return {"KHR_materials_variants lets one glTF mesh carry several looks. CNA exposes their names and the active index on the", "Model (CNA extension); switching swaps the effects of the mesh parts: no geometry or file is reloaded."};
             case Mode::Ibl: return {"ImageBasedLightEXT gives PbrEffect a whole environment instead of a few lights: an irradiance cube for diffuse", "light, a prefiltered specular cube whose mip is the roughness, and a BRDF table. All three are generated in code here."};
@@ -314,6 +330,47 @@ private:
                     pbr->setRoughnessFactorProperty(rough_);
                     pbr->setEmissiveFactorProperty(Vector3(emissive_, emissive_ * 0.6f, emissive_ * 0.2f));
                 }
+    }
+
+    void ConfigureMaterial(const DrawContext& ctx)
+    {
+        if (!normalMap_) {
+            // A normal map from the brick texture's brightness: slopes of the height field become tilted normals.
+            const int n = 128;
+            std::vector<Color> px(static_cast<std::size_t>(n * n));
+            const auto height = [&](int x, int y) { return std::sin(static_cast<float>(x) * 0.45f) * std::sin(static_cast<float>(y) * 0.45f) + (((x / 16) + (y / 16)) % 2 ? 0.0f : 0.6f); };
+            for (int y = 0; y < n; ++y)
+                for (int x = 0; x < n; ++x) {
+                    const float dx = height((x + 1) % n, y) - height((x + n - 1) % n, y), dy = height(x, (y + 1) % n) - height(x, (y + n - 1) % n);
+                    Vector3 nrm = Vector3::Normalize(Vector3(-dx * 0.5f, -dy * 0.5f, 1.0f));
+                    px[static_cast<std::size_t>(y * n + x)] = Color(static_cast<int>((nrm.X * 0.5f + 0.5f) * 255.0f), static_cast<int>((nrm.Y * 0.5f + 0.5f) * 255.0f), static_cast<int>((nrm.Z * 0.5f + 0.5f) * 255.0f), 255);
+                }
+            normalMap_ = std::make_unique<Texture2D>(ctx.device, n, n);
+            normalMap_->SetData(px.data(), static_cast<int>(px.size()));
+        }
+        static const char* names[] = {"brick", "coin", "checker"};
+        TextureTransformEXT t;
+        t.Offset = Vector2(uvOffset_[0], uvOffset_[1]);
+        t.Scale = Vector2(uvScale_, uvScale_);
+        t.Rotation = MathHelper::ToRadians(uvRotation_);
+        const AlphaModeEXT mode = alphaMode_ == 0 ? AlphaModeEXT::Opaque : (alphaMode_ == 1 ? AlphaModeEXT::Mask : AlphaModeEXT::Blend);
+        for (ModelMesh* mesh : model_->getMeshesProperty())
+            for (int i = 0; i < mesh->getMeshPartsProperty().getCountProperty(); ++i)
+                if (auto* pbr = dynamic_cast<PbrEffect*>(mesh->getMeshPartsProperty()[i]->getEffectProperty())) {
+                    pbr->setDiffuseColorProperty(Vector3(1, 1, 1));
+                    pbr->setTextureProperty(S().textures->Get(names[texture_]));
+                    pbr->setNormalMapProperty(normalOn_ ? normalMap_.get() : nullptr);
+                    pbr->setEmissiveMapProperty(emissiveOn_ ? S().textures->Get("circuit") : nullptr);
+                    pbr->setEmissiveFactorProperty(emissiveOn_ ? Vector3(1, 1, 1) : Vector3(0, 0, 0));
+                    pbr->setMetallicFactorProperty(0.0f);
+                    pbr->setRoughnessFactorProperty(0.6f);
+                    for (int slot = 0; slot < 5; ++slot) pbr->setTextureTransformEXTProperty(slot, t);
+                    pbr->setAlphaModeEXTProperty(mode);
+                    pbr->setAlphaCutoffEXTProperty(cutoff_);
+                    pbr->setDoubleSidedEXTProperty(alphaMode_ != 0);
+                    pbr->EnableDefaultLighting();
+                }
+        if (alphaMode_ == 2) RenderStates::SetTransparent3D(ctx.device, BlendState::NonPremultiplied);
     }
 
     void ConfigureIbl(const DrawContext& ctx)
@@ -472,6 +529,10 @@ private:
     }
 
     Mode mode_;
+    std::unique_ptr<Texture2D> normalMap_;
+    int texture_ = 0, alphaMode_ = 0;
+    bool normalOn_ = true, emissiveOn_ = false;
+    float uvOffset_[2] = {0.0f, 0.0f}, uvScale_ = 1.0f, uvRotation_ = 0.0f, cutoff_ = 0.5f;
     MorphTargetDataEXT* morph_ = nullptr;
     ModelMeshPart* morphPart_ = nullptr;
     std::vector<float> morphWeights_ = {0.0f, 0.0f};
