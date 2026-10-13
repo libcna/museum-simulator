@@ -8,5 +8,6 @@ std::vector<FloorSpec> AllFloorSpecs()
     floors.push_back(MakeFloor2());
     floors.push_back(MakeFloor3());
     floors.push_back(MakeFloor4());
+    floors.push_back(MakeFloor5());
     return floors;
 }

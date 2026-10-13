@@ -34,3 +34,4 @@ std::unique_ptr<Exhibit> MakeTextureLab(const RoomDef& room, Services& services)
 std::unique_ptr<Exhibit> MakeShaderLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeEffectLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeLightingLab(const RoomDef& room, Services& services);
+std::unique_ptr<Exhibit> MakeRenderStateLab(const RoomDef& room, Services& services);

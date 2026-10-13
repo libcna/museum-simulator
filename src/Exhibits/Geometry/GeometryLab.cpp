@@ -111,7 +111,7 @@ public:
                 p.AddSlider("Resolution", 4.0f, 80.0f, static_cast<float>(grid_), [this](float v) { grid_ = static_cast<int>(v); dirty_ = true; }, "%.0f", 1.0f);
                 p.AddToggle("Wireframe (FillMode)", false, [this](bool v) { wire_ = v; });
                 p.AddReadout("Vertices / triangles", [this] { return std::to_string(vertexCount_) + " / " + std::to_string(triangleCount_); });
-                p.AddReadout("WireFrame supported", [this] { return std::string(S().device->SupportsCapability(CNA::GraphicsCapability::WireFrame) ? "yes (FillMode)" : "no (emulated by the renderer)"); });
+                p.AddReadout("WireFrame supported", [this] { return std::string(S().device->SupportsCapability(CNA::GraphicsCapability::WireFrame) ? "yes (FillMode)" : "NO: wireframe is ignored here"); });
                 break;
             case Mode::Index32:
                 p.AddSlider("Grid size", 50.0f, 400.0f, static_cast<float>(grid_), [this](float v) { grid_ = static_cast<int>(v); dirty_ = true; }, "%.0f", 10.0f);
@@ -457,7 +457,7 @@ private:
             r.setFillModeProperty(FillMode::WireFrame);
             return r;
         }();
-        device.setRasterizerStateProperty(wire_ ? wireState : RasterizerState::CullNone);
+        device.setRasterizerStateProperty(wire_ && device.SupportsCapability(CNA::GraphicsCapability::WireFrame) ? wireState : RasterizerState::CullNone);
         device.SetVertexBuffer(procV_.get());
         device.setIndicesProperty(procI_.get());
         device.DrawIndexedPrimitives(PrimitiveType::TriangleList, 0, 0, vertexCount_, 0, triangleCount_);
