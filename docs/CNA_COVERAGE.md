@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-518 distinct API names are claimed by at least one room.
+527 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -229,8 +229,13 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GameComponentCollection.ComponentAdded | `app-components` |
 | GameComponentCollectionEventArgs | `app-components` |
 | GamePad.GetCapabilities | `in-players` |
+| GamePad.GetConnectionStateEXT | `in-devices` |
+| GamePad.GetFirmwareVersionEXT | `in-devices` |
 | GamePad.GetNameEXT | `in-players` |
+| GamePad.GetPowerInfoEXT | `in-devices` |
+| GamePad.GetSerialEXT | `in-devices` |
 | GamePad.GetState | `in-pad` |
+| GamePad.GetTouchpadCountEXT | `in-devices` |
 | GamePad.KeyboardEmulationEnabledEXT | `in-pad` |
 | GamePad.SetVibration | `in-pad` |
 | GamePadCapabilities | `in-players` |
@@ -285,7 +290,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.SetRenderTargets | `rt-mrt` |
 | GraphicsDevice.SetStringMarkerEXT | `cx-points` |
 | GraphicsDevice.SupportsDisplayColorSpaceEXT | `pl-renderer` |
-| GraphicsDevice.SupportsImageBasedLightingEXT | `pl-renderer` |
+| GraphicsDevice.SupportsImageBasedLightingEXT | `model-ibl`, `pl-renderer` |
 | GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT | `rt-formats` |
 | GraphicsDevice.Viewport | `cam-split`, `rv-geometry` |
 | GraphicsDeviceManager | `app-viewport` |
@@ -358,17 +363,21 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Model | `models`, `animation`, `model-load` |
 | Model.BoundingSphereEXT | `model-load`, `model-instances`, `model-bounds` |
 | Model.CopyAbsoluteBoneTransformsTo | `model-rigid` |
+| Model.CopyBoneTransformsTo | `model-load` |
 | Model.Draw | `model-instances` |
 | Model.MaterialVariantEXT | `model-variants` |
 | Model.MaterialVariantNamesEXT | `model-variants` |
+| Model.Root | `model-load` |
 | ModelAnimationsEXT | `model-rigid` |
 | ModelBone | `model-rigid` |
+| ModelBone.Children | `model-load` |
 | ModelMesh | `models`, `model-load` |
 | ModelMesh.BoundingSphere | `model-bounds` |
 | ModelMeshPart | `model-load` |
 | ModelMeshPart.Effect | `model-effects` |
 | ModelMeshPart.Tag | `model-morph` |
 | MorphTargetDataEXT | `model-morph` |
+| Mouse.GetGlobalPositionEXT | `in-devices` |
 | Mouse.GetState | `in-mouse` |
 | Mouse.IsRelativeMouseModeEXT | `in-mouse` |
 | Mouse.SetCursor | `in-mouse` |
@@ -439,7 +448,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Rectangle.IsEmpty | `vt-rectangle` |
 | Rectangle.Location | `vt-rectangle` |
 | Rectangle.Union | `vt-rectangle` |
-| RenderTarget2D | `rendertarget`, `cam-orbit`, `cam-fov`, `cam-split`, `cam-mirror`, `sprite-basics`, `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave`, `rs-scissor`, `rt-basic`, `rt-lowres`, `rt-control`, `rt-recursive`, `rt-mirror`, `rt-msaa`, `pf-targets`, `rv-targets`, `rf-telescope` |
+| RenderTarget2D | `rendertarget`, `cam-orbit`, `cam-fov`, `cam-split`, `cam-mirror`, `sprite-basics`, `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `rs-scissor`, `rt-basic`, `rt-lowres`, `rt-control`, `rt-recursive`, `rt-mirror`, `rt-msaa`, `pf-targets`, `rv-targets`, `rf-telescope` |
 | RenderTarget2D.Format | `rt-formats` |
 | RenderTarget2D.MultiSampleCount | `rt-msaa` |
 | RenderTargetBinding | `rt-mrt` |
@@ -472,9 +481,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SetMorphWeightsEXT | `model-morph` |
 | SetRuntimeMode | `cx-stats` |
 | ShaderCodeEXT | `cx-package` |
-| ShaderEffect | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave`, `rt-mrt`, `cx-shadow` |
+| ShaderEffect | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `rt-mrt`, `cx-shadow` |
 | ShaderEffect(device, package) | `cx-package` |
-| ShaderEffect.SetUniformFloat | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave` |
+| ShaderEffect.SetUniformFloat | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave` |
 | ShaderLanguageEXT | `cx-package` |
 | ShaderPackageEXT.selectFor | `cx-package` |
 | ShadowCascadeStateEXT | `cx-shadow` |
@@ -502,7 +511,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SoundState | `au-layers` |
 | SpriteBatch | `sprite-stress`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `rf-weather` |
 | SpriteBatch.Begin | `sprite-basics`, `sprite-camera`, `pf-sprites` |
-| SpriteBatch.Begin(effect) | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave`, `cx-crt` |
+| SpriteBatch.Begin(effect) | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `cx-crt` |
 | SpriteBatch.Draw | `sprite-basics`, `sprite-origin`, `sprite-sheet`, `sprite-sort`, `sprite-parallax`, `sprite-ui`, `sprite-atlas`, `sprite-hit`, `sprite-anim`, `sprite-stress`, `rt-recursive`, `pf-sprites`, `pf-overdraw`, `rv-sprites` |
 | SpriteBatch.DrawString | `text-align`, `text-transform`, `text-hud`, `text-labels` |
 | SpriteEffect | `be-model` |

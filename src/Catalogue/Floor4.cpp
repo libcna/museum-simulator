@@ -34,6 +34,10 @@ WingSpec ShaderWing()
         sh("fx-edge", "Edge Detection", "A Sobel filter built from eight extra texture reads per pixel", "edge"),
         sh("fx-crt", "CRT Look", "Scanlines, vignette and barrel distortion in one pass", "crt"),
         sh("fx-plasma", "Procedural Shader", "A colour computed from math alone, mixed over the scene", "plasma"),
+        sh("fx-swirl", "Swirl", "Rotating the texture coordinates by a radius-dependent angle, animated by a time uniform", "swirl"),
+        sh("fx-chromatic", "Chromatic Aberration", "Sampling red, green and blue at slightly different offsets like a cheap lens", "chromatic"),
+        sh("fx-kernel", "Convolution Kernels", "Sharpen, emboss and Laplacian outline from nine texture reads", "kernel"),
+        sh("fx-halftone", "Halftone", "Dots whose size follows brightness, one scene sample per cell", "halftone"),
         sh("fx-vertexwave", "Vertex Shader", "The vertex stage moving a sprite's corners with a sine wave", "vertexwave"),
     };
     return w;

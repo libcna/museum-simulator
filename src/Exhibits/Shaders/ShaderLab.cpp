@@ -129,6 +129,41 @@ void main() {
     vec3 scene = texture(texture1, vTexCoord).rgb;
     FragColor = vec4(mix(scene, plasma, uAmount), 1.0);   // no texture needed: the colour is computed per pixel
 })"},
+    {"swirl", "Swirl: rotating the UVs by radius", kVertex, R"(void main() {
+    vec2 d = vTexCoord - vec2(0.5);
+    float r = length(d);
+    float a = uAmount * 6.0 * smoothstep(0.55, 0.0, r) * (0.65 + 0.35 * sin(uTime));   // twist most at the centre
+    float s = sin(a), c = cos(a);
+    vec2 uv = vec2(0.5) + vec2(c * d.x - s * d.y, s * d.x + c * d.y);
+    FragColor = texture(texture1, uv) * vColor;
+})"},
+    {"chromatic", "Chromatic aberration", kVertex, R"(void main() {
+    vec2 off = (vTexCoord - vec2(0.5)) * 0.045 * uAmount;     // the lens bends each colour a little differently
+    float r = texture(texture1, vTexCoord + off).r;
+    float g = texture(texture1, vTexCoord).g;
+    float b = texture(texture1, vTexCoord - off).b;
+    FragColor = vec4(r, g, b, 1.0) * vColor;
+})"},
+    {"kernel", "3 x 3 convolution kernels", kVertex, R"(vec3 at(vec2 o) { return texture(texture1, vTexCoord + o * uTexel).rgb; }
+void main() {
+    vec3 c = at(vec2(0.0)), n = at(vec2(0.0, -1.0)), s = at(vec2(0.0, 1.0)), e = at(vec2(1.0, 0.0)), w = at(vec2(-1.0, 0.0));
+    vec3 k;
+    if (uMode < 0.5)      k = c * 5.0 - (n + s + e + w);                                          // sharpen
+    else if (uMode < 1.5) k = at(vec2(-1.0, -1.0)) * -2.0 - n - w + c + e + s + at(vec2(1.0, 1.0)) * 2.0 + 0.5;   // emboss
+    else                  k = vec3(1.0) - abs(c * 4.0 - (n + s + e + w)) * 3.0;                    // Laplacian outline
+    FragColor = vec4(mix(c, clamp(k, 0.0, 1.0), uAmount), 1.0);
+})"},
+    {"halftone", "Halftone dots", kVertex, R"(void main() {
+    vec2 grid = vec2(144.0, 90.0);                          // cells across and down
+    vec2 g = vTexCoord * grid;
+    vec2 f = fract(g) - 0.5;                                  // position inside the cell, centred
+    vec3 col = texture(texture1, (floor(g) + 0.5) / grid).rgb;     // one sample per cell
+    float lum = dot(col, vec3(0.299, 0.587, 0.114));
+    float radius = sqrt(lum) * 0.72;                          // brighter cells get bigger dots
+    float dotMask = smoothstep(radius, radius - 0.1, length(f));
+    vec3 scene = texture(texture1, vTexCoord).rgb;
+    FragColor = vec4(mix(scene, col * dotMask, uAmount), 1.0);
+})"},
     {"vertexwave", "Vertex shader: waving the corners", kVertexWave, R"(void main() {
     FragColor = texture(texture1, vTexCoord) * vColor;      // a plain fragment shader; the vertex stage does the work
 })"},
@@ -151,7 +186,8 @@ public:
         const std::string key = def_->key;
         if (key == "grade") p.AddChoice("uMode", {"Grayscale", "Sepia", "Invert", "Duotone"}, 1, [this](int v) { mode_ = static_cast<float>(v); });
         if (key == "pixelate") p.AddToggle("Posterise colours (uMode)", false, [this](bool v) { mode_ = v ? 1.0f : 0.0f; });
-        if (key == "blur" || key == "edge") p.AddSlider("Texel size scale", 0.5f, 3.0f, texelScale_, [this](float v) { texelScale_ = v; });
+        if (key == "kernel") p.AddChoice("uMode", {"Sharpen", "Emboss", "Laplacian outline"}, 1, [this](int v) { mode_ = static_cast<float>(v); });
+        if (key == "blur" || key == "edge" || key == "kernel") p.AddSlider("Texel size scale", 0.5f, 3.0f, texelScale_, [this](float v) { texelScale_ = v; });
         p.AddReadout("Shader compiled", [this] { return effect_ && effect_->IsEffectValid() ? std::string("yes") : (supported_ ? std::string("NO") : std::string("not run: no GLSL here")); });
         p.AddReadout("Shader language", [this] { return LanguageName(); });
         p.AddReadout("Renderer", [this] { return std::string(S().device->GetGraphicsRendererName()); });

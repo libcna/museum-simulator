@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 33 wings, 244 exhibit rooms (5 open to the sky), 307 walkable cells in all.
+10 floors, 33 wings, 248 exhibit rooms (5 open to the sky), 311 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -274,7 +274,11 @@ BasicEffect, the stock effects, lighting and custom shaders
 | 4.3.05 | `fx-edge` | Edge Detection | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
 | 4.3.06 | `fx-crt` | CRT Look | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
 | 4.3.07 | `fx-plasma` | Procedural Shader | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
-| 4.3.08 | `fx-vertexwave` | Vertex Shader | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.08 | `fx-swirl` | Swirl | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.09 | `fx-chromatic` | Chromatic Aberration | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.10 | `fx-kernel` | Convolution Kernels | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.11 | `fx-halftone` | Halftone | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.12 | `fx-vertexwave` | Vertex Shader | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
 
 ### Floor 5: Render State and Render Targets
 
@@ -321,7 +325,7 @@ glTF models and their effects, procedural and skeletal animation, particle syste
 
 | Room | Key | Title | Origin | APIs |
 |---|---|---|---|---|
-| 6.1.01 | `model-load` | Loading Models | CNA extension | ContentManager.Load<Model>, Model, ModelMesh, ModelMeshPart, Model.BoundingSphereEXT |
+| 6.1.01 | `model-load` | Loading Models | CNA extension | ContentManager.Load<Model>, Model, ModelMesh, ModelMeshPart, Model.BoundingSphereEXT, Model.Root, ModelBone.Children, Model.CopyBoneTransformsTo |
 | 6.1.02 | `model-pbr` | Metallic and Rough | CNA extension | PbrEffect, PbrEffect.MetallicFactor, PbrEffect.RoughnessFactor, PbrEffect.EmissiveFactor |
 | 6.1.03 | `model-rigid` | Rigid Animation | CNA extension | ModelAnimationsEXT, ApplyClipToBonesEXT, Model.CopyAbsoluteBoneTransformsTo, ModelBone |
 | 6.1.04 | `model-skinned` | Skinned Animation | CNA extension | SkinningData, AnimationPlayer, SkinnedPbrEffect.SetBoneTransforms |
@@ -332,7 +336,7 @@ glTF models and their effects, procedural and skeletal animation, particle syste
 | 6.1.09 | `model-material` | PBR Material Maps | CNA extension | PbrEffect.NormalMap, PbrEffect.EmissiveMap, TextureTransformEXT, AlphaModeEXT, PbrEffect.AlphaCutoff |
 | 6.1.10 | `model-morph` | Morph Targets | CNA extension | MorphTargetDataEXT, SetMorphWeightsEXT, EvaluateMorphWeightsEXT, ModelMeshPart.Tag |
 | 6.1.11 | `model-variants` | Material Variants | CNA extension | Model.MaterialVariantEXT, Model.MaterialVariantNamesEXT, PbrEffect |
-| 6.1.12 | `model-ibl` | Image-Based Lighting | CNA extension | ImageBasedLightEXT, PbrEffect.ImageBasedLight, TextureCube, PbrEffect.MetallicFactor, PbrEffect.RoughnessFactor |
+| 6.1.12 | `model-ibl` | Image-Based Lighting | CNA extension | ImageBasedLightEXT, PbrEffect.ImageBasedLight, TextureCube, PbrEffect.MetallicFactor, PbrEffect.RoughnessFactor, GraphicsDevice.SupportsImageBasedLightingEXT |
 | 6.1.13 | `model-skinfx` | SkinnedEffect | XNA 4.0 | SkinnedEffect, SkinnedEffect.SetBoneTransforms, SkinnedEffect.WeightsPerVertex, VertexPositionNormalTextureSkinned, VertexBuffer, IndexBuffer |
 
 **Animation Complex** - Procedural animation: motion built from maths and matrix hierarchies
@@ -393,7 +397,7 @@ Sound, music, keyboards, mice and game pads
 | 7.2.06 | `in-text` | Text Input and Clipboard | CNA extension | TextInputEXT.TextInput, TextInputEXT.StartTextInput, Clipboard.SetTextEXT, Clipboard.GetTextEXT |
 | 7.2.07 | `in-joystick` | Raw Joysticks | CNA extension | Joysticks.GetJoysticksEXT, Joysticks.GetCapabilitiesEXT, Joysticks.GetStateEXT |
 | 7.2.08 | `in-touch` | Touch and Gestures | XNA 4.0 | TouchPanel.GetState, TouchPanel.ReadGesture, TouchPanel.EnabledGestures, GestureType, TouchPanel.MouseTouchEmulationEnabledEXT |
-| 7.2.09 | `in-devices` | Other Input Devices | CNA extension | InputDevices.GetMiceEXT, TouchPanel.GetState, TouchPanel.MouseTouchEmulationEnabledEXT, Sensors.GetSensorsEXT, Power.GetInfoEXT |
+| 7.2.09 | `in-devices` | Other Input Devices | CNA extension | InputDevices.GetMiceEXT, TouchPanel.GetState, TouchPanel.MouseTouchEmulationEnabledEXT, Sensors.GetSensorsEXT, Power.GetInfoEXT, GamePad.GetConnectionStateEXT, GamePad.GetPowerInfoEXT, GamePad.GetTouchpadCountEXT, GamePad.GetFirmwareVersionEXT, GamePad.GetSerialEXT, Mouse.GetGlobalPositionEXT |
 
 ### Floor 8: Content, Platform and CNA
 
