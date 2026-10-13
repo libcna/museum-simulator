@@ -805,6 +805,158 @@ def build_models():
 
 
 # ----------------------------------------------------------------------------
+# Animated glTF models: a rigid robot arm (node hierarchy + animation) and a skinned tentacle
+# ----------------------------------------------------------------------------
+class GltfDoc:
+    """A tiny glTF 2.0 writer for hand-built buffers (positions, skinning, animation)."""
+
+    def __init__(self):
+        self.blob = bytearray()
+        self.views, self.accessors = [], []
+
+    def view(self, data, target=None):
+        while len(self.blob) % 4:
+            self.blob.append(0)
+        v = {"buffer": 0, "byteOffset": len(self.blob), "byteLength": len(data)}
+        if target:
+            v["target"] = target
+        self.blob.extend(data)
+        self.views.append(v)
+        return len(self.views) - 1
+
+    def accessor(self, data, comp, count, typ, target=None, minmax=None):
+        a = {"bufferView": self.view(data, target), "componentType": comp, "count": count, "type": typ}
+        if minmax:
+            a["min"], a["max"] = minmax
+        self.accessors.append(a)
+        return len(self.accessors) - 1
+
+    def finish(self, name, extra):
+        doc = {"asset": {"version": "2.0", "generator": "cna-3d-museum tools/gen_assets.py"}}
+        doc.update(extra)
+        doc["accessors"], doc["bufferViews"] = self.accessors, self.views
+        doc["buffers"] = [{"byteLength": len(self.blob), "uri": "data:application/octet-stream;base64," + base64.b64encode(bytes(self.blob)).decode()}]
+        path = os.path.join(ROOT, "Models", name + ".gltf")
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            json.dump(doc, f, separators=(",", ":"))
+
+
+def quat_z(angle):
+    return (0.0, 0.0, math.sin(angle / 2), math.cos(angle / 2))
+
+
+def quat_y(angle):
+    return (0.0, math.sin(angle / 2), 0.0, math.cos(angle / 2))
+
+
+def build_robot():
+    g = GltfDoc()
+    meshes, materials, nodes = [], [], []
+
+    def add_box(w, h, d, colour, rough=0.45, metal=0.2):
+        m = box_mesh(w, h, d)
+        for i, (x, y, z) in enumerate(m.pos):
+            m.pos[i] = (x, y + h / 2, z)       # box stands on the node origin: joints sit at the bottom
+        orient_triangles(m)
+        pos = g.accessor(b"".join(struct.pack("<3f", *p) for p in m.pos), 5126, len(m.pos), "VEC3", 34962,
+                         ([min(p[k] for p in m.pos) for k in range(3)], [max(p[k] for p in m.pos) for k in range(3)]))
+        nrm = g.accessor(b"".join(struct.pack("<3f", *n) for n in m.nrm), 5126, len(m.nrm), "VEC3", 34962)
+        uv = g.accessor(b"".join(struct.pack("<2f", *t) for t in m.uv), 5126, len(m.uv), "VEC2", 34962)
+        idx = g.accessor(b"".join(struct.pack("<H", i) for i in m.idx), 5123, len(m.idx), "SCALAR", 34963)
+        materials.append({"pbrMetallicRoughness": {"baseColorFactor": list(colour) + [1.0], "metallicFactor": metal, "roughnessFactor": rough}})
+        meshes.append({"primitives": [{"attributes": {"POSITION": pos, "NORMAL": nrm, "TEXCOORD_0": uv}, "indices": idx, "material": len(materials) - 1}]})
+        return len(meshes) - 1
+
+    base = add_box(0.9, 0.25, 0.9, (0.35, 0.37, 0.42))
+    upper = add_box(0.22, 1.0, 0.22, (0.90, 0.55, 0.15))
+    lower = add_box(0.18, 0.85, 0.18, (0.85, 0.40, 0.12))
+    hand = add_box(0.30, 0.18, 0.12, (0.30, 0.65, 0.85))
+    finger = add_box(0.05, 0.22, 0.05, (0.30, 0.65, 0.85))
+    nodes = [
+        {"name": "base", "mesh": base, "children": [1]},
+        {"name": "shoulder", "translation": [0, 0.25, 0], "children": [2]},
+        {"name": "upperArm", "mesh": upper, "children": [3]},
+        {"name": "elbow", "translation": [0, 1.0, 0], "children": [4]},
+        {"name": "lowerArm", "mesh": lower, "children": [5]},
+        {"name": "wrist", "translation": [0, 0.85, 0], "children": [6, 7, 8]},
+        {"name": "hand", "mesh": hand},
+        {"name": "fingerL", "mesh": finger, "translation": [-0.1, 0.18, 0]},
+        {"name": "fingerR", "mesh": finger, "translation": [0.1, 0.18, 0]},
+    ]
+    times = [i * 0.5 for i in range(9)]   # 4 s
+    def track(target, fn):
+        t = g.accessor(b"".join(struct.pack("<f", x) for x in times), 5126, len(times), "SCALAR", None, ([times[0]], [times[-1]]))
+        r = g.accessor(b"".join(struct.pack("<4f", *fn(x)) for x in times), 5126, len(times), "VEC4")
+        return t, r, target
+    chans = [track(1, lambda x: quat_y(math.sin(x / 4 * math.tau) * 1.2)), track(3, lambda x: quat_z(0.9 + 0.8 * math.sin(x / 4 * math.tau + 1.0))),
+             track(5, lambda x: quat_z(0.5 * math.sin(x / 4 * math.tau * 2)))]
+    samplers = [{"input": t, "output": r, "interpolation": "LINEAR"} for t, r, _ in chans]
+    channels = [{"sampler": i, "target": {"node": c[2], "path": "rotation"}} for i, c in enumerate(chans)]
+    g.finish("robot", {"scene": 0, "scenes": [{"nodes": [0]}], "nodes": nodes, "meshes": meshes, "materials": materials,
+                       "animations": [{"name": "wave", "samplers": samplers, "channels": channels}]})
+
+
+def build_tentacle():
+    g = GltfDoc()
+    segs, ring, seg_h, radius = 6, 12, 0.5, 0.22
+    pos, nrm, uvs, jnt, wgt, idx = [], [], [], [], [], []
+    rows = segs * 3 + 1
+    for r in range(rows):
+        y = r / (rows - 1) * segs * seg_h
+        t = y / seg_h                      # position along the chain in joint units
+        j = min(int(t), segs - 1)
+        f = t - j
+        taper = radius * (1.0 - 0.7 * y / (segs * seg_h))
+        for k in range(ring + 1):
+            a = k / ring * math.tau
+            pos.append((math.cos(a) * taper, y, math.sin(a) * taper))
+            nrm.append((math.cos(a), 0.0, math.sin(a)))
+            uvs.append((k / ring, y / (segs * seg_h)))
+            # Blend between this joint and the next: smooth bending between the joints.
+            j1 = min(j + 1, segs - 1)
+            jnt.append((j, j1, 0, 0))
+            wgt.append((1.0 - f, f, 0.0, 0.0) if j1 != j else (1.0, 0.0, 0.0, 0.0))
+    for r in range(rows - 1):
+        for k in range(ring):
+            a = r * (ring + 1) + k
+            b = a + 1
+            c = a + ring + 1
+            d = c + 1
+            idx += [a, c, b, b, c, d]
+    m_pos = g.accessor(b"".join(struct.pack("<3f", *p) for p in pos), 5126, len(pos), "VEC3", 34962,
+                       ([min(p[k] for p in pos) for k in range(3)], [max(p[k] for p in pos) for k in range(3)]))
+    m_nrm = g.accessor(b"".join(struct.pack("<3f", *n) for n in nrm), 5126, len(nrm), "VEC3", 34962)
+    m_uv = g.accessor(b"".join(struct.pack("<2f", *t) for t in uvs), 5126, len(uvs), "VEC2", 34962)
+    m_jnt = g.accessor(b"".join(struct.pack("<4B", *j) for j in jnt), 5121, len(jnt), "VEC4", 34962)
+    m_wgt = g.accessor(b"".join(struct.pack("<4f", *w) for w in wgt), 5126, len(wgt), "VEC4", 34962)
+    m_idx = g.accessor(b"".join(struct.pack("<H", i) for i in idx), 5123, len(idx), "SCALAR", 34963)
+    ibm = b"".join(struct.pack("<16f", 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, -i * seg_h, 0, 1) for i in range(segs))
+    m_ibm = g.accessor(ibm, 5126, segs, "MAT4")
+    # Nodes: 0 = mesh node, 1..segs = joint chain.
+    nodes = [{"name": "tentacleMesh", "mesh": 0, "skin": 0}]
+    for i in range(segs):
+        n = {"name": "joint%d" % i}
+        if i > 0:
+            n["translation"] = [0, seg_h, 0]
+        if i + 1 < segs:
+            n["children"] = [i + 2]
+        nodes.append(n)
+    times = [i * 0.25 for i in range(17)]   # 4 s loop
+    samplers, channels = [], []
+    for j in range(segs):
+        t = g.accessor(b"".join(struct.pack("<f", x) for x in times), 5126, len(times), "SCALAR", None, ([times[0]], [times[-1]]))
+        r = g.accessor(b"".join(struct.pack("<4f", *quat_z(0.55 * math.sin(x / 4 * math.tau - j * 0.7))) for x in times), 5126, len(times), "VEC4")
+        samplers.append({"input": t, "output": r, "interpolation": "LINEAR"})
+        channels.append({"sampler": j, "target": {"node": j + 1, "path": "rotation"}})
+    g.finish("tentacle", {"scene": 0, "scenes": [{"nodes": [0, 1]}], "nodes": nodes,
+                          "meshes": [{"primitives": [{"attributes": {"POSITION": m_pos, "NORMAL": m_nrm, "TEXCOORD_0": m_uv, "JOINTS_0": m_jnt, "WEIGHTS_0": m_wgt}, "indices": m_idx, "material": 0}]}],
+                          "materials": [{"pbrMetallicRoughness": {"baseColorFactor": [0.35, 0.80, 0.55, 1.0], "metallicFactor": 0.0, "roughnessFactor": 0.5}}],
+                          "skins": [{"joints": list(range(1, segs + 1)), "inverseBindMatrices": m_ibm, "skeleton": 1}],
+                          "animations": [{"name": "wave", "samplers": samplers, "channels": channels}]})
+
+
+# ----------------------------------------------------------------------------
 # Audio
 # ----------------------------------------------------------------------------
 RATE = 22050
@@ -967,6 +1119,8 @@ def main():
                tex_circuit, tex_sand, tex_hedge, tex_rust, tex_gradient, tex_pixelart):
         fn()
     build_models()
+    build_robot()
+    build_tentacle()
     for fn in (audio_ambience, audio_tone, audio_drums, audio_arpeggio, audio_chirp, audio_step,
                audio_click, audio_splash, audio_fire, audio_spark):
         fn()

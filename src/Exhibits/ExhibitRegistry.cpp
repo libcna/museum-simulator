@@ -38,6 +38,7 @@ constexpr Entry kEntries[] = {
     {"textures", MakeTextureLab},
     {"shaders", MakeShaderLab},
     {"effects", MakeEffectLab},
+    {"model-lab", MakeModelLab},
     {"particle-lab", MakeParticleLab},
     {"targets", MakeTargetLab},
     {"renderstate-lab", MakeRenderStateLab},
