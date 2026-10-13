@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-477 distinct API names are claimed by at least one room.
+488 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -107,8 +107,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BoundingBox.Intersects | `col-box-box` |
 | BoundingFrustum | `mat-view`, `col-frustum`, `cam-orbit`, `cam-security` |
 | BoundingFrustum.Contains | `mat-perspective`, `col-frustum`, `model-instances` |
+| BoundingFrustum.GetCorners | `col-frustum` |
 | BoundingSphere | `col-ray-sphere`, `col-pick` |
 | BoundingSphere.Contains | `col-sphere-box` |
+| BoundingSphere.CreateFromBoundingBox | `col-merge` |
+| BoundingSphere.CreateFromFrustum | `col-frustum` |
 | BoundingSphere.CreateFromPoints | `col-merge` |
 | BoundingSphere.CreateMerged | `col-merge` |
 | BoundingSphere.Intersects | `col-sphere-box` |
@@ -301,10 +304,13 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | MathHelper.SmoothStep | `curve-easing`, `an-doors` |
 | MathHelper.WrapAngle | `an-walker` |
 | Matrix | `models`, `animation` |
+| Matrix.CreateBillboard | `mat-billboard` |
+| Matrix.CreateConstrainedBillboard | `mat-billboard` |
 | Matrix.CreateFromQuaternion | `quat-euler` |
 | Matrix.CreateLookAt | `mat-view`, `cam-orbit`, `cam-chase`, `cam-topdown`, `cam-mirror`, `rt-mirror`, `rv-camera`, `rf-deck`, `rf-telescope`, `vr-index` |
 | Matrix.CreateOrthographic | `mat-ortho`, `cam-topdown`, `cx-shadow`, `rv-camera` |
 | Matrix.CreatePerspectiveFieldOfView | `mat-perspective`, `mat-ortho`, `col-frustum`, `cam-security`, `cam-fov`, `cam-clip`, `rv-camera`, `rf-telescope` |
+| Matrix.CreateReflection | `mat-reflection` |
 | Matrix.CreateRotationX | `quat-euler`, `an-gyroscope` |
 | Matrix.CreateRotationY | `mat-order`, `an-gears`, `an-gyroscope` |
 | Matrix.CreateRotationZ | `sprite-camera`, `an-clock`, `an-kinetic`, `an-gyroscope`, `an-walker` |
@@ -313,9 +319,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Matrix.CreateTranslation | `mat-order`, `sprite-camera` |
 | Matrix.CreateWorld | `cam-transition` |
 | Matrix.Decompose | `mat-hierarchy` |
-| Matrix.Invert | `mat-view` |
+| Matrix.Determinant | `mat-reflection` |
+| Matrix.Invert | `mat-view`, `mat-normals` |
 | Matrix.Multiply | `mat-order`, `mat-hierarchy`, `mat-screen`, `an-clock`, `an-gears`, `an-kinetic`, `an-walker` |
 | Matrix.Translation | `mat-hierarchy` |
+| Matrix.Transpose | `mat-normals` |
 | MediaPlayer.Play | `au-music` |
 | MediaPlayer.Volume | `au-music` |
 | MediaState | `au-music` |
@@ -362,6 +370,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Plane | `vec-reflect`, `col-ray-plane` |
 | Plane.DotCoordinate | `col-plane-box` |
 | Plane.Intersects | `col-plane-box` |
+| Plane.Transform | `mat-reflection` |
 | PlaneIntersectionType | `col-plane-box` |
 | PlatformCapabilities | `pl-platform` |
 | PlayerIndex | `in-players` |
@@ -519,6 +528,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Vector3.Reflect | `vec-reflect` |
 | Vector3.SmoothStep | `vec-lerp`, `cam-transition` |
 | Vector3.Subtract | `vec-add` |
+| Vector3.TransformNormal | `mat-normals` |
 | Vector4.Transform | `mat-screen` |
 | VertexBuffer | `geo-indexed`, `geo-procedural`, `geo-manybuffers`, `model-skinfx`, `pf-buffers` |
 | VertexBufferBinding | `geo-instancing`, `pf-objects` |
@@ -528,6 +538,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | VertexPositionNormalTextureSkinned | `model-skinfx` |
 | Viewport | `app-viewport`, `cam-split` |
 | Viewport.Project | `mat-screen`, `text-labels` |
+| Viewport.Unproject | `mat-screen` |
 | XNA 4.0 | `hist-xna`, `hist-compare` |
 | cna-content | `ct-pipeline` |
 | layerDepth | `sprite-sort` |

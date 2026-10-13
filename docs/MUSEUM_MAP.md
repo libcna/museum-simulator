@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 33 wings, 239 exhibit rooms (5 open to the sky), 302 walkable cells in all.
+10 floors, 33 wings, 242 exhibit rooms (5 open to the sky), 305 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -102,7 +102,10 @@ The application model, the maths of games, geometry tests and cameras
 | 1.3.03 | `mat-view` | The View Matrix | XNA 4.0 | Matrix.CreateLookAt, Matrix.Invert, BoundingFrustum |
 | 1.3.04 | `mat-perspective` | Perspective Projection | XNA 4.0 | Matrix.CreatePerspectiveFieldOfView, BoundingFrustum.Contains |
 | 1.3.05 | `mat-ortho` | Orthographic Projection | XNA 4.0 | Matrix.CreateOrthographic, Matrix.CreatePerspectiveFieldOfView |
-| 1.3.06 | `mat-screen` | World to Screen | XNA 4.0 | Viewport.Project, Vector4.Transform, Matrix.Multiply |
+| 1.3.06 | `mat-screen` | World to Screen | XNA 4.0 | Viewport.Project, Viewport.Unproject, Vector4.Transform, Matrix.Multiply |
+| 1.3.07 | `mat-billboard` | Billboards | XNA 4.0 | Matrix.CreateBillboard, Matrix.CreateConstrainedBillboard |
+| 1.3.08 | `mat-reflection` | Reflection Matrices | XNA 4.0 | Matrix.CreateReflection, Plane.Transform, Matrix.Determinant |
+| 1.3.09 | `mat-normals` | Normals and the Inverse Transpose | XNA 4.0 | Matrix.Invert, Matrix.Transpose, Vector3.TransformNormal |
 
 **Rotation and Interpolation** - Quaternions, Euler angles, easing functions and curves
 
@@ -126,8 +129,8 @@ The application model, the maths of games, geometry tests and cameras
 | 1.5.04 | `col-ray-sphere` | Ray vs Sphere | XNA 4.0 | Ray.Intersects, BoundingSphere |
 | 1.5.05 | `col-ray-plane` | Ray vs Plane | XNA 4.0 | Ray.Intersects, Plane |
 | 1.5.06 | `col-plane-box` | Which Side of the Plane | XNA 4.0 | Plane.Intersects, Plane.DotCoordinate, PlaneIntersectionType |
-| 1.5.07 | `col-merge` | Fitting and Merging Bounds | XNA 4.0 | BoundingBox.CreateFromPoints, BoundingSphere.CreateFromPoints, BoundingSphere.CreateMerged |
-| 1.5.08 | `col-frustum` | Frustum Culling | XNA 4.0 | BoundingFrustum.Contains, BoundingFrustum, Matrix.CreatePerspectiveFieldOfView |
+| 1.5.07 | `col-merge` | Fitting and Merging Bounds | XNA 4.0 | BoundingBox.CreateFromPoints, BoundingSphere.CreateFromPoints, BoundingSphere.CreateMerged, BoundingSphere.CreateFromBoundingBox |
+| 1.5.08 | `col-frustum` | Frustum Culling | XNA 4.0 | BoundingFrustum.Contains, BoundingFrustum, BoundingFrustum.GetCorners, BoundingSphere.CreateFromFrustum, Matrix.CreatePerspectiveFieldOfView |
 | 1.5.09 | `col-pick` | Picking | XNA 4.0 | Ray.Intersects, BoundingBox, BoundingSphere |
 
 **Cameras** - Orbit, chase, top-down, security, split-screen and mirror cameras

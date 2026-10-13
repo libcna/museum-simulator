@@ -2,6 +2,7 @@
 // the world -> screen pipeline. Every number shown is read from a CNA Matrix.
 #include <algorithm>
 #include <cmath>
+#include <optional>
 #include <string>
 
 #include "Exhibits/ExhibitFactories.hpp"
@@ -9,10 +10,13 @@
 #include "Exhibits/Math/MathKit.hpp"
 #include "Microsoft/Xna/Framework/BoundingFrustum.hpp"
 #include "Microsoft/Xna/Framework/Graphics/Viewport.hpp"
+#include "Microsoft/Xna/Framework/Plane.hpp"
 #include "Rendering/EffectBank.hpp"
 #include "Rendering/LitMesh.hpp"
 #include "Rendering/MiniView.hpp"
+#include "Rendering/QuadDraw.hpp"
 #include "Rendering/RenderStates.hpp"
+#include "Rendering/TextureLibrary.hpp"
 
 using namespace Microsoft::Xna::Framework;
 using namespace Microsoft::Xna::Framework::Graphics;
@@ -20,7 +24,7 @@ using namespace MathKit;
 
 namespace {
 
-enum class Mode { Order, Hierarchy, LookAt, Perspective, Ortho, Project };
+enum class Mode { Order, Hierarchy, LookAt, Perspective, Ortho, Project, Billboard, Reflection, Normals };
 
 Mode ParseMode(const std::string& s)
 {
@@ -29,6 +33,9 @@ Mode ParseMode(const std::string& s)
     if (s == "perspective") return Mode::Perspective;
     if (s == "ortho") return Mode::Ortho;
     if (s == "project") return Mode::Project;
+    if (s == "billboard") return Mode::Billboard;
+    if (s == "reflection") return Mode::Reflection;
+    if (s == "normals") return Mode::Normals;
     return Mode::Order;
 }
 
@@ -122,6 +129,31 @@ public:
                     return std::string(buf);
                 });
                 p.AddReadout("Screen (Viewport.Project)", [this] { return Fmt(ScreenPoint()); });
+                p.AddReadout("Viewport.Unproject back to world", [this] { return Fmt(UnprojectedPoint() - DioramaOrigin()); });
+                p.AddReadout("Round-trip error", [this] { return Fmt((UnprojectedPoint() - WorldPoint()).Length()) + " m"; });
+                break;
+            case Mode::Billboard:
+                p.AddChoice("Matrix", {"Fixed (no billboard)", "CreateBillboard", "CreateConstrainedBillboard (Y axis)"}, 1, [this](int v) { board_ = v; });
+                p.AddToggle("Use my own eye as the camera", false, [this](bool v) { ownEye_ = v; });
+                p.AddSlider("Virtual camera: orbit", -180.0f, 180.0f, orbit_, [this](float v) { orbit_ = v; ownEye_ = false; }, "%.0f deg", 1.0f);
+                p.AddSlider("Virtual camera: height", 0.2f, 6.0f, camHeight_, [this](float v) { camHeight_ = v; ownEye_ = false; });
+                p.AddHeading("Look from above: only CreateBillboard tilts");
+                break;
+            case Mode::Reflection:
+                p.AddSlider("Mirror plane position", -2.0f, 2.0f, mirrorX_, [this](float v) { mirrorX_ = v; });
+                p.AddSlider("Plane tilt about Y", -60.0f, 60.0f, mirrorTilt_, [this](float v) { mirrorTilt_ = v; }, "%.0f deg", 1.0f);
+                p.AddSlider("Object turn", -180.0f, 180.0f, rotY_, [this](float v) { rotY_ = v; }, "%.0f deg", 1.0f);
+                p.AddReadout("Plane after Plane.Transform", [this] { char b[96]; const Plane q = MirrorPlane(); std::snprintf(b, sizeof b, "n(%.2f %.2f %.2f) d %.2f", static_cast<double>(q.Normal.X), static_cast<double>(q.Normal.Y), static_cast<double>(q.Normal.Z), static_cast<double>(q.D)); return std::string(b); });
+                p.AddReadout("Determinant of the reflection", [this] { return Fmt(Matrix::CreateReflection(MirrorPlane()).Determinant()); });
+                p.AddHeading("Determinant -1: triangles wind the other way");
+                break;
+            case Mode::Normals:
+                p.AddSlider("Stretch X", 0.4f, 2.2f, stretch_.X, [this](float v) { stretch_.X = v; });
+                p.AddSlider("Stretch Y", 0.4f, 2.2f, stretch_.Y, [this](float v) { stretch_.Y = v; });
+                p.AddSlider("Stretch Z", 0.4f, 2.2f, stretch_.Z, [this](float v) { stretch_.Z = v; });
+                p.AddReadout("World matrix * normal (wrong)", [this] { return "worst error " + Fmt(NormalError(false)) + " (dot with a tangent)"; });
+                p.AddReadout("Transpose(Invert(world)) (right)", [this] { return "worst error " + Fmt(NormalError(true)); });
+                p.AddHeading("Red: normals as most code first writes them. Green: correct.");
                 break;
         }
         SignSpec what = Kit::Plate(Title(), Explanation());
@@ -172,6 +204,9 @@ public:
             case Mode::Perspective: DrawPerspective(ctx); break;
             case Mode::Ortho: DrawOrtho(ctx); break;
             case Mode::Project: DrawProject(ctx, o); break;
+            case Mode::Billboard: DrawBillboard(ctx, o); break;
+            case Mode::Reflection: DrawReflection(ctx, o); break;
+            case Mode::Normals: DrawNormals(ctx, o); break;
         }
         gizmos_.Flush(ctx);
     }
@@ -207,6 +242,9 @@ private:
             case Mode::LookAt: return "View matrix (CreateLookAt)";
             case Mode::Perspective: return "Perspective projection";
             case Mode::Ortho: return "Orthographic projection";
+            case Mode::Billboard: return "Billboards";
+            case Mode::Reflection: return "Reflection matrices";
+            case Mode::Normals: return "Normals and the inverse transpose";
             default: return "World to screen";
         }
     }
@@ -218,6 +256,9 @@ private:
             case Mode::LookAt: return {"CreateLookAt builds the view matrix that moves the world so the camera sits at the origin looking", "down -Z. The inset is what a camera at the red marker sees. Its rows are the camera's axes."};
             case Mode::Perspective: return {"CreatePerspectiveFieldOfView squeezes the view frustum into a cube. A wider field of view shows", "more but makes things smaller; the near and far planes clip what is too close or too far.", "BoundingFrustum counts the objects inside."};
             case Mode::Ortho: return {"An orthographic projection has no vanishing point: parallel lines stay parallel and size does not", "depend on distance (left view = perspective, right = orthographic of the same scene)."};
+            case Mode::Billboard: return {"A billboard is a flat sprite that turns to face the camera. CreateBillboard faces it fully (it tilts when you look", "from above); CreateConstrainedBillboard turns only about an axis, so trees stay upright. Orbit the virtual camera."};
+            case Mode::Reflection: return {"CreateReflection builds the matrix that mirrors a world across a Plane; Plane.Transform moves the plane with an", "object. A mirror image is back to front, so its triangles wind the other way (the determinant is -1)."};
+            case Mode::Normals: return {"Positions transform by the world matrix, but a normal must stay perpendicular to the surface: under a non-uniform", "scale that needs Transpose(Invert(world)). Red arrows use the plain matrix and lean; green ones are right."};
             default: return {"A point travels world -> view -> clip -> normalised device -> screen coordinates.", "Move the point; the cross-hair on your screen is where Viewport.Project puts it."};
         }
     }
@@ -260,6 +301,36 @@ private:
     {
         if (S().mainView == nullptr) return Vector3(0, 0, 0);
         return S().device->getViewportProperty().Project(WorldPoint(), Projection(), View(), Matrix::getIdentityProperty());
+    }
+
+    [[nodiscard]] Vector3 UnprojectedPoint() const
+    {
+        if (S().mainView == nullptr) return WorldPoint();
+        const Vector3 sp = ScreenPoint();
+        return S().device->getViewportProperty().Unproject(sp, Projection(), View(), Matrix::getIdentityProperty());
+    }
+    [[nodiscard]] Plane MirrorPlane() const
+    {
+        // A plane through x = mirrorX_ facing +X, turned about Y: moved by Plane.Transform, as an object would be.
+        const Plane base(Off(1, 0, 0), -mirrorX_);
+        return Plane::Transform(base, Matrix::CreateRotationY(MathHelper::ToRadians(mirrorTilt_)));
+    }
+    // Worst |dot(normal, tangent)| over a ring of sphere points: zero when the normal is truly perpendicular to the surface.
+    [[nodiscard]] float NormalError(bool correct) const
+    {
+        const Matrix w = Matrix::CreateScale(stretch_);
+        Matrix invT;
+        Matrix::Invert(w, invT);
+        const Matrix normalMatrix = Matrix::Transpose(invT);
+        float worst = 0.0f;
+        for (int i = 0; i < 24; ++i) {
+            const float a = static_cast<float>(i) / 24.0f * MathHelper::TwoPi, b = 0.6f + 0.5f * std::sin(a * 2.0f);
+            const Vector3 n(std::sin(b) * std::cos(a), std::cos(b), std::sin(b) * std::sin(a));
+            const Vector3 t1 = Vector3::Normalize(Vector3::Cross(n, Vector3::Up)), t2 = Vector3::Cross(n, t1);
+            const Vector3 nn = Vector3::Normalize(Vector3::TransformNormal(n, correct ? normalMatrix : w));
+            for (const Vector3& t : {t1, t2}) worst = std::max(worst, std::abs(Vector3::Dot(nn, Vector3::Normalize(Vector3::TransformNormal(t, w)))));
+        }
+        return worst;
     }
 
     // --- drawing --------------------------------------------------------------------------------
@@ -352,8 +423,89 @@ private:
         gizmos_.Label(WorldPoint() + Vector3(0, 0.9f, 0), "P", ToColor(kGold));
     }
 
+    void DrawBillboard(const DrawContext& ctx, const Vector3& o)
+    {
+        const float a = MathHelper::ToRadians(orbit_);
+        const Vector3 camera = ownEye_ ? ctx.view.eye : o + Off(std::sin(a) * 4.0f, camHeight_, std::cos(a) * 4.0f);
+        if (!ownEye_) {
+            gizmos_.SolidSphere(ctx, camera, 0.12f, kRed);
+            gizmos_.Label(camera + Vector3(0, 0.3f, 0), "camera", ToColor(kRed * 1.3f));
+        }
+        Texture2D* tex = S().textures->Get("uvgrid");
+        RenderStates::SetOpaque3D(ctx.device);
+        ctx.device.setRasterizerStateProperty(RasterizerState::CullNone);
+        for (int i = 0; i < 7; ++i) {
+            const float t = static_cast<float>(i) / 7.0f * MathHelper::TwoPi;
+            const Vector3 pos = o + Off(std::cos(t) * 2.0f, 0.9f, std::sin(t) * 1.4f - 0.2f);
+            Matrix m = Matrix::CreateTranslation(pos);   // fixed: faces local +Z
+            if (board_ == 1) m = Matrix::CreateBillboard(pos, camera, Vector3::Up, std::nullopt);
+            else if (board_ == 2) m = Matrix::CreateConstrainedBillboard(pos, camera, Vector3::Up, std::nullopt, std::nullopt);
+            else m = Matrix::CreateRotationY(R().frameYaw) * m;
+            const Vector3 right = Vector3::TransformNormal(Vector3(1.1f, 0, 0), m), up = Vector3::TransformNormal(Vector3(0, 1.6f, 0), m);
+            QuadDraw::Textured(ctx, tex, pos - right * 0.5f - up * 0.5f, right, up);
+            gizmos_.Line(pos - Vector3(0, 0.9f, 0), pos, Color(120, 130, 160, 255));
+        }
+    }
+
+    void DrawReflection(const DrawContext& ctx, const Vector3& o)
+    {
+        const Plane plane = MirrorPlane();
+        // The mirror in world space: the plane's normal and a point on it, drawn as a frame.
+        const Vector3 n = plane.Normal;
+        const Vector3 pointOn = o + n * (-plane.D);
+        const Vector3 tangent = Vector3::Normalize(Vector3::Cross(n, Vector3::Up));
+        gizmos_.Line(pointOn - tangent * 2.2f, pointOn + tangent * 2.2f, Color(120, 220, 255, 255));
+        gizmos_.Line(pointOn - tangent * 2.2f + Vector3(0, 2.2f, 0), pointOn + tangent * 2.2f + Vector3(0, 2.2f, 0), Color(120, 220, 255, 255));
+        gizmos_.Line(pointOn - tangent * 2.2f, pointOn - tangent * 2.2f + Vector3(0, 2.2f, 0), Color(120, 220, 255, 255));
+        gizmos_.Line(pointOn + tangent * 2.2f, pointOn + tangent * 2.2f + Vector3(0, 2.2f, 0), Color(120, 220, 255, 255));
+        gizmos_.Arrow(pointOn + Vector3(0, 1.1f, 0), pointOn + Vector3(0, 1.1f, 0) + n * 0.6f, Color(120, 220, 255, 255), 0.1f);
+        // The object stands on the +X side of the plane (local frame), its image behind it. The plane lives in the object's space.
+        const Matrix object = Matrix::CreateScale(0.9f) * Matrix::CreateRotationY(MathHelper::ToRadians(rotY_)) * Matrix::CreateTranslation(o + Off(1.2f + std::max(0.0f, mirrorX_), 0.6f, 0.0f));
+        const Matrix toLocal = Matrix::CreateTranslation(-o);
+        const Matrix mirror = toLocal * Matrix::CreateReflection(plane) * Matrix::CreateTranslation(o);
+        DrawBlock(ctx, object, kBlue, 1.0f);
+        ctx.device.setRasterizerStateProperty(RasterizerState::CullCounterClockwise);   // the image winds the other way: flip the cull mode
+        DrawBlock(ctx, object * mirror, kGreen, 1.0f);
+        ctx.device.setRasterizerStateProperty(RasterizerState::CullClockwise);
+        gizmos_.Label(Vector3::Transform(Vector3(0, 0.75f, 0), object), "object", ToColor(kBlue * 1.3f));
+        gizmos_.Label(Vector3::Transform(Vector3(0, 0.75f, 0), object * mirror), "world * CreateReflection(plane)", ToColor(kGreen * 1.2f));
+    }
+
+    void DrawNormals(const DrawContext& ctx, const Vector3& o)
+    {
+        const Vector3 centre = o + Vector3(0, 1.0f, 0);
+        const Matrix w = Matrix::CreateScale(stretch_) * Matrix::CreateScale(0.9f);
+        BasicEffect& fx = ctx.fx.BeginLit();
+        fx.EnableDefaultLighting();
+        fx.setPunctualLightEXT(PunctualLightEXT{});
+        fx.setViewProperty(ctx.view.view);
+        fx.setProjectionProperty(ctx.view.projection);
+        fx.setDiffuseColorProperty(Vector3(0.55f, 0.65f, 0.85f));
+        fx.setEmissiveColorProperty(Vector3(0.05f, 0.06f, 0.1f));
+        fx.setSpecularColorProperty(Vector3(0, 0, 0));
+        fx.setWorldProperty(w * Matrix::CreateTranslation(centre));
+        EffectBank::Apply(fx);
+        ctx.device.setRasterizerStateProperty(RasterizerState::CullClockwise);
+        S().shapes->Sphere().Draw(ctx.device);
+        Matrix invT;
+        Matrix::Invert(w, invT);
+        const Matrix normalMatrix = Matrix::Transpose(invT);
+        for (int i = 0; i < 18; ++i) {
+            const float a = static_cast<float>(i) / 18.0f * MathHelper::TwoPi, b = 0.7f + 0.9f * (0.5f + 0.5f * std::sin(a * 3.0f));
+            const Vector3 n(std::sin(b) * std::cos(a), std::cos(b), std::sin(b) * std::sin(a));
+            const Vector3 p = centre + Vector3::TransformNormal(n * 0.5f, w);   // the sphere shape has radius 0.5
+            const Vector3 naive = Vector3::Normalize(Vector3::TransformNormal(n, w)), right = Vector3::Normalize(Vector3::TransformNormal(n, normalMatrix));
+            gizmos_.Arrow(p, p + naive * 0.45f, Color(255, 90, 80, 255), 0.06f);
+            gizmos_.Arrow(p, p + right * 0.45f, Color(90, 255, 120, 255), 0.06f);
+        }
+    }
+
     Mode mode_;
     Gizmos gizmos_;
+    int board_ = 1;
+    bool ownEye_ = false;
+    float orbit_ = 40.0f, camHeight_ = 4.0f, mirrorX_ = 0.0f, mirrorTilt_ = 0.0f;
+    Vector3 stretch_{1.7f, 0.6f, 1.0f};
     Vector3 origin_;
     std::unique_ptr<MiniView> viewA_, viewB_;
     float time_ = 0.0f, angle_ = 0.0f;

@@ -96,7 +96,13 @@ WingSpec TransformWing()
         tr("mat-view", "The View Matrix", "Matrix.CreateLookAt: where the camera is, what it looks at, and what it sees", "lookat", {"Matrix.CreateLookAt", "Matrix.Invert", "BoundingFrustum"}),
         tr("mat-perspective", "Perspective Projection", "CreatePerspectiveFieldOfView with live field of view, aspect and clip planes", "perspective", {"Matrix.CreatePerspectiveFieldOfView", "BoundingFrustum.Contains"}),
         tr("mat-ortho", "Orthographic Projection", "CreateOrthographic beside perspective: no vanishing point, constant size", "ortho", {"Matrix.CreateOrthographic", "Matrix.CreatePerspectiveFieldOfView"}),
-        tr("mat-screen", "World to Screen", "World, view, clip and screen coordinates of a point, with Viewport.Project", "project", {"Viewport.Project", "Vector4.Transform", "Matrix.Multiply"}),
+        tr("mat-screen", "World to Screen", "World, view, clip and screen coordinates of a point, with Viewport.Project and Unproject", "project", {"Viewport.Project", "Viewport.Unproject", "Vector4.Transform", "Matrix.Multiply"}),
+        tr("mat-billboard", "Billboards", "Matrix.CreateBillboard and CreateConstrainedBillboard: sprites that turn to face a camera, fully or about an axis", "billboard",
+           {"Matrix.CreateBillboard", "Matrix.CreateConstrainedBillboard"}),
+        tr("mat-reflection", "Reflection Matrices", "Matrix.CreateReflection mirrors a world across a Plane that Plane.Transform moves, and the triangle winding flips", "reflection",
+           {"Matrix.CreateReflection", "Plane.Transform", "Matrix.Determinant"}),
+        tr("mat-normals", "Normals and the Inverse Transpose", "Why normals need Transpose(Invert(world)) under non-uniform scale: red arrows lean, green ones are perpendicular", "normals",
+           {"Matrix.Invert", "Matrix.Transpose", "Vector3.TransformNormal"}),
     };
     return w;
 }
@@ -156,8 +162,8 @@ WingSpec CollisionWing()
         Lab("col-ray-sphere", "Ray vs Sphere", "Ray.Intersects(BoundingSphere) with a movable aim", "collision", "ray-sphere", {"Ray.Intersects", "BoundingSphere"}),
         Lab("col-ray-plane", "Ray vs Plane", "Ray.Intersects(Plane): crossing distance, parallel and backward rays", "collision", "ray-plane", {"Ray.Intersects", "Plane"}),
         Lab("col-plane-box", "Which Side of the Plane", "Plane.Intersects(BoundingBox) classifies five boxes as Front, Back or Intersecting", "collision", "plane-box", {"Plane.Intersects", "Plane.DotCoordinate", "PlaneIntersectionType"}),
-        Lab("col-merge", "Fitting and Merging Bounds", "CreateFromPoints for boxes and spheres, and CreateMerged", "collision", "merge", {"BoundingBox.CreateFromPoints", "BoundingSphere.CreateFromPoints", "BoundingSphere.CreateMerged"}),
-        Lab("col-frustum", "Frustum Culling", "BoundingFrustum.Contains: fully inside, partly inside or culled", "collision", "frustum", {"BoundingFrustum.Contains", "BoundingFrustum", "Matrix.CreatePerspectiveFieldOfView"}),
+        Lab("col-merge", "Fitting and Merging Bounds", "CreateFromPoints for boxes and spheres, CreateMerged and the sphere around a box", "collision", "merge", {"BoundingBox.CreateFromPoints", "BoundingSphere.CreateFromPoints", "BoundingSphere.CreateMerged", "BoundingSphere.CreateFromBoundingBox"}),
+        Lab("col-frustum", "Frustum Culling", "BoundingFrustum.Contains: fully inside, partly inside or culled, with the frustum's corners and its own sphere", "collision", "frustum", {"BoundingFrustum.Contains", "BoundingFrustum", "BoundingFrustum.GetCorners", "BoundingSphere.CreateFromFrustum", "Matrix.CreatePerspectiveFieldOfView"}),
         Lab("col-pick", "Picking", "Your view ray tested with Ray.Intersects against boxes and spheres", "collision", "pick", {"Ray.Intersects", "BoundingBox", "BoundingSphere"}),
     };
     return w;

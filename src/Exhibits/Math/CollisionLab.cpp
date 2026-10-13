@@ -115,11 +115,14 @@ public:
                 p.AddReadout("Box size", [this] { return Fmt(Fit().Max - Fit().Min); });
                 p.AddReadout("Sphere radius", [this] { return Fmt(FitSphere().Radius); });
                 p.AddReadout("Merged sphere radius", [this] { return Fmt(BoundingSphere::CreateMerged(FitSphere(), BoundingSphere(Vector3(1.5f, 0, 0), 0.4f)).Radius); });
+                p.AddReadout("Sphere around the box (CreateFromBoundingBox)", [this] { return Fmt(BoundingSphere::CreateFromBoundingBox(Fit()).Radius); });
                 break;
             case Mode::Frustum:
                 p.AddSlider("Camera yaw", -90.0f, 90.0f, aimYaw_, [this](float v) { aimYaw_ = v; }, "%.0f deg", 1.0f);
                 p.AddSlider("Field of view", 25.0f, 100.0f, fov_, [this](float v) { fov_ = v; }, "%.0f deg", 1.0f);
                 p.AddSlider("Far plane", 2.0f, 8.0f, far_, [this](float v) { far_ = v; }, "%.1f");
+                p.AddToggle("Show the corners and the frustum's own sphere", true, [this](bool v) { showFrustumBounds_ = v; });
+                p.AddReadout("GetCorners / CreateFromFrustum radius", [this] { return std::to_string(View().GetCorners().size()) + " corners / " + Fmt(BoundingSphere::CreateFromFrustum(View()).Radius); });
                 p.AddHeading("BoundingFrustum.Contains(sphere) for 25 spheres");
                 p.AddReadout("Fully inside", [this] { return std::to_string(Count(ContainmentType::Contains)); });
                 p.AddReadout("Partly inside", [this] { return std::to_string(Count(ContainmentType::Intersects)); });
@@ -204,7 +207,9 @@ public:
                 const BoundingSphere extra(Vec(Vector3(1.5f, 0, 0)), 0.4f);
                 gizmos_.Sphere(extra, Color(255, 140, 200, 255), 24);
                 gizmos_.Sphere(BoundingSphere::CreateMerged(BoundingSphere(Vec(fs.Center), fs.Radius), extra), Color(150, 255, 150, 255), 40);
-                gizmos_.Label(Vec(Vector3(0, 1.3f, 0)), "yellow: CreateFromPoints box   blue: sphere   green: CreateMerged", Color(230, 230, 240, 255), 0.45f);
+                const BoundingSphere around = BoundingSphere::CreateFromBoundingBox(Fit());
+                gizmos_.Sphere(BoundingSphere(Vec(around.Center), around.Radius), Color(110, 255, 240, 120), 24);
+                gizmos_.Label(Vec(Vector3(0, 1.3f, 0)), "yellow: CreateFromPoints box   blue: sphere   green: CreateMerged   cyan: sphere around the box", Color(230, 230, 240, 255), 0.45f);
                 break;
             }
             case Mode::Frustum: DrawFrustum(ctx); break;
@@ -337,6 +342,11 @@ private:
     {
         const BoundingFrustum f = View();
         gizmos_.Frustum(f, Color(255, 200, 90, 255));
+        if (showFrustumBounds_) {
+            const std::vector<Vector3> corners = f.GetCorners();
+            for (std::size_t i = 0; i < corners.size(); ++i) gizmos_.SolidSphere(ctx, corners[i], 0.045f, kGold);
+            gizmos_.Sphere(BoundingSphere::CreateFromFrustum(f), Color(255, 160, 220, 140), 32);
+        }
         gizmos_.SolidSphere(ctx, Vec(Vector3(-2.6f, 0.2f, 0.0f)), 0.08f, kRed);
         for (int i = 0; i < 25; ++i) {
             const ContainmentType c = f.Contains(Ball(i));
@@ -360,6 +370,7 @@ private:
     float aimYaw_ = 0.0f, aimPitch_ = 0.0f, tilt_ = 20.0f;
     int count_ = 40;
     float fov_ = 55.0f, far_ = 5.0f;
+    bool showFrustumBounds_ = true;
     std::string pickName_ = "none";
     float pickDist_ = -1.0f;
     int pickIndex_ = -1;
