@@ -39,6 +39,23 @@ WingSpec ContentWing()
 }
 
 
+
+RoomSpec ShadowRoom()
+{
+    RoomSpec r;
+    r.key = "cx-shadow";
+    r.title = "Shadow Mapping";
+    r.subtitle = "A caster pass into a float render target, then BasicEffect receives the shadows";
+    r.exhibit = "shadow-lab";
+    r.width = 15;
+    r.depth = 15;
+    r.height = 5.5f;
+    r.theme = "futuristic";
+    r.apis = {"IShadowReceiverEXT", "BasicEffect.ShadowMapEXT", "BasicEffect.LightViewProjectionEXT", "BasicEffect.ShadowDepthBiasEXT", "BasicEffect.ShadowFilterRadiusEXT", "ShaderEffect", "Matrix.CreateOrthographic"};
+    r.origin = ApiOrigin::CnaExtension;
+    return r;
+}
+
 WingSpec CnaWing()
 {
     WingSpec w;
@@ -68,6 +85,7 @@ WingSpec CnaWing()
         cx("cx-depth", "Colour Depth Effect", "16-bit, 8-bit, grayscale and palette looks with ordered dithering", "depth", {"CNA::Graphics::DepthEffect", "DepthEffectMode", "DitherMode"}),
         cx("cx-ascii", "ASCII Post-Process", "A texture redrawn as text, in black and white or colour", "ascii", {"CNA::Graphics::AsciiPostProcessEffect", "AsciiQuantizeMode"}),
         cx("cx-package", "Shader Packages", "One shader in several languages: the package picks the variant this renderer can run", "package", {"CNA::Graphics::ShaderPackageEXT", "ShaderPackageEXT.selectFor", "ShaderCodeEXT", "ShaderEffect(device, package)", "ShaderLanguageEXT"}),
+        ShadowRoom(),
         cx("cx-stats", "Engine Statistics", "Draw calls, primitives, state changes and every live graphics resource", "stats", {"CNA::Diagnostics::GetProvider", "Snapshot.metrics", "Snapshot.resources", "SetRuntimeMode"}),
         cx("cx-points", "Point Lists", "PrimitiveType::PointListEXT and debug string markers", "points", {"PrimitiveType.PointListEXT", "GraphicsDevice.DrawUserPrimitives", "GraphicsDevice.SetStringMarkerEXT"}),
         cx("cx-devices", "Device Extensions", "Power, locale, CPU and memory, display scale and safe area", "devices", {"CNA::Devices::SystemInfo", "CNA::Devices::Locale", "CNA::Devices::PowerInfo", "CNA::Devices::DisplayInfo"}),
