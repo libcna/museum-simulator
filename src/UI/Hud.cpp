@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <string>
+#include <vector>
 
 #include "Microsoft/Xna/Framework/Graphics/BlendState.hpp"
 #include "Microsoft/Xna/Framework/Graphics/SamplerState.hpp"
@@ -10,7 +12,9 @@
 #include "Microsoft/Xna/Framework/Graphics/SpriteSortMode.hpp"
 #include "Microsoft/Xna/Framework/Rectangle.hpp"
 #include "Rendering/TextureLibrary.hpp"
+#include "Exhibits/ExhibitKit.hpp"
 #include "UI/FloorMap.hpp"
+#include "UI/UiScale.hpp"
 
 using namespace Microsoft::Xna::Framework;
 using namespace Microsoft::Xna::Framework::Graphics;
@@ -152,11 +156,15 @@ void Hud::Draw(const HudState& state)
 {
     if (s_.sprites == nullptr || s_.font == nullptr) return;
     GraphicsDevice& device = *s_.device;
-    const int w = device.getViewportProperty().getWidthProperty();
-    const int h = device.getViewportProperty().getHeightProperty();
+    const int realW = device.getViewportProperty().getWidthProperty();
+    const int realH = device.getViewportProperty().getHeightProperty();
+    // The overlay is laid out for 1280 x 720 and scaled to the window, so it reads the same in a small window and a large one.
+    const float ui = UiScale::Scale(realW, realH);
+    const int w = UiScale::Virtual(realW, ui);
+    const int h = UiScale::Virtual(realH, ui);
 
     const SamplerState sampler = SamplerState::LinearClamp;
-    s_.sprites->Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &sampler, nullptr, nullptr);
+    s_.sprites->Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &sampler, nullptr, nullptr, nullptr, Matrix::CreateScale(ui, ui, 1.0f));
 
     if (!state.paused) {
         DrawCrosshair(!state.prompt.empty(), w, h);
@@ -176,12 +184,24 @@ void Hud::Draw(const HudState& state)
             const Vector2 ts = s_.titleFont->MeasureString(state.roomTitle);
             const Vector2 ss = s_.font->MeasureString(state.roomSubtitle);
             const float titleScale = std::min(1.0f, (maxW - 80.0f) / std::max(1.0f, ts.X));
-            const float subScale = std::min(1.0f, (maxW - 80.0f) / std::max(1.0f, ss.X));
-            const float bw = std::max(ts.X * titleScale, ss.X * subScale) + 80.0f;
-            Rect(static_cast<int>(static_cast<float>(w) / 2.0f - bw / 2.0f), 56, static_cast<int>(bw), 112,
-                 Fade(Color(10, 14, 24, 190), a));
+            // A subtitle that would have to shrink a lot is wrapped onto two lines instead.
+            std::vector<std::string> sub;
+            float subScale = std::min(1.0f, (maxW - 80.0f) / std::max(1.0f, ss.X));
+            if (subScale < 0.78f) {
+                subScale = 0.82f;
+                sub = Kit::Wrap(*s_.font, state.roomSubtitle, maxW - 80.0f, subScale);
+                if (sub.size() > 3) sub.resize(3);
+            } else {
+                sub.push_back(state.roomSubtitle);
+            }
+            float subW = 0.0f;
+            for (const std::string& l : sub) subW = std::max(subW, s_.font->MeasureString(l).X * subScale);
+            const float bw = std::max(ts.X * titleScale, subW) + 80.0f;
+            const int bh = 112 + static_cast<int>(sub.size() > 1 ? (sub.size() - 1) * 24 : 0);
+            Rect(static_cast<int>(static_cast<float>(w) / 2.0f - bw / 2.0f), 56, static_cast<int>(bw), bh, Fade(Color(10, 14, 24, 190), a));
             TextCentred(*s_.titleFont, state.roomTitle, static_cast<float>(w) / 2.0f, 62.0f, Fade(Color(255, 214, 90, 255), a), titleScale);
-            TextCentred(*s_.font, state.roomSubtitle, static_cast<float>(w) / 2.0f, 126.0f, Fade(Color(230, 235, 245, 255), a), subScale);
+            for (std::size_t i = 0; i < sub.size(); ++i)
+                TextCentred(*s_.font, sub[i], static_cast<float>(w) / 2.0f, 126.0f + static_cast<float>(i) * 24.0f, Fade(Color(230, 235, 245, 255), a), subScale);
         }
         float ty = static_cast<float>(h) - 40.0f;
         for (auto it = toasts_.rbegin(); it != toasts_.rend(); ++it) {

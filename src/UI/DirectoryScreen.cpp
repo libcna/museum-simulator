@@ -1,4 +1,5 @@
 #include "UI/DirectoryScreen.hpp"
+#include "UI/UiScale.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -104,9 +105,12 @@ void DirectoryScreen::MoveSelection(int delta)
     }
 }
 
-DirectoryScreen::Result DirectoryScreen::Update(const InputState& in, const std::set<int>& discovered, int w, int h)
+DirectoryScreen::Result DirectoryScreen::Update(const InputState& in, const std::set<int>& discovered, int screenW, int screenH)
 {
     Result result;
+    // The screen is laid out in 1280 x 720 units and drawn scaled (see UiScale): input is mapped into the same units.
+    const float ui = UiScale::Scale(screenW, screenH);
+    const int w = UiScale::Virtual(screenW, ui), h = UiScale::Virtual(screenH, ui);
     const MuseumPlan& m = *s_.museum;
     if (in.Pressed(Keys::Escape) || (in.Pressed(Keys::M) && query_.empty()) || in.Pressed(Keys::Tab)) {
         result.close = true;
@@ -142,8 +146,8 @@ DirectoryScreen::Result DirectoryScreen::Update(const InputState& in, const std:
 
     bool go = in.Pressed(Keys::Enter);
     // Mouse: tabs, list rows, map cells.
-    const int mx = in.Mouse().getXProperty();
-    const int my = in.Mouse().getYProperty();
+    const int mx = static_cast<int>(static_cast<float>(in.Mouse().getXProperty()) / ui);
+    const int my = static_cast<int>(static_cast<float>(in.Mouse().getYProperty()) / ui);
     const int px = 40, py = 30, pw = w - 80, ph = h - 60;
     if (in.LeftClicked()) {
         // Floor tabs.
@@ -184,14 +188,16 @@ DirectoryScreen::Result DirectoryScreen::Update(const InputState& in, const std:
     return result;
 }
 
-void DirectoryScreen::Draw(const std::set<int>& discovered, int currentFloor, int currentCell, const Vector3& player, float yaw, int w, int h)
+void DirectoryScreen::Draw(const std::set<int>& discovered, int currentFloor, int currentCell, const Vector3& player, float yaw, int screenW, int screenH)
 {
     if (!open_ || s_.sprites == nullptr) return;
+    const float ui = UiScale::Scale(screenW, screenH);
+    const int w = UiScale::Virtual(screenW, ui), h = UiScale::Virtual(screenH, ui);
     const MuseumPlan& m = *s_.museum;
     SpriteBatch& sb = *s_.sprites;
     Texture2D& white = *s_.textures->White();
     const SamplerState sampler = SamplerState::LinearClamp;
-    sb.Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &sampler, nullptr, nullptr);
+    sb.Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &sampler, nullptr, nullptr, nullptr, Matrix::CreateScale(ui, ui, 1.0f));
     const auto rect = [&](int x, int y, int rw, int rh, Color c) { sb.Draw(white, Rectangle(x, y, rw, rh), c); };
     const auto text = [&](const std::string& t, float x, float y, Color c, float scale = 0.7f) {
         sb.DrawString(*s_.font, t, Vector2(x, y), c, 0.0f, Vector2(0, 0), scale, SpriteEffects::None, 0.0f);
