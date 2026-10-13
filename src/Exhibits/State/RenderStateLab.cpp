@@ -31,12 +31,12 @@ using namespace MathKit;
 
 namespace {
 
-enum class Mode { Cull, Fill, DepthBias, Scissor, DepthFunc, DepthRead, StencilPortal, StencilOutline, StencilShadow, BlendGallery, ColorWrite, BlendFactor };
+enum class Mode { Cull, Fill, DepthBias, Scissor, DepthFunc, DepthRead, StencilPortal, StencilOutline, StencilShadow, StencilCount, BlendGallery, ColorWrite, BlendFactor };
 
 Mode ParseMode(const std::string& s)
 {
     static const std::pair<const char*, Mode> table[] = {{"fill", Mode::Fill}, {"depthbias", Mode::DepthBias}, {"scissor", Mode::Scissor}, {"depthfunc", Mode::DepthFunc}, {"depthread", Mode::DepthRead},
-                                                         {"portal", Mode::StencilPortal}, {"outline", Mode::StencilOutline}, {"shadow", Mode::StencilShadow}, {"blendgallery", Mode::BlendGallery},
+                                                         {"portal", Mode::StencilPortal}, {"outline", Mode::StencilOutline}, {"shadow", Mode::StencilShadow}, {"stencilcount", Mode::StencilCount}, {"blendgallery", Mode::BlendGallery},
                                                          {"colorwrite", Mode::ColorWrite}, {"blendfactor", Mode::BlendFactor}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
@@ -94,6 +94,13 @@ public:
             case Mode::StencilShadow:
                 p.AddToggle("Use stencil to avoid double blend", true, [this](bool v) { stencil_ = v; });
                 p.AddSlider("Light height", 2.0f, 6.0f, size_, [this](float v) { size_ = v; });
+                break;
+            case Mode::StencilCount:
+                p.AddChoice("Scene", {"Four overlapping discs", "Closed and open meshes (two-sided)"}, 0, [this](int v) { countScene_ = v; });
+                p.AddChoice("StencilPass operation", {"Increment", "IncrementSaturation", "Decrement", "DecrementSaturation", "Invert", "Replace (reference 5)"}, 0, [this](int v) { countOp_ = v; });
+                p.AddSlider("StencilWriteMask", 1.0f, 255.0f, static_cast<float>(writeMask_), [this](float v) { writeMask_ = static_cast<int>(v); }, "%.0f", 1.0f);
+                p.AddSlider("Value the stencil is cleared to", 0.0f, 250.0f, static_cast<float>(clearValue_), [this](float v) { clearValue_ = static_cast<int>(v); }, "%.0f", 1.0f);
+                p.AddReadout("What is shown", [this] { return countScene_ == 0 ? std::string("stencil = clear value + discs covering the pixel") : std::string("clockwise faces +1, counter-clockwise -1: open meshes leave a mark"); });
                 break;
             case Mode::BlendGallery:
                 p.AddSlider("Source opacity", 0.1f, 1.0f, alpha_, [this](float v) { alpha_ = v; });
@@ -159,6 +166,7 @@ public:
             case Mode::StencilPortal: DrawPortal(ctx, o); break;
             case Mode::StencilOutline: DrawOutline(ctx, o); break;
             case Mode::StencilShadow: DrawShadow(ctx); break;
+            case Mode::StencilCount: DrawStencilCount(ctx, o); break;
             case Mode::BlendGallery: DrawBlendGallery(ctx, o); break;
             case Mode::ColorWrite: DrawColorWrite(ctx, o); break;
             case Mode::BlendFactor: DrawBlendFactor(ctx, o); break;
@@ -171,7 +179,7 @@ public:
 private:
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"RasterizerState.CullMode", "RasterizerState.FillMode", "Depth bias and z-fighting", "Scissor rectangle", "DepthBufferFunction", "Depth read-only for glass", "Stencil: a window into another world", "Stencil: object outline", "Stencil: planar shadow", "BlendState gallery", "ColorWriteChannels", "BlendFactor"};
+        static const char* t[] = {"RasterizerState.CullMode", "RasterizerState.FillMode", "Depth bias and z-fighting", "Scissor rectangle", "DepthBufferFunction", "Depth read-only for glass", "Stencil: a window into another world", "Stencil: object outline", "Stencil: planar shadow", "Stencil: counting and masks", "BlendState gallery", "ColorWriteChannels", "BlendFactor"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
@@ -185,6 +193,7 @@ private:
             case Mode::DepthRead: return {"Translucent panes must not write depth, or a pane drawn first hides the ones behind it. DepthRead (test,", "no write) fixes that, ideally with the panes also sorted back to front."};
             case Mode::StencilPortal: return {"The stencil buffer is a per-pixel integer mask. First a window quad writes 1 into it (colour writes off);", "then a second world is drawn only where the stencil equals 1: a portal. Needs a depth-stencil back buffer."};
             case Mode::StencilOutline: return {"Draw the object writing 1 to the stencil; draw it again, slightly larger and flat coloured, only where the", "stencil is NOT 1: what remains is the outline. Switch the stencil off and the larger copy hides the object."};
+            case Mode::StencilCount: return {"Each stencil operation changes a pixel's value as geometry covers it. Increment counts how many discs cover a pixel; the write", "mask limits which bits change; TwoSidedStencilMode counts clockwise faces up and counter-clockwise down, so closed meshes cancel out."};
             case Mode::StencilShadow: return {"A planar shadow is the object flattened onto the floor with Matrix.CreateShadow. Drawn with blending, any", "overlap gets darker twice; a stencil test that lets each floor pixel be shaded once avoids the double dark."};
             case Mode::BlendGallery: return {"Sixteen BlendStates over the same background: presets, premultiplied and straight alpha, additive,", "multiply, screen, subtract, min, max and custom source/destination factors. Each cell is labelled."};
             case Mode::ColorWrite: return {"ColorWriteChannels masks which colour channels a draw may change. Three overlapping quads are drawn", "with the mask you choose: remove red and every red contribution disappears while the others stay."};
@@ -347,6 +356,98 @@ private:
         // The surrounding frame.
         d.setRasterizerStateProperty(RasterizerState::CullClockwise);
         gizmos_.Box(BoundingBox(o + Off(-size_ * 0.8f, -size_ * 0.5f, 0), o + Off(size_ * 0.8f, size_ * 0.5f, 0.01f)), Color(255, 230, 150, 255));
+    }
+
+    // A flat-colour quad in the plane z = 0 of `frame`, `w` x `h` metres, centred.
+    void FlatRect(const DrawContext& ctx, const Matrix& frame, float cx, float cy, float w, float h, const Color& c)
+    {
+        BasicEffect& fx = ctx.fx.Flat();
+        fx.setWorldProperty(frame);
+        fx.setViewProperty(ctx.view.view);
+        fx.setProjectionProperty(ctx.view.projection);
+        EffectBank::Apply(fx);
+        const float x0 = cx - w * 0.5f, x1 = cx + w * 0.5f, y0 = cy - h * 0.5f, y1 = cy + h * 0.5f;
+        const VertexPositionColor q[6] = {{Vector3(x0, y0, 0), c}, {Vector3(x1, y0, 0), c}, {Vector3(x1, y1, 0), c}, {Vector3(x0, y0, 0), c}, {Vector3(x1, y1, 0), c}, {Vector3(x0, y1, 0), c}};
+        ctx.device.DrawUserPrimitives(PrimitiveType::TriangleList, q, 0, 2);
+    }
+    void FlatDisc(const DrawContext& ctx, const Matrix& frame, float cx, float cy, float r, const Color& c)
+    {
+        BasicEffect& fx = ctx.fx.Flat();
+        fx.setWorldProperty(frame);
+        fx.setViewProperty(ctx.view.view);
+        fx.setProjectionProperty(ctx.view.projection);
+        EffectBank::Apply(fx);
+        VertexPositionColor v[48 * 3];
+        for (int i = 0; i < 48; ++i) {
+            const float a0 = MathHelper::TwoPi * static_cast<float>(i) / 48.0f, a1 = MathHelper::TwoPi * static_cast<float>(i + 1) / 48.0f;
+            v[i * 3 + 0] = {Vector3(cx, cy, 0), c};
+            v[i * 3 + 1] = {Vector3(cx + std::cos(a0) * r, cy + std::sin(a0) * r, 0), c};
+            v[i * 3 + 2] = {Vector3(cx + std::cos(a1) * r, cy + std::sin(a1) * r, 0), c};
+        }
+        ctx.device.DrawUserPrimitives(PrimitiveType::TriangleList, v, 0, 48);
+    }
+
+    void DrawStencilCount(const DrawContext& ctx, const Vector3& o)
+    {
+        GraphicsDevice& d = ctx.device;
+        static const StencilOperation ops[] = {StencilOperation::Increment, StencilOperation::IncrementSaturation, StencilOperation::Decrement,
+                                               StencilOperation::DecrementSaturation, StencilOperation::Invert, StencilOperation::Replace};
+        const bool two = countScene_ == 1;
+        const int start = two ? 128 : clearValue_;
+        d.Clear(ClearOptions::Stencil, Color(0, 0, 0, 0), 1.0f, start);
+        d.setRasterizerStateProperty(RasterizerState::CullNone);
+        const Matrix frame = Matrix::CreateRotationY(R().frameYaw) * Matrix::CreateTranslation(o + Off(0, 0.2f, -1.0f));
+        BlendState none = BlendState::Opaque;
+        none.setColorWriteChannelsProperty(ColorWriteChannels::None);
+        // Pass 1: the geometry only changes the stencil (no colour, no depth test).
+        DepthStencilState count = DepthStencilState::Default;
+        count.setDepthBufferEnableProperty(false);
+        count.setStencilEnableProperty(true);
+        count.setStencilFunctionProperty(CompareFunction::Always);
+        count.setStencilPassProperty(two ? StencilOperation::Increment : ops[countOp_]);
+        count.setReferenceStencilProperty(countOp_ == 5 && !two ? 5 : 1);
+        count.setStencilWriteMaskProperty(two ? 255 : writeMask_);
+        if (two) {
+            count.setTwoSidedStencilModeProperty(true);
+            count.setCounterClockwiseStencilFunctionProperty(CompareFunction::Always);
+            count.setCounterClockwiseStencilPassProperty(StencilOperation::Decrement);
+        }
+        d.setDepthStencilStateProperty(count);
+        d.setBlendStateProperty(none);
+        if (!two) {
+            const float cx[4] = {-1.5f, -0.5f, 0.45f, 1.4f}, cy[4] = {0.3f, -0.3f, 0.35f, -0.25f}, r[4] = {1.0f, 1.05f, 0.95f, 1.0f};
+            for (int i = 0; i < 4; ++i) FlatDisc(ctx, frame, cx[i], cy[i], r[i], Color::White);
+        } else {
+            BasicEffect& fx = ctx.fx.Flat();
+            fx.setViewProperty(ctx.view.view);
+            fx.setProjectionProperty(ctx.view.projection);
+            const auto shape = [&](const LitMesh& m, const Matrix& w) { fx.setWorldProperty(w); EffectBank::Apply(fx); m.Draw(d); };
+            shape(S().shapes->Cube(), Matrix::CreateScale(1.3f) * Matrix::CreateRotationY(time_ * 0.5f) * Matrix::CreateTranslation(o + Off(-1.9f, 0.0f, -1.0f)));
+            shape(S().shapes->Sphere(), Matrix::CreateScale(1.6f) * Matrix::CreateTranslation(o + Off(0.0f, 0.0f, -1.0f)));
+            shape(S().shapes->Panel(), Matrix::CreateScale(1.6f) * Matrix::CreateRotationY(R().frameYaw) * Matrix::CreateTranslation(o + Off(1.9f, 0.0f, -1.0f)));
+        }
+        // Pass 2: paint every pixel whose stencil value is `start + k` with a colour for k, using StencilFunction.Equal.
+        d.setBlendStateProperty(BlendState::Opaque);
+        d.setRasterizerStateProperty(RasterizerState::CullNone);
+        for (int k = -4; k <= 6; ++k) {
+            if (k == 0) continue;
+            const int value = ((start + k) % 256 + 256) % 256;
+            DepthStencilState read = DepthStencilState::Default;
+            read.setDepthBufferEnableProperty(false);
+            read.setStencilEnableProperty(true);
+            read.setStencilFunctionProperty(CompareFunction::Equal);
+            read.setStencilPassProperty(StencilOperation::Keep);
+            read.setReferenceStencilProperty(value);
+            read.setStencilMaskProperty(255);
+            d.setDepthStencilStateProperty(read);
+            static const Color up[7] = {Color(0, 0, 0, 255), Color(70, 200, 120, 255), Color(240, 220, 70, 255), Color(255, 150, 50, 255), Color(240, 70, 70, 255), Color(220, 80, 220, 255), Color(250, 250, 250, 255)};
+            static const Color down[5] = {Color(0, 0, 0, 255), Color(255, 175, 80, 255), Color(120, 150, 255, 255), Color(60, 90, 200, 255), Color(30, 40, 120, 255)};
+            const Color c = k > 0 ? up[k] : down[-k];
+            FlatRect(ctx, frame, 0.0f, 0.0f, 8.0f, 4.0f, c);
+        }
+        d.setDepthStencilStateProperty(DepthStencilState::Default);
+        d.setRasterizerStateProperty(RasterizerState::CullClockwise);
+        gizmos_.Label(o + Off(0, 1.9f, -1.0f), two ? "closed meshes cancel to 0 (unmarked); the open panel does not" : "green 1 disc, yellow 2, orange 3, red 4 (the stencil value minus the cleared value)", Color(255, 230, 150, 255), 0.5f);
     }
 
     void DrawOutline(const DrawContext& ctx, const Vector3& o)
@@ -527,6 +628,7 @@ private:
         d.setDepthStencilStateProperty(DepthStencilState::Default);
     }
 
+    int countScene_ = 0, countOp_ = 0, writeMask_ = 255, clearValue_ = 0;
     Mode mode_;
     Gizmos gizmos_;
     std::unique_ptr<BasicEffect> fx_;

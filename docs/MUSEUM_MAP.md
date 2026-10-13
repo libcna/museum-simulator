@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 33 wings, 243 exhibit rooms (5 open to the sky), 306 walkable cells in all.
+10 floors, 33 wings, 244 exhibit rooms (5 open to the sky), 307 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -293,10 +293,11 @@ RasterizerState, DepthStencilState, BlendState and off-screen rendering
 | 5.1.07 | `rs-portal` | Stencil: a Portal | XNA 4.0 | DepthStencilState.StencilEnable, DepthStencilState.StencilFunction, StencilOperation, ColorWriteChannels |
 | 5.1.08 | `rs-outline` | Stencil: an Outline | XNA 4.0 | DepthStencilState.ReferenceStencil, DepthStencilState.StencilPass, CompareFunction.NotEqual |
 | 5.1.09 | `rs-shadow` | Stencil: a Planar Shadow | XNA 4.0 | Matrix.CreateShadow, DepthStencilState.StencilPass, StencilOperation.Increment |
-| 5.1.10 | `rs-blend` | BlendState Gallery | XNA 4.0 | BlendState, Blend, BlendFunction |
-| 5.1.11 | `rs-colorwrite` | Color Write Channels | XNA 4.0 | BlendState.ColorWriteChannels, ColorWriteChannels |
-| 5.1.12 | `rs-blendfactor` | Blend Factor | XNA 4.0 | BlendState.BlendFactor, Blend.BlendFactor, Blend.InverseBlendFactor |
-| 5.1.13 | `rs-occlusion` | Occlusion Query | XNA 4.0 | OcclusionQuery, OcclusionQuery.PixelCount, OcclusionQuery.IsComplete, GraphicsCapability.OcclusionQuery |
+| 5.1.10 | `rs-stencilcount` | Stencil: Counting and Masks | XNA 4.0 | DepthStencilState.StencilPass, DepthStencilState.StencilWriteMask, DepthStencilState.StencilMask, DepthStencilState.TwoSidedStencilMode, DepthStencilState.CounterClockwiseStencilPass, DepthStencilState.CounterClockwiseStencilFunction, StencilOperation, GraphicsDevice.Clear |
+| 5.1.11 | `rs-blend` | BlendState Gallery | XNA 4.0 | BlendState, Blend, BlendFunction |
+| 5.1.12 | `rs-colorwrite` | Color Write Channels | XNA 4.0 | BlendState.ColorWriteChannels, ColorWriteChannels |
+| 5.1.13 | `rs-blendfactor` | Blend Factor | XNA 4.0 | BlendState.BlendFactor, Blend.BlendFactor, Blend.InverseBlendFactor |
+| 5.1.14 | `rs-occlusion` | Occlusion Query | XNA 4.0 | OcclusionQuery, OcclusionQuery.PixelCount, OcclusionQuery.IsComplete, GraphicsCapability.OcclusionQuery |
 
 **Render Target Complex** - Off-screen rendering: screens, mirrors, feedback, low resolution and MRT
 
@@ -431,8 +432,8 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 | Room | Key | Title | Origin | APIs |
 |---|---|---|---|---|
 | 8.3.01 | `pl-window` | The Game Window | XNA 4.0 | GameWindow.Title, GameWindow.ClientBounds, GameWindow.AllowUserResizing, GameWindow.ClientSizeChanged, Game.Activated, GameWindow.FileDropEXT |
-| 8.3.02 | `pl-adapter` | Adapter and Back Buffer | XNA 4.0 | GraphicsAdapter, DisplayMode, GraphicsDevice.GraphicsProfile, PresentationParameters |
-| 8.3.03 | `pl-renderer` | The Active Renderer | CNA extension | GraphicsDevice.GetRendererCapabilityProfileEXT, RendererFeature, RendererLimit, RendererFormatUsage, GraphicsDevice.GetGraphicsRendererName |
+| 8.3.02 | `pl-adapter` | Adapter and Back Buffer | XNA 4.0 | GraphicsAdapter, DisplayMode, GraphicsDevice.GraphicsProfile, PresentationParameters, GraphicsAdapter.IsProfileSupported, GraphicsAdapter.QueryRenderTargetFormat, GraphicsAdapter.QueryBackBufferFormat, GraphicsAdapter.Adapters |
+| 8.3.03 | `pl-renderer` | The Active Renderer | CNA extension | GraphicsDevice.GetRendererCapabilityProfileEXT, RendererFeature, RendererLimit, RendererFormatUsage, GraphicsDevice.GetGraphicsRendererName, GraphicsDevice.GetDisplayColorSpaceEXT, GraphicsDevice.SupportsDisplayColorSpaceEXT, GraphicsDevice.SetDisplayColorSpaceEXT, GraphicsDevice.SupportsImageBasedLightingEXT, GraphicsDevice.GetTrackedResourceCount, GraphicsDevice.GetLogicalSizeEXT |
 | 8.3.04 | `pl-platform` | Platform Capabilities | CNA extension | Game.GetPlatformCapabilitiesEXT, PlatformCapabilities |
 
 **History and Versions** - Where XNA came from, and what this very build of CNA is made of

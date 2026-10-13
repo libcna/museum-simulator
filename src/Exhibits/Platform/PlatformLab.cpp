@@ -34,6 +34,13 @@ Mode ParseMode(const std::string& s)
     return Mode::Window;
 }
 
+std::string Hex(long long v)
+{
+    char buf[24];
+    std::snprintf(buf, sizeof buf, "%04llX", static_cast<unsigned long long>(v));
+    return buf;
+}
+
 std::string Num(double v, const char* f = "%.0f")
 {
     char buf[48];
@@ -102,7 +109,7 @@ public:
             case Mode::Renderer:
                 p.AddReadout("Active renderer", [this] { return std::string(S().device->GetGraphicsRendererName()); });
                 p.AddReadout("Maturity", [this] { return maturity_; });
-                p.AddChoice("Table", {"Features", "Limits and formats"}, 0, [this](int v) { page_ = v; });
+                p.AddChoice("Table", {"Features", "Limits and formats", "Device queries"}, 0, [this](int v) { page_ = v; });
                 break;
             case Mode::Platform:
                 p.AddReadout("Platform", [this] { return platformName_; });
@@ -247,6 +254,19 @@ private:
                 lines_.push_back("GraphicsProfile: " + profileName_);
                 lines_.push_back("Back buffer: " + std::to_string(pp.getBackBufferWidthProperty()) + " x " + std::to_string(pp.getBackBufferHeightProperty()) + ", " + std::to_string(pp.getMultiSampleCountProperty()) + "x multisample");
                 lines_.push_back(std::string("Full screen: ") + (pp.getIsFullScreenProperty() ? "yes" : "no") + "    present interval " + std::to_string(static_cast<int>(pp.getPresentationIntervalProperty())) + "    depth format " + std::to_string(static_cast<int>(pp.getDepthStencilFormatProperty())));
+                lines_.push_back("Adapters: " + std::to_string(GraphicsAdapter::getAdaptersProperty().size()) + "    vendor 0x" + Hex(a.getVendorIdProperty()) + "  device 0x" + Hex(a.getDeviceIdProperty()) + "  revision " + std::to_string(a.getRevisionProperty()) + "    wide screen: " + (a.getIsWideScreenProperty() ? "yes" : "no"));
+                {
+                    SurfaceFormat sf = SurfaceFormat::Color;
+                    DepthFormat df = DepthFormat::None;
+                    int ms = 0;
+                    const bool reach = a.IsProfileSupported(GraphicsProfile::Reach), hidef = a.IsProfileSupported(GraphicsProfile::HiDef);
+                    const bool rt = a.QueryRenderTargetFormat(GraphicsProfile::HiDef, SurfaceFormat::Color, DepthFormat::Depth24Stencil8, 4, sf, df, ms);
+                    lines_.push_back(std::string("IsProfileSupported: Reach ") + (reach ? "yes" : "no") + ", HiDef " + (hidef ? "yes" : "no") + "    QueryRenderTargetFormat(Color, Depth24Stencil8, 4x): " +
+                                     (rt ? "ok -> " + std::to_string(static_cast<int>(sf)) + " / depth " + std::to_string(static_cast<int>(df)) + " / " + std::to_string(ms) + " samples" : std::string("not available")));
+                    const bool bb = a.QueryBackBufferFormat(GraphicsProfile::HiDef, SurfaceFormat::Color, DepthFormat::Depth24, 0, sf, df, ms);
+                    lines_.push_back(std::string("QueryBackBufferFormat(Color, Depth24): ") + (bb ? "ok" : "not available") + "    PresentationParameters.BackBufferFormat " + std::to_string(static_cast<int>(pp.getBackBufferFormatProperty())) +
+                                     ", DisplayOrientation " + std::to_string(static_cast<int>(pp.getDisplayOrientationProperty())) + ", headless " + (pp.getHeadlessEXTProperty() ? "yes" : "no"));
+                }
                 const Viewport vp = d.getViewportProperty();
                 lines_.push_back("Viewport: " + std::to_string(vp.getWidthProperty()) + " x " + std::to_string(vp.getHeightProperty()) + "   title-safe area " + std::to_string(vp.getTitleSafeAreaProperty().Width) + " x " + std::to_string(vp.getTitleSafeAreaProperty().Height));
             } else if (mode_ == Mode::Renderer) {
@@ -308,6 +328,26 @@ private:
                     rect(x, y + 4, 12, 12, c);
                     text(std::string(FeatureName(f)) + ": " + word, x + 20, y - 2, Kit::kText, 0.58f);
                     ++i;
+                }
+            } else if (page_ == 2) {
+                // Questions a game asks the device itself, as opposed to the capability profile.
+                const auto yes = [](bool v) { return v ? "yes" : "no"; };
+                const CNA::DisplayColorSpace spaces[] = {CNA::DisplayColorSpace::Srgb, CNA::DisplayColorSpace::Scrgb, CNA::DisplayColorSpace::Hdr10};
+                const char* spaceNames[] = {"sRGB", "scRGB", "HDR10"};
+                std::vector<std::string> rows;
+                rows.push_back(std::string("GetDisplayColorSpaceEXT: ") + spaceNames[std::min(static_cast<int>(d.GetDisplayColorSpaceEXT()), 2)]);
+                for (int i = 0; i < 3; ++i) rows.push_back(std::string("SupportsDisplayColorSpaceEXT(") + spaceNames[i] + "): " + yes(d.SupportsDisplayColorSpaceEXT(spaces[i])));
+                rows.push_back(std::string("SetDisplayColorSpaceEXT(HDR10) accepted: ") + yes(d.SetDisplayColorSpaceEXT(CNA::DisplayColorSpace::Hdr10)) + "   (an honest no where there is no HDR swap chain)");
+                rows.push_back(std::string("SupportsShadowSamplingEXT: ") + yes(d.SupportsShadowSamplingEXT()) + "      SupportsImageBasedLightingEXT: " + yes(d.SupportsImageBasedLightingEXT()));
+                rows.push_back(std::string("ExecutesShaderEffectSourceEXT: ") + yes(d.ExecutesShaderEffectSourceEXT()));
+                int lw = 0, lh = 0;
+                const bool logical = d.GetLogicalSizeEXT(lw, lh);
+                rows.push_back(std::string("GetLogicalSizeEXT: ") + (logical ? std::to_string(lw) + " x " + std::to_string(lh) : std::string("no virtual resolution set")));
+                rows.push_back("GetTrackedResourceCount: " + std::to_string(d.GetTrackedResourceCount()) + " live GPU resources on this device");
+                float y = 80.0f;
+                for (const std::string& r : rows) {
+                    text(r, 24, y, Kit::kText, 0.62f);
+                    y += 34.0f;
                 }
             } else {
                 const std::pair<CNA::RendererLimit, const char*> limits[] = {{CNA::RendererLimit::MaxTextureDimension, "max texture dimension"}, {CNA::RendererLimit::MaxVertexStreams, "max vertex streams"},

@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-502 distinct API names are claimed by at least one room.
+518 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -178,6 +178,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | DepthFormat | `cam-clip`, `rt-basic` |
 | DepthFormat.Depth24 | `rv-depth` |
 | DepthStencilState | `sky`, `renderstates`, `cam-clip`, `rv-depth` |
+| DepthStencilState.CounterClockwiseStencilFunction | `rs-stencilcount` |
+| DepthStencilState.CounterClockwiseStencilPass | `rs-stencilcount` |
 | DepthStencilState.DepthBufferEnable | `rs-depthfunc` |
 | DepthStencilState.DepthBufferFunction | `light-many`, `rs-depthfunc` |
 | DepthStencilState.DepthBufferWriteEnable | `rs-depthread` |
@@ -185,7 +187,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | DepthStencilState.ReferenceStencil | `rs-outline` |
 | DepthStencilState.StencilEnable | `rs-portal` |
 | DepthStencilState.StencilFunction | `rs-portal` |
-| DepthStencilState.StencilPass | `rs-outline`, `rs-shadow` |
+| DepthStencilState.StencilMask | `rs-stencilcount` |
+| DepthStencilState.StencilPass | `rs-outline`, `rs-shadow`, `rs-stencilcount` |
+| DepthStencilState.StencilWriteMask | `rs-stencilcount` |
+| DepthStencilState.TwoSidedStencilMode | `rs-stencilcount` |
 | DirectionalLight | `lighting`, `be-lights`, `light-types` |
 | DisplayMode | `pl-adapter` |
 | DitherMode | `cx-depth` |
@@ -250,26 +255,37 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Graphics/RenderTargetChanges | `pf-targets` |
 | Graphics/TextureBindingChanges | `pf-state` |
 | GraphicsAdapter | `info`, `app-device`, `pl-adapter` |
+| GraphicsAdapter.Adapters | `pl-adapter` |
+| GraphicsAdapter.IsProfileSupported | `pl-adapter` |
+| GraphicsAdapter.QueryBackBufferFormat | `pl-adapter` |
+| GraphicsAdapter.QueryRenderTargetFormat | `pl-adapter` |
 | GraphicsCapability | `app-device` |
 | GraphicsCapability.Instancing | `geo-instancing`, `pf-objects` |
 | GraphicsCapability.MultiSampleAntiAliasing | `rt-msaa` |
 | GraphicsCapability.OcclusionQuery | `rs-occlusion` |
 | GraphicsCapability.WireFrame | `rs-fill` |
 | GraphicsDevice | `info`, `app-device` |
+| GraphicsDevice.Clear | `rs-stencilcount` |
 | GraphicsDevice.DrawIndexedPrimitives | `geo-indexed`, `geo-manybuffers`, `geo-dynindex`, `pf-objects` |
 | GraphicsDevice.DrawInstancedPrimitives | `geo-instancing`, `pf-objects` |
 | GraphicsDevice.DrawPrimitives | `geo-indexed` |
 | GraphicsDevice.DrawUserPrimitives | `geo-triangle`, `geo-primitives`, `cx-points`, `pf-buffers`, `pf-particles`, `rv-geometry` |
 | GraphicsDevice.GetBackBufferData | `vr-index` |
+| GraphicsDevice.GetDisplayColorSpaceEXT | `pl-renderer` |
 | GraphicsDevice.GetGraphicsRendererName | `pl-renderer` |
+| GraphicsDevice.GetLogicalSizeEXT | `pl-renderer` |
 | GraphicsDevice.GetRendererCapabilityProfileEXT | `pl-renderer` |
+| GraphicsDevice.GetTrackedResourceCount | `pl-renderer` |
 | GraphicsDevice.GraphicsProfile | `pl-adapter` |
 | GraphicsDevice.ResourceCreated | `ct-lifetime` |
 | GraphicsDevice.ResourceDestroyed | `ct-lifetime` |
 | GraphicsDevice.ScissorRectangle | `sprite-scissor`, `rs-scissor`, `rv-geometry` |
+| GraphicsDevice.SetDisplayColorSpaceEXT | `pl-renderer` |
 | GraphicsDevice.SetRenderTarget | `rendertarget`, `rt-basic`, `rt-control`, `rt-cube`, `pf-targets`, `rv-targets` |
 | GraphicsDevice.SetRenderTargets | `rt-mrt` |
 | GraphicsDevice.SetStringMarkerEXT | `cx-points` |
+| GraphicsDevice.SupportsDisplayColorSpaceEXT | `pl-renderer` |
+| GraphicsDevice.SupportsImageBasedLightingEXT | `pl-renderer` |
 | GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT | `rt-formats` |
 | GraphicsDevice.Viewport | `cam-split`, `rv-geometry` |
 | GraphicsDeviceManager | `app-viewport` |
@@ -498,7 +514,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SpriteFont.MeasureString | `text-align`, `text-measure` |
 | SpriteFont.Spacing | `text-measure` |
 | SpriteSortMode | `sprite-sort`, `pf-sprites` |
-| StencilOperation | `rs-portal` |
+| StencilOperation | `rs-portal`, `rs-stencilcount` |
 | StencilOperation.Increment | `rs-shadow` |
 | StorageContainer | `ct-storage` |
 | StorageDevice | `ct-storage` |
