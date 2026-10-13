@@ -73,10 +73,10 @@ The application model, the maths of games, geometry tests and cameras
 
 | Room | Key | Title | Origin | APIs |
 |---|---|---|---|---|
-| 1.1.01 | `app-lifecycle` | Game Lifecycle | XNA 4.0 | Game, GameTime, Game.IsFixedTimeStep, Game.TargetElapsedTime, Game.LaunchParameters, LaunchParameters |
+| 1.1.01 | `app-lifecycle` | Game Lifecycle | XNA 4.0 | Game, GameTime, Game.IsFixedTimeStep, Game.TargetElapsedTime, Game.LaunchParameters, LaunchParameters, Game.Exiting |
 | 1.1.02 | `app-gametime` | GameTime and Frame Rate | XNA 4.0 | GameTime.ElapsedGameTime, GameTime.TotalGameTime |
 | 1.1.03 | `app-device` | Device and Renderer Report | XNA 4.0 | GraphicsDevice, GraphicsAdapter, GraphicsCapability, RendererCapabilityProfile, PresentationParameters |
-| 1.1.04 | `app-viewport` | Back Buffer, Viewport and Fullscreen | XNA 4.0 | GraphicsDeviceManager, PresentationParameters, PresentInterval, GraphicsDeviceStatus, GraphicsDeviceManager.DeviceReset, GraphicsDeviceManager.DeviceResetting, Viewport, GameWindow.ClientBounds |
+| 1.1.04 | `app-viewport` | Back Buffer, Viewport and Fullscreen | XNA 4.0 | GraphicsDeviceManager, PresentationParameters, PresentInterval, GraphicsDeviceStatus, GraphicsDeviceManager.DeviceReset, GraphicsDeviceManager.DeviceResetting, GraphicsDeviceManager.PreparingDeviceSettings, Viewport, GameWindow.ClientBounds |
 | 1.1.05 | `app-content` | Content Lifetime | XNA 4.0 | ContentManager, ContentManager.Load, ContentManager.Unload, ContentLoadException, Texture2D |
 | 1.1.06 | `app-components` | Game Components | XNA 4.0 | GameComponent, DrawableGameComponent, Game.Components, GameComponentCollection.ComponentAdded, GameComponentCollectionEventArgs |
 | 1.1.07 | `app-services` | Game Services | XNA 4.0 | GameServiceContainer, GameServiceContainer.AddService, GameServiceContainer.GetService, GameServiceContainer.RemoveService, Game.Services, IGraphicsDeviceService |
@@ -380,11 +380,11 @@ Sound, music, keyboards, mice and game pads
 | 7.1.01 | `au-basics` | SoundEffect.Play | XNA 4.0 | SoundEffect.Play, SoundEffect, ContentManager.Load<SoundEffect> |
 | 7.1.02 | `au-layers` | Instances and Layers | XNA 4.0 | SoundEffectInstance, SoundEffectInstance.IsLooped, SoundEffectInstance.Volume, SoundEffectInstance.Pitch, SoundState |
 | 7.1.03 | `au-spatial` | 3D Audio | XNA 4.0 | SoundEffectInstance.Apply3D, AudioEmitter, AudioListener, SoundEffect.DopplerScale, SoundEffect.DistanceScale, SoundEffect.SpeedOfSound |
-| 7.1.04 | `au-synth` | A Synthesiser | XNA 4.0 | DynamicSoundEffectInstance, DynamicSoundEffectInstance.SubmitBuffer, AudioChannels |
+| 7.1.04 | `au-synth` | A Synthesiser | XNA 4.0 | DynamicSoundEffectInstance, DynamicSoundEffectInstance.SubmitBuffer, AudioChannels, DynamicSoundEffectInstance.PendingBufferCount, DynamicSoundEffectInstance.GetSampleSizeInBytes, SoundEffect.GetSampleDuration |
 | 7.1.05 | `au-generate` | Generated Sounds | XNA 4.0 | SoundEffect(buffer, sampleRate, channels), AudioChannels |
 | 7.1.06 | `au-master` | Master Volume and Settings | XNA 4.0 | SoundEffect.MasterVolume, SoundEffect.DistanceScale, SoundEffect.DopplerScale, SoundEffect.SpeedOfSound |
 | 7.1.07 | `au-music` | Song and MediaPlayer | XNA 4.0 | Song, MediaPlayer.Play, MediaPlayer.Volume, MediaState |
-| 7.1.08 | `au-mic` | The Microphone | XNA 4.0 | Microphone, Microphone.GetData |
+| 7.1.08 | `au-mic` | The Microphone | XNA 4.0 | Microphone, Microphone.GetData, Microphone.SampleRate, Microphone.BufferDuration, Microphone.GetSampleSizeInBytes, Microphone.IsHeadset |
 
 **Input Complex** - Keyboard, mouse, game pads, text input, joysticks and the machine's other devices
 

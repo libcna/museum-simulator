@@ -10,6 +10,8 @@
 #include "CNA/GraphicsCapability.hpp"
 #include "CNA/RendererCapabilityProfile.hpp"
 #include "Exhibits/ExhibitFactories.hpp"
+#include "Microsoft/Xna/Framework/GraphicsDeviceInformation.hpp"
+#include "Microsoft/Xna/Framework/PreparingDeviceSettingsEventArgs.hpp"
 #include "Exhibits/ExhibitKit.hpp"
 #include "Exhibits/Math/MathKit.hpp"
 #include "Microsoft/Xna/Framework/Content/ContentLoadException.hpp"
@@ -96,6 +98,7 @@ public:
             if (S().graphics != nullptr && resetToken_ != 0) {
                 S().graphics->DeviceResetting.Remove(resettingToken_);
                 S().graphics->DeviceReset.Remove(resetToken_);
+                S().graphics->PreparingDeviceSettings.Remove(preparingToken_);
             }
             if (S().game != nullptr && addedToken_ != 0) {
                 S().game->getComponentsProperty().ComponentAdded.Remove(addedToken_);
@@ -125,6 +128,7 @@ public:
                 p.AddReadout("TotalGameTime", [this] { return Fmt(static_cast<float>(S().stats->totalSeconds), " s"); });
                 p.AddReadout("ElapsedGameTime", [this] { return Fmt(S().stats->elapsedMilliseconds, " ms"); });
                 p.AddReadout("IsRunningSlowly", [this] { return std::string(S().stats->runningSlowly ? "TRUE" : "false"); });
+                p.AddReadout("Game.Exiting", [] { return std::string("raised once when you quit (see the log)"); });
                 p.AddReadout("LaunchParameters", [this] {
                     if (S().game == nullptr) return std::string("-");
                     const auto& lp = S().game->getLaunchParametersProperty();
@@ -160,6 +164,7 @@ public:
                 p.AddReadout("Back buffer", [this] { return BackBufferText(); });
                 p.AddReadout("Depth / stencil", [this] { return std::to_string(static_cast<int>(S().device->getPresentationParametersProperty().getDepthStencilFormatProperty())) + " (DepthFormat)"; });
                 p.AddReadout("DeviceResetting / DeviceReset events", [this] { return std::to_string(resettingCount_) + " / " + std::to_string(resetCount_); });
+                p.AddReadout("PreparingDeviceSettings", [this] { return std::to_string(preparingCount_) + (preparingCount_ > 0 ? ", last asked for " + preparingNote_ : std::string(" (fires on ApplyChanges)")); });
                 p.AddReadout("PresentInterval", [this] {
                     static const char* names[] = {"Default", "One (vsync)", "Two", "Immediate"};
                     return std::string(names[std::clamp(static_cast<int>(S().device->getPresentationParametersProperty().getPresentationIntervalProperty()), 0, 3)]);
@@ -218,6 +223,11 @@ public:
         if (mode_ == Mode::Viewport && S().graphics != nullptr) {
             resettingToken_ = S().graphics->DeviceResetting.Add([this](System::Object*, const System::EventArgs&) { ++resettingCount_; });
             resetToken_ = S().graphics->DeviceReset.Add([this](System::Object*, const System::EventArgs&) { ++resetCount_; });
+            preparingToken_ = S().graphics->PreparingDeviceSettings.Add([this](System::Object*, const PreparingDeviceSettingsEventArgs& e) {
+                ++preparingCount_;
+                const PresentationParameters& pp = e.getGraphicsDeviceInformationProperty().getPresentationParametersProperty();
+                preparingNote_ = std::to_string(pp.getBackBufferWidthProperty()) + " x " + std::to_string(pp.getBackBufferHeightProperty()) + ", " + (pp.getIsFullScreenProperty() ? "full screen" : "windowed");
+            });
         }
         if (mode_ == Mode::Components && S().game != nullptr) {
             addedToken_ = S().game->getComponentsProperty().ComponentAdded.Add([this](System::Object*, const GameComponentCollectionEventArgs&) { ++addedCount_; });
@@ -527,6 +537,9 @@ private:
     }
 
     Mode mode_;
+    std::size_t preparingToken_ = 0;
+    int preparingCount_ = 0;
+    std::string preparingNote_;
     std::size_t resetToken_ = 0, resettingToken_ = 0, addedToken_ = 0, removedToken_ = 0;
     int resetCount_ = 0, resettingCount_ = 0, addedCount_ = 0, removedCount_ = 0;
     Gizmos gizmos_;

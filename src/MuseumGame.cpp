@@ -48,6 +48,8 @@ MuseumGame::MuseumGame(const MuseumOptions& options) : options_(options), graphi
     setIsFixedTimeStepProperty(false);
     getWindowProperty().setTitleProperty("CNA 3D Museum");
     getWindowProperty().setAllowUserResizingProperty(true);
+    // Game.Exiting is raised once, as the loop ends; the log line is the evidence (and the lifecycle room says where to look).
+    Exiting.Add([](System::Object*, const System::EventArgs&) { Museum::Log("app", "Game.Exiting raised: the museum is shutting down"); });
 }
 
 MuseumGame::~MuseumGame()

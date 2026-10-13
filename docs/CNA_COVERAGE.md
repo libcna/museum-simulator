@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-527 distinct API names are claimed by at least one room.
+536 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -199,6 +199,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | DualTextureEffect.Texture2 | `be-dual` |
 | DynamicIndexBuffer | `geo-dynindex` |
 | DynamicSoundEffectInstance | `au-synth` |
+| DynamicSoundEffectInstance.GetSampleSizeInBytes | `au-synth` |
+| DynamicSoundEffectInstance.PendingBufferCount | `au-synth` |
 | DynamicSoundEffectInstance.SubmitBuffer | `au-synth` |
 | DynamicVertexBuffer | `sky`, `particles`, `geo-dynamic`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `rf-garden`, `rf-weather` |
 | DynamicVertexBuffer.SetData | `pf-buffers` |
@@ -219,6 +221,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Game | `info`, `app-lifecycle`, `hist-xna` |
 | Game.Activated | `pl-window` |
 | Game.Components | `app-components` |
+| Game.Exiting | `app-lifecycle` |
 | Game.GetPlatformCapabilitiesEXT | `pl-platform` |
 | Game.IsFixedTimeStep | `app-lifecycle`, `pf-dashboard` |
 | Game.IsRunningSlowly | `pf-dashboard` |
@@ -296,6 +299,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDeviceManager | `app-viewport` |
 | GraphicsDeviceManager.DeviceReset | `app-viewport` |
 | GraphicsDeviceManager.DeviceResetting | `app-viewport` |
+| GraphicsDeviceManager.PreparingDeviceSettings | `app-viewport` |
 | GraphicsDeviceStatus | `app-viewport` |
 | GraphicsProfile | `hist-xna` |
 | GraphicsResource.Dispose | `ct-lifetime` |
@@ -359,7 +363,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | MediaState | `au-music` |
 | MeshBuilder | `an-gears` |
 | Microphone | `au-mic` |
+| Microphone.BufferDuration | `au-mic` |
 | Microphone.GetData | `au-mic` |
+| Microphone.GetSampleSizeInBytes | `au-mic` |
+| Microphone.IsHeadset | `au-mic` |
+| Microphone.SampleRate | `au-mic` |
 | Model | `models`, `animation`, `model-load` |
 | Model.BoundingSphereEXT | `model-load`, `model-instances`, `model-bounds` |
 | Model.CopyAbsoluteBoneTransformsTo | `model-rigid` |
@@ -500,6 +508,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SoundEffect(buffer, sampleRate, channels) | `au-generate` |
 | SoundEffect.DistanceScale | `au-spatial`, `au-master` |
 | SoundEffect.DopplerScale | `au-spatial`, `au-master` |
+| SoundEffect.GetSampleDuration | `au-synth` |
 | SoundEffect.MasterVolume | `au-master` |
 | SoundEffect.Play | `au-basics` |
 | SoundEffect.SpeedOfSound | `au-spatial`, `au-master` |
