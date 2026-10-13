@@ -79,6 +79,40 @@ WingSpec BasicEffectWing()
     return w;
 }
 
+WingSpec LightingWing()
+{
+    WingSpec w;
+    w.name = "Lighting Laboratory";
+    w.tagline = "Directional, point and spot lights, attenuation, colour, many lights, flashlight, emissive";
+    w.theme = "corridor-dark";
+    w.accent = {1.0f, 0.88f, 0.45f};
+    w.spineSide = Wall::East;
+    const auto li = [](const char* key, const char* title, const char* subtitle, const char* mode, std::vector<std::string> apis, ApiOrigin origin = ApiOrigin::CnaExtension) {
+        RoomSpec r;
+        r.key = key;
+        r.title = title;
+        r.subtitle = subtitle;
+        r.exhibit = "lighting-lab";
+        r.params = {{"mode", mode}};
+        r.width = 14;
+        r.depth = 13;
+        r.height = 5.2f;
+        r.theme = "dark-room";
+        r.apis = std::move(apis);
+        r.origin = origin;
+        return r;
+    };
+    w.rooms = {
+        li("light-types", "Directional, Point and Spot", "The three light types on the same sphere and floor", "types", {"DirectionalLight", "PunctualLightEXT", "BasicEffect"}),
+        li("light-falloff", "Attenuation and Range", "How a point light fades with distance and where its range ends", "falloff", {"PunctualLightEXT.Range", "BasicEffect"}),
+        li("light-coloured", "Coloured Lights", "Red, green and blue lamps added together with additive blending", "coloured", {"PunctualLightEXT.DiffuseColor", "BlendState.Additive"}),
+        li("light-many", "Many Lights", "Up to 24 lights by multi-pass additive rendering, with live frame rate", "many", {"PunctualLightEXT", "BlendState.Additive", "DepthStencilState.DepthBufferFunction"}),
+        li("light-flashlight", "Flashlight", "A spot light at your eye, aimed where you look", "flashlight", {"PunctualLightKindEXT.Spot", "PunctualLightEXT.OuterAngle"}),
+        li("light-emissive", "Emissive Materials", "EmissiveColor glows without a lamp; an additive halo fakes bloom", "emissive", {"BasicEffect.EmissiveColor", "BlendState.Additive"}, ApiOrigin::Xna),
+    };
+    return w;
+}
+
 }  // namespace
 
 FloorSpec MakeFloor4()
@@ -90,6 +124,7 @@ FloorSpec MakeFloor4()
     f.theme = "concourse";
     f.accent = {0.70f, 0.45f, 1.0f};
     f.wings.push_back(BasicEffectWing());
+    f.wings.push_back(LightingWing());
     f.wings.push_back(ShaderWing());
     return f;
 }
