@@ -20,7 +20,8 @@ Vector3 RoomBuilder::AddPedestal(float x, float z, float size, float height, con
 {
     const float h = size * 0.5f;
     // Stepped plinth: a slightly wider base and cap give the block some architectural character.
-    AddBox(Vector3(x - h, 0.0f, z - h), Vector3(x + h, height, z + h), texture, 1.0f, tint, true);
+    // The block ends a hair below the cap so the two top faces are never coplanar (that z-fought as stripes).
+    AddBox(Vector3(x - h, 0.0f, z - h), Vector3(x + h, height - 0.006f, z + h), texture, 1.0f, tint, true);
     AddBox(Vector3(x - h - 0.05f, 0.0f, z - h - 0.05f), Vector3(x + h + 0.05f, 0.1f, z + h + 0.05f), "stone", 1.0f,
            Vector3(0.7f, 0.7f, 0.7f), false);
     AddBox(Vector3(x - h - 0.04f, height - 0.06f, z - h - 0.04f), Vector3(x + h + 0.04f, height, z + h + 0.04f), "stone",
