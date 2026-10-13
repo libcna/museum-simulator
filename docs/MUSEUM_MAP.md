@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 32 wings, 229 exhibit rooms (5 open to the sky), 291 walkable cells in all.
+10 floors, 33 wings, 232 exhibit rooms (5 open to the sky), 295 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -143,6 +143,14 @@ The application model, the maths of games, geometry tests and cameras
 | 1.6.07 | `cam-transition` | Camera Transitions | XNA 4.0 | Vector3.SmoothStep, Quaternion.Slerp, Matrix.CreateWorld |
 | 1.6.08 | `cam-split` | Split Screen | XNA 4.0 | Viewport, GraphicsDevice.Viewport, RenderTarget2D |
 | 1.6.09 | `cam-mirror` | Rear-View Mirror | XNA 4.0 | RenderTarget2D, Matrix.CreateLookAt |
+
+**Value Types** - Packed vectors, Rectangle and Point, Color: the small structures everything else is built from
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 1.7.01 | `vt-packed` | Packed Vector Formats | XNA 4.0 | IPackedVector, Byte4, NormalizedByte4, NormalizedShort4, Short4, HalfVector4, Rgba1010102, Rgba64, Bgra4444, Bgra5551, Bgr565, Rg32, PackedValue |
+| 1.7.02 | `vt-rectangle` | Rectangle and Point | XNA 4.0 | Rectangle, Rectangle.Intersects, Rectangle.Intersect, Rectangle.Union, Rectangle.Contains, Rectangle.Inflate, Point |
+| 1.7.03 | `vt-color` | Colour | XNA 4.0 | Color, Color.Lerp, Color.Multiply, Color.FromNonPremultiplied, Color.PackedValue |
 
 ### Floor 2: Two-Dimensional Rendering
 

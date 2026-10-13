@@ -38,16 +38,19 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Feature | Status |
 |---|---|
 | `SkinnedEffect` (the glTF skinned models use `SkinnedPbrEffect`), `ResourceContentManager`, haptic effects (devices are listed, none played) | planned: see HANDOFF.md |
+| XACT audio (`AudioEngine`, `SoundBank`, `WaveBank`, `Cue`) | not implemented: it needs `.xgs`/`.xwb`/`.xsb` files from Microsoft's XACT authoring tool; no sample files ship with CNA and none can be generated here |
+| `MediaLibrary`, albums, playlists, pictures (`Microsoft.Xna.Framework.Media`) | not implemented: they describe a device's media store, which a desktop does not have |
 | Video playback (`VideoPlayer`) | not implemented: needs CNA_ENABLE_VIDEO (FFmpeg), which this build leaves off |
 | GamerServices, Net (network sessions), avatars | not implemented: networking and online services are outside the museum's scope |
 | `FileDialog`, `MessageBox`, `SystemTray`, `UrlLauncher`, `Camera` (CNA_DEVICES) | not implemented: they open real dialogs or hardware; the room reports whether each is supported |
 | Compiled XNA effects (`.fxb`), C API, Inspector | not implemented: disabled in CNA's default build for the renderers used here |
+| `ColorMatrixEffect` | not shown: CNA implements it on the SOFTWARE renderer only |
 | Retired renderers and removed CNA features (for example VULKAN, the post-process chain) | deliberately not demonstrated |
 
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-419 distinct API names are claimed by at least one room.
+441 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -84,6 +87,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BasicEffect.VertexColorEnabled | `be-combos`, `rv-shading` |
 | BasicEffect.World | `rv-camera` |
 | BasicEffect.setPunctualLightEXT | `be-punctual` |
+| Bgr565 | `vt-packed` |
+| Bgra4444 | `vt-packed` |
+| Bgra5551 | `vt-packed` |
 | Blend | `sprite-blend`, `rs-blend` |
 | Blend.BlendFactor | `rs-blendfactor`, `rv-blend` |
 | Blend.InverseBlendFactor | `rs-blendfactor` |
@@ -107,6 +113,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BoundingSphere.Intersects | `col-sphere-box` |
 | BoundingSphere.Transform | `model-bounds` |
 | ButtonState | `in-mouse` |
+| Byte4 | `vt-packed` |
 | CNA::Devices::DisplayInfo | `cx-devices` |
 | CNA::Devices::Locale | `cx-devices` |
 | CNA::Devices::PowerInfo | `cx-devices` |
@@ -124,8 +131,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CRTMaskType | `cx-crt` |
 | Clipboard.GetTextEXT | `in-text` |
 | Clipboard.SetTextEXT | `in-text` |
-| Color | `sprite-tint` |
-| Color.Lerp | `sprite-tint` |
+| Color | `vt-color`, `sprite-tint` |
+| Color.FromNonPremultiplied | `vt-color` |
+| Color.Lerp | `vt-color`, `sprite-tint` |
+| Color.Multiply | `vt-color` |
+| Color.PackedValue | `vt-color` |
 | ColorWriteChannels | `rs-portal`, `rs-colorwrite`, `rv-blend` |
 | CompareFunction | `tex-alpha`, `rs-depthfunc`, `rv-depth` |
 | CompareFunction.NotEqual | `rs-outline` |
@@ -243,6 +253,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsResource.Dispose | `ct-lifetime` |
 | GraphicsResource.Disposing | `ct-lifetime` |
 | GraphicsResource.IsDisposed | `ct-cache`, `ct-lifetime` |
+| HalfVector4 | `vt-packed` |
+| IPackedVector | `vt-packed` |
 | IShadowReceiverEXT | `cx-shadow` |
 | ImageBasedLightEXT | `model-ibl` |
 | IndexBuffer | `particles`, `geo-indexed`, `geo-procedural`, `geo-index32`, `geo-dynindex`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic` |
@@ -307,9 +319,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | MouseCursor | `in-mouse` |
 | MouseState | `in-mouse` |
 | NoMicrophoneConnectedException | `au-mic` |
+| NormalizedByte4 | `vt-packed` |
+| NormalizedShort4 | `vt-packed` |
 | OcclusionQuery | `rs-occlusion` |
 | OcclusionQuery.IsComplete | `rs-occlusion` |
 | OcclusionQuery.PixelCount | `rs-occlusion` |
+| PackedValue | `vt-packed` |
 | PackedVector.Alpha8 | `tex-formats` |
 | PackedVector.Bgr565 | `tex-formats` |
 | PackedVector.Bgra4444 | `tex-formats` |
@@ -328,6 +343,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | PlaneIntersectionType | `col-plane-box` |
 | PlatformCapabilities | `pl-platform` |
 | PlayerIndex | `in-players` |
+| Point | `vt-rectangle` |
 | Power.GetInfoEXT | `in-devices` |
 | PreferPerPixelLighting | `lighting` |
 | PresentInterval | `app-viewport` |
@@ -356,7 +372,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | RasterizerState.ScissorTestEnable | `sprite-scissor`, `rs-scissor` |
 | RasterizerState.SlopeScaleDepthBias | `rs-depthbias` |
 | Ray.Intersects | `col-ray-box`, `col-ray-sphere`, `col-ray-plane`, `col-pick` |
-| Rectangle | `sprite-sheet`, `sprite-ui` |
+| Rectangle | `vt-rectangle`, `sprite-sheet`, `sprite-ui` |
+| Rectangle.Contains | `vt-rectangle` |
+| Rectangle.Inflate | `vt-rectangle` |
+| Rectangle.Intersect | `vt-rectangle` |
+| Rectangle.Intersects | `vt-rectangle` |
+| Rectangle.Union | `vt-rectangle` |
 | RenderTarget2D | `rendertarget`, `cam-orbit`, `cam-fov`, `cam-split`, `cam-mirror`, `sprite-basics`, `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave`, `rs-scissor`, `rt-basic`, `rt-lowres`, `rt-control`, `rt-recursive`, `rt-mirror`, `rt-msaa`, `pf-targets`, `rv-targets`, `rf-telescope` |
 | RenderTarget2D.Format | `rt-formats` |
 | RenderTarget2D.MultiSampleCount | `rt-msaa` |
@@ -366,6 +387,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | RendererFeature | `pl-renderer` |
 | RendererFormatUsage | `pl-renderer` |
 | RendererLimit | `pl-renderer` |
+| Rg32 | `vt-packed` |
+| Rgba1010102 | `vt-packed` |
+| Rgba64 | `vt-packed` |
 | SamplerState | `materials`, `sprite-sampler` |
 | SamplerState.AddressU | `tex-address`, `rv-sampling` |
 | SamplerState.AnisotropicClamp | `tex-filter` |
@@ -388,6 +412,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ShaderEffect.SetUniformFloat | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave` |
 | ShaderLanguageEXT | `cx-package` |
 | ShaderPackageEXT.selectFor | `cx-package` |
+| Short4 | `vt-packed` |
 | SkinnedPbrEffect.SetBoneTransforms | `model-skinned` |
 | SkinningData | `model-skinned` |
 | Snapshot.metrics | `cx-stats` |
