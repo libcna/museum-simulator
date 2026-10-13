@@ -247,6 +247,30 @@ void ControlPanel::Handle(const InteractEvent& e)
 
 bool ControlPanel::Press(const std::string& label, const float* value)
 {
+    if (label == "*") {
+        // Smoke test: operate every control through its whole range (sliders at min, middle and max; every choice
+        // option; toggles both ways; buttons once). Exceptions propagate to the caller, which logs them.
+        for (Row& r : rows_) {
+            const auto fire = [&](float v) {
+                r.value = v;
+                if (r.onValue) r.onValue(v);
+            };
+            switch (r.kind) {
+                case Kind::Slider: fire(r.min); fire((r.min + r.max) * 0.5f); fire(r.max); fire(r.min + (r.max - r.min) * 0.3f); break;
+                case Kind::Toggle: fire(1.0f); fire(0.0f); fire(1.0f); fire(0.0f); break;
+                case Kind::Choice:
+                    for (std::size_t i = 0; i < r.options.size(); ++i) fire(static_cast<float>(i));
+                    fire(0.0f);
+                    break;
+                case Kind::Button:
+                    if (r.onPress) r.onPress();
+                    break;
+                default: break;
+            }
+        }
+        dirty_ = true;
+        return true;
+    }
     for (Row& r : rows_) {
         if (r.label.find(label) == std::string::npos) continue;
         const auto fire = [&](float v) {

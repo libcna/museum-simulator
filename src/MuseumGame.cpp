@@ -566,6 +566,7 @@ void MuseumGame::SaveScreenshot(const std::string& path)
 //   walk:F,S,N      walk with forward F / strafe S input for N frames (collision applies)
 //   e               press E on whatever is under the crosshair
 //   use:I           activate interactable I directly (index in registration order)
+//   pressall        operate every control of the current room through its whole range (smoke test)
 //   time:H          set the museum clock to hour H (0..24)
 //   press:LABEL[=V] operate the control-panel row whose label contains LABEL (slider value V)
 //   shot:FILE       save a screenshot        quit            exit
@@ -591,9 +592,9 @@ void MuseumGame::RunScript()
             if (f >= 0 && f < static_cast<int>(museum_->floors.size())) TeleportToCell(museum_->floors[static_cast<std::size_t>(f)].hub);
         } else if (op == "stats") {
             const WorldStats& w = world_->Stats();
-            Museum::Log("stats", "built %d loaded %d (lifetime built %d destroyed %d) triangles %d  textures %zu  frame %lld  fps %.0f  interactables %d + %d panel controls in %d loaded cells  visited %zu",
+            Museum::Log("stats", "built %d loaded %d (lifetime built %d destroyed %d) triangles %d  textures %zu  frame %lld  fps %.0f  interactables %d + %d panel controls in %d loaded cells  visited %zu  floor %d",
                         w.cellsBuilt, w.cellsLoaded, w.cellsBuiltTotal, w.cellsDestroyedTotal, w.triangles, textures_->Count(), frame_,
-                        static_cast<double>(stats_.fps), w.interactablesSeen, w.controlsSeen, w.roomsLoadedEver, discovered_.size());
+                        static_cast<double>(stats_.fps), w.interactablesSeen, w.controlsSeen, w.roomsLoadedEver, discovered_.size(), museum_->FloorAt(camera_.Position().Y));
         } else if (op == "directory") {
             if (arg == "close") directory_->Close();
             else OpenDirectory();
@@ -654,6 +655,19 @@ void MuseumGame::RunScript()
                 for (const auto& item : interaction->Items())
                     if (!done && item.command) done = item.command(label, value);
             Museum::Log("script", "press '%s': %s", label.c_str(), done ? "done" : "no such control");
+        } else if (op == "pressall") {
+            // pressall: operate every control of the current room's panels through its whole range (smoke test)
+            int panels = 0;
+            if (InteractionSystem* interaction = world_->CurrentInteraction())
+                for (const auto& item : interaction->Items())
+                    if (item.command) {
+                        try {
+                            if (item.command("*", nullptr)) ++panels;
+                        } catch (const std::exception& e) {
+                            Museum::Log("script", "pressall: exception in room %s: %s", shownCell_ >= 0 ? museum_->Room(shownCell_).key.c_str() : "?", e.what());
+                        }
+                    }
+            Museum::Log("script", "pressall: %d panel(s) exercised", panels);
         } else if (op == "shot") {
             pendingShot_ = arg;
             scriptWait_ = 2;

@@ -29,7 +29,8 @@ given; anything unverified says so. Counts are not repeated here: run `build/bin
 ```bash
 tools/build.sh                                   # build/ ; MUSEUM_RENDERERS="OPENGLES3;OPENGL33;SOFTWARE" for a multi-renderer tree
 build/bin/museum_tests                           # needs: tools/build.sh cna-3d-museum museum_tests
-tools/tour.sh -f 3                               # every room, 3 frames each (SOFTWARE needs MUSEUM_TIMEOUT=1500)
+tools/tour.sh -f 3 -p                            # every room, 3 frames each, every control operated (SOFTWARE needs MUSEUM_TIMEOUT=1500)
+tools/nav_test.sh                                # elevator to every floor
 tools/renderer_check.sh OPENGLES3 OPENGL33 SOFTWARE
 tools/reference.sh compare                       # visual regression, default renderer OPENGLES3
 tools/gen_docs.sh                                # regenerate counts, map, coverage tables
