@@ -11,6 +11,7 @@
 #include "Exhibits/ExhibitKit.hpp"
 #include "Exhibits/Math/MathKit.hpp"
 #include "Microsoft/Xna/Framework/Graphics/BufferUsage.hpp"
+#include "Microsoft/Xna/Framework/Graphics/DynamicIndexBuffer.hpp"
 #include "Microsoft/Xna/Framework/Graphics/DynamicVertexBuffer.hpp"
 #include "Microsoft/Xna/Framework/Graphics/IndexBuffer.hpp"
 #include "Microsoft/Xna/Framework/Graphics/IndexElementSize.hpp"
@@ -32,7 +33,7 @@ using namespace MathKit;
 
 namespace {
 
-enum class Mode { Triangle, Indexed, Primitives, Dynamic, Procedural, Index32, ManyBuffers, Instancing };
+enum class Mode { Triangle, Indexed, Primitives, Dynamic, Procedural, Index32, ManyBuffers, Instancing, DynIndex };
 
 Mode ParseMode(const std::string& s)
 {
@@ -43,6 +44,7 @@ Mode ParseMode(const std::string& s)
     if (s == "index32") return Mode::Index32;
     if (s == "manybuffers") return Mode::ManyBuffers;
     if (s == "instancing") return Mode::Instancing;
+    if (s == "dynindex") return Mode::DynIndex;
     return Mode::Triangle;
 }
 
@@ -125,6 +127,12 @@ public:
                 p.AddReadout("Draw calls per frame", [this] { return merged_ ? std::string("1") : std::to_string(count_); });
                 p.AddReadout("Buffers alive", [this] { return merged_ ? std::string("2") : std::to_string(count_ + 1); });
                 break;
+            case Mode::DynIndex:
+                p.AddSlider("Reveal radius (m)", 0.3f, 3.0f, revealRadius_, [this](float v) { revealRadius_ = v; }, "%.1f");
+                p.AddToggle("Move the window", true, [this](bool v) { moveWindow_ = v; });
+                p.AddReadout("Triangles drawn / in the mesh", [this] { return std::to_string(drawnTriangles_) + " / " + std::to_string((kDynGrid - 1) * (kDynGrid - 1) * 2); });
+                p.AddReadout("Index data uploaded", [this] { return Fmt(static_cast<float>(drawnTriangles_ * 3 * 2) / 1024.0f) + " KB per frame"; });
+                break;
             case Mode::Instancing:
                 p.AddSlider("Cubes", 100.0f, 20000.0f, static_cast<float>(count_ = 2000), [this](float v) { count_ = static_cast<int>(v); dirty_ = true; }, "%.0f", 100.0f);
                 p.AddChoice("Method", {"DrawInstancedPrimitives", "A draw call per cube"}, 0, [this](int v) { naive_ = v == 1; });
@@ -197,6 +205,7 @@ public:
             case Mode::Index32: DrawIndex32(ctx, o); break;
             case Mode::ManyBuffers: DrawManyBuffers(ctx, o); break;
             case Mode::Instancing: DrawInstancing(ctx, o); break;
+            case Mode::DynIndex: DrawDynIndex(ctx, o); break;
         }
         RenderStates::SetOpaque3D(device);
         gizmos_.Flush(ctx);
@@ -206,7 +215,7 @@ public:
 private:
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"A triangle and its winding", "Vertex and index buffers", "Primitive types", "Dynamic vertex buffers", "Procedural geometry", "32-bit indices and large meshes", "Many small vertex buffers", "Hardware instancing"};
+        static const char* t[] = {"A triangle and its winding", "Vertex and index buffers", "Primitive types", "Dynamic vertex buffers", "Procedural geometry", "32-bit indices and large meshes", "Many small vertex buffers", "Hardware instancing", "Dynamic index buffers"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
@@ -219,6 +228,7 @@ private:
             case Mode::Procedural: return {"Meshes built in code: a sphere, torus and cone from parametric formulas, and a height field. Raise the", "resolution and the triangle count climbs; wireframe shows the tessellation."};
             case Mode::Index32: return {"16-bit indices address at most 65 536 vertices. Bigger meshes need IndexElementSize.ThirtyTwoBits,", "which every 3D CNA renderer supports. This grid goes well past the 16-bit limit."};
             case Mode::ManyBuffers: return {"Each draw call has a cost. Hundreds of tiny VertexBuffers means hundreds of calls; merging them into", "one buffer draws the same triangles in one call. Compare the frame rate."};
+            case Mode::DynIndex: return {"A DynamicIndexBuffer is rewritten every frame, here to draw only the part of a large height field near a moving", "point: the vertices never change, only which triangles the indices select. SetDataOptions.Discard avoids stalling the GPU."};
             default: return {"Instancing draws one mesh many times in a single call, taking a world matrix per instance from a second", "vertex stream (VertexBufferBinding with an instance frequency). Compare it with a call per cube."};
         }
     }
@@ -549,6 +559,46 @@ private:
         }
     }
 
+    // ---- dynamic index buffer -------------------------------------------------------------------
+    static constexpr int kDynGrid = 80;
+    void DrawDynIndex(const DrawContext& ctx, const Vector3& o)
+    {
+        GraphicsDevice& device = ctx.device;
+        if (!dynIndexVertices_) {
+            std::vector<std::uint32_t> unused;
+            BuildGrid(kDynGrid, dynGridV_, unused, 4.4f);
+            for (Vnt& p : dynGridV_) {
+                p.Position.Y = Height(p.Position.X * 1.2f, p.Position.Z * 1.2f, 0.0f) * 0.9f;
+                const float e = 0.02f;
+                const float hx = Height((p.Position.X + e) * 1.2f, p.Position.Z * 1.2f, 0.0f) - Height((p.Position.X - e) * 1.2f, p.Position.Z * 1.2f, 0.0f);
+                const float hz = Height(p.Position.X * 1.2f, (p.Position.Z + e) * 1.2f, 0.0f) - Height(p.Position.X * 1.2f, (p.Position.Z - e) * 1.2f, 0.0f);
+                p.Normal = Vector3::Normalize(Vector3(-hx * 2.4f, 2.0f * e, -hz * 2.4f));
+            }
+            dynIndexVertices_ = std::make_unique<VertexBuffer>(device, Vnt::getVertexDeclarationStatic(), kDynGrid * kDynGrid, BufferUsage::WriteOnly);
+            dynIndexVertices_->SetData(dynGridV_.data(), kDynGrid * kDynGrid);
+            dynIndices_ = std::make_unique<DynamicIndexBuffer>(device, IndexElementSize::SixteenBits, (kDynGrid - 1) * (kDynGrid - 1) * 6, BufferUsage::WriteOnly);
+        }
+        const float cx = moveWindow_ ? std::sin(time_ * 0.7f) * 1.2f : 0.0f, cz = moveWindow_ ? std::cos(time_ * 0.5f) * 1.2f : 0.0f;
+        dynIndexData_.clear();
+        for (int z = 0; z + 1 < kDynGrid; ++z)
+            for (int x = 0; x + 1 < kDynGrid; ++x) {
+                const Vnt& p = dynGridV_[static_cast<std::size_t>(z * kDynGrid + x)];
+                const float dx = p.Position.X - cx, dz = p.Position.Z - cz;
+                if (dx * dx + dz * dz > revealRadius_ * revealRadius_) continue;
+                const std::uint16_t i0 = static_cast<std::uint16_t>(z * kDynGrid + x), i1 = static_cast<std::uint16_t>(i0 + 1), i2 = static_cast<std::uint16_t>(i0 + kDynGrid), i3 = static_cast<std::uint16_t>(i2 + 1);
+                for (const std::uint16_t i : {i0, i2, i1, i1, i2, i3}) dynIndexData_.push_back(i);
+            }
+        drawnTriangles_ = static_cast<int>(dynIndexData_.size()) / 3;
+        if (drawnTriangles_ == 0) return;
+        dynIndices_->SetData(dynIndexData_.data(), 0, static_cast<int>(dynIndexData_.size()), SetDataOptions::Discard);
+        BasicEffect& fx = Lit(ctx, Matrix::CreateTranslation(o + Vector3(0, -0.4f, 0)), Vector3(0.55f, 0.85f, 0.5f));
+        EffectBank::Apply(fx);
+        device.setRasterizerStateProperty(RasterizerState::CullNone);
+        device.SetVertexBuffer(dynIndexVertices_.get());
+        device.setIndicesProperty(dynIndices_.get());
+        device.DrawIndexedPrimitives(PrimitiveType::TriangleList, 0, 0, kDynGrid * kDynGrid, 0, drawnTriangles_);
+    }
+
     // ---- instancing -----------------------------------------------------------------------------
     void DrawInstancing(const DrawContext& ctx, const Vector3& o)
     {
@@ -590,6 +640,13 @@ private:
 
     Mode mode_;
     Gizmos gizmos_;
+    float revealRadius_ = 1.2f;
+    bool moveWindow_ = true;
+    int drawnTriangles_ = 0;
+    std::unique_ptr<VertexBuffer> dynIndexVertices_;
+    std::unique_ptr<DynamicIndexBuffer> dynIndices_;
+    std::vector<Vnt> dynGridV_;
+    std::vector<std::uint16_t> dynIndexData_;
     float time_ = 0.0f, spin_ = 0.0f, speed_ = 1.0f, turn_ = 25.0f, apex_ = 0.9f;
     int cull_ = 1, prim_ = 0, count_ = 8, grid_ = 32, shape_ = 0, dataOptions_ = 0;
     bool dirty_ = true, wire_ = false, merged_ = false, naive_ = false;

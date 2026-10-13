@@ -42,6 +42,8 @@ WingSpec BuffersWing()
         Geo("geo-manybuffers", "Many Small Buffers", "Hundreds of VertexBuffers against one merged buffer: the cost of draw calls", "manybuffers", {"VertexBuffer", "GraphicsDevice.DrawIndexedPrimitives"}),
         Geo("geo-instancing", "Hardware Instancing", "DrawInstancedPrimitives with a per-instance world matrix stream, against one call per cube", "instancing",
             {"VertexBufferBinding", "GraphicsDevice.DrawInstancedPrimitives", "GraphicsCapability.Instancing"}),
+        Geo("geo-dynindex", "Dynamic Index Buffers", "A DynamicIndexBuffer rewritten every frame to draw only the part of a big mesh near a moving point", "dynindex",
+            {"DynamicIndexBuffer", "SetDataOptions.Discard", "GraphicsDevice.DrawIndexedPrimitives", "IndexBuffer"}),
     };
     return w;
 }
