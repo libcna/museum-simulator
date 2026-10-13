@@ -100,7 +100,8 @@ void Hud::DrawHelp(int w, int h)
 {
     const char* lines[] = {
         "CONTROLS",
-        "W A S D / arrows   walk            Mouse   look around",
+        "W A S D / Up Down   walk            Mouse   look around",
+        "Left Right   turn                   Page Up / Down   look up / down",
         "Shift   walk faster                 E / Left click   interact",
         "Esc   pause menu                    F1 / H   this help",
         "M / Tab   directory and map            F3   statistics",

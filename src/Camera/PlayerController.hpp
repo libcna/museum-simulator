@@ -60,6 +60,8 @@ private:
     float baseY_ = 0.0f;
     bool captured_ = false;
     bool relativeMode_ = false;
+    bool pointerUnavailable_ = false;   // the platform cannot re-centre the pointer (no window): mouse look off
+    int verifyFrames_ = 0, verifiedFrames_ = 0;
     int centreX_ = 0;
     int centreY_ = 0;
     float stride_ = 0.0f;

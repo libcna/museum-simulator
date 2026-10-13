@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <exception>
 
 #include "Diagnostics/Log.hpp"
@@ -12,7 +13,8 @@ using namespace Microsoft::Xna::Framework::Input;
 
 namespace {
 constexpr float kStrideLength = 1.55f;
-constexpr float kMaxStepSeconds = 0.05f;   // a long frame is walked in several small steps
+constexpr float kMaxStepSeconds = 0.05f;
+constexpr int kVerifyFrames = 6;   // frames spent checking that re-centring the pointer works   // a long frame is walked in several small steps
 }  // namespace
 
 void PlayerController::SetMouseCaptured(bool captured, int windowWidth, int windowHeight)
@@ -29,6 +31,9 @@ void PlayerController::SetMouseCaptured(bool captured, int windowWidth, int wind
             relativeMode_ = false;
             Museum::Log("input", "relative mouse mode unavailable (%s); re-centring the cursor instead", e.what());
         }
+        verifyFrames_ = 0;
+        verifiedFrames_ = 0;
+        pointerUnavailable_ = false;
         if (!relativeMode_) Mouse::SetPosition(centreX_, centreY_);
     } else {
         try {
@@ -54,12 +59,39 @@ void PlayerController::Update(float dt, FirstPersonCamera& camera, const Collisi
             dx = static_cast<float>(now.getXProperty());
             dy = static_cast<float>(now.getYProperty());
         } else {
-            dx = static_cast<float>(now.getXProperty() - centreX_);
-            dy = static_cast<float>(now.getYProperty() - centreY_);
-            Mouse::SetPosition(centreX_, centreY_);
+            // The pointer is re-centred every frame, so it must read back at the centre. A platform with no
+            // window to warp the pointer in (CNA's SOFTWARE renderer presents a CPU buffer) keeps reporting one
+            // fixed position instead: that is "no pointer", not a huge mouse movement. The first frames after
+            // capturing only verify that, without turning the camera.
+            const int x = now.getXProperty(), y = now.getYProperty();
+            if (verifyFrames_ < kVerifyFrames) {
+                ++verifyFrames_;
+                const bool centred = std::abs(x - centreX_) <= 2 && std::abs(y - centreY_) <= 2;
+                verifiedFrames_ += centred ? 1 : 0;
+                Mouse::SetPosition(centreX_, centreY_);
+                if (verifyFrames_ == kVerifyFrames && verifiedFrames_ == 0) {
+                    pointerUnavailable_ = true;
+                    Museum::Log("input", "the pointer cannot be re-centred on this platform: mouse look is off, use the arrow keys and Page Up/Down");
+                }
+                dx = dy = 0.0f;
+            } else if (pointerUnavailable_) {
+                dx = dy = 0.0f;
+            } else {
+                dx = static_cast<float>(x - centreX_);
+                dy = static_cast<float>(y - centreY_);
+                Mouse::SetPosition(centreX_, centreY_);
+            }
         }
         dyaw -= dx * settings_.mouseSensitivity;
         dpitch -= dy * settings_.mouseSensitivity * (settings_.invertY ? -1.0f : 1.0f);
+    }
+    // Keyboard look: always available, and the only look control where there is no usable pointer.
+    if (!keyboardBlocked_) {
+        constexpr float kTurnRate = 1.9f, kPitchRate = 1.2f;
+        if (input.Down(Keys::Left)) dyaw += kTurnRate * dt;
+        if (input.Down(Keys::Right)) dyaw -= kTurnRate * dt;
+        if (input.Down(Keys::PageUp)) dpitch += kPitchRate * dt;
+        if (input.Down(Keys::PageDown)) dpitch -= kPitchRate * dt;
     }
     const GamePadState& pad = input.Pad();
     Vector2 stickMove(0, 0);

@@ -43,6 +43,8 @@ constexpr Entry kEntries[] = {
     {"content-lab", MakeContentLab},
     {"cnaext-lab", MakeCnaExtLab},
     {"platform-lab", MakePlatformLab},
+    {"perf-lab", MakePerfLab},
+    {"validation-lab", MakeValidationLab},
     {"anim-lab", MakeAnimLab},
     {"model-lab", MakeModelLab},
     {"particle-lab", MakeParticleLab},

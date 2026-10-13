@@ -2,19 +2,17 @@
 
 Only things that were observed are listed. "Open" means not yet explained.
 
-## SOFTWARE renderer shows the museum from the wrong camera angle (open)
+## SOFTWARE renderer showed the museum from the wrong camera angle (resolved: a museum bug, not CNA's)
 
-- Observed 2026-10-13, `CNA_GRAPHICS_RENDERER=SOFTWARE`, every room (lobby, geo-triangle, cam-orbit, tex-mip).
-- The 3D view looks as if the camera were pointed at the ceiling: the floor/ceiling lights appear huge and
-  changing the camera pitch (script `at:x,z,yaw,pitch`) does not change the picture, while yaw changes it a little.
-  The HUD (SpriteBatch) is correct. OPENGLES3 and OPENGL33 agree with each other.
-- (VULKAN was retired from CNA on 2026-10-13, so it is no longer part of the comparison.)
-- CNA documents SOFTWARE as "complete classic XNA contract" but flags it Experimental in
-  `GraphicsBackendMaturity`. The museum uses only stock `BasicEffect`, `VertexBuffer`/`IndexBuffer`,
-  `DrawIndexedPrimitives`, `DrawUserPrimitives` and render targets.
-- Not caused by near/far planes (tried 0.5/100 and 0.2/260).
-- Next step: a minimal repro (one triangle with an explicit view/projection through BasicEffect on SOFTWARE) to decide
-  whether this is CNA or the museum; fix in CNA if it is CNA.
+- Observed 2026-10-13 with `CNA_GRAPHICS_RENDERER=SOFTWARE`: every room looked as if the camera pointed at the ceiling.
+- Cause, found with the Renderer Validation floor and a log of the mouse state: SOFTWARE presents a CPU buffer and has no
+  native window, so relative mouse mode is unavailable and the pointer can not be re-centred. `Mouse.GetState()` kept
+  returning (0, 0); the player controller's fallback read that as a mouse movement of (-centre) every frame and pinned the
+  pitch at its limit. CNA's renderer was never involved: all 70+ self-checks in `rv-*` pass on SOFTWARE.
+- Fix (museum): the player controller spends the first frames after capturing the pointer verifying that re-centring works
+  and turns mouse look off when it does not; arrow keys and Page Up/Down now look around on every platform.
+- Result: OPENGLES3 vs OPENGL33 screenshots differ in 0.00 % of pixels, OPENGLES3 vs SOFTWARE in 4.6 % (filtering and
+  rasterisation details).
 
 ## Frame loop
 

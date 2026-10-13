@@ -22,6 +22,9 @@ public:
     void Draw(Microsoft::Xna::Framework::Graphics::GraphicsDevice& device) const;
     [[nodiscard]] const Microsoft::Xna::Framework::BoundingBox& Bounds() const { return bounds_; }
     [[nodiscard]] int TriangleCount() const { return triangles_; }
+    [[nodiscard]] int VertexCount() const { return vertexCount_; }
+    [[nodiscard]] Microsoft::Xna::Framework::Graphics::VertexBuffer* Vertices() const { return vertexBuffer_.get(); }
+    [[nodiscard]] Microsoft::Xna::Framework::Graphics::IndexBuffer* Indices() const { return indexBuffer_.get(); }
 
 private:
     std::unique_ptr<Microsoft::Xna::Framework::Graphics::VertexBuffer> vertexBuffer_;
