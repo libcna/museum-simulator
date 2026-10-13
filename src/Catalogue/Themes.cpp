@@ -53,6 +53,8 @@ const std::map<std::string, Theme>& Themes()
         {"workshop", T("wood", "stone", "plaster", {0.80f, 0.74f, 0.66f}, {0.85f, 0.8f, 0.75f}, {0.24f, 0.22f, 0.20f}, 1.0f)},
         {"basement", T("cobble", "stone", "stone", {0.55f, 0.55f, 0.58f}, {0.6f, 0.6f, 0.62f}, {0.16f, 0.16f, 0.18f}, 0.8f, {1.0f, 0.9f, 0.7f})},
         {"white-cube", T("concrete", "panel", "panel", {1.0f, 1.0f, 1.0f}, {0.95f, 0.95f, 0.95f}, {0.45f, 0.45f, 0.45f}, 1.0f, {1.0f, 1.0f, 1.0f})},
+        {"pop-studio", T("concrete", "panel", "panel", {0.95f, 0.92f, 0.95f}, {0.85f, 0.85f, 0.9f}, {0.40f, 0.38f, 0.42f}, 1.0f)},
+        {"corridor-pop", T("carpet", "plaster", "plaster", {1.0f, 0.88f, 0.82f}, {0.9f, 0.75f, 0.8f}, {0.32f, 0.28f, 0.28f}, 1.0f)},
         {"garden", T("grass", "brick", "plaster", {0.9f, 0.95f, 0.85f}, {0.95f, 1.0f, 0.95f}, {1.0f, 1.0f, 1.0f}, 0.0f)},
         {"plaza", T("cobble", "stone", "plaster", {0.95f, 0.93f, 0.9f}, {0.95f, 0.95f, 0.95f}, {1.0f, 1.0f, 1.0f}, 0.0f)},
     };

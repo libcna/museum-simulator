@@ -60,6 +60,11 @@ public:
 protected:
     /** A looping positional voice that is released when the exhibit is destroyed. Null when audio is off. */
     Voice3D* CreateLoop(const std::string& sound, const Microsoft::Xna::Framework::Vector3& position, float volume, float radius);
+    /** The wall the room's door is in, and the wall facing it (where wide screens go). */
+    [[nodiscard]] Wall DoorWall() const { return room_.doors.empty() ? Wall::South : room_.doors.front().wall; }
+    [[nodiscard]] Wall FarWall() const { return Opposite(DoorWall()); }
+    /** Centre and facing (yaw, 0 = +Z) of a screen hung on the far wall `height` metres up. */
+    void FarScreenPose(float height, Microsoft::Xna::Framework::Vector3& centre, float& yaw) const;
     /** A control console standing in the room (local metres). Create it, and add its rows, in BuildStatic. */
     ControlPanel& AddPanel(const std::string& title, float x, float y, float z, float yaw, float width = 1.8f);
     [[nodiscard]] Services& S() { return services_; }

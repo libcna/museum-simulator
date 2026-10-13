@@ -52,3 +52,13 @@ void Exhibit::DoBuildStatic(RoomBuilder& builder)
     BuildStatic(builder);
     for (auto& panel : panels_) panel->BuildStand(builder);
 }
+
+void Exhibit::FarScreenPose(float height, Microsoft::Xna::Framework::Vector3& centre, float& yaw) const
+{
+    switch (FarWall()) {
+        case Wall::North: centre = room_.ToWorld(0.0f, height, -room_.halfD + 0.06f); yaw = 0.0f; break;
+        case Wall::South: centre = room_.ToWorld(0.0f, height, room_.halfD - 0.06f); yaw = 3.14159265f; break;
+        case Wall::East: centre = room_.ToWorld(room_.halfW - 0.06f, height, 0.0f); yaw = -1.57079633f; break;
+        default: centre = room_.ToWorld(-room_.halfW + 0.06f, height, 0.0f); yaw = 1.57079633f; break;
+    }
+}

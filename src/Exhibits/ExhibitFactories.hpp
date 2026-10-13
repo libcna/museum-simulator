@@ -27,3 +27,5 @@ std::unique_ptr<Exhibit> MakeCurveLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeCollisionLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeCameraLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeAppLab(const RoomDef& room, Services& services);
+std::unique_ptr<Exhibit> MakeSpriteLab(const RoomDef& room, Services& services);
+std::unique_ptr<Exhibit> MakeTextLab(const RoomDef& room, Services& services);

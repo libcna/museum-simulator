@@ -18,6 +18,12 @@ public:
     void Render(const Microsoft::Xna::Framework::Color& background,
                 const std::function<void(Microsoft::Xna::Framework::Graphics::SpriteBatch&, int, int)>& draw);
 
+    /**
+     * Redraws the screen with `draw` in full control: it calls SpriteBatch.Begin/End itself with whatever
+     * sort mode, blend, sampler, rasterizer state and transform it wants to demonstrate.
+     */
+    void RenderCustom(const Microsoft::Xna::Framework::Color& background, const std::function<void(Microsoft::Xna::Framework::Graphics::SpriteBatch&, int, int)>& draw);
+
     [[nodiscard]] Microsoft::Xna::Framework::Graphics::Texture2D* Texture() { return target_.get(); }
     [[nodiscard]] bool HasContent() const { return rendered_; }
     [[nodiscard]] int Width() const { return width_; }

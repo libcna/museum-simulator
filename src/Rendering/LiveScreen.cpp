@@ -27,3 +27,13 @@ void LiveScreen::Render(const Color& background, const std::function<void(Sprite
     device.SetRenderTarget(nullptr);
     rendered_ = true;
 }
+
+void LiveScreen::RenderCustom(const Color& background, const std::function<void(SpriteBatch&, int, int)>& draw)
+{
+    GraphicsDevice& device = *s_.device;
+    device.SetRenderTarget(target_.get());
+    device.Clear(background);
+    draw(*s_.sprites, width_, height_);
+    device.SetRenderTarget(nullptr);
+    rendered_ = true;
+}
