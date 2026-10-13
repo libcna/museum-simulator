@@ -32,4 +32,13 @@ inline void SetTransparent3D(Microsoft::Xna::Framework::Graphics::GraphicsDevice
     device.getSamplerStatesProperty()[0] = SamplerState::LinearWrap;
 }
 
+/**
+ * Unbinds the first texture slots. XNA (and CNA) refuse Texture2D.SetData on a texture that is still set on the
+ * device ("The texture resource is in use"), so call this before rewriting a texture that was drawn last frame.
+ */
+inline void UnbindTextures(Microsoft::Xna::Framework::Graphics::GraphicsDevice& device)
+{
+    for (int i = 0; i < 4; ++i) device.getTexturesProperty()(i, nullptr);
+}
+
 }  // namespace RenderStates
