@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# The whole verification battery on the default renderer (a few minutes). Prints one line per step and exits non-zero
+# if any step failed. SLOW=1 also tours every room on OPENGL33 and SOFTWARE (SOFTWARE takes about 20 minutes).
+#   tools/check_all.sh
+set -u
+cd "$(dirname "$0")/.." || exit 2
+failed=0
+step() {   # step NAME COMMAND...
+  local name=$1; shift
+  if "$@" > "${BUILD_DIR:-build}/check_$(echo "$name" | tr ' /' '__').log" 2>&1; then echo "ok    $name"; else echo "FAIL  $name  (log: ${BUILD_DIR:-build}/check_$(echo "$name" | tr ' /' '__').log)"; failed=1; fi
+}
+step "build" tools/build.sh cna-3d-museum museum_tests
+step "museum_tests" "${BUILD_DIR:-build}/bin/museum_tests"
+step "validate" "${BUILD_DIR:-build}/bin/cna-3d-museum" --validate
+step "documentation is up to date" bash -c 'tools/gen_docs.sh && git diff --quiet -- README.md docs'
+step "tour every room, operate every control" tools/tour.sh -f 3 -p
+step "elevator to every floor" tools/nav_test.sh
+step "renderer self-checks" tools/renderer_check.sh OPENGLES3
+step "visual regression" tools/reference.sh compare
+step "memory over three tours" tools/leak_check.sh
+if [ "${SLOW:-0}" = 1 ]; then
+  for r in OPENGL33 SOFTWARE; do
+    step "tour on $r" env CNA_GRAPHICS_RENDERER=$r MUSEUM_TIMEOUT=2400 tools/tour.sh -f 3 -p
+    step "self-checks on $r" tools/renderer_check.sh $r
+  done
+fi
+exit $failed

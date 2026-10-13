@@ -150,6 +150,7 @@ hardware.
 | `tools/nav_test.sh` | rides the elevator to every floor, opens the directory, and checks the arrival floor |
 | `tools/renderer_check.sh [RENDERER...]` | runs the floor 9 *Renderer Validation* self-checks on each renderer and prints a PASS/FAIL matrix |
 | `tools/reference.sh capture\|compare` | visual regression: renders the named reference views and compares them with stored images |
+| `tools/check_all.sh` | the whole battery on the default renderer (build, tests, validation, documentation freshness, tour with every control, navigation, renderer checks, visual regression, memory); `SLOW=1` adds OPENGL33 and SOFTWARE |
 | `tools/run.sh "script"`, `tools/shot.sh OUT.png ...`, `tools/roomshots.sh OUT.png KEY...` | run a script, take a screenshot, or a contact sheet of rooms, on a private virtual display (Xvfb) |
 
 None of the scripts touches your real display. Failures are never swallowed: a crash, a timeout or a missing

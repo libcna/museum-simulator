@@ -31,6 +31,8 @@ given; anything unverified says so. Counts are not repeated here: run `build/bin
 
 ## Build, run and test
 
+`tools/check_all.sh` runs the whole battery (a few minutes); the individual tools are:
+
 ```bash
 tools/build.sh                                   # build/ ; MUSEUM_RENDERERS="OPENGLES3;OPENGL33;SOFTWARE" for a multi-renderer tree
 build/bin/museum_tests                           # needs: tools/build.sh cna-3d-museum museum_tests
