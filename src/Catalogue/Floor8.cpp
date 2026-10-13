@@ -45,13 +45,13 @@ RoomSpec ShadowRoom()
     RoomSpec r;
     r.key = "cx-shadow";
     r.title = "Shadow Mapping";
-    r.subtitle = "A caster pass into a float render target, then BasicEffect receives the shadows";
+    r.subtitle = "A caster pass into a float render target (optionally cascaded), then BasicEffect receives the shadows";
     r.exhibit = "shadow-lab";
     r.width = 15;
     r.depth = 15;
     r.height = 5.5f;
     r.theme = "futuristic";
-    r.apis = {"IShadowReceiverEXT", "BasicEffect.ShadowMapEXT", "BasicEffect.LightViewProjectionEXT", "BasicEffect.ShadowDepthBiasEXT", "BasicEffect.ShadowFilterRadiusEXT", "ShaderEffect", "Matrix.CreateOrthographic"};
+    r.apis = {"IShadowReceiverEXT", "BasicEffect.ShadowMapEXT", "BasicEffect.LightViewProjectionEXT", "BasicEffect.ShadowDepthBiasEXT", "BasicEffect.ShadowFilterRadiusEXT", "ShadowCascadeStateEXT", "BasicEffect.ShadowCascadesEXT", "ShaderEffect", "Matrix.CreateOrthographic"};
     r.origin = ApiOrigin::CnaExtension;
     return r;
 }

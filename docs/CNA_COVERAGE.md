@@ -17,7 +17,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Texture2D (mips, filter, address, formats, dynamic), TextureCube, Texture3D | floor 3 | covered |
 | BasicEffect (all features), AlphaTestEffect, DualTextureEffect, EnvironmentMapEffect | floors 3-4 | covered |
 | Punctual point/spot lights (CNAEXT) | floor 4 | covered |
-| Shadow mapping with `IShadowReceiverEXT` (no cascades yet) | floor 8 | covered |
+| Shadow mapping with `IShadowReceiverEXT`, PCF filtering and cascaded shadow maps (`ShadowCascadeStateEXT`) | floor 8 | covered |
 | ShaderEffect (GLSL source at run time) | floor 4 *Shader Lab* | covered; run-time shader source only (no compiled effects) |
 | RasterizerState, DepthStencilState (incl. stencil), BlendState, SamplerState | floor 5 | covered |
 | RenderTarget2D, MRT, float formats, mirrors, multisampling, OcclusionQuery | floor 5 | covered |
@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-437 distinct API names are claimed by at least one room.
+439 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -77,6 +77,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BasicEffect.LightViewProjectionEXT | `cx-shadow` |
 | BasicEffect.LightingEnabled | `be-lights` |
 | BasicEffect.PreferPerPixelLighting | `be-perpixel` |
+| BasicEffect.ShadowCascadesEXT | `cx-shadow` |
 | BasicEffect.ShadowDepthBiasEXT | `cx-shadow` |
 | BasicEffect.ShadowFilterRadiusEXT | `cx-shadow` |
 | BasicEffect.ShadowMapEXT | `cx-shadow` |
@@ -410,6 +411,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ShaderEffect.SetUniformFloat | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave` |
 | ShaderLanguageEXT | `cx-package` |
 | ShaderPackageEXT.selectFor | `cx-package` |
+| ShadowCascadeStateEXT | `cx-shadow` |
 | Short4 | `vt-packed` |
 | SkinnedPbrEffect.SetBoneTransforms | `model-skinned` |
 | SkinningData | `model-skinned` |
