@@ -135,7 +135,7 @@ hardware.
 | `--screenshot FILE [--screenshot-frame N]` | save one frame and exit |
 | `--script "a;b;c"` | scripted actions: `goto:`, `at:`, `walk:`, `press:LABEL=V`, `use:`, `time:`, `shot:`, `quit` ... |
 | `--fixed-step S`, `--frames N` | deterministic, bounded runs |
-| `--validate`, `--inventory`, `--list-rooms`, `--list-views`, `--map-markdown`, `--coverage-markdown` | data-only commands, no window |
+| `--validate`, `--inventory`, `--list-rooms`, `--list-turned-rooms`, `--list-views`, `--map-markdown`, `--coverage-markdown` | data-only commands, no window |
 | `--no-audio`, `--volume`, `--width`, `--height`, `--fullscreen` | usual switches |
 | `--no-save`, `--fresh`, `--save` | the visited rooms are kept between runs in CNA's per-user storage (`StorageDevice`); scripted and screenshot runs never touch it unless `--save` |
 
