@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 33 wings, 242 exhibit rooms (5 open to the sky), 305 walkable cells in all.
+10 floors, 33 wings, 243 exhibit rooms (5 open to the sky), 306 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -103,9 +103,10 @@ The application model, the maths of games, geometry tests and cameras
 | 1.3.04 | `mat-perspective` | Perspective Projection | XNA 4.0 | Matrix.CreatePerspectiveFieldOfView, BoundingFrustum.Contains |
 | 1.3.05 | `mat-ortho` | Orthographic Projection | XNA 4.0 | Matrix.CreateOrthographic, Matrix.CreatePerspectiveFieldOfView |
 | 1.3.06 | `mat-screen` | World to Screen | XNA 4.0 | Viewport.Project, Viewport.Unproject, Vector4.Transform, Matrix.Multiply |
-| 1.3.07 | `mat-billboard` | Billboards | XNA 4.0 | Matrix.CreateBillboard, Matrix.CreateConstrainedBillboard |
-| 1.3.08 | `mat-reflection` | Reflection Matrices | XNA 4.0 | Matrix.CreateReflection, Plane.Transform, Matrix.Determinant |
-| 1.3.09 | `mat-normals` | Normals and the Inverse Transpose | XNA 4.0 | Matrix.Invert, Matrix.Transpose, Vector3.TransformNormal |
+| 1.3.07 | `mat-offcenter` | Off-Centre Projections | XNA 4.0 | Matrix.CreatePerspective, Matrix.CreatePerspectiveOffCenter, Matrix.CreateOrthographicOffCenter |
+| 1.3.08 | `mat-billboard` | Billboards | XNA 4.0 | Matrix.CreateBillboard, Matrix.CreateConstrainedBillboard |
+| 1.3.09 | `mat-reflection` | Reflection Matrices | XNA 4.0 | Matrix.CreateReflection, Plane.Transform, Matrix.Determinant |
+| 1.3.10 | `mat-normals` | Normals and the Inverse Transpose | XNA 4.0 | Matrix.Invert, Matrix.Transpose, Vector3.TransformNormal |
 
 **Rotation and Interpolation** - Quaternions, Euler angles, easing functions and curves
 
@@ -113,10 +114,10 @@ The application model, the maths of games, geometry tests and cameras
 |---|---|---|---|---|
 | 1.4.01 | `quat-euler` | Euler Angles and Gimbal Lock | XNA 4.0 | Quaternion.CreateFromYawPitchRoll, Matrix.CreateFromQuaternion, Matrix.CreateRotationX |
 | 1.4.02 | `quat-slerp` | Slerp and Lerp | XNA 4.0 | Quaternion.Slerp, Quaternion.Lerp, Quaternion.Normalize, Quaternion.Dot |
-| 1.4.03 | `quat-axis` | Axis and Angle | XNA 4.0 | Quaternion.CreateFromAxisAngle, Quaternion.Concatenate, Quaternion.Inverse |
+| 1.4.03 | `quat-axis` | Axis and Angle | XNA 4.0 | Quaternion.CreateFromAxisAngle, Quaternion.Concatenate, Quaternion.Inverse, Quaternion.Conjugate |
 | 1.4.04 | `curve-easing` | Easing Functions | XNA 4.0 | MathHelper.Lerp, MathHelper.SmoothStep, MathHelper.Hermite, MathHelper.CatmullRom |
 | 1.4.05 | `curve-spline` | Splines | XNA 4.0 | Vector3.CatmullRom |
-| 1.4.06 | `curve-class` | The Curve Class | XNA 4.0 | Curve, CurveKey, CurveLoopType, CurveTangent, CurveContinuity, CurveKeyCollection |
+| 1.4.06 | `curve-class` | The Curve Class | XNA 4.0 | Curve, CurveKey, CurveLoopType, CurveTangent, CurveContinuity, CurveKeyCollection, CurveKey.TangentIn, CurveKey.TangentOut, Curve.IsConstant |
 | 1.4.07 | `curve-barycentric` | Barycentric Coordinates | XNA 4.0 | Vector3.Barycentric |
 
 **Collision and Geometry** - BoundingBox, BoundingSphere, BoundingFrustum, Plane and Ray
@@ -128,8 +129,8 @@ The application model, the maths of games, geometry tests and cameras
 | 1.5.03 | `col-ray-box` | Ray vs Box | XNA 4.0 | Ray.Intersects, BoundingBox |
 | 1.5.04 | `col-ray-sphere` | Ray vs Sphere | XNA 4.0 | Ray.Intersects, BoundingSphere |
 | 1.5.05 | `col-ray-plane` | Ray vs Plane | XNA 4.0 | Ray.Intersects, Plane |
-| 1.5.06 | `col-plane-box` | Which Side of the Plane | XNA 4.0 | Plane.Intersects, Plane.DotCoordinate, PlaneIntersectionType |
-| 1.5.07 | `col-merge` | Fitting and Merging Bounds | XNA 4.0 | BoundingBox.CreateFromPoints, BoundingSphere.CreateFromPoints, BoundingSphere.CreateMerged, BoundingSphere.CreateFromBoundingBox |
+| 1.5.06 | `col-plane-box` | Which Side of the Plane | XNA 4.0 | Plane.Intersects, Plane.DotCoordinate, Plane.DotNormal, PlaneIntersectionType |
+| 1.5.07 | `col-merge` | Fitting and Merging Bounds | XNA 4.0 | BoundingBox.CreateFromPoints, BoundingSphere.CreateFromPoints, BoundingSphere.CreateMerged, BoundingSphere.CreateFromBoundingBox, BoundingBox.CreateFromSphere |
 | 1.5.08 | `col-frustum` | Frustum Culling | XNA 4.0 | BoundingFrustum.Contains, BoundingFrustum, BoundingFrustum.GetCorners, BoundingSphere.CreateFromFrustum, Matrix.CreatePerspectiveFieldOfView |
 | 1.5.09 | `col-pick` | Picking | XNA 4.0 | Ray.Intersects, BoundingBox, BoundingSphere |
 
@@ -152,8 +153,8 @@ The application model, the maths of games, geometry tests and cameras
 | Room | Key | Title | Origin | APIs |
 |---|---|---|---|---|
 | 1.7.01 | `vt-packed` | Packed Vector Formats | XNA 4.0 | IPackedVector, Byte4, NormalizedByte4, NormalizedShort4, Short4, HalfVector4, Rgba1010102, Rgba64, Bgra4444, Bgra5551, Bgr565, Rg32, PackedValue |
-| 1.7.02 | `vt-rectangle` | Rectangle and Point | XNA 4.0 | Rectangle, Rectangle.Intersects, Rectangle.Intersect, Rectangle.Union, Rectangle.Contains, Rectangle.Inflate, Point |
-| 1.7.03 | `vt-color` | Colour | XNA 4.0 | Color, Color.Lerp, Color.Multiply, Color.FromNonPremultiplied, Color.PackedValue |
+| 1.7.02 | `vt-rectangle` | Rectangle and Point | XNA 4.0 | Rectangle, Rectangle.Intersects, Rectangle.Intersect, Rectangle.Union, Rectangle.Contains, Rectangle.Inflate, Rectangle.Bottom, Rectangle.Location, Rectangle.IsEmpty, Point |
+| 1.7.03 | `vt-color` | Colour | XNA 4.0 | Color, Color.Lerp, Color.Multiply, Color.FromNonPremultiplied, Color.PackedValue, Color.ToVector3, Color.PackFromVector4 |
 
 ### Floor 2: Two-Dimensional Rendering
 

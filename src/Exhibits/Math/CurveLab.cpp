@@ -65,6 +65,9 @@ public:
                 p.AddSlider("Position", 0.0f, 8.0f, pos_, [this](float v) { pos_ = v; auto_ = false; }, "%.2f");
                 p.AddHeading("Curve.Evaluate");
                 p.AddReadout("Evaluate(position)", [this] { return Fmt(curve_.Evaluate(pos_)); });
+                p.AddReadout("Key 1 TangentIn / TangentOut", [this] { return Fmt(curve_.getKeysProperty()[1].getTangentInProperty()) + " / " + Fmt(curve_.getKeysProperty()[1].getTangentOutProperty()); });
+                p.AddReadout("Key 1 Continuity", [this] { return std::string(curve_.getKeysProperty()[1].getContinuityProperty() == CurveContinuity::Step ? "Step" : "Smooth"); });
+                p.AddReadout("IsConstant", [this] { return std::string(curve_.getIsConstantProperty() ? "true" : "false"); });
                 p.AddReadout("Keys", [this] { return std::to_string(curve_.getKeysProperty().getCountProperty()) + " keys at 0, 1, 2, 3"; });
                 break;
             case Mode::Barycentric:

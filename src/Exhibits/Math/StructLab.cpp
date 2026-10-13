@@ -207,7 +207,7 @@ private:
         rect(static_cast<int>(b_[0]) + 66, static_cast<int>(b_[1]) + 51, 8, 8, pointInside ? Color(120, 255, 160, 255) : Color(255, 120, 110, 255));
         text("A (blue, inflated by " + std::to_string(static_cast<int>(inflate_)) + ") and B (orange, 140 x 110)", 24, 56, Kit::kText, 0.7f);
         text(std::string("A.Intersects(B): ") + (hit ? "true" : "false") + "     Intersect: " + std::to_string(isect.Width) + " x " + std::to_string(isect.Height) + "     Union: " + std::to_string(uni.Width) + " x " + std::to_string(uni.Height), 24, 470, Kit::kText, 0.62f);
-        text(std::string("A.Contains(centre of B): ") + (pointInside ? "true" : "false") + "     A centre: " + std::to_string(centre.X) + ", " + std::to_string(centre.Y) + "     A.Left/Right " + std::to_string(Ai.getLeftProperty()) + "/" + std::to_string(Ai.getRightProperty()), 24, 498, Kit::kDim, 0.55f);
+        text(std::string("A.Contains(centre of B): ") + (pointInside ? "true" : "false") + "     A centre: " + std::to_string(centre.X) + ", " + std::to_string(centre.Y) + "     A.Left/Right " + std::to_string(Ai.getLeftProperty()) + "/" + std::to_string(Ai.getRightProperty()) + "  Bottom " + std::to_string(Ai.getBottomProperty()) + "  Location " + std::to_string(Ai.getLocationProperty().X) + "," + std::to_string(Ai.getLocationProperty().Y) + (Ai.getIsEmptyProperty() ? "  EMPTY" : ""), 24, 498, Kit::kDim, 0.55f);
     }
 
     static Color Hue(float h, float alpha)
@@ -238,6 +238,13 @@ private:
             text(buf, static_cast<float>(x), 342, Kit::kDim, 0.5f);
         }
         text("PackedValue is the 32-bit word (alpha in the top byte); Color stores premultiplied alpha as XNA does.", 40, 400, Kit::kDim, 0.55f);
+        Color repacked;
+        repacked.PackFromVector4(mix.ToVector4());
+        const Vector3 rgb = mix.ToVector3();
+        char line[160];
+        std::snprintf(line, sizeof line, "Lerp(A, B).ToVector3() = (%.2f, %.2f, %.2f);  PackFromVector4(ToVector4()) %s the original", static_cast<double>(rgb.X), static_cast<double>(rgb.Y), static_cast<double>(rgb.Z),
+                      repacked.getPackedValueProperty() == mix.getPackedValueProperty() ? "reproduces" : "DIFFERS from");
+        text(line, 40, 430, Kit::kDim, 0.55f);
     }
 
     Mode mode_ = Mode::Packed;

@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-488 distinct API names are claimed by at least one room.
+502 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -104,6 +104,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BoundingBox | `col-ray-box`, `col-pick`, `an-conveyor` |
 | BoundingBox.Contains | `col-box-box` |
 | BoundingBox.CreateFromPoints | `col-merge` |
+| BoundingBox.CreateFromSphere | `col-merge` |
 | BoundingBox.Intersects | `col-box-box` |
 | BoundingFrustum | `mat-view`, `col-frustum`, `cam-orbit`, `cam-security` |
 | BoundingFrustum.Contains | `mat-perspective`, `col-frustum`, `model-instances` |
@@ -140,7 +141,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Color.FromNonPremultiplied | `vt-color` |
 | Color.Lerp | `vt-color`, `sprite-tint` |
 | Color.Multiply | `vt-color` |
+| Color.PackFromVector4 | `vt-color` |
 | Color.PackedValue | `vt-color` |
+| Color.ToVector3 | `vt-color` |
 | ColorWriteChannels | `rs-portal`, `rs-colorwrite`, `rv-blend` |
 | CompareFunction | `tex-alpha`, `rs-depthfunc`, `rv-depth` |
 | CompareFunction.NotEqual | `rs-outline` |
@@ -159,8 +162,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CubeMapFace | `tex-cube`, `rt-cube` |
 | CullMode | `rs-cull` |
 | Curve | `curve-class` |
+| Curve.IsConstant | `curve-class` |
 | CurveContinuity | `curve-class` |
 | CurveKey | `curve-class` |
+| CurveKey.TangentIn | `curve-class` |
+| CurveKey.TangentOut | `curve-class` |
 | CurveKeyCollection | `curve-class` |
 | CurveLoopType | `curve-class` |
 | CurveTangent | `curve-class` |
@@ -309,7 +315,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Matrix.CreateFromQuaternion | `quat-euler` |
 | Matrix.CreateLookAt | `mat-view`, `cam-orbit`, `cam-chase`, `cam-topdown`, `cam-mirror`, `rt-mirror`, `rv-camera`, `rf-deck`, `rf-telescope`, `vr-index` |
 | Matrix.CreateOrthographic | `mat-ortho`, `cam-topdown`, `cx-shadow`, `rv-camera` |
+| Matrix.CreateOrthographicOffCenter | `mat-offcenter` |
+| Matrix.CreatePerspective | `mat-offcenter` |
 | Matrix.CreatePerspectiveFieldOfView | `mat-perspective`, `mat-ortho`, `col-frustum`, `cam-security`, `cam-fov`, `cam-clip`, `rv-camera`, `rf-telescope` |
+| Matrix.CreatePerspectiveOffCenter | `mat-offcenter` |
 | Matrix.CreateReflection | `mat-reflection` |
 | Matrix.CreateRotationX | `quat-euler`, `an-gyroscope` |
 | Matrix.CreateRotationY | `mat-order`, `an-gears`, `an-gyroscope` |
@@ -369,6 +378,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | PbrEffect.RoughnessFactor | `model-pbr`, `model-ibl` |
 | Plane | `vec-reflect`, `col-ray-plane` |
 | Plane.DotCoordinate | `col-plane-box` |
+| Plane.DotNormal | `col-plane-box` |
 | Plane.Intersects | `col-plane-box` |
 | Plane.Transform | `mat-reflection` |
 | PlaneIntersectionType | `col-plane-box` |
@@ -389,6 +399,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | PunctualLightKindEXT.Spot | `light-flashlight` |
 | Quaternion | `animation` |
 | Quaternion.Concatenate | `quat-axis` |
+| Quaternion.Conjugate | `quat-axis` |
 | Quaternion.CreateFromAxisAngle | `quat-axis` |
 | Quaternion.CreateFromYawPitchRoll | `quat-euler` |
 | Quaternion.Dot | `quat-slerp` |
@@ -404,10 +415,13 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | RasterizerState.SlopeScaleDepthBias | `rs-depthbias` |
 | Ray.Intersects | `col-ray-box`, `col-ray-sphere`, `col-ray-plane`, `col-pick` |
 | Rectangle | `vt-rectangle`, `sprite-sheet`, `sprite-ui`, `sprite-anim` |
+| Rectangle.Bottom | `vt-rectangle` |
 | Rectangle.Contains | `vt-rectangle` |
 | Rectangle.Inflate | `vt-rectangle` |
 | Rectangle.Intersect | `vt-rectangle`, `sprite-hit` |
 | Rectangle.Intersects | `vt-rectangle`, `sprite-hit` |
+| Rectangle.IsEmpty | `vt-rectangle` |
+| Rectangle.Location | `vt-rectangle` |
 | Rectangle.Union | `vt-rectangle` |
 | RenderTarget2D | `rendertarget`, `cam-orbit`, `cam-fov`, `cam-split`, `cam-mirror`, `sprite-basics`, `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave`, `rs-scissor`, `rt-basic`, `rt-lowres`, `rt-control`, `rt-recursive`, `rt-mirror`, `rt-msaa`, `pf-targets`, `rv-targets`, `rf-telescope` |
 | RenderTarget2D.Format | `rt-formats` |

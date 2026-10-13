@@ -61,6 +61,7 @@ public:
                 p.AddReadout("xyzw", [this] { return FmtQ(AxisQuat()); });
                 p.AddReadout("Length (always 1)", [this] { return Fmt(AxisQuat().Length()); });
                 p.AddReadout("Inverse * q", [this] { return FmtQ(Quaternion::Concatenate(AxisQuat(), Quaternion::Inverse(AxisQuat()))); });
+                p.AddReadout("Conjugate (= Inverse for unit q)", [this] { return FmtQ(Quaternion::Conjugate(AxisQuat())) + (Quaternion::Conjugate(AxisQuat()) == Quaternion::Inverse(AxisQuat()) ? "  same" : "  differs"); });
                 break;
         }
         SignSpec what = Kit::Plate(Title(), Explanation());

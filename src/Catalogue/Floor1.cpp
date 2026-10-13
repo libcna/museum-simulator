@@ -63,8 +63,8 @@ WingSpec ValueTypeWing()
     w.rooms = {
         vt("vt-packed", "Packed Vector Formats", "Byte4, NormalizedShort4, HalfVector4, Rgba1010102, Bgr565... what each stores and what it loses", "packed",
            {"IPackedVector", "Byte4", "NormalizedByte4", "NormalizedShort4", "Short4", "HalfVector4", "Rgba1010102", "Rgba64", "Bgra4444", "Bgra5551", "Bgr565", "Rg32", "PackedValue"}),
-        vt("vt-rectangle", "Rectangle and Point", "Intersects, Intersect, Union, Contains and Inflate computed live on two rectangles", "rect", {"Rectangle", "Rectangle.Intersects", "Rectangle.Intersect", "Rectangle.Union", "Rectangle.Contains", "Rectangle.Inflate", "Point"}),
-        vt("vt-color", "Colour", "Color.Lerp, Multiply, FromNonPremultiplied and the packed 32-bit value", "color", {"Color", "Color.Lerp", "Color.Multiply", "Color.FromNonPremultiplied", "Color.PackedValue"}),
+        vt("vt-rectangle", "Rectangle and Point", "Intersects, Intersect, Union, Contains and Inflate computed live on two rectangles", "rect", {"Rectangle", "Rectangle.Intersects", "Rectangle.Intersect", "Rectangle.Union", "Rectangle.Contains", "Rectangle.Inflate", "Rectangle.Bottom", "Rectangle.Location", "Rectangle.IsEmpty", "Point"}),
+        vt("vt-color", "Colour", "Color.Lerp, Multiply, FromNonPremultiplied and the packed 32-bit value", "color", {"Color", "Color.Lerp", "Color.Multiply", "Color.FromNonPremultiplied", "Color.PackedValue", "Color.ToVector3", "Color.PackFromVector4"}),
     };
     return w;
 }
@@ -97,6 +97,8 @@ WingSpec TransformWing()
         tr("mat-perspective", "Perspective Projection", "CreatePerspectiveFieldOfView with live field of view, aspect and clip planes", "perspective", {"Matrix.CreatePerspectiveFieldOfView", "BoundingFrustum.Contains"}),
         tr("mat-ortho", "Orthographic Projection", "CreateOrthographic beside perspective: no vanishing point, constant size", "ortho", {"Matrix.CreateOrthographic", "Matrix.CreatePerspectiveFieldOfView"}),
         tr("mat-screen", "World to Screen", "World, view, clip and screen coordinates of a point, with Viewport.Project and Unproject", "project", {"Viewport.Project", "Viewport.Unproject", "Vector4.Transform", "Matrix.Multiply"}),
+        tr("mat-offcenter", "Off-Centre Projections", "CreatePerspective, CreatePerspectiveOffCenter and CreateOrthographicOffCenter: asymmetric frusta and the classic pixel-space matrix", "offcenter",
+           {"Matrix.CreatePerspective", "Matrix.CreatePerspectiveOffCenter", "Matrix.CreateOrthographicOffCenter"}),
         tr("mat-billboard", "Billboards", "Matrix.CreateBillboard and CreateConstrainedBillboard: sprites that turn to face a camera, fully or about an axis", "billboard",
            {"Matrix.CreateBillboard", "Matrix.CreateConstrainedBillboard"}),
         tr("mat-reflection", "Reflection Matrices", "Matrix.CreateReflection mirrors a world across a Plane that Plane.Transform moves, and the triangle winding flips", "reflection",
@@ -137,11 +139,11 @@ WingSpec RotationWing()
         Lab("quat-slerp", "Slerp and Lerp", "Quaternion.Slerp turns at constant speed; Lerp then Normalize does not", "quaternions", "slerp",
             {"Quaternion.Slerp", "Quaternion.Lerp", "Quaternion.Normalize", "Quaternion.Dot"}),
         Lab("quat-axis", "Axis and Angle", "Quaternion.CreateFromAxisAngle, Concatenate and Inverse", "quaternions", "axisangle",
-            {"Quaternion.CreateFromAxisAngle", "Quaternion.Concatenate", "Quaternion.Inverse"}),
+            {"Quaternion.CreateFromAxisAngle", "Quaternion.Concatenate", "Quaternion.Inverse", "Quaternion.Conjugate"}),
         Lab("curve-easing", "Easing Functions", "MathHelper.Lerp, SmoothStep, Hermite and CatmullRom graphed side by side", "curves", "easing",
             {"MathHelper.Lerp", "MathHelper.SmoothStep", "MathHelper.Hermite", "MathHelper.CatmullRom"}),
         Lab("curve-spline", "Splines", "Vector3.CatmullRom through four control points with a rider", "curves", "spline", {"Vector3.CatmullRom"}),
-        Lab("curve-class", "The Curve Class", "Curve, CurveKey, tangents, continuity and loop types", "curves", "curve", {"Curve", "CurveKey", "CurveLoopType", "CurveTangent", "CurveContinuity", "CurveKeyCollection"}),
+        Lab("curve-class", "The Curve Class", "Curve, CurveKey, tangents, continuity and loop types", "curves", "curve", {"Curve", "CurveKey", "CurveLoopType", "CurveTangent", "CurveContinuity", "CurveKeyCollection", "CurveKey.TangentIn", "CurveKey.TangentOut", "Curve.IsConstant"}),
         Lab("curve-barycentric", "Barycentric Coordinates", "Vector3.Barycentric weights inside a triangle", "curves", "barycentric", {"Vector3.Barycentric"}),
     };
     return w;
@@ -161,8 +163,8 @@ WingSpec CollisionWing()
         Lab("col-ray-box", "Ray vs Box", "Ray.Intersects(BoundingBox): the distance to the entry point", "collision", "ray-box", {"Ray.Intersects", "BoundingBox"}),
         Lab("col-ray-sphere", "Ray vs Sphere", "Ray.Intersects(BoundingSphere) with a movable aim", "collision", "ray-sphere", {"Ray.Intersects", "BoundingSphere"}),
         Lab("col-ray-plane", "Ray vs Plane", "Ray.Intersects(Plane): crossing distance, parallel and backward rays", "collision", "ray-plane", {"Ray.Intersects", "Plane"}),
-        Lab("col-plane-box", "Which Side of the Plane", "Plane.Intersects(BoundingBox) classifies five boxes as Front, Back or Intersecting", "collision", "plane-box", {"Plane.Intersects", "Plane.DotCoordinate", "PlaneIntersectionType"}),
-        Lab("col-merge", "Fitting and Merging Bounds", "CreateFromPoints for boxes and spheres, CreateMerged and the sphere around a box", "collision", "merge", {"BoundingBox.CreateFromPoints", "BoundingSphere.CreateFromPoints", "BoundingSphere.CreateMerged", "BoundingSphere.CreateFromBoundingBox"}),
+        Lab("col-plane-box", "Which Side of the Plane", "Plane.Intersects(BoundingBox) classifies five boxes as Front, Back or Intersecting", "collision", "plane-box", {"Plane.Intersects", "Plane.DotCoordinate", "Plane.DotNormal", "PlaneIntersectionType"}),
+        Lab("col-merge", "Fitting and Merging Bounds", "CreateFromPoints for boxes and spheres, CreateMerged and the sphere around a box", "collision", "merge", {"BoundingBox.CreateFromPoints", "BoundingSphere.CreateFromPoints", "BoundingSphere.CreateMerged", "BoundingSphere.CreateFromBoundingBox", "BoundingBox.CreateFromSphere"}),
         Lab("col-frustum", "Frustum Culling", "BoundingFrustum.Contains: fully inside, partly inside or culled, with the frustum's corners and its own sphere", "collision", "frustum", {"BoundingFrustum.Contains", "BoundingFrustum", "BoundingFrustum.GetCorners", "BoundingSphere.CreateFromFrustum", "Matrix.CreatePerspectiveFieldOfView"}),
         Lab("col-pick", "Picking", "Your view ray tested with Ray.Intersects against boxes and spheres", "collision", "pick", {"Ray.Intersects", "BoundingBox", "BoundingSphere"}),
     };

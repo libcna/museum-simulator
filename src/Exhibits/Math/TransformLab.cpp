@@ -24,7 +24,7 @@ using namespace MathKit;
 
 namespace {
 
-enum class Mode { Order, Hierarchy, LookAt, Perspective, Ortho, Project, Billboard, Reflection, Normals };
+enum class Mode { Order, Hierarchy, LookAt, Perspective, Ortho, Project, Billboard, Reflection, Normals, OffCenter };
 
 Mode ParseMode(const std::string& s)
 {
@@ -36,6 +36,7 @@ Mode ParseMode(const std::string& s)
     if (s == "billboard") return Mode::Billboard;
     if (s == "reflection") return Mode::Reflection;
     if (s == "normals") return Mode::Normals;
+    if (s == "offcenter") return Mode::OffCenter;
     return Mode::Order;
 }
 
@@ -54,7 +55,7 @@ public:
 
     void BuildStatic(RoomBuilder& b) override
     {
-        const bool dioramaMode = mode_ == Mode::LookAt || mode_ == Mode::Perspective || mode_ == Mode::Ortho;
+        const bool dioramaMode = mode_ == Mode::LookAt || mode_ == Mode::Perspective || mode_ == Mode::Ortho || mode_ == Mode::OffCenter;
         origin_ = dioramaMode ? R().ToWorld(0, 0, 0) : BuildStagePlinth(b, 0.0f, 0.0f) + Vector3(0, 0.55f, 0);
         ControlPanel& p = AddPanel(Title(), -4.8f, 1.5f, 1.8f, MathHelper::PiOver2, 2.1f);
         switch (mode_) {
@@ -147,6 +148,16 @@ public:
                 p.AddReadout("Determinant of the reflection", [this] { return Fmt(Matrix::CreateReflection(MirrorPlane()).Determinant()); });
                 p.AddHeading("Determinant -1: triangles wind the other way");
                 break;
+            case Mode::OffCenter:
+                p.AddChoice("Projection", {"CreatePerspective (symmetric)", "CreatePerspectiveOffCenter (skewed)", "CreateOrthographicOffCenter (pixels)"}, 1, [this](int v) { projChoice_ = v; });
+                p.AddSlider("Left (at the near plane)", -2.5f, -0.2f, ocL_, [this](float v) { ocL_ = v; });
+                p.AddSlider("Right", 0.2f, 2.5f, ocR_, [this](float v) { ocR_ = v; });
+                p.AddSlider("Bottom", -1.5f, -0.2f, ocB_, [this](float v) { ocB_ = v; });
+                p.AddSlider("Top", 0.2f, 1.5f, ocT_, [this](float v) { ocT_ = v; });
+                p.AddReadout("M11 / M22", [this] { const Matrix m = OffCentre(); return Fmt(m.M11) + " / " + Fmt(m.M22); });
+                p.AddReadout("M31 / M32 (the skew)", [this] { const Matrix m = OffCentre(); return Fmt(m.M31) + " / " + Fmt(m.M32); });
+                p.AddReadout("Aperture", [this] { return projChoice_ == 2 ? std::string("pixels: (0,0) top-left, y down") : Fmt(ocR_ - ocL_) + " x " + Fmt(ocT_ - ocB_) + " at the near plane"; });
+                break;
             case Mode::Normals:
                 p.AddSlider("Stretch X", 0.4f, 2.2f, stretch_.X, [this](float v) { stretch_.X = v; });
                 p.AddSlider("Stretch Y", 0.4f, 2.2f, stretch_.Y, [this](float v) { stretch_.Y = v; });
@@ -164,7 +175,7 @@ public:
 
     void Load(InteractionSystem&, MuseumWorld&) override
     {
-        if (mode_ == Mode::LookAt || mode_ == Mode::Perspective || mode_ == Mode::Ortho) {
+        if (mode_ == Mode::LookAt || mode_ == Mode::Perspective || mode_ == Mode::Ortho || mode_ == Mode::OffCenter) {
             viewA_ = std::make_unique<MiniView>(S(), 480, 300);
             if (mode_ == Mode::Ortho) viewB_ = std::make_unique<MiniView>(S(), 480, 300);
         }
@@ -185,6 +196,13 @@ public:
             viewA_->Render(ctx, ViewMatrix(), Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(60.0f), viewA_->Aspect(), 0.1f, 40.0f), CameraWorld(), scene);
         } else if (mode_ == Mode::Perspective && viewA_) {
             viewA_->Render(ctx, PerspectiveView(), ProjectionMatrix(), PerspectiveEye(), scene);
+        } else if (mode_ == Mode::OffCenter && viewA_) {
+            if (projChoice_ == 2) {
+                // Pixel space: the view is the identity and the projection maps (0,0) top-left to (480,300) bottom-right.
+                viewA_->Render(ctx, Matrix::getIdentityProperty(), OffCentre(), Vector3::Zero, [this](const DrawContext& sub) { DrawPixelScene(sub); }, Color(18, 22, 36, 255));
+            } else {
+                viewA_->Render(ctx, PerspectiveView(), OffCentre(), PerspectiveEye(), scene);
+            }
         } else if (mode_ == Mode::Ortho && viewA_ && viewB_) {
             const Vector3 eye = c + Off(0, 3.0f, 8.0f);
             const Matrix view = Matrix::CreateLookAt(eye, c + Vector3(0, 0.5f, 0), Vector3::Up);
@@ -207,6 +225,7 @@ public:
             case Mode::Billboard: DrawBillboard(ctx, o); break;
             case Mode::Reflection: DrawReflection(ctx, o); break;
             case Mode::Normals: DrawNormals(ctx, o); break;
+            case Mode::OffCenter: DrawOffCentre(ctx); break;
         }
         gizmos_.Flush(ctx);
     }
@@ -245,6 +264,7 @@ private:
             case Mode::Billboard: return "Billboards";
             case Mode::Reflection: return "Reflection matrices";
             case Mode::Normals: return "Normals and the inverse transpose";
+            case Mode::OffCenter: return "Off-centre projections";
             default: return "World to screen";
         }
     }
@@ -258,6 +278,7 @@ private:
             case Mode::Ortho: return {"An orthographic projection has no vanishing point: parallel lines stay parallel and size does not", "depend on distance (left view = perspective, right = orthographic of the same scene)."};
             case Mode::Billboard: return {"A billboard is a flat sprite that turns to face the camera. CreateBillboard faces it fully (it tilts when you look", "from above); CreateConstrainedBillboard turns only about an axis, so trees stay upright. Orbit the virtual camera."};
             case Mode::Reflection: return {"CreateReflection builds the matrix that mirrors a world across a Plane; Plane.Transform moves the plane with an", "object. A mirror image is back to front, so its triangles wind the other way (the determinant is -1)."};
+            case Mode::OffCenter: return {"An off-centre projection slices the view frustum asymmetrically: the camera still looks straight ahead but the window", "it looks through is shifted (M31, M32). CreateOrthographicOffCenter(0, w, h, 0) is the classic pixel-space 2D projection."};
             case Mode::Normals: return {"Positions transform by the world matrix, but a normal must stay perpendicular to the surface: under a non-uniform", "scale that needs Transpose(Invert(world)). Red arrows use the plain matrix and lean; green ones are right."};
             default: return {"A point travels world -> view -> clip -> normalised device -> screen coordinates.", "Move the point; the cross-hair on your screen is where Viewport.Project puts it."};
         }
@@ -303,6 +324,35 @@ private:
         return S().device->getViewportProperty().Project(WorldPoint(), Projection(), View(), Matrix::getIdentityProperty());
     }
 
+    [[nodiscard]] Matrix OffCentre() const
+    {
+        const float farPlane = 14.0f;
+        if (projChoice_ == 0) return Matrix::CreatePerspective(ocR_ - ocL_, ocT_ - ocB_, 1.0f, farPlane);
+        if (projChoice_ == 1) return Matrix::CreatePerspectiveOffCenter(ocL_, ocR_, ocB_, ocT_, 1.0f, farPlane);
+        return Matrix::CreateOrthographicOffCenter(0.0f, 480.0f, 300.0f, 0.0f, 0.0f, 1.0f);
+    }
+    // A pixel-space scene: a grid, the origin marker at the top-left and a few labelled rectangles.
+    void DrawPixelScene(const DrawContext& sub)
+    {
+        RenderStates::SetOpaque3D(sub.device);
+        sub.device.setRasterizerStateProperty(RasterizerState::CullNone);
+        const auto rect = [&](float x, float y, float w, float h, Color c) { QuadDraw::Coloured(sub, Vector3(x, y + h, -0.5f), Vector3(w, 0, 0), Vector3(0, -h, 0), c); };
+        for (int x = 0; x <= 480; x += 40) rect(static_cast<float>(x), 0, 1, 300, Color(60, 72, 104, 255));
+        for (int y = 0; y <= 300; y += 40) rect(0, static_cast<float>(y), 480, 1, Color(60, 72, 104, 255));
+        rect(0, 0, 60, 60, Color(255, 200, 80, 255));            // (0, 0) is the top-left corner
+        rect(420, 240, 60, 60, Color(110, 230, 150, 255));       // (480, 300) the bottom-right
+        rect(180, 100, 120, 80, Color(120, 170, 255, 255));
+        rect(200, 120, 40, 40, Color(255, 120, 120, 255));
+    }
+    void DrawOffCentre(const DrawContext& ctx)
+    {
+        DrawDiorama(ctx, S(), DioramaOrigin(), time_, 3.0f);
+        if (projChoice_ != 2) {
+            gizmos_.Frustum(BoundingFrustum(PerspectiveView() * OffCentre()), Color(255, 200, 80, 255));
+            gizmos_.SolidSphere(ctx, PerspectiveEye(), 0.1f, kRed);
+        }
+        viewA_->DrawInRoom(ctx, R().ToWorld(3.8f, 1.9f, -3.2f), -MathHelper::PiOver2 * 0.6f + R().frameYaw, 2.6f);
+    }
     [[nodiscard]] Vector3 UnprojectedPoint() const
     {
         if (S().mainView == nullptr) return WorldPoint();
@@ -502,6 +552,8 @@ private:
 
     Mode mode_;
     Gizmos gizmos_;
+    int projChoice_ = 1;
+    float ocL_ = -1.4f, ocR_ = 0.6f, ocB_ = -0.5f, ocT_ = 0.7f;
     int board_ = 1;
     bool ownEye_ = false;
     float orbit_ = 40.0f, camHeight_ = 4.0f, mirrorX_ = 0.0f, mirrorTilt_ = 0.0f;

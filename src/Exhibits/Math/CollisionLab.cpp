@@ -107,6 +107,7 @@ public:
                 p.AddHeading("Plane.Intersects(box) for five boxes");
                 for (int i = 0; i < 5; ++i) p.AddReadout("Box " + std::to_string(i + 1), [this, i] { return Name(PlaneNow().Intersects(Row(i))); });
                 p.AddReadout("DotCoordinate(origin)", [this] { return Fmt(PlaneNow().DotCoordinate(Vector3(0, 0, 0))); });
+                p.AddReadout("DotNormal(up)", [this] { return Fmt(PlaneNow().DotNormal(Vector3::Up)); });
                 break;
             case Mode::Merge:
                 p.AddSlider("Points used", 4.0f, 64.0f, static_cast<float>(count_), [this](float v) { count_ = static_cast<int>(v); }, "%.0f", 1.0f);
@@ -116,6 +117,7 @@ public:
                 p.AddReadout("Sphere radius", [this] { return Fmt(FitSphere().Radius); });
                 p.AddReadout("Merged sphere radius", [this] { return Fmt(BoundingSphere::CreateMerged(FitSphere(), BoundingSphere(Vector3(1.5f, 0, 0), 0.4f)).Radius); });
                 p.AddReadout("Sphere around the box (CreateFromBoundingBox)", [this] { return Fmt(BoundingSphere::CreateFromBoundingBox(Fit()).Radius); });
+                p.AddReadout("Box around the sphere (CreateFromSphere)", [this] { return Fmt(BoundingBox::CreateFromSphere(FitSphere()).Max - BoundingBox::CreateFromSphere(FitSphere()).Min); });
                 break;
             case Mode::Frustum:
                 p.AddSlider("Camera yaw", -90.0f, 90.0f, aimYaw_, [this](float v) { aimYaw_ = v; }, "%.0f deg", 1.0f);
