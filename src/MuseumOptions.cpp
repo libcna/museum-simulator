@@ -1,0 +1,71 @@
+#include "MuseumOptions.hpp"
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
+namespace {
+
+bool Match(const char* arg, const char* name, const char*& value, int& i, int argc, char** argv)
+{
+    const std::size_t n = std::strlen(name);
+    if (std::strncmp(arg, name, n) != 0) return false;
+    if (arg[n] == '=') { value = arg + n + 1; return true; }
+    if (arg[n] == '\0' && i + 1 < argc) { value = argv[++i]; return true; }
+    return false;
+}
+
+}  // namespace
+
+const char* MuseumOptions::Usage()
+{
+    return
+        "cna-3d-museum [options]\n"
+        "  --width N --height N      window size (default 1280x720)\n"
+        "  --fullscreen              start fullscreen\n"
+        "  --no-vsync                disable vertical sync\n"
+        "  --sensitivity F           mouse sensitivity multiplier (default 1.0)\n"
+        "  --volume F                master volume 0..1\n"
+        "  --no-audio                do not load or play any sound\n"
+        "  --room ID                 start in a room: lobby, info, models, materials, lighting,\n"
+        "                            renderstates, rendertarget, particles, animation, sky, audio\n"
+        "  --pos X,Y,Z --yaw DEG --pitch DEG   start pose (metres, degrees)\n"
+        "  --frames N                exit after N frames\n"
+        "  --screenshot FILE.png [--screenshot-frame N]   save the back buffer and exit\n"
+        "  --fixed-step SECONDS      advance the simulation by a fixed step per frame\n"
+        "  --script \"a;b;c\"          scripted test actions (see HANDOFF.md)\n";
+}
+
+MuseumOptions MuseumOptions::Parse(int argc, char** argv)
+{
+    MuseumOptions o;
+    for (int i = 1; i < argc; ++i) {
+        const char* a = argv[i];
+        const char* v = nullptr;
+        if (Match(a, "--width", v, i, argc, argv)) o.width = std::atoi(v);
+        else if (Match(a, "--height", v, i, argc, argv)) o.height = std::atoi(v);
+        else if (!std::strcmp(a, "--fullscreen")) o.fullscreen = true;
+        else if (!std::strcmp(a, "--no-vsync")) o.vsync = false;
+        else if (Match(a, "--sensitivity", v, i, argc, argv)) o.mouseSensitivity = 0.0025f * static_cast<float>(std::atof(v));
+        else if (Match(a, "--volume", v, i, argc, argv)) o.volume = static_cast<float>(std::atof(v));
+        else if (!std::strcmp(a, "--no-audio")) o.audio = false;
+        else if (Match(a, "--room", v, i, argc, argv)) o.startRoom = v;
+        else if (Match(a, "--yaw", v, i, argc, argv)) o.startYawDegrees = static_cast<float>(std::atof(v));
+        else if (Match(a, "--pitch", v, i, argc, argv)) o.startPitchDegrees = static_cast<float>(std::atof(v));
+        else if (Match(a, "--pos", v, i, argc, argv)) {
+            float x = 0, y = 0, z = 0;
+            if (std::sscanf(v, "%f,%f,%f", &x, &y, &z) == 3)
+                o.startPosition = Microsoft::Xna::Framework::Vector3(x, y, z);
+        }
+        else if (Match(a, "--frames", v, i, argc, argv)) o.maxFrames = std::atoi(v);
+        else if (Match(a, "--screenshot-frame", v, i, argc, argv)) o.screenshotFrame = std::atoi(v);
+        else if (Match(a, "--screenshot", v, i, argc, argv)) o.screenshotPath = v;
+        else if (Match(a, "--fixed-step", v, i, argc, argv)) o.fixedTimeStep = static_cast<float>(std::atof(v));
+        else if (Match(a, "--script", v, i, argc, argv)) o.script = v;
+        else if (!std::strcmp(a, "--help") || !std::strcmp(a, "-h")) o.showHelp = true;
+        else std::fprintf(stderr, "cna-3d-museum: ignoring unknown option '%s'\n", a);
+    }
+    if (o.width < 320) o.width = 320;
+    if (o.height < 200) o.height = 200;
+    return o;
+}

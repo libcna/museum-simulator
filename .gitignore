@@ -1,0 +1,17 @@
+# Build trees (shared names only: build/, build-asan/, build-probe/, ...)
+/build*/
+*.o
+*.a
+__pycache__/
+.cache/
+compile_commands.json
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Screenshots and scratch output
+/shots/
+*.log
