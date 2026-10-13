@@ -49,7 +49,7 @@ const std::map<std::string, Theme>& Themes()
         {"brick-loft", T("wood", "brick", "plaster", {0.95f, 0.85f, 0.78f}, {0.9f, 0.85f, 0.8f}, {0.27f, 0.24f, 0.22f}, 1.05f)},
         {"retro", T("carpet", "wood", "plaster", {0.72f, 0.80f, 0.68f}, {0.7f, 0.9f, 0.7f}, {0.22f, 0.24f, 0.20f}, 1.0f)},
         {"futuristic", T("tiles", "metal", "metal", {0.55f, 0.75f, 1.0f}, {0.6f, 0.75f, 0.95f}, {0.14f, 0.18f, 0.28f}, 0.9f, {0.75f, 0.9f, 1.0f})},
-        {"neon-lab", T("darkgrid", "metal", "metal", {0.30f, 0.32f, 0.42f}, {0.35f, 0.38f, 0.45f}, {0.07f, 0.08f, 0.12f}, 0.5f, {0.8f, 0.85f, 1.0f})},
+        {"neon-lab", T("darkgrid", "metal", "metal", {0.55f, 0.62f, 0.80f}, {0.7f, 0.75f, 0.9f}, {0.22f, 0.25f, 0.34f}, 0.9f, {0.8f, 0.9f, 1.0f})},
         {"workshop", T("wood", "stone", "plaster", {0.80f, 0.74f, 0.66f}, {0.85f, 0.8f, 0.75f}, {0.24f, 0.22f, 0.20f}, 1.0f)},
         {"basement", T("cobble", "stone", "stone", {0.55f, 0.55f, 0.58f}, {0.6f, 0.6f, 0.62f}, {0.16f, 0.16f, 0.18f}, 0.8f, {1.0f, 0.9f, 0.7f})},
         {"white-cube", T("concrete", "panel", "panel", {1.0f, 1.0f, 1.0f}, {0.95f, 0.95f, 0.95f}, {0.45f, 0.45f, 0.45f}, 1.0f, {1.0f, 1.0f, 1.0f})},

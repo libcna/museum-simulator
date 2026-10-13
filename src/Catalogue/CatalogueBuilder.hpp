@@ -53,6 +53,7 @@ struct FloorSpec {
 FloorSpec MakeFloor0();
 FloorSpec MakeFloor1();
 FloorSpec MakeFloor2();
+FloorSpec MakeFloor3();
 
 /** All floors in order. */
 std::vector<FloorSpec> AllFloorSpecs();

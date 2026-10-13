@@ -6,5 +6,6 @@ std::vector<FloorSpec> AllFloorSpecs()
     floors.push_back(MakeFloor0());
     floors.push_back(MakeFloor1());
     floors.push_back(MakeFloor2());
+    floors.push_back(MakeFloor3());
     return floors;
 }
