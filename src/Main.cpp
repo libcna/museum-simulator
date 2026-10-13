@@ -1,4 +1,5 @@
 #include "Catalogue/Inventory.hpp"
+#include "Catalogue/ReferenceViews.hpp"
 #include "MuseumGame.hpp"
 
 #include <cstdio>
@@ -18,6 +19,10 @@ int main(int argc, char** argv)
         if (options.listRooms) {
             for (const RoomDef& r : TheMuseum().rooms)
                 if (r.kind == CellKind::Room) std::printf("%s\n", r.key.c_str());
+            return 0;
+        }
+        if (options.listViews) {
+            for (const ReferenceView& v : ReferenceViews()) std::printf("%s\t%s\t%s\n", v.name, v.room, v.shows);
             return 0;
         }
         if (options.validate || options.inventory) {

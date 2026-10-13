@@ -31,6 +31,9 @@ const char* MuseumOptions::Usage()
         "  --pos X,Y,Z --yaw DEG --pitch DEG   start pose (metres, degrees)\n"
         "  --frames N                exit after N frames\n"
         "  --screenshot FILE.png [--screenshot-frame N]   save the back buffer and exit\n"
+        "  --view NAME               start at a reference view (see --list-views); --no-hud hides the overlay\n"
+        "  --list-views              print the reference views: name, room, description (no window)\n"
+        "  --time HOURS [--time-run] set the museum clock (0..24, default 11); frozen unless --time-run\n"
         "  --fixed-step SECONDS      advance the simulation by a fixed step per frame\n"
         "  --script \"a;b;c\"          scripted test actions (see src/MuseumGame.cpp, RunScript)\n"
         "  --validate                check the museum's structure (no window); exit status 1 if invalid\n"
@@ -62,10 +65,15 @@ MuseumOptions MuseumOptions::Parse(int argc, char** argv)
         else if (Match(a, "--frames", v, i, argc, argv)) o.maxFrames = std::atoi(v);
         else if (Match(a, "--screenshot-frame", v, i, argc, argv)) o.screenshotFrame = std::atoi(v);
         else if (Match(a, "--screenshot", v, i, argc, argv)) o.screenshotPath = v;
+        else if (Match(a, "--time", v, i, argc, argv)) o.startHours = static_cast<float>(std::atof(v));
+        else if (!std::strcmp(a, "--time-run")) o.timeRuns = true;
         else if (Match(a, "--fixed-step", v, i, argc, argv)) o.fixedTimeStep = static_cast<float>(std::atof(v));
         else if (Match(a, "--script", v, i, argc, argv)) o.script = v;
         else if (!std::strcmp(a, "--validate")) o.validate = true;
         else if (!std::strcmp(a, "--inventory")) o.inventory = true;
+        else if (Match(a, "--view", v, i, argc, argv)) o.view = v;
+        else if (!std::strcmp(a, "--no-hud")) o.hud = false;
+        else if (!std::strcmp(a, "--list-views")) o.listViews = true;
         else if (!std::strcmp(a, "--list-rooms")) o.listRooms = true;
         else if (!std::strcmp(a, "--help") || !std::strcmp(a, "-h")) o.showHelp = true;
         else std::fprintf(stderr, "cna-3d-museum: ignoring unknown option '%s'\n", a);

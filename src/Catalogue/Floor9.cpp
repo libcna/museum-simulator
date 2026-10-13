@@ -77,6 +77,64 @@ WingSpec ValidationWing()
     return w;
 }
 
+
+WingSpec RoofWing()
+{
+    WingSpec w;
+    w.name = "Observation Deck";
+    w.tagline = "Open-air rooms under the museum sky: the clock, a garden, a telescope and a weather station";
+    w.theme = "garden";
+    w.accent = {0.95f, 0.30f, 0.30f};
+    w.spineSide = Wall::East;
+    const auto rf = [](const char* key, const char* title, const char* subtitle, const char* mode, std::vector<std::string> apis, ApiOrigin origin) {
+        RoomSpec r;
+        r.key = key;
+        r.title = title;
+        r.subtitle = subtitle;
+        r.exhibit = "roof-lab";
+        r.params = {{"mode", mode}};
+        r.width = 15;
+        r.depth = 15;
+        r.height = 5.0f;
+        r.theme = "garden";
+        r.openRoof = true;
+        r.apis = std::move(apis);
+        r.origin = origin;
+        return r;
+    };
+    w.rooms = {
+        rf("rf-deck", "Sun, Moon and the Museum Clock", "Time of day drives the sun, the daylight, the ambient colour and the lamps", "deck", {"Matrix.CreateLookAt", "Vector3", "BasicEffect.EmissiveColor", "MathHelper"}, ApiOrigin::Xna),
+        rf("rf-garden", "Terrace Garden", "A particle fountain and wind-blown leaves drawn as camera-facing quads", "garden", {"DynamicVertexBuffer", "BlendState.NonPremultiplied", "Texture2D", "SoundEffectInstance"}, ApiOrigin::Xna),
+        rf("rf-telescope", "Telescope", "A narrow field of view into a render target: aim at the sun, the moon or the skyline", "telescope", {"Matrix.CreatePerspectiveFieldOfView", "RenderTarget2D", "BasicEffect.FogEnabled", "Matrix.CreateLookAt"}, ApiOrigin::Xna),
+        rf("rf-weather", "Weather Station", "Rain as lines, snow and splashes as particles, wind, visibility and lightning", "weather", {"PrimitiveType.LineList", "DynamicVertexBuffer", "SetDataOptions.Discard", "SpriteBatch"}, ApiOrigin::Xna),
+    };
+    return w;
+}
+
+
+WingSpec ReferenceWing()
+{
+    WingSpec w;
+    w.name = "Reference Scenes";
+    w.tagline = "Named viewpoints that the visual regression tool renders and compares";
+    w.theme = "white-cube";
+    w.accent = {0.95f, 0.30f, 0.30f};
+    w.spineSide = Wall::West;
+    RoomSpec r;
+    r.key = "vr-index";
+    r.title = "Reference Scenes";
+    r.subtitle = "Teleport to the exact views that tools/reference.sh captures and compares";
+    r.exhibit = "views-lab";
+    r.width = 13;
+    r.depth = 13;
+    r.height = 5.0f;
+    r.theme = "white-cube";
+    r.apis = {"GraphicsDevice.GetBackBufferData", "Texture2D.SaveAsPng", "Matrix.CreateLookAt"};
+    r.origin = ApiOrigin::Xna;
+    w.rooms = {r};
+    return w;
+}
+
 }  // namespace
 
 FloorSpec MakeFloor9()
@@ -89,5 +147,7 @@ FloorSpec MakeFloor9()
     f.accent = {0.95f, 0.30f, 0.30f};
     f.wings.push_back(PerformanceWing());
     f.wings.push_back(ValidationWing());
+    f.wings.push_back(RoofWing());
+    f.wings.push_back(ReferenceWing());
     return f;
 }

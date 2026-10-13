@@ -106,7 +106,7 @@ void Hud::DrawHelp(int w, int h)
         "Esc   pause menu                    F1 / H   this help",
         "M / Tab   directory and map            F3   statistics",
         "F11   fullscreen                    R   return to the entrance        N   minimap on/off",
-        "F2   mute audio                     [ ]   mouse sensitivity",
+        "F2   mute audio                     [ ]   mouse sensitivity       T / Y   time of day",
         "Gamepad: left stick walk, right stick look, A interact, Start pause",
     };
     const int panelW = 760;

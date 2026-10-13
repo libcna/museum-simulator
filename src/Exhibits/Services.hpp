@@ -77,6 +77,7 @@ struct Services {
     const SceneView* mainView = nullptr;   // the visitor's camera for this frame (valid during Draw/DrawOverlay)
     Microsoft::Xna::Framework::Graphics::Texture2D* whiteTexture = nullptr;
     std::function<void(int floor)> travelToFloor;   // elevator: ride to a floor's elevator car
+    std::function<void(const std::string& name)> showView;   // teleport to a named reference view
     std::function<void()> openDirectory;            // the full-screen directory and map
     std::string contentRoot;
     bool supportsThreeD = true;

@@ -22,8 +22,13 @@ struct MuseumOptions {
     std::optional<float> startYawDegrees;
     std::optional<float> startPitchDegrees;
     std::optional<Microsoft::Xna::Framework::Vector3> startPosition;
+    std::optional<float> startHours;   // set the museum clock (0..24) and keep it still unless --time-run
+    bool timeRuns = false;             // the museum day advances by itself (T / Y also control it in the game)
     float fixedTimeStep = 0.0f;         // >0: advance the simulation by this many seconds per frame
     std::string script;                 // semicolon-separated test actions, see MuseumGame::RunScript
+    std::optional<std::string> view;   // start at a named reference view (see --list-views)
+    bool hud = true;                   // false: draw only the 3D scene (screenshots for comparison)
+    bool listViews = false;            // print the reference views, one per line (no window) and exit
     bool showHelp = false;
     bool validate = false;              // check the catalogue (no window) and exit with the result
     bool listRooms = false;             // print every room key, one per line (no window) and exit

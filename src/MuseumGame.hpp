@@ -44,6 +44,7 @@ private:
     void HandleSystemKeys();
     void SetPaused(bool paused);
     void TeleportToCell(int cell);
+    void GoToView(const std::string& name);
     void ResetToEntrance();
     void UpdateFrameStats(float dt);
     void RecordLoopStats(const Microsoft::Xna::Framework::GameTime& gameTime);
@@ -86,6 +87,7 @@ private:
     bool showHelp_ = false;
     bool showStats_ = false;
     bool showMap_ = true;
+    bool timeRuns_ = false;   // the museum clock advances on its own (key Y)
     float sensitivityScale_ = 1.0f;
     const MuseumPlan* museum_ = nullptr;
     int shownCell_ = -1;

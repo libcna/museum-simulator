@@ -1,4 +1,5 @@
 #include "MuseumGame.hpp"
+#include "Catalogue/ReferenceViews.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -123,6 +124,8 @@ void MuseumGame::LoadContent()
         if (const RoomDef* r = museum_->FindByKey(*options_.startRoom)) TeleportToCell(r->index);
         else Museum::Log("main", "unknown room '%s'", options_.startRoom->c_str());
     }
+    if (options_.view) GoToView(*options_.view);
+    services_.showView = [this](const std::string& name) { GoToView(name); };
     if (options_.startPosition) {
         camera_.SetPosition(*options_.startPosition);
         world_->Arrive(std::max(0, museum_->CellAt(*options_.startPosition)));
@@ -134,6 +137,9 @@ void MuseumGame::LoadContent()
 
     // The ambience plays everywhere, quietly; footsteps and exhibits add their own sounds.
     if (Voice3D* ambience = audio_->CreateLoop("ambience", Vector3(0, 0, 0), 0.18f, 1e6f)) audio_->SetPlaying(ambience, true);
+
+    if (options_.startHours) timeOfDay_.SetHours(*options_.startHours);
+    timeRuns_ = options_.timeRuns;
 
     SetPaused(false);
     hud_->Toast("Welcome! Press F1 for controls.", 5.0f);
@@ -169,6 +175,19 @@ void MuseumGame::TeleportToCell(int cell)
     const Spawn spawn = museum_->SpawnPoint(cell);
     camera_.SetPose(spawn.eye, spawn.yaw, 0.0f);
     world_->Arrive(cell);
+}
+
+void MuseumGame::GoToView(const std::string& name)
+{
+    const ReferenceView* view = FindReferenceView(name);
+    const RoomDef* room = view != nullptr ? museum_->FindByKey(view->room) : nullptr;
+    if (room == nullptr) {
+        Museum::Log("main", "unknown reference view '%s'", name.c_str());
+        return;
+    }
+    TeleportToCell(room->index);
+    camera_.SetPose(camera_.Position() + camera_.GroundForward() * view->advance, camera_.Yaw(), 0.0f);
+    world_->Arrive(room->index);
 }
 
 void MuseumGame::ResetToEntrance()
@@ -242,6 +261,18 @@ void MuseumGame::HandleSystemKeys()
     if (input_.Pressed(Keys::F3)) showStats_ = !showStats_;
     if ((input_.Pressed(Keys::M) || input_.Pressed(Keys::Tab)) && !paused_ && !directory_->IsOpen()) OpenDirectory();
     if (input_.Pressed(Keys::N) && !paused_ && !directory_->IsOpen()) showMap_ = !showMap_;
+    // The museum clock: T moves it an hour on (Shift: back), Y lets the day run or stops it.
+    if (input_.Pressed(Keys::T) && !paused_) {
+        const bool back = input_.Down(Keys::LeftShift) || input_.Down(Keys::RightShift);
+        timeOfDay_.Advance(back ? -1.0f : 1.0f);
+        char buf[48];
+        std::snprintf(buf, sizeof buf, "Museum time %02d:%02d", static_cast<int>(timeOfDay_.Hours()) % 24, static_cast<int>(timeOfDay_.Hours() * 60.0f) % 60);
+        hud_->Toast(buf, 1.5f);
+    }
+    if (input_.Pressed(Keys::Y) && !paused_) {
+        timeRuns_ = !timeRuns_;
+        hud_->Toast(timeRuns_ ? "The museum day is running" : "The museum clock is stopped", 1.5f);
+    }
     if (input_.Pressed(Keys::F2)) audio_->SetMuted(!audio_->Muted());
     if (input_.Pressed(Keys::F11)) {
         graphics_.ToggleFullScreen();
@@ -352,6 +383,7 @@ void MuseumGame::Update(GameTime& gameTime)
     }
 
     if (ride_.active) UpdateRide(dt);
+    if (timeRuns_ && !paused_) timeOfDay_.Advance(dt * 0.2f);   // 12 museum minutes per second
     if (!paused_ && ride_.active) {
         time_ += dt;
         world_->Update(dt, time_, camera_.Position(), camera_.Forward());
@@ -455,7 +487,7 @@ void MuseumGame::Draw(const GameTime& gameTime)
         hud.bannerAlpha = bannerAge_ < 4.0f ? std::clamp(std::min(bannerAge_ * 3.0f, (4.0f - bannerAge_) * 1.5f), 0.0f, 1.0f) : 0.0f;
     }
     Game::Draw(gameTime);     // DrawableGameComponents draw over the scene
-    hud_->Draw(hud);
+    if (options_.hud) hud_->Draw(hud);
     services_.mainView = nullptr;
     if (directory_->IsOpen()) {
         directory_->Draw(discovered_, hud.floor, shownCell_, camera_.Position(), camera_.Yaw(), vp.getWidthProperty(), vp.getHeightProperty());
@@ -496,6 +528,7 @@ void MuseumGame::SaveScreenshot(const std::string& path)
 //   walk:F,S,N      walk with forward F / strafe S input for N frames (collision applies)
 //   e               press E on whatever is under the crosshair
 //   use:I           activate interactable I directly (index in registration order)
+//   time:H          set the museum clock to hour H (0..24)
 //   press:LABEL[=V] operate the control-panel row whose label contains LABEL (slider value V)
 //   shot:FILE       save a screenshot        quit            exit
 void MuseumGame::RunScript()
@@ -543,6 +576,8 @@ void MuseumGame::RunScript()
                 const RoomDef& r = museum_->Room(shownCell_);
                 camera_.SetPose(r.ToWorld(x, 1.65f, z), MathHelper::ToRadians(yaw), MathHelper::ToRadians(pitch));
             }
+        } else if (op == "time") {
+            timeOfDay_.SetHours(static_cast<float>(std::atof(arg.c_str())));
         } else if (op == "look") {
             float yaw = 0, pitch = 0;
             if (std::sscanf(arg.c_str(), "%f,%f", &yaw, &pitch) == 2)
