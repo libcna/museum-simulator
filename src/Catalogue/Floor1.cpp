@@ -37,6 +37,38 @@ WingSpec MathWing()
     return w;
 }
 
+WingSpec TransformWing()
+{
+    WingSpec w;
+    w.name = "Matrices and Transforms";
+    w.tagline = "World, view and projection: how a point reaches the screen";
+    w.theme = "corridor-green";
+    w.accent = {0.55f, 0.90f, 0.55f};
+    w.spineSide = Wall::West;
+    const auto tr = [](const char* key, const char* title, const char* subtitle, const char* mode, std::vector<std::string> apis) {
+        RoomSpec r;
+        r.key = key;
+        r.title = title;
+        r.subtitle = subtitle;
+        r.exhibit = "transforms";
+        r.params = {{"mode", mode}};
+        r.width = 13;
+        r.depth = 13;
+        r.theme = "white-cube";
+        r.apis = std::move(apis);
+        return r;
+    };
+    w.rooms = {
+        tr("mat-order", "Transform Order", "Matrix.CreateScale, CreateRotationY and CreateTranslation multiplied in two orders", "order", {"Matrix.CreateScale", "Matrix.CreateRotationY", "Matrix.CreateTranslation", "Matrix.Multiply"}),
+        tr("mat-hierarchy", "Parent and Child", "Local and world matrices, Matrix.Decompose and transform hierarchies", "hierarchy", {"Matrix.Multiply", "Matrix.Decompose", "Matrix.Translation"}),
+        tr("mat-view", "The View Matrix", "Matrix.CreateLookAt: where the camera is, what it looks at, and what it sees", "lookat", {"Matrix.CreateLookAt", "Matrix.Invert", "BoundingFrustum"}),
+        tr("mat-perspective", "Perspective Projection", "CreatePerspectiveFieldOfView with live field of view, aspect and clip planes", "perspective", {"Matrix.CreatePerspectiveFieldOfView", "BoundingFrustum.Contains"}),
+        tr("mat-ortho", "Orthographic Projection", "CreateOrthographic beside perspective: no vanishing point, constant size", "ortho", {"Matrix.CreateOrthographic", "Matrix.CreatePerspectiveFieldOfView"}),
+        tr("mat-screen", "World to Screen", "World, view, clip and screen coordinates of a point, with Viewport.Project", "project", {"Viewport.Project", "Vector4.Transform", "Matrix.Multiply"}),
+    };
+    return w;
+}
+
 }  // namespace
 
 FloorSpec MakeFloor1()
@@ -48,5 +80,6 @@ FloorSpec MakeFloor1()
     f.theme = "concourse";
     f.accent = {0.40f, 0.75f, 0.95f};
     f.wings.push_back(MathWing());
+    f.wings.push_back(TransformWing());
     return f;
 }

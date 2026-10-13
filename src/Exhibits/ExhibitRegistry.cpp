@@ -26,6 +26,7 @@ constexpr Entry kEntries[] = {
     {"sky", MakeSkyRoom},
     {"audio", MakeAudioRoom},
     {"vectors", MakeVectorLab},
+    {"transforms", MakeTransformLab},
 };
 
 }  // namespace
