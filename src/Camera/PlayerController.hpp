@@ -40,6 +40,8 @@ public:
     [[nodiscard]] bool MouseCaptured() const { return captured_; }
 
     /** Test hook: walk with the given forward/strafe input (each -1..1) for the next `frames` updates. */
+    /** While true the walking keys are ignored (text-entry exhibits). */
+    void SetKeyboardBlocked(bool blocked) { keyboardBlocked_ = blocked; }
     void ScriptWalk(float forward, float strafe, int frames, float yawTurnPerFrame = 0.0f)
     {
         scriptForward_ = forward;
@@ -68,4 +70,5 @@ private:
     float scriptStrafe_ = 0.0f;
     float scriptTurn_ = 0.0f;
     int scriptFrames_ = 0;
+    bool keyboardBlocked_ = false;
 };

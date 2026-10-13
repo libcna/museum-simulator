@@ -63,7 +63,8 @@ void PlayerController::Update(float dt, FirstPersonCamera& camera, const Collisi
     }
     const GamePadState& pad = input.Pad();
     Vector2 stickMove(0, 0);
-    if (pad.getIsConnectedProperty()) {
+    // With CNA's keyboard-emulated gamepad on, the keys already walk the visitor: do not count them twice.
+    if (pad.getIsConnectedProperty() && !GamePad::getKeyboardEmulationEnabledEXT()) {
         const Vector2 look = pad.getThumbSticksProperty().getRightProperty();
         dyaw -= look.X * settings_.stickLookSpeed * dt;
         dpitch += look.Y * settings_.stickLookSpeed * dt * (settings_.invertY ? -1.0f : 1.0f);
@@ -74,10 +75,12 @@ void PlayerController::Update(float dt, FirstPersonCamera& camera, const Collisi
     // Walk ---------------------------------------------------------------
     float forward = 0.0f;
     float strafe = 0.0f;
-    if (input.Down(Keys::W) || input.Down(Keys::Up)) forward += 1.0f;
-    if (input.Down(Keys::S) || input.Down(Keys::Down)) forward -= 1.0f;
-    if (input.Down(Keys::D)) strafe += 1.0f;
-    if (input.Down(Keys::A)) strafe -= 1.0f;
+    if (!keyboardBlocked_) {
+        if (input.Down(Keys::W) || input.Down(Keys::Up)) forward += 1.0f;
+        if (input.Down(Keys::S) || input.Down(Keys::Down)) forward -= 1.0f;
+        if (input.Down(Keys::D)) strafe += 1.0f;
+        if (input.Down(Keys::A)) strafe -= 1.0f;
+    }
     forward += stickMove.Y;
     strafe += stickMove.X;
     if (scriptFrames_ > 0) {
@@ -91,7 +94,7 @@ void PlayerController::Update(float dt, FirstPersonCamera& camera, const Collisi
         forward /= len;
         strafe /= len;
     }
-    const bool sprint = input.Down(Keys::LeftShift) || input.Down(Keys::RightShift);
+    const bool sprint = !keyboardBlocked_ && (input.Down(Keys::LeftShift) || input.Down(Keys::RightShift));
     const float speed = settings_.walkSpeed * (sprint ? settings_.sprintMultiplier : 1.0f);
 
     Vector3 position = camera.Position();

@@ -47,6 +47,7 @@ struct FrameStats {
     bool fixedStep = false;          // Game.IsFixedTimeStep
     float targetMilliseconds = 0.0f; // Game.TargetElapsedTime
     float frameHistory[120] = {};    // recent ElapsedGameTime values, oldest first
+    bool typingCapture = false;      // text-entry exhibit: the keyboard types instead of walking (Esc releases it)
     float injectedDelayMs = 0.0f;    // lab control: burn this long inside every Update
     int hitchFrames = 0;             // lab control: frames of extra delay left
     int cellsBuilt = 0, cellsLoaded = 0;   // lazily built world (see MuseumWorld)

@@ -231,6 +231,12 @@ void MuseumGame::OpenDirectory()
 
 void MuseumGame::HandleSystemKeys()
 {
+    // A text-entry exhibit owns the keyboard until Escape: no hotkeys, no walking.
+    player_->SetKeyboardBlocked(stats_.typingCapture);
+    if (stats_.typingCapture) {
+        if (input_.Pressed(Keys::Escape)) stats_.typingCapture = false;
+        return;
+    }
     if (input_.Pressed(Keys::Escape) || input_.PadPressed(&GamePadButtons::getStartProperty)) SetPaused(!paused_);
     if (input_.Pressed(Keys::F1) || input_.Pressed(Keys::H)) showHelp_ = !showHelp_;
     if (input_.Pressed(Keys::F3)) showStats_ = !showStats_;
@@ -373,10 +379,10 @@ void MuseumGame::Update(GameTime& gameTime)
             focusPrompt_ = interaction->FocusedPrompt();
             InteractEvent event;
             event.hit = interaction->LastHit();
-            event.pressed = input_.Pressed(Keys::E) || input_.LeftClicked() || input_.PadPressed(&GamePadButtons::getAProperty);
-            event.held = held || input_.Down(Keys::E);
+            event.pressed = (!stats_.typingCapture && input_.Pressed(Keys::E)) || input_.LeftClicked() || input_.PadPressed(&GamePadButtons::getAProperty);
+            event.held = held || (!stats_.typingCapture && input_.Down(Keys::E));
             event.wheel = input_.WheelDelta();
-            event.alternate = input_.Pressed(Keys::Q) || input_.RightClicked();
+            event.alternate = (!stats_.typingCapture && input_.Pressed(Keys::Q)) || input_.RightClicked();
             if (event.pressed || event.held || event.wheel != 0.0f || event.alternate) {
                 if (interaction->Dispatch(event) && event.pressed) audio_->PlayUi("click", 0.6f);
             }

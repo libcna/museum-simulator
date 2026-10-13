@@ -38,6 +38,43 @@ WingSpec AudioWing()
     return w;
 }
 
+
+WingSpec InputWing()
+{
+    WingSpec w;
+    w.name = "Input Complex";
+    w.tagline = "Keyboard, mouse, game pads, text input, joysticks and the machine's other devices";
+    w.theme = "control-room";
+    w.accent = {0.95f, 0.50f, 0.65f};
+    w.spineSide = Wall::West;
+    const auto in = [](const char* key, const char* title, const char* subtitle, const char* mode, std::vector<std::string> apis, ApiOrigin origin = ApiOrigin::Xna) {
+        RoomSpec r;
+        r.key = key;
+        r.title = title;
+        r.subtitle = subtitle;
+        r.exhibit = "input-lab";
+        r.params = {{"mode", mode}};
+        r.width = 13;
+        r.depth = 13;
+        r.height = 5.2f;
+        r.theme = "control-room";
+        r.apis = std::move(apis);
+        r.origin = origin;
+        return r;
+    };
+    w.rooms = {
+        in("in-keyboard", "The Keyboard", "Keyboard.GetState, IsKeyDown, GetPressedKeys and layout-aware key names", "keyboard", {"Keyboard.GetState", "KeyboardState.IsKeyDown", "KeyboardState.GetPressedKeys", "Keyboard.GetKeyNameEXT", "Keyboard.GetModStateEXT"}),
+        in("in-edges", "Pressed, Held, Released", "Finding key edges by comparing this frame's state with the last", "edges", {"KeyboardState", "Keys", "KeyState"}),
+        in("in-mouse", "The Mouse", "Position, five buttons, both wheels, relative mode and cursor shapes", "mouse", {"Mouse.GetState", "MouseState", "ButtonState", "Mouse.IsRelativeMouseModeEXT", "Mouse.SetCursor", "MouseCursor"}, ApiOrigin::Xna),
+        in("in-pad", "The Game Pad", "Sticks, triggers, buttons, D-pad, dead zones, vibration and keyboard emulation", "pad", {"GamePad.GetState", "GamePadState", "GamePadDeadZone", "GamePad.SetVibration", "GamePad.KeyboardEmulationEnabledEXT"}),
+        in("in-players", "Four Player Slots", "PlayerIndex, IsConnected, packet numbers and capabilities", "players", {"PlayerIndex", "GamePad.GetCapabilities", "GamePadCapabilities", "GamePad.GetNameEXT"}),
+        in("in-text", "Text Input and Clipboard", "TextInputEXT characters, Backspace by polling, and copy/paste", "text", {"TextInputEXT.TextInput", "TextInputEXT.StartTextInput", "Clipboard.SetTextEXT", "Clipboard.GetTextEXT"}, ApiOrigin::CnaExtension),
+        in("in-joystick", "Raw Joysticks", "Axes, buttons and hats of any connected joystick", "joystick", {"Joysticks.GetJoysticksEXT", "Joysticks.GetCapabilitiesEXT", "Joysticks.GetStateEXT"}, ApiOrigin::CnaExtension),
+        in("in-devices", "Other Input Devices", "Mice, keyboards, touch, sensors and power as the machine reports them", "devices", {"InputDevices.GetMiceEXT", "TouchPanel.GetState", "TouchPanel.MouseTouchEmulationEnabledEXT", "Sensors.GetSensorsEXT", "Power.GetInfoEXT"}, ApiOrigin::CnaExtension),
+    };
+    return w;
+}
+
 }  // namespace
 
 FloorSpec MakeFloor7()
@@ -49,5 +86,6 @@ FloorSpec MakeFloor7()
     f.theme = "concourse";
     f.accent = {0.95f, 0.50f, 0.65f};
     f.wings.push_back(AudioWing());
+    f.wings.push_back(InputWing());
     return f;
 }
