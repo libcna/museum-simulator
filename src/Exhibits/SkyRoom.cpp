@@ -83,7 +83,6 @@ public:
 
         auto button = [&](float z, std::function<std::string()> prompt, std::function<void()> action) {
             Interactable ia;
-            ia.room = R().id;
             ia.bounds = BoundingBox(R().ToWorld(4.5f, 0.0f, z - 0.45f), R().ToWorld(5.5f, 1.4f, z + 0.45f));
             ia.maxDistance = 3.6f;
             ia.prompt = std::move(prompt);

@@ -89,7 +89,6 @@ public:
     {
         for (int i = 0; i < kButtonCount; ++i) {
             Interactable ia;
-            ia.room = R().id;
             const float x = ButtonX(i);
             ia.bounds = BoundingBox(R().ToWorld(x - 0.3f, kConsoleTop - 0.05f, kConsoleZ0 - 0.1f), R().ToWorld(x + 0.3f, kConsoleTop + 0.3f, kConsoleZ1 + 0.1f));
             ia.maxDistance = 4.2f;
@@ -98,7 +97,6 @@ public:
             interaction.Add(std::move(ia));
         }
         Interactable subject;
-        subject.room = R().id;
         subject.bounds = BoundingBox(R().ToWorld(-0.6f, 0.0f, -0.6f), R().ToWorld(0.6f, 2.4f, 0.6f));
         subject.maxDistance = 6.0f;
         subject.prompt = [this] { return std::string("Change the test object (") + kSubjectNames[subject_] + ")"; };

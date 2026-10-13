@@ -25,6 +25,9 @@ public:
 
     explicit PlayerController(const Settings& settings) : settings_(settings) {}
 
+    /** Height of the floor the visitor stands on; the eye is `eyeHeight` above it. */
+    void SetBaseY(float baseY) { baseY_ = baseY; }
+
     Settings& GetSettings() { return settings_; }
     [[nodiscard]] const Settings& GetSettings() const { return settings_; }
 
@@ -52,6 +55,7 @@ public:
 
 private:
     Settings settings_;
+    float baseY_ = 0.0f;
     bool captured_ = false;
     bool relativeMode_ = false;
     int centreX_ = 0;

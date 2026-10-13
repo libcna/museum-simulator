@@ -99,7 +99,6 @@ public:
         renderer_ = std::make_unique<ParticleRenderer>(*S().device, 1700);
 
         Interactable fire;
-        fire.room = R().id;
         fire.bounds = BoundingBox(R().ToWorld(kFireX - 1.1f, 0.0f, kFireZ - 1.1f), R().ToWorld(kFireX + 1.1f, 2.4f, kFireZ + 1.1f));
         fire.maxDistance = 5.0f;
         fire.prompt = [this] { return std::string("Stoke the fire (") + kFireNames[fire_] + ", next: " + kFireNames[(fire_ + 1) % 3] + ")"; };
@@ -110,7 +109,6 @@ public:
         interaction.Add(std::move(fire));
 
         Interactable pool;
-        pool.room = R().id;
         pool.bounds = BoundingBox(R().ToWorld(kPoolX - 1.9f, 0.0f, kPoolZ - 1.9f), R().ToWorld(kPoolX + 1.9f, 2.4f, kPoolZ + 1.9f));
         pool.maxDistance = 5.5f;
         pool.prompt = [this] { return std::string("Fountain: ") + kFountainNames[fountain_] + "  (next)"; };
@@ -121,7 +119,6 @@ public:
         interaction.Add(std::move(pool));
 
         Interactable sparkler;
-        sparkler.room = R().id;
         sparkler.bounds = BoundingBox(R().ToWorld(kSparkX - 0.55f, 0.0f, kSparkZ - 0.55f), R().ToWorld(kSparkX + 0.55f, kSparkTop + 0.8f, kSparkZ + 0.55f));
         sparkler.prompt = [] { return std::string("Fire the sparks"); };
         sparkler.activate = [this] {
@@ -142,8 +139,8 @@ public:
         }
 
         if (S().audio != nullptr) {
-            fireVoice_ = S().audio->CreateLoop("fire", R().ToWorld(kFireX, 0.6f, kFireZ), 0.55f, 11.0f);
-            waterVoice_ = S().audio->CreateLoop("water", R().ToWorld(kPoolX, 0.6f, kPoolZ), 0.6f, 11.0f);
+            fireVoice_ = CreateLoop("fire", R().ToWorld(kFireX, 0.6f, kFireZ), 0.55f, 11.0f);
+            waterVoice_ = CreateLoop("water", R().ToWorld(kPoolX, 0.6f, kPoolZ), 0.6f, 11.0f);
             S().audio->SetPlaying(fireVoice_, true);
             S().audio->SetPlaying(waterVoice_, true);
         }

@@ -24,7 +24,10 @@ public:
     /** Adds a texture created at run time (signs, generated images) under `name`. */
     Microsoft::Xna::Framework::Graphics::Texture2D*
     Register(const std::string& name, std::unique_ptr<Microsoft::Xna::Framework::Graphics::Texture2D> texture);
+    /** Releases a texture added with Register(). Unknown names are ignored. */
+    void Unregister(const std::string& name) { textures_.erase(name); }
     [[nodiscard]] int MissingCount() const { return missing_; }
+    [[nodiscard]] std::size_t Count() const { return textures_.size(); }
 
 private:
     Microsoft::Xna::Framework::Graphics::GraphicsDevice& device_;

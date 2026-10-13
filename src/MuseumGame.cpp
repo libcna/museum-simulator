@@ -29,7 +29,7 @@ constexpr float kMaxFrameSeconds = 0.1f;
 // The near plane is as far out as the 0.32 m collision radius allows: depth precision is what keeps wall
 // signs from z-fighting with the wall they hang on, and it improves with the square of the near distance.
 constexpr float kNearPlane = 0.2f;
-constexpr float kFarPlane = 140.0f;
+constexpr float kFarPlane = 260.0f;
 }  // namespace
 
 MuseumGame::MuseumGame(const MuseumOptions& options) : options_(options), graphics_(this)
@@ -96,8 +96,10 @@ void MuseumGame::LoadContent()
     sky_ = std::make_unique<SkyDome>(services_, timeOfDay_);
     services_.sky = sky_.get();
     services_.timeOfDay = &timeOfDay_;
-    world_ = std::make_unique<MuseumWorld>(services_);
-    world_->Build();
+    museum_ = &TheMuseum();
+    services_.museum = museum_;
+    for (const std::string& problem : ValidateMuseum(*museum_)) Museum::Log("catalogue", "INVALID: %s", problem.c_str());
+    world_ = std::make_unique<MuseumWorld>(services_, *museum_);
     hud_ = std::make_unique<Hud>(services_);
 
     PlayerController::Settings settings;
@@ -110,10 +112,13 @@ void MuseumGame::LoadContent()
     // Start in the entrance lobby unless the command line asked for somewhere else.
     ResetToEntrance();
     if (options_.startRoom) {
-        if (const RoomDef* r = FindRoomByKey(*options_.startRoom)) TeleportToRoom(*r);
+        if (const RoomDef* r = museum_->FindByKey(*options_.startRoom)) TeleportToCell(r->index);
         else Museum::Log("main", "unknown room '%s'", options_.startRoom->c_str());
     }
-    if (options_.startPosition) camera_.SetPosition(*options_.startPosition);
+    if (options_.startPosition) {
+        camera_.SetPosition(*options_.startPosition);
+        world_->Arrive(std::max(0, museum_->CellAt(*options_.startPosition)));
+    }
     if (options_.startYawDegrees || options_.startPitchDegrees) {
         camera_.SetPose(camera_.Position(), MathHelper::ToRadians(options_.startYawDegrees.value_or(MathHelper::ToDegrees(camera_.Yaw()))),
                         MathHelper::ToRadians(options_.startPitchDegrees.value_or(0.0f)));
@@ -150,21 +155,19 @@ void MuseumGame::UnloadContent()
     textures_.reset();
 }
 
-Vector3 MuseumGame::RoomSpawn(const RoomDef& room) const
+void MuseumGame::TeleportToCell(int cell)
 {
-    // Stand just inside the south wall (or the middle of a small room), looking north.
-    const Vector3 c = room.Center();
-    return Vector3(c.X, 1.65f, c.Z + room.halfD * (room.id == RoomId::Lobby ? 0.55f : 0.86f));
-}
-
-void MuseumGame::TeleportToRoom(const RoomDef& room)
-{
-    camera_.SetPose(RoomSpawn(room), 0.0f, 0.0f);
+    const Spawn spawn = museum_->SpawnPoint(cell);
+    camera_.SetPose(spawn.eye, spawn.yaw, 0.0f);
+    world_->Arrive(cell);
 }
 
 void MuseumGame::ResetToEntrance()
 {
-    TeleportToRoom(GetRoom(RoomId::Lobby));
+    // The lobby is the ground-floor hub; the visitor arrives from the street, facing into the building.
+    const RoomDef& lobby = museum_->Room(museum_->floors.front().hub);
+    camera_.SetPose(lobby.ToWorld(0.0f, 1.65f, lobby.halfD * 0.55f), 0.0f, 0.0f);
+    world_->Arrive(lobby.index);
 }
 
 void MuseumGame::SetPaused(bool paused)
@@ -250,23 +253,34 @@ void MuseumGame::Update(GameTime& gameTime)
 
     if (!paused_) {
         time_ += dt;
+        player_->SetBaseY(museum_->floors[static_cast<std::size_t>(museum_->FloorAt(camera_.Position().Y))].baseY);
         player_->Update(dt, camera_, world_->Collision(), input_, true);
         const Vector3 forward = camera_.Forward();
         world_->Update(dt, time_, camera_.Position(), forward);
 
-        const std::optional<RoomId> room = world_->RoomAt(camera_.Position());
-        if (room != shownRoom_) {
-            shownRoom_ = room;
-            if (room) bannerAge_ = 0.0f;
+        const int cell = world_->CurrentCell();
+        if (cell != shownCell_) {
+            shownCell_ = cell;
+            if (cell >= 0) {
+                bannerAge_ = 0.0f;
+                discovered_.insert(cell);
+            }
         }
         bannerAge_ += dt;
 
-        InteractionSystem& interaction = world_->Interaction();
-        if (room) {
-            interaction.Focus(camera_.ViewRay(), *room, world_->Collision());
-            focusPrompt_ = interaction.FocusedPrompt();
-            if (input_.Pressed(Keys::E) || input_.LeftClicked() || input_.PadPressed(&GamePadButtons::getAProperty)) {
-                if (interaction.Activate()) audio_->PlayUi("click", 0.6f);
+        InteractionSystem* interaction = world_->CurrentInteraction();
+        if (interaction != nullptr) {
+            const bool held = input_.LeftDown();
+            interaction->Focus(camera_.ViewRay(), world_->Collision(), held);
+            focusPrompt_ = interaction->FocusedPrompt();
+            InteractEvent event;
+            event.hit = interaction->LastHit();
+            event.pressed = input_.Pressed(Keys::E) || input_.LeftClicked() || input_.PadPressed(&GamePadButtons::getAProperty);
+            event.held = held || input_.Down(Keys::E);
+            event.wheel = input_.WheelDelta();
+            event.alternate = input_.Pressed(Keys::Q) || input_.RightClicked();
+            if (event.pressed || event.held || event.wheel != 0.0f || event.alternate) {
+                if (interaction->Dispatch(event) && event.pressed) audio_->PlayUi("click", 0.6f);
             }
         } else {
             focusPrompt_.clear();
@@ -276,7 +290,7 @@ void MuseumGame::Update(GameTime& gameTime)
     }
     audio_->Update();
     hud_->Update(dt);
-    stats_.roomsDrawn = world_->ZonesDrawn();
+    stats_.roomsDrawn = world_->Stats().cellsDrawn;
 
     if (options_.maxFrames > 0 && frame_ >= options_.maxFrames) Exit();
 }
@@ -318,8 +332,11 @@ void MuseumGame::Draw(const GameTime&)
     hud.playerPosition = camera_.Position();
     hud.playerYaw = camera_.Yaw();
     hud.rendererName = rendererName_;
-    if (shownRoom_) {
-        const RoomDef& r = GetRoom(*shownRoom_);
+    hud.cell = shownCell_;
+    hud.floor = museum_->FloorAt(camera_.Position().Y);
+    hud.discovered = &discovered_;
+    if (shownCell_ >= 0) {
+        const RoomDef& r = museum_->Room(shownCell_);
         hud.roomTitle = r.title;
         hud.roomSubtitle = r.subtitle;
         hud.bannerAlpha = bannerAge_ < 4.0f ? std::clamp(std::min(bannerAge_ * 3.0f, (4.0f - bannerAge_) * 1.5f), 0.0f, 1.0f) : 0.0f;
@@ -375,10 +392,15 @@ void MuseumGame::RunScript()
             scriptWait_ = std::atoi(arg.c_str());
             return;
         } else if (op == "goto") {
-            if (const RoomDef* r = FindRoomByKey(arg)) TeleportToRoom(*r);
+            if (const RoomDef* r = museum_->FindByKey(arg)) TeleportToCell(r->index);
+            else Museum::Log("script", "goto: unknown room '%s'", arg.c_str());
         } else if (op == "pos") {
             float x = 0, y = 1.65f, z = 0;
-            if (std::sscanf(arg.c_str(), "%f,%f,%f", &x, &y, &z) == 3) camera_.SetPosition(Vector3(x, y, z));
+            if (std::sscanf(arg.c_str(), "%f,%f,%f", &x, &y, &z) == 3) {
+                camera_.SetPosition(Vector3(x, y, z));
+                const int cell = museum_->CellAt(Vector3(x, y, z));
+                if (cell >= 0) world_->Arrive(cell);
+            }
         } else if (op == "look") {
             float yaw = 0, pitch = 0;
             if (std::sscanf(arg.c_str(), "%f,%f", &yaw, &pitch) == 2)
@@ -390,17 +412,18 @@ void MuseumGame::RunScript()
             scriptWait_ = n;
             return;
         } else if (op == "e") {
-            InteractionSystem& interaction = world_->Interaction();
-            if (const std::optional<RoomId> room = world_->RoomAt(camera_.Position())) {
-                interaction.Focus(camera_.ViewRay(), *room, world_->Collision());
-                const std::string prompt = interaction.FocusedPrompt();
-                const bool used = interaction.Activate();
+            if (InteractionSystem* interaction = world_->CurrentInteraction()) {
+                interaction->Focus(camera_.ViewRay(), world_->Collision());
+                const std::string prompt = interaction->FocusedPrompt();
+                const bool used = interaction->Activate();
                 Museum::Log("script", "e: %s (%s)", used ? prompt.c_str() : "nothing under the crosshair", used ? "activated" : "-");
             }
         } else if (op == "use") {
             const std::size_t index = static_cast<std::size_t>(std::atoi(arg.c_str()));
-            const auto& items = world_->Interaction().Items();
-            if (index < items.size() && items[index].activate) items[index].activate();
+            if (InteractionSystem* interaction = world_->CurrentInteraction()) {
+                const auto& items = interaction->Items();
+                if (index < items.size() && items[index].activate) items[index].activate();
+            }
         } else if (op == "shot") {
             pendingShot_ = arg;
             scriptWait_ = 2;

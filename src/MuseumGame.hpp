@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -41,12 +42,11 @@ protected:
 private:
     void HandleSystemKeys();
     void SetPaused(bool paused);
-    void TeleportToRoom(const RoomDef& room);
+    void TeleportToCell(int cell);
     void ResetToEntrance();
     void UpdateFrameStats(float dt);
     void RunScript();
     void SaveScreenshot(const std::string& path);
-    [[nodiscard]] Microsoft::Xna::Framework::Vector3 RoomSpawn(const RoomDef& room) const;
 
     MuseumOptions options_;
     Microsoft::Xna::Framework::GraphicsDeviceManager graphics_;
@@ -80,7 +80,9 @@ private:
     bool showStats_ = false;
     bool showMap_ = false;
     float sensitivityScale_ = 1.0f;
-    std::optional<RoomId> shownRoom_;
+    const MuseumPlan* museum_ = nullptr;
+    int shownCell_ = -1;
+    std::set<int> discovered_;
     float bannerAge_ = 99.0f;
     float fpsAccumulator_ = 0.0f;
     int fpsFrames_ = 0;

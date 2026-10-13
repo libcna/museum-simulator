@@ -114,7 +114,6 @@ public:
             screens_[i] = std::make_unique<LiveScreen>(S(), 512, 192);
             dirty_[i] = true;
             Interactable ia;
-            ia.room = R().id;
             const StationPlace& st = kStations[i];
             ia.bounds = BoundingBox(R().ToWorld(st.x - 0.55f, 0.0f, st.z - 0.55f), R().ToWorld(st.x + 0.55f, kPedestalH + 1.5f, st.z + 0.55f));
             ia.maxDistance = 4.5f;

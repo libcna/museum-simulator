@@ -181,21 +181,18 @@ public:
         lecternScreen_ = std::make_unique<LiveScreen>(S(), 512, 192);
 
         Interactable shelf;
-        shelf.room = R().id;
         shelf.bounds = BoundingBox(R().ToWorld(2.2f, 0.0f, -7.0f), R().ToWorld(7.0f, 1.5f, -5.9f));
         shelf.prompt = [this] { return std::string(perPixel_ ? "Switch the spheres to per-vertex lighting" : "Switch the spheres to per-pixel lighting"); };
         shelf.activate = [this] { perPixel_ = !perPixel_; };
         interaction.Add(std::move(shelf));
 
         Interactable panels;
-        panels.room = R().id;
         panels.bounds = BoundingBox(R().ToWorld(-6.5f, 1.2f, -7.0f), R().ToWorld(-1.9f, 3.0f, -6.6f));
         panels.prompt = [this] { return std::string("Change how far the UVs reach (") + std::to_string(kRanges[rangeIndex_]).substr(0, 3) + ")"; };
         panels.activate = [this] { rangeIndex_ = (rangeIndex_ + 1) % kRangeCount; };
         interaction.Add(std::move(panels));
 
         Interactable lectern;
-        lectern.room = R().id;
         lectern.bounds = BoundingBox(R().ToWorld(kLecternX - 0.75f, 0.0f, kLecternZ - 0.5f), R().ToWorld(kLecternX + 0.75f, 1.6f, kLecternZ + 0.5f));
         lectern.prompt = [this] { return std::string("Next texture filter (") + kFilters[filter_].name + ")"; };
         lectern.activate = [this] { filter_ = (filter_ + 1) % kFilterCount; screenDirty_ = true; };
@@ -203,7 +200,6 @@ public:
 
         for (int i = 0; i < 2; ++i) {
             Interactable uv;
-            uv.room = R().id;
             const float z = i == 0 ? 3.0f : 5.4f;
             uv.bounds = BoundingBox(R().ToWorld(4.3f, 0.0f, z - 0.5f), R().ToWorld(5.3f, 1.8f, z + 0.5f));
             uv.prompt = [this] { return std::string(useGrid_ ? "Swap the UV grid for a checker" : "Swap the checker for the UV grid"); };

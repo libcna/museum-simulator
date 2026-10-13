@@ -70,9 +70,8 @@ public:
     {
         for (int i = 0; i < 4; ++i) {
             const Speaker& s = kSpeakers[i];
-            if (S().audio != nullptr) voices_[i] = S().audio->CreateLoop(s.sound, R().ToWorld(s.x, kSpeakerHeight + 0.5f, s.z), s.volume, 10.0f);
+            if (S().audio != nullptr) voices_[i] = CreateLoop(s.sound, R().ToWorld(s.x, kSpeakerHeight + 0.5f, s.z), s.volume, 10.0f);
             Interactable ia;
-            ia.room = R().id;
             ia.bounds = BoundingBox(R().ToWorld(s.x - 0.55f, 0.0f, s.z - 0.55f), R().ToWorld(s.x + 0.55f, kSpeakerHeight + 1.0f, s.z + 0.55f));
             ia.prompt = [this, i] { return std::string(on_[i] ? "Stop " : "Start ") + kSpeakers[i].title; };
             ia.activate = [this, i] {
@@ -82,7 +81,6 @@ public:
             interaction.Add(std::move(ia));
         }
         Interactable bell;
-        bell.room = R().id;
         bell.bounds = BoundingBox(R().ToWorld(kBellX - 0.5f, 0.0f, kBellZ - 0.5f), R().ToWorld(kBellX + 0.5f, kBellHeight + 0.8f, kBellZ + 0.5f));
         bell.prompt = [] { return std::string("Ring the chirp"); };
         bell.activate = [this] {

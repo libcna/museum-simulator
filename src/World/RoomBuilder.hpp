@@ -7,9 +7,7 @@
 #include "Rendering/MeshBuilder.hpp"
 #include "Rendering/SignFactory.hpp"
 #include "World/CollisionWorld.hpp"
-#include "World/RoomDef.hpp"
-
-enum class Wall { North, South, East, West };
+#include "World/Catalogue.hpp"
 
 /**
  * What an exhibit sees while the museum is being built. Coordinates are room-local:

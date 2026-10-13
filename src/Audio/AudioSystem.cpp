@@ -168,3 +168,14 @@ int AudioSystem::ActiveVoiceCount() const
         if (v->wantPlaying) ++n;
     return n + static_cast<int>(oneShots_.size());
 }
+
+void AudioSystem::ReleaseLoop(Voice3D* voice)
+{
+    if (voice == nullptr) return;
+    for (auto it = loops_.begin(); it != loops_.end(); ++it) {
+        if (it->get() != voice) continue;
+        if (voice->instance) voice->instance->Stop();
+        loops_.erase(it);
+        return;
+    }
+}

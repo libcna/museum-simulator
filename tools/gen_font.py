@@ -19,7 +19,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "Content", "Fonts")
 DEFAULT_TTF = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-CHARS = [chr(c) for c in range(32, 127)] + ["·", "•", "→", "✓", "°", "×"]
+CHARS = [chr(c) for c in range(32, 127)] + ["·", "•", "→", "✓", "°", "×", "←", "↑", "↓", "▲", "▼", "▶", "◀", "≈", "≤", "≥", "²", "³", "±", "π", "µ", "–", "—", "…", "é", "ö", "ü", "á", "í", "ó", "ž", "š", "č", "ř", "ě", "ý", "★", "✦"]
 ATLAS = 512
 
 

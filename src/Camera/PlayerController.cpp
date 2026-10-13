@@ -118,5 +118,5 @@ void PlayerController::Update(float dt, FirstPersonCamera& camera, const Collisi
     }
     if (moving_) bobPhase_ += travelled * 4.2f;
     const float bob = moving_ ? std::sin(bobPhase_) * 0.022f * (sprint ? 1.3f : 1.0f) : 0.0f;
-    camera.SetPosition(Vector3(position.X, settings_.eyeHeight + bob, position.Z));
+    camera.SetPosition(Vector3(position.X, baseY_ + settings_.eyeHeight + bob, position.Z));
 }

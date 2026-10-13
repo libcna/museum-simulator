@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <string>
 
 #include "Microsoft/Xna/Framework/BoundingFrustum.hpp"
@@ -19,6 +20,7 @@ class ModelLibrary;
 class Shapes;
 class SkyDome;
 class TimeOfDay;
+class MuseumPlan;
 
 /** Per-frame numbers shown on the Information Hall screens and the F3 overlay. */
 struct FrameStats {
@@ -49,6 +51,9 @@ struct Services {
     Microsoft::Xna::Framework::Graphics::SpriteFont* font = nullptr;
     Microsoft::Xna::Framework::Graphics::SpriteFont* titleFont = nullptr;
     const FrameStats* stats = nullptr;
+    const MuseumPlan* museum = nullptr;
+    std::function<void(int floor)> travelToFloor;   // elevator: ride to a floor's elevator car
+    std::function<void()> openDirectory;            // the full-screen directory and map
     std::string contentRoot;
     bool supportsThreeD = true;
     bool supportsWireframe = true;

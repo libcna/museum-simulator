@@ -6,7 +6,9 @@
 #include "Exhibits/Services.hpp"
 #include "Microsoft/Xna/Framework/Color.hpp"
 #include "Microsoft/Xna/Framework/Vector2.hpp"
-#include "World/RoomDef.hpp"
+#include <set>
+
+#include "World/Catalogue.hpp"
 
 struct HudState {
     std::string prompt;          // interaction text for the crosshair target, empty when none
@@ -17,6 +19,9 @@ struct HudState {
     bool audioMuted = false;
     float mouseSensitivityScale = 1.0f;
     float volume = 1.0f;
+    int cell = -1;               // current cell index, -1 outside
+    int floor = 0;
+    const std::set<int>* discovered = nullptr;
     std::string roomTitle;       // current room, empty in a corridor
     std::string roomSubtitle;
     float bannerAlpha = 0.0f;    // 0..1 fade for the room banner

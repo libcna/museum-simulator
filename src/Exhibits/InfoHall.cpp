@@ -90,9 +90,12 @@ public:
         b.AddWallSign(Wall::North, kScreenAlong, kScreenY, kScreenW, kScreenH, controls);
 
         std::vector<std::string> guide;
-        for (const RoomDef& room : AllRooms()) {
-            if (room.id == RoomId::Info) continue;
-            guide.push_back(std::string(room.title) + "  -  " + room.subtitle);
+        for (const WingDef& wing : S().museum->wings) {
+            if (wing.floor != R().floor || wing.index != R().wing) continue;   // the rooms of this wing
+            for (const int index : wing.rooms) {
+                const RoomDef& room = S().museum->Room(index);
+                if (room.index != R().index) guide.push_back(room.title + "  -  " + room.subtitle);
+            }
         }
         SignSpec rooms = TextPanel("Room guide", guide);
         for (SignLine& l : rooms.lines) l.color = (&l == &rooms.lines.front()) ? kGold : kText;
@@ -147,7 +150,6 @@ public:
     {
         screen_ = std::make_unique<LiveScreen>(S(), 1024, 576);
         Interactable logo;
-        logo.room = R().id;
         logo.bounds = BoundingBox(R().ToWorld(-1.6f, 0.0f, -1.6f), R().ToWorld(1.6f, 4.3f, 1.6f));
         logo.maxDistance = 6.0f;
         logo.prompt = [this] { return std::string(spinning_ ? "Stop the logo" : "Spin the logo"); };
@@ -155,7 +157,6 @@ public:
         interaction.Add(std::move(logo));
 
         Interactable stats;
-        stats.room = R().id;
         stats.bounds = BoundingBox(R().ToWorld(R().halfW - 0.5f, kScreenY - kScreenH / 2, -kScreenAlong - kScreenW / 2),
                                    R().ToWorld(R().halfW, kScreenY + kScreenH / 2, -kScreenAlong + kScreenW / 2));
         stats.maxDistance = 7.0f;

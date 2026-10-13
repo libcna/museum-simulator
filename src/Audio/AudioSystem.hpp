@@ -55,6 +55,8 @@ public:
     /** Creates (but does not start) a looping positional voice. Returned pointer lives as long as the system. */
     Voice3D* CreateLoop(const std::string& name, const Microsoft::Xna::Framework::Vector3& position,
                         float baseVolume, float radius);
+    /** Stops and destroys a loop created by CreateLoop(). */
+    void ReleaseLoop(Voice3D* voice);
     /** Starts/stops a loop. Stopped voices keep their instance so they can resume. */
     void SetPlaying(Voice3D* voice, bool playing);
 

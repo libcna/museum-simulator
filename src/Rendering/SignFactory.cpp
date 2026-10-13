@@ -44,6 +44,7 @@ std::string SignFactory::CreateCustom(int w, int h, const Color& background,
     }
     for (Color& c : pixels) c = Color(c.getRProperty(), c.getGProperty(), c.getBProperty(), static_cast<std::uint8_t>(255));
     textures_.Register(name, ImageUtil::CreateMipmapped(device_, pixels, w, h));
+    if (scope_ != nullptr) scope_->push_back(name);
     return name;
 }
 

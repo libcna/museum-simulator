@@ -86,7 +86,7 @@ target_compile_definitions(museum_core PUBLIC
 # directories are passed as -isystem (GCC and Clang then silence them).
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(museum_core PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Wconversion
-        -Wno-sign-conversion -Wno-overloaded-virtual)
+        -Wno-sign-conversion -Wno-overloaded-virtual -Wno-missing-field-initializers)
     file(GLOB _museum_system_includes
         "${CNA_ROOT_DIR}/modules/*/include"
         "${CNA_ROOT_DIR}/modules/renderers/*/include"

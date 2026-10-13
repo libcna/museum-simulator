@@ -80,7 +80,6 @@ public:
             angle_[i] = static_cast<float>(i) * 0.9f;
             const Item& it = kItems[i];
             Interactable ia;
-            ia.room = R().id;
             const Vector3 lo = R().ToWorld(it.x - 0.58f, 0.0f, it.z - 0.58f);
             const Vector3 hi = R().ToWorld(it.x + 0.58f, kPedestalHeight + 1.35f, it.z + 0.58f);
             ia.bounds = BoundingBox(lo, hi);

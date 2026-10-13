@@ -32,6 +32,21 @@ public:
         return mouse_.getLeftButtonProperty() == ButtonState::Pressed &&
                previousMouse_.getLeftButtonProperty() == ButtonState::Released;
     }
+    [[nodiscard]] bool LeftDown() const
+    {
+        return mouse_.getLeftButtonProperty() == Microsoft::Xna::Framework::Input::ButtonState::Pressed;
+    }
+    [[nodiscard]] bool RightClicked() const
+    {
+        using Microsoft::Xna::Framework::Input::ButtonState;
+        return mouse_.getRightButtonProperty() == ButtonState::Pressed &&
+               previousMouse_.getRightButtonProperty() == ButtonState::Released;
+    }
+    /** Wheel notches since the last frame (positive = scrolled away from the user). */
+    [[nodiscard]] float WheelDelta() const
+    {
+        return static_cast<float>(mouse_.getScrollWheelValueProperty() - previousMouse_.getScrollWheelValueProperty()) / 120.0f;
+    }
     [[nodiscard]] bool PadPressed(Microsoft::Xna::Framework::Input::ButtonState (Microsoft::Xna::Framework::Input::GamePadButtons::*button)() const) const
     {
         using Microsoft::Xna::Framework::Input::ButtonState;

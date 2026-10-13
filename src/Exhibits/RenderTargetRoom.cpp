@@ -50,17 +50,21 @@ const MonitorSpec kMonitors[3] = {
     {Chase, 480, 270, -4.2f, true, 2.6f, 1.4625f, 2.55f},
 };
 
+// Cameras only film places that are always built while the visitor is here: this room, the gallery
+// outside its door, and the next room along the wing.
+enum class Where { Self, Gallery, Neighbour };
+constexpr int Gallery = 1;   // index into kCams of the gallery camera
 struct SecurityCam {
     const char* name;
-    RoomId room;
-    Vector3 eye;       // room-local
-    Vector3 target;    // room-local centre of attention
+    Where where;
+    Vector3 eye;       // local to the filmed cell; for the gallery, x is relative to this room's door
+    Vector3 target;    // local centre of attention
     float sweep;       // metres the target sweeps from side to side
 };
 const SecurityCam kCams[3] = {
-    {"CAM 1  LOBBY", RoomId::Lobby, {7.3f, 4.35f, -5.3f}, {0.0f, 0.9f, 1.5f}, 5.5f},
-    {"CAM 2  INFO HALL", RoomId::Info, {8.2f, 6.2f, 8.2f}, {0.0f, 1.6f, 0.0f}, 3.5f},
-    {"CAM 3  COURTYARD", RoomId::Sky, {-7.2f, 3.9f, 7.2f}, {0.0f, 1.0f, 0.0f}, 3.0f},
+    {"CAM 1  THIS ROOM", Where::Self, {6.4f, 4.2f, -5.3f}, {0.0f, 0.9f, 1.5f}, 5.5f},
+    {"CAM 2  GALLERY", Where::Gallery, {0.0f, 4.2f, 0.0f}, {0.0f, 1.0f, 0.0f}, 3.5f},
+    {"CAM 3  NEXT ROOM", Where::Neighbour, {-5.5f, 3.9f, 5.5f}, {0.0f, 1.0f, 0.0f}, 3.0f},
 };
 
 class RenderTargetRoom final : public Exhibit {
@@ -123,7 +127,6 @@ public:
             Vector3 right, normal;
             const Vector3 centre = MonitorCentre(m, right, normal);
             Interactable ia;
-            ia.room = R().id;
             ia.bounds = BoundingBox(centre - Vector3(m.onNorthWall ? m.w / 2 : 0.5f, m.h / 2, m.onNorthWall ? 0.5f : m.w / 2),
                                     centre + Vector3(m.onNorthWall ? m.w / 2 : 0.5f, m.h / 2, m.onNorthWall ? 0.5f : m.w / 2));
             ia.maxDistance = 9.0f;
@@ -132,7 +135,6 @@ public:
             interaction.Add(std::move(ia));
         }
         Interactable freeze;
-        freeze.room = R().id;
         freeze.bounds = BoundingBox(R().ToWorld(-4.75f, 0.0f, -1.1f), R().ToWorld(-3.8f, 1.2f, 1.5f));
         freeze.prompt = [this] { return std::string(frozen_ ? "Resume the live feeds" : "Freeze the feeds (the render targets keep their last frame)"); };
         freeze.activate = [this] { frozen_ = !frozen_; };
@@ -220,17 +222,30 @@ private:
         rendered_[static_cast<std::size_t>(i)] = false;
     }
 
+    [[nodiscard]] const RoomDef& CamRoom(const SecurityCam& c) const
+    {
+        const MuseumPlan& m = *S().museum;
+        if (c.where == Where::Self || R().wing < 0) return R();
+        const WingDef& wing = m.wings[static_cast<std::size_t>(R().wing)];
+        if (c.where == Where::Gallery) return m.Room(wing.gallery);
+        for (std::size_t i = 0; i < wing.rooms.size(); ++i)
+            if (wing.rooms[i] == R().index) return m.Room(wing.rooms[(i + 1) % wing.rooms.size()]);
+        return R();
+    }
+
     // Eye and target (world space) of the security camera for feed `cam_`.
     void SecurityPose(Vector3& eye, Vector3& target) const
     {
         const SecurityCam& c = kCams[cam_];
-        const RoomDef& room = GetRoom(c.room);
-        eye = room.ToWorld(c.eye.X, c.eye.Y, c.eye.Z);
+        const RoomDef& room = CamRoom(c);
+        float ex = c.eye.X;
+        if (c.where == Where::Gallery) ex += R().centre.X - room.centre.X;   // above this room's door
+        eye = room.ToWorld(ex, c.eye.Y, c.eye.Z);
         const float sweep = std::sin(time_ * 0.35f) * c.sweep;
-        const Vector3 toCentre = Vector3(-c.eye.X, 0, -c.eye.Z);
+        const Vector3 toCentre = Vector3(-ex, 0, -c.eye.Z);
         Vector3 side = Vector3::Cross(toCentre, Vector3::Up);
         if (side.LengthSquared() > 1e-4f) side = Vector3::Normalize(side);
-        target = room.ToWorld(c.target.X, c.target.Y, c.target.Z) + side * sweep;
+        target = room.ToWorld(c.target.X + (c.where == Where::Gallery ? ex : 0.0f), c.target.Y, c.target.Z) + side * sweep;
     }
 
     void RenderFeed(const DrawContext& main, int index)
@@ -252,10 +267,12 @@ private:
             projection = Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(62.0f), aspect, 0.2f, 140.0f);
             label = kCams[cam_].name;
         } else if (index == Map) {
-            const Vector3 centre(0.0f, 0.0f, -30.0f);
-            eye = centre + (orthographic_ ? Vector3(0, 70, 0) : Vector3(0, 70, 22));
+            const RoomDef& gallery = CamRoom(kCams[Gallery]);
+            const Vector3 centre = gallery.centre;
+            const float span = std::max(46.0f, gallery.halfW * 2.0f + 12.0f);
+            eye = centre + (orthographic_ ? Vector3(0, 70, 0) : Vector3(0, 70, span * 0.35f));
             view = Matrix::CreateLookAt(eye, centre, orthographic_ ? Vector3(0, 0, -1) : Vector3::Up);
-            projection = orthographic_ ? Matrix::CreateOrthographic(62.0f, 62.0f / aspect, 1.0f, 200.0f)
+            projection = orthographic_ ? Matrix::CreateOrthographic(span, span / aspect, 1.0f, 200.0f)
                                        : Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(50.0f), aspect, 1.0f, 220.0f);
             label = orthographic_ ? "MAP  ORTHOGRAPHIC" : "MAP  PERSPECTIVE";
         } else {
@@ -351,7 +368,7 @@ private:
         S().shapes->Cylinder().Draw(ctx.device);
         // Mount arm up to the ceiling.
         fx.setDiffuseColorProperty(Vector3(0.2f, 0.2f, 0.22f));
-        const float ceiling = GetRoom(kCams[cam_].room).height;
+        const float ceiling = CamRoom(kCams[cam_]).centre.Y + CamRoom(kCams[cam_]).height - R().centre.Y;
         fx.setWorldProperty(Matrix::CreateScale(0.08f, std::max(0.1f, ceiling - eye.Y), 0.08f) * Matrix::CreateTranslation(eye));
         EffectBank::Apply(fx);
         S().shapes->Cylinder().Draw(ctx.device);

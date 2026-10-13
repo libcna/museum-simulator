@@ -1,7 +1,11 @@
 #pragma once
 
+#include <vector>
+
 #include "Exhibits/Services.hpp"
-#include "World/RoomDef.hpp"
+#include "World/Catalogue.hpp"
+
+struct Voice3D;
 
 class RoomBuilder;
 class InteractionSystem;
@@ -24,7 +28,7 @@ struct UpdateContext {
 class Exhibit {
 public:
     Exhibit(const RoomDef& room, Services& services) : room_(room), services_(services) {}
-    virtual ~Exhibit() = default;
+    virtual ~Exhibit();
     Exhibit(const Exhibit&) = delete;
     Exhibit& operator=(const Exhibit&) = delete;
 
@@ -45,10 +49,14 @@ public:
     virtual void OnLeave() {}
 
 protected:
+    /** A looping positional voice that is released when the exhibit is destroyed. Null when audio is off. */
+    Voice3D* CreateLoop(const std::string& sound, const Microsoft::Xna::Framework::Vector3& position, float volume, float radius);
     [[nodiscard]] Services& S() { return services_; }
+    [[nodiscard]] const Services& S() const { return services_; }
     [[nodiscard]] const RoomDef& R() const { return room_; }
 
 private:
     const RoomDef& room_;
     Services& services_;
+    std::vector<Voice3D*> voices_;
 };

@@ -10,7 +10,7 @@
 #include "Microsoft/Xna/Framework/Graphics/SpriteSortMode.hpp"
 #include "Microsoft/Xna/Framework/Rectangle.hpp"
 #include "Rendering/TextureLibrary.hpp"
-#include "World/MuseumWorld.hpp"
+#include "UI/FloorMap.hpp"
 
 using namespace Microsoft::Xna::Framework;
 using namespace Microsoft::Xna::Framework::Graphics;
@@ -76,60 +76,24 @@ void Hud::DrawCrosshair(bool focused, int w, int h)
 
 void Hud::DrawMinimap(const HudState& state, int screenW)
 {
-    // The museum spans x -28..28 and z -68..8 metres; fit it into a corner panel.
-    constexpr float kScale = 3.3f;
-    constexpr float kMinX = -28.5f;
-    constexpr float kMinZ = -68.5f;
-    const int panelW = static_cast<int>(57.0f * kScale) + 16;
-    const int panelH = static_cast<int>(77.0f * kScale) + 16;
-    const int px = screenW - panelW - 14;
+    if (s_.museum == nullptr) return;
+    const int size = std::clamp(screenW / 5, 190, 300);
+    const int px = screenW - size - 14;
     const int py = 14;
-    Panel(px, py, panelW, panelH);
-    const auto toScreen = [&](float x, float z) {
-        return Vector2(static_cast<float>(px) + 8.0f + (x - kMinX) * kScale, static_cast<float>(py) + 8.0f + (z - kMinZ) * kScale);
-    };
-    for (const RoomDef& r : AllRooms()) {
-        const Vector3 c = r.Center();
-        const Vector2 a = toScreen(c.X - r.halfW, c.Z - r.halfD);
-        const Vector2 b = toScreen(c.X + r.halfW, c.Z + r.halfD);
-        const bool here = state.roomTitle == r.title;
-        Rect(static_cast<int>(a.X), static_cast<int>(a.Y), static_cast<int>(b.X - a.X), static_cast<int>(b.Y - a.Y),
-             here ? Color(90, 120, 190, 235) : Color(52, 62, 84, 235));
-    }
-    // Corridors: a thin bar between each pair of neighbouring rooms.
-    for (const RoomDef& a : AllRooms()) {
-        for (const RoomDef& b : AllRooms()) {
-            const bool east = (b.col == a.col + 1 && b.row == a.row);
-            const bool south = (b.row == a.row + 1 && b.col == a.col && a.id != RoomId::Lobby);
-            if (!east && !south) continue;
-            const Vector3 ca = a.Center();
-            const Vector3 cb = b.Center();
-            const Vector2 p = east ? toScreen(ca.X + a.halfW, ca.Z - 1.6f) : toScreen(ca.X - 1.6f, ca.Z + a.halfD);
-            const Vector2 q = east ? toScreen(cb.X - b.halfW, cb.Z + 1.6f) : toScreen(cb.X + 1.6f, cb.Z - b.halfD);
-            Rect(static_cast<int>(p.X), static_cast<int>(p.Y), std::max(2, static_cast<int>(q.X - p.X)),
-                 std::max(2, static_cast<int>(q.Y - p.Y)), Color(70, 80, 100, 235));
-        }
-    }
-    // Visitor arrow: a dot plus a short heading line.
-    const Vector2 me = toScreen(state.playerPosition.X, state.playerPosition.Z);
-    const float fx = -std::sin(state.playerYaw);
-    const float fz = -std::cos(state.playerYaw);
-    for (int i = 1; i <= 5; ++i)
-        Rect(static_cast<int>(me.X + fx * static_cast<float>(i) * 2.0f) - 1, static_cast<int>(me.Y + fz * static_cast<float>(i) * 2.0f) - 1,
-             3, 3, Color(255, 220, 100, 255));
-    Rect(static_cast<int>(me.X) - 3, static_cast<int>(me.Y) - 3, 7, 7, Color(255, 80, 60, 255));
-
-    // Room names, small.
-    for (const RoomDef& r : AllRooms()) {
-        const Vector3 c = r.Center();
-        const Vector2 p = toScreen(c.X, c.Z);
-        std::string label = r.title;
-        const std::size_t amp = label.find(' ');
-        if (amp != std::string::npos) label = label.substr(0, amp);
-        const Vector2 size = s_.font->MeasureString(label);
-        constexpr float kLabelScale = 0.5f;
-        Text(*s_.font, label, Vector2(p.X - size.X * kLabelScale * 0.5f, p.Y - 6.0f), Color(230, 235, 245, 255), kLabelScale);
-    }
+    Panel(px, py, size, size);
+    MapView view;
+    view.floor = state.floor;
+    view.currentCell = state.cell;
+    view.showPlayer = true;
+    view.player = state.playerPosition;
+    view.yaw = state.playerYaw;
+    view.discovered = state.discovered;
+    view.follow = true;
+    view.followRadius = 48.0f;
+    FloorMap::Draw(s_, *s_.museum, view, Rectangle(px + 4, py + 4, size - 8, size - 8));
+    char label[48];
+    std::snprintf(label, sizeof label, "FLOOR %d", state.floor);
+    Text(*s_.font, label, Vector2(static_cast<float>(px) + 10.0f, static_cast<float>(py + size) + 6.0f), Color(255, 214, 90, 255), 0.6f);
 }
 
 void Hud::DrawHelp(int w, int h)

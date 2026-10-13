@@ -39,6 +39,9 @@ public:
                 Microsoft::Xna::Framework::Graphics::SpriteFont* font,
                 Microsoft::Xna::Framework::Graphics::SpriteFont* titleFont, TextureLibrary& textures);
 
+    /** Textures created while a scope is set are recorded in it, so their owner can release them. */
+    void SetScope(std::vector<std::string>* scope) { scope_ = scope; }
+
     /** Renders the sign and returns the name it is registered under. */
     std::string Create(const SignSpec& spec);
 
@@ -56,4 +59,5 @@ private:
     Microsoft::Xna::Framework::Graphics::SpriteFont* titleFont_;
     TextureLibrary& textures_;
     int counter_ = 0;
+    std::vector<std::string>* scope_ = nullptr;
 };

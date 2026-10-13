@@ -54,7 +54,6 @@ public:
     void Load(InteractionSystem& interaction, MuseumWorld&) override
     {
         Interactable arm;
-        arm.room = R().id;
         arm.bounds = BoundingBox(R().ToWorld(kArmX - 1.2f, 0.0f, kArmZ - 1.2f), R().ToWorld(kArmX + 1.2f, 3.0f, kArmZ + 1.2f));
         arm.maxDistance = 5.0f;
         arm.prompt = [this] { return std::string(armRunning_ ? "Freeze the arm" : "Move the arm"); };
@@ -62,7 +61,6 @@ public:
         interaction.Add(std::move(arm));
 
         Interactable orrery;
-        orrery.room = R().id;
         orrery.bounds = BoundingBox(R().ToWorld(kOrreryX - 1.6f, 0.0f, kOrreryZ - 1.6f), R().ToWorld(kOrreryX + 1.6f, 3.0f, kOrreryZ + 1.6f));
         orrery.maxDistance = 5.0f;
         orrery.prompt = [this] { return std::string("Orrery speed ") + kOrreryNames[speed_] + " (next: " + kOrreryNames[(speed_ + 1) % 3] + ")"; };
