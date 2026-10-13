@@ -2,11 +2,13 @@
 // Run with `ctest --test-dir build` or build/bin/museum_tests.
 #include <cmath>
 #include <cstdio>
+#include <queue>
 #include <set>
 #include <string>
 
 #include "Catalogue/CatalogueBuilder.hpp"
 #include "Catalogue/Inventory.hpp"
+#include "Catalogue/ReferenceViews.hpp"
 #include "Exhibits/ExhibitRegistry.hpp"
 #include "World/Catalogue.hpp"
 
@@ -116,6 +118,50 @@ void TestInventory(const MuseumPlan& m)
     Check(InventoryAsJson(m).find("\"rooms\"") != std::string::npos, "inventory JSON has rooms");
 }
 
+void TestEveryFloorIsConnected(const MuseumPlan& m)
+{
+    // From each floor's hall, walking through doors must reach every cell of that floor (and nothing of another floor).
+    for (const FloorDef& f : m.floors) {
+        int onFloor = 0;
+        for (const RoomDef& r : m.rooms) onFloor += r.floor == f.index ? 1 : 0;
+        std::set<int> seen = {f.hub};
+        std::queue<int> open;
+        open.push(f.hub);
+        while (!open.empty()) {
+            const int c = open.front();
+            open.pop();
+            for (const DoorDef& d : m.Room(c).doors)
+                if (d.to >= 0 && seen.insert(d.to).second) open.push(d.to);
+        }
+        bool crossed = false;
+        for (const int c : seen) crossed = crossed || m.Room(c).floor != f.index;
+        Check(static_cast<int>(seen.size()) == onFloor, "floor " + std::to_string(f.index) + ": every cell is reachable from the hall (" + std::to_string(seen.size()) + " of " + std::to_string(onFloor) + ")");
+        Check(!crossed, "floor " + std::to_string(f.index) + ": doors never lead to another floor");
+    }
+}
+
+void TestReferenceViews(const MuseumPlan& m)
+{
+    std::set<std::string> names;
+    for (const ReferenceView& v : ReferenceViews()) {
+        Check(names.insert(v.name).second, std::string("reference view name is unique: ") + v.name);
+        const RoomDef* r = m.FindByKey(v.room);
+        Check(r != nullptr, std::string("reference view ") + v.name + " names a real room (" + v.room + ")");
+        if (r != nullptr) Check(v.advance >= 0.0f && v.advance < r->halfD * 2.0f, std::string("reference view ") + v.name + " stays inside its room");
+        Check(FindReferenceView(v.name) == &v, std::string("FindReferenceView round trip for ") + v.name);
+    }
+}
+
+void TestGeneratedDocumentsMentionEveryRoom(const MuseumPlan& m)
+{
+    const std::string map = MapAsMarkdown(m), coverage = CoverageAsMarkdown(m);
+    for (const RoomDef& r : m.rooms) {
+        if (r.kind != CellKind::Room) continue;
+        Check(map.find("`" + r.key + "`") != std::string::npos, "the generated map lists " + r.key);
+        for (const std::string& api : r.apis) Check(coverage.find("| " + api + " |") != std::string::npos, "the coverage table lists " + api);
+    }
+}
+
 }  // namespace
 
 int main()
@@ -129,6 +175,9 @@ int main()
     TestExhibitsResolve(m);
     TestAssetsExist(m);
     TestInventory(m);
+    TestEveryFloorIsConnected(m);
+    TestReferenceViews(m);
+    TestGeneratedDocumentsMentionEveryRoom(m);
     std::printf("%d checks, %d failed\n%s", g_checks, g_failures, InventoryAsText(m).c_str());
     return g_failures == 0 ? 0 : 1;
 }
