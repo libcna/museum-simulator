@@ -79,6 +79,13 @@ WingSpec ModelWing()
         mo("model-morph", "Morph Targets", "Blend shapes from a glTF file: two targets, per-vertex deltas and a weight animation", "morph", {"MorphTargetDataEXT", "SetMorphWeightsEXT", "EvaluateMorphWeightsEXT", "ModelMeshPart.Tag"}, "morph"),
         mo("model-variants", "Material Variants", "KHR_materials_variants: one mesh, four looks switched at run time", "variants", {"Model.MaterialVariantEXT", "Model.MaterialVariantNamesEXT", "PbrEffect"}, "variants"),
         mo("model-ibl", "Image-Based Lighting", "ImageBasedLightEXT: an irradiance cube, a prefiltered specular cube and a BRDF table lighting a PBR model", "ibl", {"ImageBasedLightEXT", "PbrEffect.ImageBasedLight", "TextureCube", "PbrEffect.MetallicFactor", "PbrEffect.RoughnessFactor"}, "sphere"),
+        [&] {
+            RoomSpec r = mo("model-skinfx", "SkinnedEffect", "XNA's skinning effect: a tube bent by four bone matrices, with one, two or four blend weights per vertex", "",
+                            {"SkinnedEffect", "SkinnedEffect.SetBoneTransforms", "SkinnedEffect.WeightsPerVertex", "VertexPositionNormalTextureSkinned", "VertexBuffer", "IndexBuffer"});
+            r.exhibit = "skinfx-lab";
+            r.origin = ApiOrigin::Xna;
+            return r;
+        }(),
     };
     return w;
 }
