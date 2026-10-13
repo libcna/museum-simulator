@@ -37,6 +37,38 @@ WingSpec MathWing()
     return w;
 }
 
+
+WingSpec ValueTypeWing()
+{
+    WingSpec w;
+    w.name = "Value Types";
+    w.tagline = "Packed vectors, Rectangle and Point, Color: the small structures everything else is built from";
+    w.theme = "corridor-warm";
+    w.accent = {0.55f, 0.85f, 0.65f};
+    w.spineSide = Wall::East;
+    const auto vt = [](const char* key, const char* title, const char* subtitle, const char* mode, std::vector<std::string> apis) {
+        RoomSpec r;
+        r.key = key;
+        r.title = title;
+        r.subtitle = subtitle;
+        r.exhibit = "struct-lab";
+        r.params = {{"mode", mode}};
+        r.width = 13;
+        r.depth = 13;
+        r.height = 5.0f;
+        r.theme = "white-cube";
+        r.apis = std::move(apis);
+        return r;
+    };
+    w.rooms = {
+        vt("vt-packed", "Packed Vector Formats", "Byte4, NormalizedShort4, HalfVector4, Rgba1010102, Bgr565... what each stores and what it loses", "packed",
+           {"IPackedVector", "Byte4", "NormalizedByte4", "NormalizedShort4", "Short4", "HalfVector4", "Rgba1010102", "Rgba64", "Bgra4444", "Bgra5551", "Bgr565", "Rg32", "PackedValue"}),
+        vt("vt-rectangle", "Rectangle and Point", "Intersects, Intersect, Union, Contains and Inflate computed live on two rectangles", "rect", {"Rectangle", "Rectangle.Intersects", "Rectangle.Intersect", "Rectangle.Union", "Rectangle.Contains", "Rectangle.Inflate", "Point"}),
+        vt("vt-color", "Colour", "Color.Lerp, Multiply, FromNonPremultiplied and the packed 32-bit value", "color", {"Color", "Color.Lerp", "Color.Multiply", "Color.FromNonPremultiplied", "Color.PackedValue"}),
+    };
+    return w;
+}
+
 WingSpec TransformWing()
 {
     WingSpec w;
@@ -205,5 +237,6 @@ FloorSpec MakeFloor1()
     f.wings.push_back(RotationWing());
     f.wings.push_back(CollisionWing());
     f.wings.push_back(CameraWing());
+    f.wings.push_back(ValueTypeWing());
     return f;
 }
