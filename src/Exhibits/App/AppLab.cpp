@@ -197,7 +197,10 @@ public:
     void Load(InteractionSystem&, MuseumWorld&) override
     {
         if (mode_ == Mode::GameTimeLab) graph_ = std::make_unique<LiveScreen>(S(), 640, 320);
-        if (mode_ == Mode::Content && S().game != nullptr) content_ = std::make_unique<Content::ContentManager>(&S().game->getServicesProperty(), S().contentRoot);
+        if (mode_ == Mode::Content && S().game != nullptr) {
+            content_ = std::make_unique<Content::ContentManager>(&S().game->getServicesProperty(), S().contentRoot);
+            LoadSet();   // start with something to see: the twelve textures are on the wall when you arrive
+        }
         if (mode_ == Mode::Components && S().game != nullptr) {
             Game& g = *S().game;
             const Color cols[3] = {Color(190, 50, 50, 230), Color(50, 160, 70, 230), Color(60, 90, 210, 230)};
