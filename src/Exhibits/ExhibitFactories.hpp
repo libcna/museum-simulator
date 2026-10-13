@@ -39,6 +39,7 @@ std::unique_ptr<Exhibit> MakeTargetLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeParticleLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeModelLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeSkinFxLab(const RoomDef& room, Services& services);
+std::unique_ptr<Exhibit> MakeReflectLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeAnimLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeAudioLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeInputLab(const RoomDef& room, Services& services);

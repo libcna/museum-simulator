@@ -74,7 +74,13 @@ WingSpec BasicEffectWing()
         fx("be-alpha", "Alpha and Sorting", "Translucent spheres: draw order, depth writes and BlendState", "alpha", {"BasicEffect.Alpha", "BlendState.NonPremultiplied", "DepthStencilState.DepthRead"}),
         fx("be-punctual", "Point and Spot Lights", "PunctualLightEXT: one point or spot light with range and cone on a stock BasicEffect", "punctual", {"PunctualLightEXT", "BasicEffect.setPunctualLightEXT"}, ApiOrigin::CnaExtension),
         fx("be-dual", "DualTextureEffect", "Two textures multiplied per pixel: a tiling surface and a lightmap", "dual", {"DualTextureEffect", "DualTextureEffect.Texture2"}),
-        fx("be-model", "The Effect Object Model", "Techniques, passes and parameters as CNA reports them for a stock effect", "reflection", {"Effect", "EffectTechnique", "EffectPass", "EffectParameterCollection"}),
+        [&] {
+            RoomSpec r = fx("be-model", "The Effect Object Model", "Parameters (class, type, size, annotations), techniques and passes of six stock effects, the IEffect interfaces and Effect.Clone", "",
+                            {"Effect", "EffectParameter", "EffectParameterClass", "EffectParameterType", "EffectParameterCollection", "EffectAnnotation", "EffectTechnique", "EffectPass",
+                             "IEffectMatrices", "IEffectLights", "IEffectFog", "Effect.Clone", "SpriteEffect", "SkinnedEffect"});
+            r.exhibit = "reflect-lab";
+            return r;
+        }(),
     };
     return w;
 }

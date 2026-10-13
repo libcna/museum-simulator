@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-461 distinct API names are claimed by at least one room.
+470 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -188,7 +188,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | DynamicVertexBuffer | `sky`, `particles`, `geo-dynamic`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `rf-garden`, `rf-weather` |
 | DynamicVertexBuffer.SetData | `pf-buffers` |
 | Effect | `be-model` |
+| Effect.Clone | `be-model` |
+| EffectAnnotation | `be-model` |
+| EffectParameter | `be-model` |
+| EffectParameterClass | `be-model` |
 | EffectParameterCollection | `be-model` |
+| EffectParameterType | `be-model` |
 | EffectPass | `be-model` |
 | EffectPass.Apply | `pf-state` |
 | EffectTechnique | `be-model` |
@@ -264,6 +269,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsResource.Disposing | `ct-lifetime` |
 | GraphicsResource.IsDisposed | `ct-cache`, `ct-lifetime` |
 | HalfVector4 | `vt-packed` |
+| IEffectFog | `be-model` |
+| IEffectLights | `be-model` |
+| IEffectMatrices | `be-model` |
 | IGraphicsDeviceService | `app-services` |
 | IPackedVector | `vt-packed` |
 | IShadowReceiverEXT | `cx-shadow` |
@@ -427,7 +435,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ShaderPackageEXT.selectFor | `cx-package` |
 | ShadowCascadeStateEXT | `cx-shadow` |
 | Short4 | `vt-packed` |
-| SkinnedEffect | `model-skinfx` |
+| SkinnedEffect | `be-model`, `model-skinfx` |
 | SkinnedEffect.SetBoneTransforms | `model-skinfx` |
 | SkinnedEffect.WeightsPerVertex | `model-skinfx` |
 | SkinnedPbrEffect.SetBoneTransforms | `model-skinned` |
@@ -453,6 +461,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SpriteBatch.Begin(effect) | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave`, `cx-crt` |
 | SpriteBatch.Draw | `sprite-basics`, `sprite-origin`, `sprite-sheet`, `sprite-sort`, `sprite-parallax`, `sprite-ui`, `sprite-atlas`, `sprite-stress`, `rt-recursive`, `pf-sprites`, `pf-overdraw`, `rv-sprites` |
 | SpriteBatch.DrawString | `text-align`, `text-transform`, `text-hud`, `text-labels` |
+| SpriteEffect | `be-model` |
 | SpriteEffects | `sprite-basics`, `text-transform`, `rv-sprites` |
 | SpriteFont.Characters | `text-glyphs` |
 | SpriteFont.DefaultCharacter | `text-glyphs` |

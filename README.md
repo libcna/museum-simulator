@@ -28,9 +28,9 @@ floors:          10
 wings:           33
 exhibit rooms:   235  (5 outdoors)
 walkable cells:  298  (rooms, galleries, concourses, halls, elevators)
-exhibit kinds:   44
+exhibit kinds:   45
 origin:          186 XNA 4.0, 49 CNA extension, 0 application
-API names:       461
+API names:       470
   floor 0  10 rooms  Lobby and Introductory Tour
   floor 1  48 rooms  Fundamentals
   floor 2  19 rooms  Two-Dimensional Rendering

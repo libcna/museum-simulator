@@ -1,0 +1,241 @@
+// Effect reflection: what an Effect tells a program about itself. Parameters (name, class, type, size, semantic,
+// annotations), techniques and passes, the IEffectMatrices / IEffectLights / IEffectFog interfaces that let tools
+// configure any stock effect the same way, and Effect.Clone.
+#include <algorithm>
+#include <array>
+#include <cstdio>
+#include <exception>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "Diagnostics/Log.hpp"
+#include "Exhibits/ExhibitFactories.hpp"
+#include "Exhibits/ScreenExhibit.hpp"
+#include "Microsoft/Xna/Framework/Graphics/AlphaTestEffect.hpp"
+#include "Microsoft/Xna/Framework/Graphics/BasicEffect.hpp"
+#include "Microsoft/Xna/Framework/Graphics/DualTextureEffect.hpp"
+#include "Microsoft/Xna/Framework/Graphics/Effect.hpp"
+#include "Microsoft/Xna/Framework/Graphics/EffectAnnotation.hpp"
+#include "Microsoft/Xna/Framework/Graphics/EffectAnnotationCollection.hpp"
+#include "Microsoft/Xna/Framework/Graphics/EffectParameter.hpp"
+#include "Microsoft/Xna/Framework/Graphics/EffectParameterClass.hpp"
+#include "Microsoft/Xna/Framework/Graphics/EffectParameterCollection.hpp"
+#include "Microsoft/Xna/Framework/Graphics/EffectParameterType.hpp"
+#include "Microsoft/Xna/Framework/Graphics/EffectPass.hpp"
+#include "Microsoft/Xna/Framework/Graphics/EffectPassCollection.hpp"
+#include "Microsoft/Xna/Framework/Graphics/EffectTechnique.hpp"
+#include "Microsoft/Xna/Framework/Graphics/EffectTechniqueCollection.hpp"
+#include "Microsoft/Xna/Framework/Graphics/EnvironmentMapEffect.hpp"
+#include "Microsoft/Xna/Framework/Graphics/IEffectFog.hpp"
+#include "Microsoft/Xna/Framework/Graphics/IEffectLights.hpp"
+#include "Microsoft/Xna/Framework/Graphics/IEffectMatrices.hpp"
+#include "Microsoft/Xna/Framework/Graphics/SkinnedEffect.hpp"
+#include "Microsoft/Xna/Framework/Graphics/SpriteEffect.hpp"
+
+using namespace Microsoft::Xna::Framework;
+using namespace Microsoft::Xna::Framework::Graphics;
+
+namespace {
+
+const char* ClassName(EffectParameterClass c)
+{
+    switch (c) {
+        case EffectParameterClass::Scalar: return "Scalar";
+        case EffectParameterClass::Vector: return "Vector";
+        case EffectParameterClass::Matrix: return "Matrix";
+        case EffectParameterClass::Object: return "Object";
+        case EffectParameterClass::Struct: return "Struct";
+    }
+    return "?";
+}
+
+const char* TypeName(EffectParameterType t)
+{
+    switch (t) {
+        case EffectParameterType::Void: return "Void";
+        case EffectParameterType::Bool: return "Bool";
+        case EffectParameterType::Int32: return "Int32";
+        case EffectParameterType::Single: return "Single";
+        case EffectParameterType::String: return "String";
+        case EffectParameterType::Texture: return "Texture";
+        case EffectParameterType::Texture1D: return "Texture1D";
+        case EffectParameterType::Texture2D: return "Texture2D";
+        case EffectParameterType::Texture3D: return "Texture3D";
+        case EffectParameterType::TextureCube: return "TextureCube";
+    }
+    return "?";
+}
+
+const char* kEffects[] = {"BasicEffect", "AlphaTestEffect", "DualTextureEffect", "EnvironmentMapEffect", "SkinnedEffect", "SpriteEffect"};
+
+class ReflectLab final : public ScreenExhibit {
+public:
+    ReflectLab(const RoomDef& room, Services& services) : ScreenExhibit(room, services, 960, 540, 7.6f) {}
+
+    void BuildStatic(RoomBuilder& b) override
+    {
+        ControlPanel& p = AddPanel("The Effect object model", -4.8f, 1.5f, 1.8f, MathHelper::PiOver2, 2.1f);
+        p.AddChoice("Effect", {kEffects[0], kEffects[1], kEffects[2], kEffects[3], kEffects[4], kEffects[5]}, 0, [this](int v) { Select(v); });
+        p.AddSlider("Scroll the parameter list", 0.0f, 1.0f, scroll_, [this](float v) { scroll_ = v; });
+        p.AddButton("Configure through the interfaces", [this] { ConfigureThroughInterfaces(); });
+        p.AddButton("Clone the effect", [this] { CloneIt(); });
+        p.AddReadout("Interfaces", [this] { return interfaces_; });
+        p.AddReadout("Via interfaces", [this] { return configured_; });
+        p.AddReadout("Clone", [this] { return cloned_; });
+        AddInfoSign(b, "What an Effect can tell you",
+                    {"Every Effect lists its Parameters (name, class, type, rows x columns, semantic, annotations), its Techniques and the",
+                     "Passes of each. The stock effects also implement IEffectMatrices, IEffectLights and IEffectFog, so one routine can set",
+                     "World/View/Projection, lights and fog on any of them. Clone() copies an effect with its current values."});
+    }
+
+    void OnScreenLoaded() override { Select(0); }
+
+protected:
+    void DrawScreen(SpriteBatch& sb) override
+    {
+        if (S().font == nullptr || !effect_) return;
+        sb.Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::LinearClamp, nullptr, nullptr);
+        Texture2D& white = *S().whiteTexture;
+        const auto rect = [&](float x, float y, float w, float h, Color c) { sb.Draw(white, Rectangle(static_cast<int>(x), static_cast<int>(y), static_cast<int>(w), static_cast<int>(h)), c); };
+        const auto text = [&](const std::string& t, float x, float y, Color c, float s = 0.62f) { sb.DrawString(*S().font, t, Vector2(x, y), c, 0.0f, Vector2(0, 0), s, SpriteEffects::None, 0.0f); };
+        text(std::string(kEffects[index_]) + ": " + summary_, 24, 12, Kit::kGold, 0.85f);
+        rect(20, 64, 920, 2, Kit::Rgba(90, 100, 130));
+        const float cols[] = {30, 330, 440, 560, 640, 760};
+        const char* heads[] = {"Parameter", "Class", "Type", "Size", "Elements", "Semantic / annotations"};
+        for (int i = 0; i < 6; ++i) text(heads[i], cols[i], 72, Kit::kDim, 0.55f);
+        const int visibleRows = 12;
+        const int total = static_cast<int>(rows_.size());
+        const int first = std::clamp(static_cast<int>(scroll_ * static_cast<float>(std::max(0, total - visibleRows)) + 0.5f), 0, std::max(0, total - visibleRows));
+        for (int r = 0; r < visibleRows && first + r < total; ++r) {
+            const auto& row = rows_[static_cast<std::size_t>(first + r)];
+            const float y = 100.0f + static_cast<float>(r) * 29.0f;
+            if (r % 2 == 0) rect(20, y - 3, 920, 28, Kit::Rgba(36, 44, 66));
+            for (int i = 0; i < 6; ++i) text(row[static_cast<std::size_t>(i)], cols[i], y, i == 0 ? Kit::kText : Kit::kXna, 0.58f);
+        }
+        text(std::to_string(total) + " parameters, showing " + std::to_string(first + 1) + " to " + std::to_string(std::min(total, first + visibleRows)), 30, 462, Kit::kDim, 0.55f);
+        text(techniques_, 30, 492, Kit::kText, 0.58f);
+        sb.End();
+    }
+
+private:
+    void Select(int i)
+    {
+        index_ = std::clamp(i, 0, 5);
+        GraphicsDevice& d = *S().device;
+        effect_.reset();
+        clone_.reset();
+        rows_.clear();
+        cloned_ = "not cloned yet";
+        configured_ = "-";
+        try {
+            switch (index_) {
+                case 0: effect_ = std::make_unique<BasicEffect>(d); break;
+                case 1: effect_ = std::make_unique<AlphaTestEffect>(d); break;
+                case 2: effect_ = std::make_unique<DualTextureEffect>(d); break;
+                case 3: effect_ = std::make_unique<EnvironmentMapEffect>(d); break;
+                case 4: effect_ = std::make_unique<SkinnedEffect>(d); break;
+                default: effect_ = std::make_unique<SpriteEffect>(d); break;
+            }
+        } catch (const std::exception& e) {
+            summary_ = std::string("could not be created: ") + e.what();
+            Museum::Log("reflect", "%s: %s", kEffects[index_], e.what());
+            return;
+        }
+        Reflect();
+    }
+
+    void Reflect()
+    {
+        Effect& fx = *effect_;
+        EffectParameterCollection& params = fx.getParametersProperty();
+        for (int i = 0; i < params.getCountProperty(); ++i) {
+            EffectParameter* p = params[i];
+            if (p == nullptr) continue;
+            char size[24];
+            std::snprintf(size, sizeof size, "%d x %d", p->getRowCountProperty(), p->getColumnCountProperty());
+            std::string extra = p->getSemanticProperty();
+            const int ann = p->getAnnotationsProperty().getCountProperty();
+            if (ann > 0) extra += (extra.empty() ? "" : ", ") + std::to_string(ann) + " annotations";
+            rows_.push_back({p->getNameProperty(), ClassName(p->getParameterClassProperty()), TypeName(p->getParameterTypeProperty()), size,
+                             std::to_string(p->getElementsProperty().getCountProperty()), extra.empty() ? "-" : extra});
+        }
+        EffectTechniqueCollection& techs = fx.getTechniquesProperty();
+        std::string t = std::to_string(techs.getCountProperty()) + " technique(s): ";
+        for (int i = 0; i < techs.getCountProperty(); ++i) {
+            EffectTechnique* tech = techs[i];
+            if (tech == nullptr) continue;
+            t += (i ? ", " : "") + tech->getNameProperty() + " (" + std::to_string(tech->getPassesProperty().getCountProperty()) + " pass" + (tech->getPassesProperty().getCountProperty() == 1 ? "" : "es") + ")";
+        }
+        const EffectTechnique* cur = fx.getCurrentTechniqueProperty();
+        techniques_ = t + (cur != nullptr ? "; current: " + cur->getNameProperty() : "");
+        summary_ = std::to_string(params.getCountProperty()) + " parameters";
+        const bool m = dynamic_cast<IEffectMatrices*>(effect_.get()) != nullptr, l = dynamic_cast<IEffectLights*>(effect_.get()) != nullptr,
+                   f = dynamic_cast<IEffectFog*>(effect_.get()) != nullptr;
+        interfaces_ = std::string(m ? "Matrices " : "") + (l ? "Lights " : "") + (f ? "Fog" : "");
+        if (interfaces_.empty()) interfaces_ = "none (a plain Effect)";
+    }
+
+    // The same code for every effect: this is what the interfaces are for.
+    void ConfigureThroughInterfaces()
+    {
+        if (!effect_) return;
+        std::string done;
+        try {
+            if (auto* m = dynamic_cast<IEffectMatrices*>(effect_.get())) {
+                const Matrix w = Matrix::CreateTranslation(1.0f, 2.0f, 3.0f);
+                m->setWorldProperty(w);
+                m->setViewProperty(Matrix::CreateLookAt(Vector3(0, 0, 5), Vector3::Zero, Vector3::Up));
+                m->setProjectionProperty(Matrix::CreatePerspectiveFieldOfView(1.0f, 1.6f, 0.1f, 50.0f));
+                done += m->getWorldProperty() == w ? "matrices read back OK. " : "matrices MISMATCH. ";
+            }
+            if (auto* l = dynamic_cast<IEffectLights*>(effect_.get())) {
+                l->EnableDefaultLighting();
+                l->setAmbientLightColorProperty(Vector3(0.2f, 0.25f, 0.3f));
+                done += l->getLightingEnabledProperty() && l->getDirectionalLight0Property().getEnabledProperty() ? "lights on. " : "lights not enabled. ";
+            }
+            if (auto* f = dynamic_cast<IEffectFog*>(effect_.get())) {
+                f->setFogEnabledProperty(true);
+                f->setFogStartProperty(5.0f);
+                f->setFogEndProperty(40.0f);
+                done += f->getFogEnabledProperty() && f->getFogEndProperty() == 40.0f ? "fog set." : "fog not set.";
+            }
+        } catch (const std::exception& e) {
+            done += std::string("exception: ") + e.what();
+        }
+        configured_ = done.empty() ? "nothing to set: no interfaces" : done;
+    }
+
+    void CloneIt()
+    {
+        if (!effect_) return;
+        try {
+            // Change something first, so the clone visibly starts from the current values.
+            if (auto* l = dynamic_cast<IEffectLights*>(effect_.get())) l->setAmbientLightColorProperty(Vector3(0.9f, 0.1f, 0.1f));
+            clone_.reset(effect_->Clone());
+            std::string r = "copy has " + std::to_string(clone_->getParametersProperty().getCountProperty()) + " parameters";
+            if (auto* a = dynamic_cast<IEffectLights*>(effect_.get())) {
+                if (auto* b = dynamic_cast<IEffectLights*>(clone_.get())) {
+                    b->setAmbientLightColorProperty(Vector3(0.1f, 0.9f, 0.1f));
+                    r += a->getAmbientLightColorProperty().X > 0.5f && b->getAmbientLightColorProperty().Y > 0.5f ? "; changing it left the original alone" : "; STATE SHARED";
+                }
+            }
+            cloned_ = r;
+        } catch (const std::exception& e) {
+            cloned_ = std::string("Clone threw: ") + e.what();
+        }
+    }
+
+    std::unique_ptr<Effect> effect_, clone_;
+    std::vector<std::array<std::string, 6>> rows_;
+    std::string summary_ = "-", techniques_ = "-", interfaces_ = "-", configured_ = "-", cloned_ = "-";
+    int index_ = 0;
+    float scroll_ = 0.0f;
+};
+
+}  // namespace
+
+std::unique_ptr<Exhibit> MakeReflectLab(const RoomDef& room, Services& services)
+{
+    return std::make_unique<ReflectLab>(room, services);
+}

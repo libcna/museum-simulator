@@ -29,12 +29,12 @@ using namespace MathKit;
 
 namespace {
 
-enum class Mode { Combos, Lights, Material, PerPixel, Fog, Alpha, Punctual, Dual, Reflection };
+enum class Mode { Combos, Lights, Material, PerPixel, Fog, Alpha, Punctual, Dual };
 
 Mode ParseMode(const std::string& s)
 {
     static const std::pair<const char*, Mode> table[] = {{"lights", Mode::Lights}, {"material", Mode::Material}, {"perpixel", Mode::PerPixel}, {"fog", Mode::Fog},
-                                                         {"alpha", Mode::Alpha}, {"punctual", Mode::Punctual}, {"dual", Mode::Dual}, {"reflection", Mode::Reflection}};
+                                                         {"alpha", Mode::Alpha}, {"punctual", Mode::Punctual}, {"dual", Mode::Dual}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
     return Mode::Combos;
@@ -107,14 +107,6 @@ public:
                 p.AddSlider("Lightmap offset", -1.0f, 1.0f, offset_, [this](float v) { offset_ = v; });
                 p.AddReadout("DualTextureEffect", [this] { return dualStatus_; });
                 break;
-            case Mode::Reflection:
-                p.AddReadout("GetTypeName()", [this] { return fx_ ? fx_->GetTypeName() : std::string("-"); });
-                p.AddReadout("Techniques", [this] { return fx_ ? std::to_string(fx_->getTechniquesProperty().getCountProperty()) : std::string("-"); });
-                p.AddReadout("Current technique", [this] { return fx_ && fx_->getCurrentTechniqueProperty() ? fx_->getCurrentTechniqueProperty()->getNameProperty() : std::string("-"); });
-                p.AddReadout("Passes", [this] { return fx_ && fx_->getCurrentTechniqueProperty() ? std::to_string(fx_->getCurrentTechniqueProperty()->getPassesProperty().getCountProperty()) : std::string("-"); });
-                p.AddReadout("Effect parameters", [this] { return fx_ ? std::to_string(fx_->getParametersProperty().getCountProperty()) : std::string("-"); });
-                p.AddReadout("IsStockEffectEXT", [this] { return std::string(fx_ && fx_->IsStockEffectEXT() ? "true (CNA extension)" : "false"); });
-                break;
         }
         SignSpec what = Kit::Plate(Title(), Explanation());
         what.leftAlign = true;
@@ -169,7 +161,6 @@ public:
             case Mode::Alpha: DrawAlpha(ctx, o); break;
             case Mode::Punctual: DrawPunctual(ctx); break;
             case Mode::Dual: DrawDual(ctx, o); break;
-            case Mode::Reflection: DrawReflection(ctx, o); break;
         }
         RenderStates::SetOpaque3D(ctx.device);
         gizmos_.Flush(ctx);
@@ -179,7 +170,7 @@ public:
 private:
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"Texture, vertex colour and diffuse", "Lights and ambient", "Material: diffuse, specular, emissive", "Per-vertex and per-pixel lighting", "Fog", "Alpha and sorting", "Point and spot lights (CNA extension)", "DualTextureEffect", "The Effect object model"};
+        static const char* t[] = {"Texture, vertex colour and diffuse", "Lights and ambient", "Material: diffuse, specular, emissive", "Per-vertex and per-pixel lighting", "Fog", "Alpha and sorting", "Point and spot lights (CNA extension)", "DualTextureEffect"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
@@ -192,8 +183,7 @@ private:
             case Mode::Fog: return {"Fog fades colours towards FogColor between FogStart and FogEnd, hiding the far clip plane and adding depth.", "The view is a corridor of columns in a render target; the clear colour matches the fog."};
             case Mode::Alpha: return {"BasicEffect.Alpha makes a surface translucent only if the BlendState blends. Overlapping translucent", "objects must be drawn back to front, or without depth writes, or the nearer one hides the farther."};
             case Mode::Punctual: return {"CNA extension: PunctualLightEXT adds one point or spot light with a range and cone angles to the stock", "BasicEffect (XNA has only directional lights). Move it, narrow the cone or shorten the range."};
-            case Mode::Dual: return {"DualTextureEffect multiplies two textures per pixel, the classic way to apply a baked lightmap over a", "tiling surface texture. The lightmap here is a soft radial gradient; slide it across the bricks."};
-            default: return {"Every Effect, even a stock one, is described by techniques, passes and parameters. Drawing means setting", "the effect's properties, then Apply()ing each pass of the current technique. CNA reports this for BasicEffect."};
+            default: return {"DualTextureEffect multiplies two textures per pixel, the classic way to apply a baked lightmap over a", "tiling surface texture. The lightmap here is a soft radial gradient; slide it across the bricks."};
         }
     }
 
@@ -498,20 +488,6 @@ private:
         } catch (const std::exception& e) {
             dualStatus_ = std::string("draw failed: ") + std::string(e.what()).substr(0, 24);
         }
-    }
-
-    void DrawReflection(const DrawContext& ctx, const Vector3& o)
-    {
-        ResetFx(*fx_);
-        fx_->EnableDefaultLighting();
-        fx_->setTextureEnabledProperty(true);
-        fx_->setTextureProperty(S().textures->Get("marble"));
-        ctx.device.setRasterizerStateProperty(RasterizerState::CullClockwise);
-        DrawSphere(ctx, Matrix::CreateScale(2.0f) * Matrix::CreateRotationY(spin_) * Matrix::CreateTranslation(o), S().shapes->Sphere());
-        // The parameters the effect reports, as labels.
-        EffectParameterCollection& params = fx_->getParametersProperty();
-        for (int i = 0; i < std::min(params.getCountProperty(), 8); ++i)
-            gizmos_.Label(o + Off(2.0f, 1.2f - static_cast<float>(i) * 0.3f, 0), params[i]->getNameProperty(), Color(180, 230, 255, 255), 0.45f);
     }
 
     Mode mode_;

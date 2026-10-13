@@ -44,7 +44,7 @@ public:
         p.AddSlider("Bend per joint", -80.0f, 80.0f, bend_, [this](float v) { bend_ = v; animate_ = false; }, "%.0f deg", 1.0f);
         p.AddSlider("Twist per joint", -60.0f, 60.0f, twist_, [this](float v) { twist_ = v; animate_ = false; }, "%.0f deg", 1.0f);
         p.AddToggle("Animate", true, [this](bool v) { animate_ = v; });
-        p.AddToggle("Lighting (EnableDefaultLighting)", true, [this](bool v) { lighting_ = v; });
+        p.AddToggle("Directional lights (EnableDefaultLighting)", true, [this](bool v) { lighting_ = v; });
         p.AddToggle("PreferPerPixelLighting", true, [this](bool v) { perPixel_ = v; });
         p.AddToggle("Fog", false, [this](bool v) { fog_ = v; });
         p.AddToggle("Show joints and weights", true, [this](bool v) { joints_ = v; });
@@ -100,8 +100,14 @@ public:
         fx.setDiffuseColorProperty(Vector3(1, 1, 1));
         fx.setAlphaProperty(1.0f);
         fx.setPreferPerPixelLightingProperty(perPixel_);
-        fx.setLightingEnabledProperty(lighting_);
-        if (lighting_) fx.EnableDefaultLighting();
+        // SkinnedEffect always lights (LightingEnabled cannot be false): "off" means no directional lights and a flat ambient.
+        fx.EnableDefaultLighting();
+        if (!lighting_) {
+            fx.getDirectionalLight0Property().setEnabledProperty(false);
+            fx.getDirectionalLight1Property().setEnabledProperty(false);
+            fx.getDirectionalLight2Property().setEnabledProperty(false);
+            fx.setAmbientLightColorProperty(Vector3(0.85f, 0.85f, 0.85f));
+        }
         fx.setFogEnabledProperty(fog_);
         if (fog_) {
             fx.setFogColorProperty(Vector3(0.12f, 0.14f, 0.22f));
