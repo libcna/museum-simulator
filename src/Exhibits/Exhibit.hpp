@@ -60,9 +60,12 @@ public:
 protected:
     /** A looping positional voice that is released when the exhibit is destroyed. Null when audio is off. */
     Voice3D* CreateLoop(const std::string& sound, const Microsoft::Xna::Framework::Vector3& position, float volume, float radius);
-    /** The wall the room's door is in, and the wall facing it (where wide screens go). */
-    [[nodiscard]] Wall DoorWall() const { return room_.doors.empty() ? Wall::South : room_.doors.front().wall; }
+    /** The wall the room's door is in, and the wall facing it (where wide screens go): walls of the room's local frame. */
+    [[nodiscard]] Wall DoorWall() const { return room_.doors.empty() ? Wall::South : room_.LocalWall(room_.doors.front().wall); }
     [[nodiscard]] Wall FarWall() const { return Opposite(DoorWall()); }
+    /** A local offset as a world offset: `ToWorld(0,0,0) + Off(x, y, z)` is `ToWorld(x, y, z)`. */
+    [[nodiscard]] Microsoft::Xna::Framework::Vector3 Off(float x, float y, float z) const { return room_.Rotate(Microsoft::Xna::Framework::Vector3(x, y, z)); }
+    [[nodiscard]] Microsoft::Xna::Framework::Vector3 Off(const Microsoft::Xna::Framework::Vector3& local) const { return room_.Rotate(local); }
     /** Centre and facing (yaw, 0 = +Z) of a screen hung on the far wall `height` metres up. */
     void FarScreenPose(float height, Microsoft::Xna::Framework::Vector3& centre, float& yaw) const;
     /** A point on the far wall: `along` metres to the right as seen from the door, `height` up; yaw faces into the room. */

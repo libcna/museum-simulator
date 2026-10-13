@@ -427,7 +427,7 @@ private:
         ctx.device.setRasterizerStateProperty(RasterizerState::CullClockwise);
         for (int i = 0; i < count_; ++i) {
             const float x = (static_cast<float>(i % side) - static_cast<float>(side) * 0.5f) * 1.2f, z = (static_cast<float>(i / side) - static_cast<float>(side) * 0.5f) * 1.2f;
-            const Vector3 p = o + Vector3(x, 0.5f, z);
+            const Vector3 p = o + Off(x, 0.5f, z);
             const float scale = 0.5f / radius;
             if (cull_ && frustum.Contains(BoundingSphere(p, radius * scale)) == ContainmentType::Disjoint) continue;
             model_->Draw(Matrix::CreateScale(scale) * Matrix::CreateRotationY(spin_t_ * 0.5f + static_cast<float>(i)) * Matrix::CreateTranslation(p), ctx.view.view, ctx.view.projection);

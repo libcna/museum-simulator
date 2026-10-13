@@ -83,39 +83,39 @@ public:
         switch (mode_) {
             case Mode::Euler: {
                 const Quaternion q = Quat();
-                DrawBody(ctx, Matrix::CreateFromQuaternion(q) * Matrix::CreateTranslation(o + Vector3(-1.1f, 0, 0)), kBlue);
-                DrawBody(ctx, MatrixEuler() * Matrix::CreateTranslation(o + Vector3(1.1f, 0, 0)), kGreen);
-                gizmos_.Label(o + Vector3(-1.1f, 0.85f, 0), "Quaternion", ToColor(kBlue * 1.3f));
-                gizmos_.Label(o + Vector3(1.1f, 0.85f, 0), "Matrices Z * X * Y", ToColor(kGreen * 1.2f));
+                DrawBody(ctx, Matrix::CreateFromQuaternion(q) * Matrix::CreateTranslation(o + Off(-1.1f, 0, 0)), kBlue);
+                DrawBody(ctx, MatrixEuler() * Matrix::CreateTranslation(o + Off(1.1f, 0, 0)), kGreen);
+                gizmos_.Label(o + Off(-1.1f, 0.85f, 0), "Quaternion", ToColor(kBlue * 1.3f));
+                gizmos_.Label(o + Off(1.1f, 0.85f, 0), "Matrices Z * X * Y", ToColor(kGreen * 1.2f));
                 const Vector3 ya = YawAxis() * 0.9f, ra = RollAxis() * 0.9f;
-                gizmos_.Arrow(o + Vector3(-1.1f, 0, 0), o + Vector3(-1.1f, 0, 0) + ya, Color(255, 220, 90, 255), 0.1f);
-                gizmos_.Arrow(o + Vector3(-1.1f, 0, 0), o + Vector3(-1.1f, 0, 0) + ra, Color(255, 120, 200, 255), 0.1f);
-                gizmos_.Label(o + Vector3(-1.1f, 0, 0) + ya + Vector3(0, 0.1f, 0), "yaw axis", Color(255, 230, 120, 255), 0.45f);
-                gizmos_.Label(o + Vector3(-1.1f, 0, 0) + ra + Vector3(0, -0.1f, 0), "roll axis", Color(255, 150, 215, 255), 0.45f);
+                gizmos_.Arrow(o + Off(-1.1f, 0, 0), o + Off(-1.1f, 0, 0) + ya, Color(255, 220, 90, 255), 0.1f);
+                gizmos_.Arrow(o + Off(-1.1f, 0, 0), o + Off(-1.1f, 0, 0) + ra, Color(255, 120, 200, 255), 0.1f);
+                gizmos_.Label(o + Off(-1.1f, 0, 0) + ya + Vector3(0, 0.1f, 0), "yaw axis", Color(255, 230, 120, 255), 0.45f);
+                gizmos_.Label(o + Off(-1.1f, 0, 0) + ra + Vector3(0, -0.1f, 0), "roll axis", Color(255, 150, 215, 255), 0.45f);
                 break;
             }
             case Mode::Slerp: {
-                DrawBody(ctx, Matrix::CreateFromQuaternion(A()) * Matrix::CreateTranslation(o + Vector3(-1.7f, 0, 0)), kRed);
-                DrawBody(ctx, Matrix::CreateFromQuaternion(B()) * Matrix::CreateTranslation(o + Vector3(1.7f, 0, 0)), kBlue);
+                DrawBody(ctx, Matrix::CreateFromQuaternion(A()) * Matrix::CreateTranslation(o + Off(-1.7f, 0, 0)), kRed);
+                DrawBody(ctx, Matrix::CreateFromQuaternion(B()) * Matrix::CreateTranslation(o + Off(1.7f, 0, 0)), kBlue);
                 DrawBody(ctx, Matrix::CreateFromQuaternion(Quaternion::Slerp(A(), B(), t_)) * Matrix::CreateTranslation(o + Vector3(0, 0.5f, 0)), kGold);
                 DrawBody(ctx, Matrix::CreateFromQuaternion(Quaternion::Normalize(Quaternion::Lerp(A(), B(), t_))) * Matrix::CreateTranslation(o + Vector3(0, -0.5f, 0)), kViolet);
-                gizmos_.Label(o + Vector3(-1.7f, 0.85f, 0), "A", ToColor(kRed * 1.3f));
-                gizmos_.Label(o + Vector3(1.7f, 0.85f, 0), "B", ToColor(kBlue * 1.3f));
-                gizmos_.Label(o + Vector3(0.9f, 0.5f, 0), "Slerp", ToColor(kGold));
-                gizmos_.Label(o + Vector3(0.9f, -0.5f, 0), "Lerp + Normalize", ToColor(kViolet * 1.2f));
+                gizmos_.Label(o + Off(-1.7f, 0.85f, 0), "A", ToColor(kRed * 1.3f));
+                gizmos_.Label(o + Off(1.7f, 0.85f, 0), "B", ToColor(kBlue * 1.3f));
+                gizmos_.Label(o + Off(0.9f, 0.5f, 0), "Slerp", ToColor(kGold));
+                gizmos_.Label(o + Off(0.9f, -0.5f, 0), "Lerp + Normalize", ToColor(kViolet * 1.2f));
                 break;
             }
             case Mode::AxisAngle: {
                 const Vector3 axis = AxisVector();
                 gizmos_.Arrow(o - axis * 1.1f, o + axis * 1.1f, Color(255, 220, 90, 255), 0.12f);
                 gizmos_.Label(o + axis * 1.2f, "axis", Color(255, 230, 120, 255), 0.5f);
-                DrawBody(ctx, Matrix::CreateFromQuaternion(Quaternion::Identity) * Matrix::CreateTranslation(o + Vector3(-1.8f, 0, 0)), kRed);
+                DrawBody(ctx, Matrix::CreateFromQuaternion(Quaternion::Identity) * Matrix::CreateTranslation(o + Off(-1.8f, 0, 0)), kRed);
                 DrawBody(ctx, Matrix::CreateFromQuaternion(Total()) * Matrix::CreateTranslation(o), kGold);
-                gizmos_.Label(o + Vector3(-1.8f, 0.85f, 0), "identity", ToColor(kRed * 1.3f));
+                gizmos_.Label(o + Off(-1.8f, 0.85f, 0), "identity", ToColor(kRed * 1.3f));
                 gizmos_.Label(o + Vector3(0, 0.85f, 0), second_ ? "q then q again" : "q", ToColor(kGold));
                 const Quaternion back = Quaternion::Concatenate(Total(), Quaternion::Inverse(Total()));
-                DrawBody(ctx, Matrix::CreateFromQuaternion(back) * Matrix::CreateTranslation(o + Vector3(1.8f, 0, 0)), kGreen);
-                gizmos_.Label(o + Vector3(1.8f, 0.85f, 0), "q then Inverse(q)", ToColor(kGreen * 1.2f));
+                DrawBody(ctx, Matrix::CreateFromQuaternion(back) * Matrix::CreateTranslation(o + Off(1.8f, 0, 0)), kGreen);
+                gizmos_.Label(o + Off(1.8f, 0.85f, 0), "q then Inverse(q)", ToColor(kGreen * 1.2f));
                 break;
             }
         }

@@ -143,7 +143,7 @@ public:
         } else if (lamp_ == 2) {
             lamp.Kind = PunctualLightKindEXT::Spot;
             lamp.Position = SpotPosition();
-            const Vector3 aim = centre + Vector3(std::sin(time_ * 0.8f) * 1.6f, -centre.Y + 0.1f, std::cos(time_ * 0.6f) * 1.2f);
+            const Vector3 aim = centre + Off(std::sin(time_ * 0.8f) * 1.6f, -centre.Y + 0.1f, std::cos(time_ * 0.6f) * 1.2f);
             lamp.Direction = Vector3::Normalize(aim - lamp.Position);
             lamp.DiffuseColor = Vector3(0.95f, 0.97f, 1.0f) * 1.6f;
             lamp.Range = 12.0f;

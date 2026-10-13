@@ -57,6 +57,8 @@ public:
     void Draw(const DrawContext& ctx);
 
     [[nodiscard]] float Height() const;   // metres
+    /** The direction the screen faces in the world (the pose is in the room's local frame). */
+    [[nodiscard]] float WorldYaw() const { return pose_.yaw + room_.frameYaw; }
     [[nodiscard]] Microsoft::Xna::Framework::Vector3 Centre() const { return room_.ToWorld(pose_.x, pose_.y, pose_.z); }
 
 private:

@@ -145,8 +145,8 @@ void ControlPanel::Load(InteractionSystem& interaction)
     dirty_ = true;
 
     const Vector3 centre = Centre();
-    const Vector3 r = Right(pose_.yaw) * (pose_.width * 0.5f);
-    const Vector3 n = Normal(pose_.yaw) * 0.25f;
+    const Vector3 r = Right(WorldYaw()) * (pose_.width * 0.5f);
+    const Vector3 n = Normal(WorldYaw()) * 0.25f;
     const float halfH = Height() * 0.5f;
     Interactable ia;
     const Vector3 a = centre - r - n - Vector3(0, halfH, 0);
@@ -167,7 +167,7 @@ int ControlPanel::RowAt(const Vector3& hit, float& xFraction) const
 {
     const Vector3 centre = Centre();
     const Vector3 rel = hit - centre;
-    const float u = Vector3::Dot(rel, Right(pose_.yaw)) / pose_.width + 0.5f;
+    const float u = Vector3::Dot(rel, Right(WorldYaw())) / pose_.width + 0.5f;
     const float v = 0.5f - rel.Y / Height();
     xFraction = u;
     const float py = v * Height() / pose_.width * static_cast<float>(pixelWidth_);
@@ -391,7 +391,7 @@ void ControlPanel::Draw(const DrawContext& ctx)
     if (!screen_ || !screen_->HasContent()) return;
     RenderStates::SetOpaque3D(ctx.device);
     const Vector3 centre = Centre();
-    const Vector3 r = Right(pose_.yaw) * pose_.width;
+    const Vector3 r = Right(WorldYaw()) * pose_.width;
     const Vector3 up(0, Height(), 0);
     QuadDraw::Textured(ctx, screen_->Texture(), centre - r * 0.5f - up * 0.5f, r, up);
 }

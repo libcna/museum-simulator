@@ -251,12 +251,12 @@ private:
             fx_->setAlphaProperty(alpha_);
             if (lighting_) fx_->EnableDefaultLighting();
             fx_->setLightingEnabledProperty(lighting_);
-            Camera(*fx_, ctx, Matrix::CreateRotationY(spin_) * Matrix::CreateRotationX(0.45f) * Matrix::CreateTranslation(o + Vector3(-1.4f + static_cast<float>(i % 2) * 2.8f, 0.9f - static_cast<float>(i / 2) * 1.9f, 0)));
+            Camera(*fx_, ctx, Matrix::CreateRotationY(spin_) * Matrix::CreateRotationX(0.45f) * Matrix::CreateTranslation(o + Off(-1.4f + static_cast<float>(i % 2) * 2.8f, 0.9f - static_cast<float>(i / 2) * 1.9f, 0)));
             d.setBlendStateProperty(alpha_ < 0.99f ? BlendState::NonPremultiplied : BlendState::Opaque);
             d.setRasterizerStateProperty(RasterizerState::CullNone);
             EffectBank::Apply(*fx_);
             d.DrawUserPrimitives(PrimitiveType::TriangleList, coloured_.data(), 0, 12);
-            gizmos_.Label(o + Vector3(-1.4f + static_cast<float>(i % 2) * 2.8f, 1.5f - static_cast<float>(i / 2) * 1.9f, 0), std::string(tex ? "texture" : "no texture") + ", " + (vc ? "vertex colour" : "no vertex colour"), Color(255, 230, 150, 255), 0.5f);
+            gizmos_.Label(o + Off(-1.4f + static_cast<float>(i % 2) * 2.8f, 1.5f - static_cast<float>(i / 2) * 1.9f, 0), std::string(tex ? "texture" : "no texture") + ", " + (vc ? "vertex colour" : "no vertex colour"), Color(255, 230, 150, 255), 0.5f);
         }
         d.setBlendStateProperty(BlendState::Opaque);
     }
@@ -306,8 +306,8 @@ private:
         ctx.device.setRasterizerStateProperty(RasterizerState::CullClockwise);
         DrawSphere(ctx, Matrix::CreateScale(2.2f) * Matrix::CreateRotationY(spin_) * Matrix::CreateTranslation(o), S().shapes->Sphere());
         const float y = MathHelper::ToRadians(yaw_);
-        gizmos_.Arrow(o - Vector3(std::cos(y), -0.7f, std::sin(y)) * 1.8f, o - Vector3(std::cos(y), -0.7f, std::sin(y)) * 1.2f, Color(255, 150, 130, 255), 0.15f);
-        gizmos_.Label(o - Vector3(std::cos(y), -0.7f, std::sin(y)) * 1.9f, "light 0", Color(255, 170, 150, 255), 0.5f);
+        gizmos_.Arrow(o - Off(std::cos(y), -0.7f, std::sin(y)) * 1.8f, o - Off(std::cos(y), -0.7f, std::sin(y)) * 1.2f, Color(255, 150, 130, 255), 0.15f);
+        gizmos_.Label(o - Off(std::cos(y), -0.7f, std::sin(y)) * 1.9f, "light 0", Color(255, 170, 150, 255), 0.5f);
     }
 
     void DrawMaterial(const DrawContext& ctx, const Vector3& o)
@@ -324,8 +324,8 @@ private:
             fx_->setEmissiveColorProperty(Vector3(emissive_ * 0.4f, emissive_ * 0.3f, emissive_ * 0.1f));
             ctx.device.setRasterizerStateProperty(RasterizerState::CullClockwise);
             const float x = -3.2f + static_cast<float>(i) * 1.6f;
-            DrawSphere(ctx, Matrix::CreateScale(1.35f) * Matrix::CreateTranslation(o + Vector3(x, 0, 0)), S().shapes->Sphere());
-            gizmos_.Label(o + Vector3(x, 0.95f, 0), "power " + std::to_string(static_cast<int>(powers[i])), Color(255, 230, 150, 255), 0.5f);
+            DrawSphere(ctx, Matrix::CreateScale(1.35f) * Matrix::CreateTranslation(o + Off(x, 0, 0)), S().shapes->Sphere());
+            gizmos_.Label(o + Off(x, 0.95f, 0), "power " + std::to_string(static_cast<int>(powers[i])), Color(255, 230, 150, 255), 0.5f);
         }
     }
 
@@ -350,8 +350,8 @@ private:
             fx_->setPreferPerPixelLightingProperty(i == 1);
             ctx.device.setRasterizerStateProperty(RasterizerState::CullClockwise);
             const float x = -1.6f + static_cast<float>(i) * 3.2f;
-            DrawSphere(ctx, Matrix::CreateScale(2.4f) * Matrix::CreateTranslation(o + Vector3(x, 0, 0)), *coarse_);
-            gizmos_.Label(o + Vector3(x, 1.4f, 0), i == 0 ? "per-vertex" : "PreferPerPixelLighting", Color(255, 230, 150, 255), 0.55f);
+            DrawSphere(ctx, Matrix::CreateScale(2.4f) * Matrix::CreateTranslation(o + Off(x, 0, 0)), *coarse_);
+            gizmos_.Label(o + Off(x, 1.4f, 0), i == 0 ? "per-vertex" : "PreferPerPixelLighting", Color(255, 230, 150, 255), 0.55f);
         }
     }
 
@@ -388,7 +388,7 @@ private:
         GraphicsDevice& d = ctx.device;
         // Three overlapping spheres; the "sorted" order is farthest first from the visitor.
         struct S3 { Vector3 pos; Vector3 colour; };
-        S3 items[3] = {{o + Vector3(-0.9f, 0, 0.6f), {0.95f, 0.3f, 0.25f}}, {o + Vector3(0, 0, 0), {0.3f, 0.9f, 0.35f}}, {o + Vector3(0.9f, 0, -0.6f), {0.3f, 0.5f, 1.0f}}};
+        S3 items[3] = {{o + Off(-0.9f, 0, 0.6f), {0.95f, 0.3f, 0.25f}}, {o + Vector3(0, 0, 0), {0.3f, 0.9f, 0.35f}}, {o + Off(0.9f, 0, -0.6f), {0.3f, 0.5f, 1.0f}}};
         if (sorted_ && S().mainView != nullptr)
             std::sort(items, items + 3, [&](const S3& a, const S3& b) { return Vector3::DistanceSquared(a.pos, S().mainView->eye) > Vector3::DistanceSquared(b.pos, S().mainView->eye); });
         d.setBlendStateProperty(BlendState::NonPremultiplied);
@@ -412,7 +412,7 @@ private:
         GraphicsDevice& d = ctx.device;
         const Vector3 centre = R().ToWorld(0.0f, 0.0f, 0.0f);
         const float t = move_ ? time_ : 0.0f;
-        const Vector3 lamp = centre + Vector3(std::cos(t * 0.8f) * 3.0f, height_, std::sin(t * 0.8f) * 3.0f);
+        const Vector3 lamp = centre + Off(std::cos(t * 0.8f) * 3.0f, height_, std::sin(t * 0.8f) * 3.0f);
         ResetFx(*fx_);
         fx_->setLightingEnabledProperty(true);
         fx_->setTextureEnabledProperty(true);
@@ -440,7 +440,7 @@ private:
         S().shapes->Plane().Draw(d);
         for (int i = 0; i < 5; ++i) {
             const float a = static_cast<float>(i) / 5.0f * MathHelper::TwoPi;
-            Camera(*fx_, ctx, Matrix::CreateScale(0.7f, 0.9f + 0.2f * static_cast<float>(i % 3), 0.7f) * Matrix::CreateTranslation(centre + Vector3(std::cos(a) * 2.4f, 0.03f, std::sin(a) * 2.4f)));
+            Camera(*fx_, ctx, Matrix::CreateScale(0.7f, 0.9f + 0.2f * static_cast<float>(i % 3), 0.7f) * Matrix::CreateTranslation(centre + Off(std::cos(a) * 2.4f, 0.03f, std::sin(a) * 2.4f)));
             EffectBank::Apply(*fx_);
             (i % 2 ? S().shapes->Cylinder() : S().shapes->Cone()).Draw(d);
         }
@@ -511,7 +511,7 @@ private:
         // The parameters the effect reports, as labels.
         EffectParameterCollection& params = fx_->getParametersProperty();
         for (int i = 0; i < std::min(params.getCountProperty(), 8); ++i)
-            gizmos_.Label(o + Vector3(2.0f, 1.2f - static_cast<float>(i) * 0.3f, 0), params[i]->getNameProperty(), Color(180, 230, 255, 255), 0.45f);
+            gizmos_.Label(o + Off(2.0f, 1.2f - static_cast<float>(i) * 0.3f, 0), params[i]->getNameProperty(), Color(180, 230, 255, 255), 0.45f);
     }
 
     Mode mode_;

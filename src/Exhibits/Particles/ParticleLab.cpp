@@ -171,15 +171,15 @@ public:
         switch (static_cast<Pattern>(pattern_)) {
             case Pattern::Ring: {
                 const float a = Rand(0, MathHelper::TwoPi);
-                return base + Vector3(std::cos(a), 0, std::sin(a)) * std::max(0.2f, P.spawnRadius);
+                return base + Off(std::cos(a), 0, std::sin(a)) * std::max(0.2f, P.spawnRadius);
             }
-            case Pattern::Box: return base + Vector3(Rand(-3.5f, 3.5f), Rand(0.0f, 0.4f), Rand(-3.5f, 3.5f)) * (P.spawnRadius > 1.0f ? 1.0f : 0.5f);
+            case Pattern::Box: return base + Off(Rand(-3.5f, 3.5f), Rand(0.0f, 0.4f), Rand(-3.5f, 3.5f)) * (P.spawnRadius > 1.0f ? 1.0f : 0.5f);
             case Pattern::Sphere: {
                 Vector3 d(Rand(-1, 1), Rand(-1, 1), Rand(-1, 1));
                 if (d.LengthSquared() < 1e-4f) d = Vector3(0, 1, 0);
                 return base + Vector3::Normalize(d) * std::max(0.2f, P.spawnRadius);
             }
-            default: return base + Vector3(Rand(-1, 1), 0, Rand(-1, 1)) * (static_cast<Pattern>(pattern_) == Pattern::Cone ? P.spawnRadius * 0.3f : 0.0f);
+            default: return base + Off(Rand(-1, 1), 0, Rand(-1, 1)) * (static_cast<Pattern>(pattern_) == Pattern::Cone ? P.spawnRadius * 0.3f : 0.0f);
         }
     }
     Vector3 Direction(const Vector3& from)

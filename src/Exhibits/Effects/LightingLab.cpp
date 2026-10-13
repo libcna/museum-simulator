@@ -110,7 +110,7 @@ public:
         switch (mode_) {
             case Mode::Types: DrawTypes(ctx, centre); break;
             case Mode::Falloff: {
-                Lamp l{centre + Vector3(-4.0f, 1.4f, 0), Vector3(1.0f, 0.9f, 0.7f) * intensity_, range_};
+                Lamp l{centre + Off(-4.0f, 1.4f, 0), Vector3(1.0f, 0.9f, 0.7f) * intensity_, range_};
                 DrawLit(ctx, centre, {l}, 0.05f);
                 if (showRange_) gizmos_.Sphere(BoundingSphere(l.position, range_), Color(255, 220, 130, 255), 40);
                 gizmos_.SolidSphere(ctx, l.position, 0.12f, Vector3(1, 0.9f, 0.5f));
@@ -122,7 +122,7 @@ public:
                 for (int i = 0; i < 3; ++i)
                     if (on_[i]) {
                         const float a = time_ + static_cast<float>(i) * 2.094f;
-                        lamps.push_back({centre + Vector3(std::cos(a) * 2.2f, 1.6f, std::sin(a) * 2.2f), cols[i] * intensity_, 6.0f});
+                        lamps.push_back({centre + Off(std::cos(a) * 2.2f, 1.6f, std::sin(a) * 2.2f), cols[i] * intensity_, 6.0f});
                         gizmos_.SolidSphere(ctx, lamps.back().position, 0.12f, cols[i]);
                     }
                 DrawLit(ctx, centre, lamps, 0.03f);
@@ -133,7 +133,7 @@ public:
                 for (int i = 0; i < count_; ++i) {
                     const float a = time_ * 0.5f + static_cast<float>(i) * 0.8f, r = 1.0f + 0.14f * static_cast<float>(i % 12);
                     const Vector3 c = Vector3(0.5f + 0.5f * std::sin(static_cast<float>(i) * 1.7f), 0.5f + 0.5f * std::sin(static_cast<float>(i) * 2.3f + 1.0f), 0.5f + 0.5f * std::sin(static_cast<float>(i) * 3.1f + 2.0f));
-                    lamps.push_back({centre + Vector3(std::cos(a) * r * 1.9f, 1.0f + 0.5f * std::sin(a * 1.3f), std::sin(a) * r * 1.9f), c * 1.6f, 3.2f});
+                    lamps.push_back({centre + Off(std::cos(a) * r * 1.9f, 1.0f + 0.5f * std::sin(a * 1.3f), std::sin(a) * r * 1.9f), c * 1.6f, 3.2f});
                 }
                 DrawLit(ctx, centre, lamps, 0.03f);
                 break;
@@ -221,12 +221,12 @@ private:
         for (int i = 0; i < 6; ++i) {
             const float x = -4.0f + static_cast<float>(i) * 1.6f;
             const float z = (i % 2 == 0) ? -2.2f : 2.2f;
-            const Matrix m = Matrix::CreateScale(0.8f, 1.0f + 0.5f * static_cast<float>(i % 3), 0.8f) * Matrix::CreateTranslation(centre + Vector3(x, 0.03f, z));
+            const Matrix m = Matrix::CreateScale(0.8f, 1.0f + 0.5f * static_cast<float>(i % 3), 0.8f) * Matrix::CreateTranslation(centre + Off(x, 0.03f, z));
             const LitMesh& mesh = (i % 3 == 0) ? S().shapes->Cylinder() : (i % 3 == 1 ? S().shapes->Cone() : S().shapes->Cylinder());
             item(m, Vector3(0.9f, 0.8f - 0.1f * static_cast<float>(i % 3), 0.7f), mesh);
         }
         item(Matrix::CreateScale(1.1f) * Matrix::CreateTranslation(centre + Vector3(0, 0.65f, 0)), Vector3(0.8f, 0.85f, 0.95f), S().shapes->Sphere());
-        item(Matrix::CreateScale(0.9f) * Matrix::CreateRotationY(0.6f) * Matrix::CreateTranslation(centre + Vector3(2.4f, 0.48f, 0.6f)), Vector3(0.9f, 0.9f, 0.6f), S().shapes->Cube());
+        item(Matrix::CreateScale(0.9f) * Matrix::CreateRotationY(0.6f) * Matrix::CreateTranslation(centre + Off(2.4f, 0.48f, 0.6f)), Vector3(0.9f, 0.9f, 0.6f), S().shapes->Cube());
         fx.setPunctualLightEXT(PunctualLightEXT{});
     }
 
@@ -255,9 +255,9 @@ private:
         GraphicsDevice& d = ctx.device;
         for (int i = 0; i < 3; ++i) {
             const float x = -3.4f + static_cast<float>(i) * 3.4f;
-            const Vector3 base = centre + Vector3(x, 0, 0);
+            const Vector3 base = centre + Off(x, 0, 0);
             const float a = move_ ? time_ : 0.0f;
-            const Vector3 lamp = base + Vector3(std::cos(a) * 1.8f, height_, std::sin(a) * 1.8f);
+            const Vector3 lamp = base + Off(std::cos(a) * 1.8f, height_, std::sin(a) * 1.8f);
             for (int pass = 0; pass < 2; ++pass) {
                 BasicEffect& fx = Prepare(ctx, Matrix::CreateScale(pass == 0 ? Vector3(3.0f, 1.0f, 3.0f) : Vector3(1.2f)) * Matrix::CreateTranslation(base + Vector3(0, pass == 0 ? 0.03f : 0.9f, 0)),
                                           Vector3(0.85f, 0.85f, 0.9f), Vector3(0.05f, 0.05f, 0.07f));
@@ -294,7 +294,7 @@ private:
         const Vector3 cols[3] = {{1.0f, 0.4f, 0.2f}, {0.3f, 1.0f, 0.5f}, {0.4f, 0.5f, 1.0f}};
         for (int i = 0; i < 6; ++i) {
             const bool glow = i < 3;
-            const Vector3 p = centre + Vector3(-3.6f + static_cast<float>(i) * 1.45f, 0.7f, 0.0f);
+            const Vector3 p = centre + Off(-3.6f + static_cast<float>(i) * 1.45f, 0.7f, 0.0f);
             BasicEffect& fx = Prepare(ctx, Matrix::CreateScale(1.0f) * Matrix::CreateRotationY(time_ * 0.5f) * Matrix::CreateTranslation(p), cols[i % 3] * 0.6f, Vector3(0.04f, 0.04f, 0.06f));
             if (glow) fx.setEmissiveColorProperty(cols[i % 3] * emissive_);
             EffectBank::Apply(fx);
@@ -310,8 +310,8 @@ private:
                 d.setDepthStencilStateProperty(DepthStencilState::Default);
             }
         }
-        gizmos_.Label(centre + Vector3(-2.2f, 1.9f, 0), "EmissiveColor set", Color(255, 230, 150, 255), 0.55f);
-        gizmos_.Label(centre + Vector3(2.2f, 1.9f, 0), "diffuse only", Color(255, 230, 150, 255), 0.55f);
+        gizmos_.Label(centre + Off(-2.2f, 1.9f, 0), "EmissiveColor set", Color(255, 230, 150, 255), 0.55f);
+        gizmos_.Label(centre + Off(2.2f, 1.9f, 0), "diffuse only", Color(255, 230, 150, 255), 0.55f);
     }
 
     Mode mode_;

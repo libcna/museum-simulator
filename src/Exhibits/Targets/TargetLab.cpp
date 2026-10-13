@@ -152,7 +152,7 @@ public:
         const Vector3 stage = R().ToWorld(0.0f, 0.02f, 0.0f);
         const auto scene = [this, stage](const DrawContext& sub) { DrawDiorama(sub, S(), stage, time_, 2.4f); };
         const auto camera = [&](float angle, float radius, float height, Matrix& v, Vector3& eye) {
-            eye = stage + Vector3(std::cos(angle) * radius, height, std::sin(angle) * radius);
+            eye = stage + Off(std::cos(angle) * radius, height, std::sin(angle) * radius);
             v = Matrix::CreateLookAt(eye, stage + Vector3(0, 0.4f, 0), Vector3::Up);
         };
         switch (mode_) {
@@ -285,7 +285,7 @@ private:
                           ang, Vector2(320, 180), 0.9f, SpriteEffects::None, 0.0f);
         S().sprites->End();
         const Vector3 stage = R().ToWorld(0.0f, 0.02f, 0.0f);
-        const Vector3 eye = stage + Vector3(std::cos(time_ * 0.5f) * 4.0f, 2.2f, std::sin(time_ * 0.5f) * 4.0f);
+        const Vector3 eye = stage + Off(std::cos(time_ * 0.5f) * 4.0f, 2.2f, std::sin(time_ * 0.5f) * 4.0f);
         const Matrix view = Matrix::CreateLookAt(eye, stage + Vector3(0, 0.4f, 0), Vector3::Up);
         const Matrix proj = Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(55.0f), 16.0f / 9.0f, 0.1f, 60.0f);
         const SceneView sv(view, proj, eye);
@@ -370,7 +370,7 @@ private:
     {
         GraphicsDevice& d = ctx.device;
         const Vector3 stage = R().ToWorld(0.0f, 0.02f, 0.0f);
-        const Vector3 eye = stage + Vector3(std::cos(time_ * 0.4f) * 4.5f, 2.4f, std::sin(time_ * 0.4f) * 4.5f);
+        const Vector3 eye = stage + Off(std::cos(time_ * 0.4f) * 4.5f, 2.4f, std::sin(time_ * 0.4f) * 4.5f);
         source_->Render(ctx, Matrix::CreateLookAt(eye, stage + Vector3(0, 0.4f, 0), Vector3::Up), Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(55.0f), source_->Aspect(), 0.1f, 60.0f), eye, scene);
         if (!effect_ || !effect_->IsEffectValid() || !d.SupportsCapability(CNA::GraphicsCapability::MultipleRenderTargets)) return;
         const std::vector<RenderTargetBinding> bindings = {RenderTargetBinding(gray_.get()), RenderTargetBinding(edge_.get())};

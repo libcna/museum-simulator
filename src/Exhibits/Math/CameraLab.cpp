@@ -164,7 +164,7 @@ public:
             }
             default: {
                 const Pose p = Current();
-                Matrix view = Matrix::CreateLookAt(p.eye, p.target, mode_ == Mode::TopDown ? Vector3(0, 0, -1) : Vector3::Up);
+                Matrix view = Matrix::CreateLookAt(p.eye, p.target, mode_ == Mode::TopDown ? Off(0, 0, -1) : Vector3::Up);
                 Matrix proj;
                 if (mode_ == Mode::TopDown && ortho_) proj = Matrix::CreateOrthographic(size_, size_ / aspect, 0.5f, 40.0f);
                 else if (mode_ == Mode::Clip) proj = Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(60.0f), aspect, near_, far_);
@@ -180,18 +180,18 @@ public:
         // The live screens.
         const Vector3 centre = R().ToWorld(0.0f, 1.9f, -5.2f);
         if (mode_ == Mode::Fov) {
-            a_->DrawInRoom(ctx, R().ToWorld(-2.0f, 1.9f, -5.2f), 0.0f, 3.5f);
-            b_->DrawInRoom(ctx, R().ToWorld(2.0f, 1.9f, -5.2f), 0.0f, 3.5f);
+            a_->DrawInRoom(ctx, R().ToWorld(-2.0f, 1.9f, -5.2f), R().frameYaw, 3.5f);
+            b_->DrawInRoom(ctx, R().ToWorld(2.0f, 1.9f, -5.2f), R().frameYaw, 3.5f);
             gizmos_.Label(R().ToWorld(-2.0f, 3.9f, -5.2f), "FOV " + std::to_string(static_cast<int>(fov_)), Color(255, 230, 120, 255));
             gizmos_.Label(R().ToWorld(2.0f, 3.9f, -5.2f), "FOV " + std::to_string(static_cast<int>(fov2_)), Color(255, 230, 120, 255));
         } else if (mode_ == Mode::Mirror && a_ && a_->HasContent()) {
             RenderStates::SetOpaque3D(ctx.device);
             ctx.device.setRasterizerStateProperty(RasterizerState::CullNone);
-            const Vector3 r(1.0f * (flip_ ? -1.0f : 1.0f) * 4.0f, 0, 0), up(0, 4.0f / a_->Aspect(), 0);
+            const Vector3 r = Off(1.0f * (flip_ ? -1.0f : 1.0f) * 4.0f, 0, 0), up(0, 4.0f / a_->Aspect(), 0);
             const Vector3 o = centre - r * 0.5f - up * 0.5f;
             QuadDraw::Textured(ctx, a_->Texture(), o, r, up);
         } else if (a_) {
-            a_->DrawInRoom(ctx, centre, 0.0f, mode_ == Mode::Split ? 5.0f : 4.4f);
+            a_->DrawInRoom(ctx, centre, R().frameYaw, mode_ == Mode::Split ? 5.0f : 4.4f);
         }
         gizmos_.Flush(ctx);
     }
@@ -355,7 +355,7 @@ private:
         const float aspect = 16.0f / 9.0f;
         Matrix proj = Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(mode_ == Mode::Fov ? fov_ : (mode_ == Mode::Security ? fov_ : 60.0f)), aspect, 0.3f, mode_ == Mode::Clip ? near_ + (far_ - near_) * 0.2f : 3.0f);
         if (mode_ == Mode::Clip) proj = Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(60.0f), aspect, near_, far_);
-        gizmos_.Frustum(BoundingFrustum(Matrix::CreateLookAt(p.eye, p.target, mode_ == Mode::TopDown ? Vector3(0, 0, -1) : Vector3::Up) * proj), Color(255, 200, 80, 255));
+        gizmos_.Frustum(BoundingFrustum(Matrix::CreateLookAt(p.eye, p.target, mode_ == Mode::TopDown ? Off(0, 0, -1) : Vector3::Up) * proj), Color(255, 200, 80, 255));
         gizmos_.Label(p.eye + Vector3(0, 0.25f, 0), "camera", ToColor(kRed * 1.3f), 0.5f);
     }
 

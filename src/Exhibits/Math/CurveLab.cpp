@@ -133,8 +133,8 @@ private:
 
     void DrawEasing(const DrawContext&, const Vector3& o)
     {
-        const Vector3 base = o + Vector3(-1.5f, -0.7f, 0);
-        const auto at = [&](float x, float y) { return base + Vector3(x * 3.0f, y * 1.6f, 0); };
+        const Vector3 base = o + Off(-1.5f, -0.7f, 0);
+        const auto at = [&](float x, float y) { return base + Off(x * 3.0f, y * 1.6f, 0); };
         gizmos_.Line(at(0, 0), at(1, 0), Color(160, 160, 190, 255));
         gizmos_.Line(at(0, 0), at(0, 1), Color(160, 160, 190, 255));
         gizmos_.Line(at(1, 0), at(1, 1), Color(70, 70, 90, 255));
@@ -194,8 +194,8 @@ private:
 
     void DrawCurveClass(const DrawContext&, const Vector3& o)
     {
-        const Vector3 base = o + Vector3(-1.8f, -0.7f, 0);
-        const auto at = [&](float x, float y) { return base + Vector3(x * 0.45f, y * 1.4f, 0); };
+        const Vector3 base = o + Off(-1.8f, -0.7f, 0);
+        const auto at = [&](float x, float y) { return base + Off(x * 0.45f, y * 1.4f, 0); };
         gizmos_.Line(at(0, 0), at(8, 0), Color(140, 140, 170, 255));
         gizmos_.Line(at(0, -0.3f), at(0, 1.3f), Color(140, 140, 170, 255));
         Vector3 prev = at(-1.0f, curve_.Evaluate(-1.0f));

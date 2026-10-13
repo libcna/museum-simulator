@@ -124,11 +124,35 @@ struct RoomDef {
 
     [[nodiscard]] Microsoft::Xna::Framework::Vector3 Center() const { return centre; }
     [[nodiscard]] Microsoft::Xna::Framework::BoundingBox Interior() const;
+    /**
+     * Turn of the room's local frame about its centre (0, or pi for a room entered through its north wall).
+     * Local coordinates are what exhibits are written in: the door is always on the local south wall and
+     * the far wall (where screens hang) is always the local north wall, whichever side of the gallery the
+     * room is on. Everything that places furniture or content goes through ToWorld, Rotate and LocalWall.
+     */
+    float frameYaw = 0.0f;
+    [[nodiscard]] bool Turned() const { return frameYaw != 0.0f; }
     /** Room-local metres (x east, z south, y above the floor) -> world. */
     [[nodiscard]] Microsoft::Xna::Framework::Vector3 ToWorld(float x, float y, float z) const
     {
+        return Turned() ? Microsoft::Xna::Framework::Vector3(centre.X - x, centre.Y + y, centre.Z - z)
+                        : Microsoft::Xna::Framework::Vector3(centre.X + x, centre.Y + y, centre.Z + z);
+    }
+    /** Room centre plus a world-axis offset (ignores the local frame): for code that works in world walls. */
+    [[nodiscard]] Microsoft::Xna::Framework::Vector3 WorldAt(float x, float y, float z) const
+    {
         return Microsoft::Xna::Framework::Vector3(centre.X + x, centre.Y + y, centre.Z + z);
     }
+    /** A local direction or offset -> world direction. */
+    [[nodiscard]] Microsoft::Xna::Framework::Vector3 Rotate(const Microsoft::Xna::Framework::Vector3& v) const
+    {
+        return Turned() ? Microsoft::Xna::Framework::Vector3(-v.X, v.Y, -v.Z) : v;
+    }
+    /** The world wall a local wall lies on, and the local wall a world wall appears as. */
+    [[nodiscard]] Wall WorldWall(Wall local) const { return Turned() ? Opposite(local) : local; }
+    [[nodiscard]] Wall LocalWall(Wall world) const { return Turned() ? Opposite(world) : world; }
+    /** An offset along a wall (x for north/south walls, z for east/west) in the other frame. */
+    [[nodiscard]] float AlongSign() const { return Turned() ? -1.0f : 1.0f; }
     [[nodiscard]] bool Contains(const Microsoft::Xna::Framework::Vector3& p, float margin = 0.0f) const;
     /** The portal volume of a door, in world space. */
     [[nodiscard]] Microsoft::Xna::Framework::BoundingBox DoorBounds(const DoorDef& door) const;

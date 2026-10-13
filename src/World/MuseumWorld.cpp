@@ -228,6 +228,9 @@ void MuseumWorld::Activate(int cell, const Vector3& position, bool synchronous)
 
 void MuseumWorld::Arrive(int cell)
 {
+    // A teleport (quick travel, the elevator, a script) leaves the old room without walking out of its door.
+    if (current_ >= 0 && current_ != cell)
+        if (Exhibit* e = FindExhibit(current_)) e->OnLeave();
     current_ = cell;
     const RoomDef& r = museum_.Room(cell);
     Activate(cell, r.centre, true);

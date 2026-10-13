@@ -68,6 +68,13 @@ texture is bound (`RenderStates::UnbindTextures`).
 
 ## Museum bugs found and fixed this session
 
+- **Half of the rooms were back to front.** Rooms alternate between the two sides of a gallery; every exhibit was written
+  for "enter through the south door, screens on the north wall", so a room entered through its north door had its content
+  behind the visitor, left/right captions swapped and some screens facing away. Fixed at the root: those rooms (108, see
+  `--list-turned-rooms`) get a turned local frame (`RoomDef::frameYaw`, `ToWorld`, `Rotate`, `LocalWall`, `Exhibit::Off`);
+  `docs/ARCHITECTURE.md` has the rules for new exhibit code, `museum_tests` (`TestRoomFrames`) guards the invariant.
+- Teleports (quick travel, elevator, scripts) never called `OnLeave` on the room being left, so e.g. the Game Components
+  badges stayed on screen in the next room. `MuseumWorld::Arrive` now calls it.
 - The mouse-look fallback treated "no pointer" (SOFTWARE has no window) as a gigantic movement; fixed, and keyboard look added
   (Left/Right, Page Up/Down). This had been misdiagnosed as a SOFTWARE rendering bug.
 - Panel text/readouts that silently depended on another room's effect state (black floors); labs now set everything they use.
@@ -76,7 +83,7 @@ texture is bound (`RenderStates::UnbindTextures`).
 
 ## What is next (priority order)
 
-1. **Gaps listed in `docs/CNA_COVERAGE.md`**: SkinnedEffect, ResourceContentManager, haptic effects. (Occlusion queries,
+1. **Gaps listed in `docs/CNA_COVERAGE.md`**: ResourceContentManager, haptic effects (SkinnedEffect now has `model-skinfx`). (Occlusion queries,
    multisampling, image-based lighting, morph targets, material variants, shader packages, touch gestures and
    GameServiceContainer were added after the first audit.)
 2. **Navigation**: stairs/escalators are not implemented (elevators and the directory move you between floors); a

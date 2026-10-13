@@ -154,7 +154,7 @@ public:
         } else if (mode_ == Mode::Perspective && viewA_) {
             viewA_->Render(ctx, PerspectiveView(), ProjectionMatrix(), PerspectiveEye(), scene);
         } else if (mode_ == Mode::Ortho && viewA_ && viewB_) {
-            const Vector3 eye = c + Vector3(0, 3.0f, 8.0f);
+            const Vector3 eye = c + Off(0, 3.0f, 8.0f);
             const Matrix view = Matrix::CreateLookAt(eye, c + Vector3(0, 0.5f, 0), Vector3::Up);
             viewA_->Render(ctx, view, Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(50.0f), viewA_->Aspect(), near_, far_ + 6.0f), eye, scene);
             viewB_->Render(ctx, view, OrthoMatrix(), eye, scene);
@@ -289,7 +289,7 @@ private:
     {
         const Matrix base = Matrix::CreateTranslation(o);
         gizmos_.Axes(base, 0.9f);
-        gizmos_.Label(o + Vector3(0.95f, 0, 0), "world X", Color(255, 130, 120, 255), 0.5f);
+        gizmos_.Label(o + Off(0.95f, 0, 0), "world X", Color(255, 130, 120, 255), 0.5f);
         DrawBlock(ctx, Combined(order_) * base, kBlue, 1.0f);
         gizmos_.Label(Vector3::Transform(Vector3(0, 0.75f, 0), Combined(order_) * base), order_ == 0 ? "S * R * T" : "T * R * S", ToColor(kGold));
         RenderStates::SetTransparent3D(ctx.device, BlendState::NonPremultiplied);
@@ -325,7 +325,7 @@ private:
         Matrix inv;
         Matrix::Invert(view, inv);
         gizmos_.Axes(inv, 0.6f);
-        viewA_->DrawInRoom(ctx, R().ToWorld(3.8f, 1.9f, -3.2f), -MathHelper::PiOver2 * 0.6f, 2.6f);
+        viewA_->DrawInRoom(ctx, R().ToWorld(3.8f, 1.9f, -3.2f), -MathHelper::PiOver2 * 0.6f + R().frameYaw, 2.6f);
     }
 
     void DrawPerspective(const DrawContext& ctx)
@@ -334,14 +334,14 @@ private:
         DrawDiorama(ctx, S(), c, time_, 3.0f);
         gizmos_.Frustum(BoundingFrustum(PerspectiveView() * ProjectionMatrix()), Color(255, 200, 80, 255));
         gizmos_.SolidSphere(ctx, PerspectiveEye(), 0.1f, kRed);
-        viewA_->DrawInRoom(ctx, R().ToWorld(3.8f, 1.9f, -3.2f), -MathHelper::PiOver2 * 0.6f, 2.6f);
+        viewA_->DrawInRoom(ctx, R().ToWorld(3.8f, 1.9f, -3.2f), -MathHelper::PiOver2 * 0.6f + R().frameYaw, 2.6f);
     }
 
     void DrawOrtho(const DrawContext& ctx)
     {
         DrawDiorama(ctx, S(), DioramaOrigin(), time_, 3.0f);
-        viewA_->DrawInRoom(ctx, R().ToWorld(2.6f, 2.0f, -4.6f), -MathHelper::PiOver2 * 0.35f, 2.3f);
-        viewB_->DrawInRoom(ctx, R().ToWorld(4.7f, 2.0f, -0.4f), -MathHelper::PiOver2 * 0.8f, 2.3f);
+        viewA_->DrawInRoom(ctx, R().ToWorld(2.6f, 2.0f, -4.6f), -MathHelper::PiOver2 * 0.35f + R().frameYaw, 2.3f);
+        viewB_->DrawInRoom(ctx, R().ToWorld(4.7f, 2.0f, -0.4f), -MathHelper::PiOver2 * 0.8f + R().frameYaw, 2.3f);
     }
 
     void DrawProject(const DrawContext& ctx, const Vector3& o)

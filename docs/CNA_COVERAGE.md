@@ -37,7 +37,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 
 | Feature | Status |
 |---|---|
-| `SkinnedEffect` (the glTF skinned models use `SkinnedPbrEffect`), `ResourceContentManager`, haptic effects (devices are listed, none played) | planned: see HANDOFF.md |
+| `ResourceContentManager`, haptic effects (devices are listed, none played) | planned: see HANDOFF.md |
 | XACT audio (`AudioEngine`, `SoundBank`, `WaveBank`, `Cue`) | not implemented: it needs `.xgs`/`.xwb`/`.xsb` files from Microsoft's XACT authoring tool; no sample files ship with CNA and none can be generated here |
 | `MediaLibrary`, albums, playlists, pictures (`Microsoft.Xna.Framework.Media`) | not implemented: they describe a device's media store, which a desktop does not have |
 | Video playback (`VideoPlayer`) | not implemented: needs CNA_ENABLE_VIDEO (FFmpeg), which this build leaves off |
@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-457 distinct API names are claimed by at least one room.
+461 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -268,7 +268,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | IPackedVector | `vt-packed` |
 | IShadowReceiverEXT | `cx-shadow` |
 | ImageBasedLightEXT | `model-ibl` |
-| IndexBuffer | `particles`, `geo-indexed`, `geo-procedural`, `geo-index32`, `geo-dynindex`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic` |
+| IndexBuffer | `particles`, `geo-indexed`, `geo-procedural`, `geo-index32`, `geo-dynindex`, `model-skinfx`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic` |
 | IndexElementSize | `geo-index32` |
 | InputDevices.GetMiceEXT | `in-devices` |
 | Joysticks.GetCapabilitiesEXT | `in-joystick` |
@@ -427,6 +427,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ShaderPackageEXT.selectFor | `cx-package` |
 | ShadowCascadeStateEXT | `cx-shadow` |
 | Short4 | `vt-packed` |
+| SkinnedEffect | `model-skinfx` |
+| SkinnedEffect.SetBoneTransforms | `model-skinfx` |
+| SkinnedEffect.WeightsPerVertex | `model-skinfx` |
 | SkinnedPbrEffect.SetBoneTransforms | `model-skinned` |
 | SkinningData | `model-skinned` |
 | Snapshot.metrics | `cx-stats` |
@@ -501,11 +504,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Vector3.SmoothStep | `vec-lerp`, `cam-transition` |
 | Vector3.Subtract | `vec-add` |
 | Vector4.Transform | `mat-screen` |
-| VertexBuffer | `geo-indexed`, `geo-procedural`, `geo-manybuffers`, `pf-buffers` |
+| VertexBuffer | `geo-indexed`, `geo-procedural`, `geo-manybuffers`, `model-skinfx`, `pf-buffers` |
 | VertexBufferBinding | `geo-instancing`, `pf-objects` |
 | VertexPositionColor | `geo-triangle` |
 | VertexPositionColorTexture | `tex-uv`, `an-conveyor` |
 | VertexPositionNormalTexture | `geo-dynamic` |
+| VertexPositionNormalTextureSkinned | `model-skinfx` |
 | Viewport | `app-viewport`, `cam-split` |
 | Viewport.Project | `mat-screen`, `text-labels` |
 | XNA 4.0 | `hist-xna`, `hist-compare` |

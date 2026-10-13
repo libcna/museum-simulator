@@ -6,6 +6,10 @@ using namespace Microsoft::Xna::Framework;
 
 int InteractionSystem::Add(Interactable interactable)
 {
+    // Bounds are often built from two ToWorld corners, which swap when a room's frame is turned.
+    const Vector3 lo = Vector3::Min(interactable.bounds.Min, interactable.bounds.Max);
+    const Vector3 hi = Vector3::Max(interactable.bounds.Min, interactable.bounds.Max);
+    interactable.bounds = BoundingBox(lo, hi);
     items_.push_back(std::move(interactable));
     return static_cast<int>(items_.size()) - 1;
 }

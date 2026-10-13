@@ -160,14 +160,14 @@ private:
         const float spin = time_ * 0.5f;
         return {
             {&S().shapes->Plane(), Matrix::CreateScale(14.0f, 1.0f, 14.0f) * Matrix::CreateTranslation(c + Vector3(0, 0.02f, 0)), Vector3(0.7f, 0.75f, 0.8f)},
-            {&S().shapes->Cube(), Matrix::CreateScale(1.0f) * Matrix::CreateRotationY(spin) * Matrix::CreateTranslation(c + Vector3(-1.8f, 0.5f, -0.6f)), Vector3(0.9f, 0.4f, 0.3f)},
-            {&S().shapes->Sphere(), Matrix::CreateScale(1.1f) * Matrix::CreateTranslation(c + Vector3(0.1f, 0.9f + 0.25f * std::sin(time_), 0.9f)), Vector3(0.35f, 0.6f, 0.95f)},
-            {&S().shapes->Cylinder(), Matrix::CreateScale(0.5f, 3.0f, 0.5f) * Matrix::CreateTranslation(c + Vector3(-5.0f, 0.0f, -5.5f)), Vector3(0.8f, 0.8f, 0.5f)},
-            {&S().shapes->Cylinder(), Matrix::CreateScale(0.5f, 3.0f, 0.5f) * Matrix::CreateTranslation(c + Vector3(-5.0f, 0.0f, 0.0f)), Vector3(0.8f, 0.8f, 0.5f)},
-            {&S().shapes->Cylinder(), Matrix::CreateScale(0.5f, 3.0f, 0.5f) * Matrix::CreateTranslation(c + Vector3(-5.0f, 0.0f, 5.5f)), Vector3(0.8f, 0.8f, 0.5f)},
-            {&S().shapes->Cylinder(), Matrix::CreateScale(0.5f, 3.0f, 0.5f) * Matrix::CreateTranslation(c + Vector3(5.0f, 0.0f, -5.5f)), Vector3(0.8f, 0.8f, 0.5f)},
-            {&S().shapes->Cylinder(), Matrix::CreateScale(0.5f, 3.0f, 0.5f) * Matrix::CreateTranslation(c + Vector3(5.0f, 0.0f, 5.5f)), Vector3(0.8f, 0.8f, 0.5f)},
-            {&S().shapes->Cone(), Matrix::CreateScale(1.0f, 1.8f, 1.0f) * Matrix::CreateTranslation(c + Vector3(1.9f, 0.0f, -0.9f)), Vector3(0.4f, 0.85f, 0.45f)},
+            {&S().shapes->Cube(), Matrix::CreateScale(1.0f) * Matrix::CreateRotationY(spin) * Matrix::CreateTranslation(c + Off(-1.8f, 0.5f, -0.6f)), Vector3(0.9f, 0.4f, 0.3f)},
+            {&S().shapes->Sphere(), Matrix::CreateScale(1.1f) * Matrix::CreateTranslation(c + Off(0.1f, 0.9f + 0.25f * std::sin(time_), 0.9f)), Vector3(0.35f, 0.6f, 0.95f)},
+            {&S().shapes->Cylinder(), Matrix::CreateScale(0.5f, 3.0f, 0.5f) * Matrix::CreateTranslation(c + Off(-5.0f, 0.0f, -5.5f)), Vector3(0.8f, 0.8f, 0.5f)},
+            {&S().shapes->Cylinder(), Matrix::CreateScale(0.5f, 3.0f, 0.5f) * Matrix::CreateTranslation(c + Off(-5.0f, 0.0f, 0.0f)), Vector3(0.8f, 0.8f, 0.5f)},
+            {&S().shapes->Cylinder(), Matrix::CreateScale(0.5f, 3.0f, 0.5f) * Matrix::CreateTranslation(c + Off(-5.0f, 0.0f, 5.5f)), Vector3(0.8f, 0.8f, 0.5f)},
+            {&S().shapes->Cylinder(), Matrix::CreateScale(0.5f, 3.0f, 0.5f) * Matrix::CreateTranslation(c + Off(5.0f, 0.0f, -5.5f)), Vector3(0.8f, 0.8f, 0.5f)},
+            {&S().shapes->Cylinder(), Matrix::CreateScale(0.5f, 3.0f, 0.5f) * Matrix::CreateTranslation(c + Off(5.0f, 0.0f, 5.5f)), Vector3(0.8f, 0.8f, 0.5f)},
+            {&S().shapes->Cone(), Matrix::CreateScale(1.0f, 1.8f, 1.0f) * Matrix::CreateTranslation(c + Off(1.9f, 0.0f, -0.9f)), Vector3(0.4f, 0.85f, 0.45f)},
         };
     }
     [[nodiscard]] Vector3 LightDirection() const   // unit vector from the scene towards the light

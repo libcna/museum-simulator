@@ -15,6 +15,7 @@
 #include "World/Catalogue.hpp"
 
 using Microsoft::Xna::Framework::BoundingBox;
+using Microsoft::Xna::Framework::Vector3;
 
 namespace {
 
@@ -93,6 +94,34 @@ void TestDoorsAreSymmetric(const MuseumPlan& m)
             Check(matched, "door " + r.key + " -> " + other.key + " lines up with its twin");
         }
     }
+}
+
+// Exhibits are written for "the door is on the south wall, screens hang on the north wall". A room entered through
+// its north wall has its local frame turned half a circle so that this holds on both sides of a gallery.
+void TestRoomFrames(const MuseumPlan& m)
+{
+    int turned = 0, straight = 0;
+    for (const RoomDef& r : m.rooms) {
+        if (r.kind != CellKind::Room) {
+            Check(!r.Turned(), r.key + " is not an exhibit room: its frame is not turned");
+            continue;
+        }
+        Check(!r.doors.empty(), r.key + " has a door");
+        const Wall door = r.doors.front().wall;
+        Check(door == Wall::North || door == Wall::South, r.key + " is entered through a north or south wall");
+        Check(r.LocalWall(door) == Wall::South, r.key + ": its door is on the local south wall");
+        Check(r.Turned() == (door == Wall::North), r.key + ": turned exactly when entered from the north");
+        (r.Turned() ? turned : straight)++;
+        // ToWorld, Rotate and WorldAt agree, and the arrival point looks at the local north wall.
+        const Vector3 a = r.ToWorld(2.0f, 1.0f, -3.0f);
+        const Vector3 b = r.WorldAt(0, 0, 0) + r.Rotate(Vector3(2.0f, 1.0f, -3.0f));
+        Check((a - b).Length() < 1e-4f, r.key + ": ToWorld equals centre + Rotate");
+        const Spawn s = m.SpawnPoint(r.index);
+        const Vector3 ahead(-std::sin(s.yaw), 0.0f, -std::cos(s.yaw));
+        const Vector3 far = r.ToWorld(0.0f, 0.0f, -r.halfD) - r.ToWorld(0.0f, 0.0f, 0.0f);
+        Check(Vector3::Dot(ahead, far) > 0.0f, r.key + ": the arrival view faces the local north (far) wall");
+    }
+    Check(turned > 0 && straight > 0, "rooms exist on both sides of a gallery");
 }
 
 void TestExhibitsResolve(const MuseumPlan& m)
@@ -196,6 +225,7 @@ int main()
     TestFloorStructure(m);
     TestKeysAndNumbers(m);
     TestPointLookup(m);
+    TestRoomFrames(m);
     TestDoorsAreSymmetric(m);
     TestExhibitsResolve(m);
     TestAssetsExist(m);

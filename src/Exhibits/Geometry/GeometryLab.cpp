@@ -289,7 +289,7 @@ private:
         GraphicsDevice& device = ctx.device;
         const Matrix rot = Matrix::CreateRotationY(spin_) * Matrix::CreateRotationX(0.4f);
         {
-            BasicEffect& fx = Flat(ctx, Matrix::CreateScale(0.8f) * rot * Matrix::CreateTranslation(o + Vector3(-2.2f, 0, 0)));
+            BasicEffect& fx = Flat(ctx, Matrix::CreateScale(0.8f) * rot * Matrix::CreateTranslation(o + Off(-2.2f, 0, 0)));
             EffectBank::Apply(fx);
             device.SetVertexBuffer(flatCube_.get());
             device.DrawPrimitives(PrimitiveType::TriangleList, 0, 12);
@@ -302,15 +302,15 @@ private:
             device.DrawIndexedPrimitives(PrimitiveType::TriangleList, 0, 0, 8, 0, 12);
         }
         {
-            BasicEffect& fx = Lit(ctx, Matrix::CreateScale(0.8f) * rot * Matrix::CreateTranslation(o + Vector3(2.2f, 0, 0)), Vector3(0.8f, 0.8f, 0.9f));
+            BasicEffect& fx = Lit(ctx, Matrix::CreateScale(0.8f) * rot * Matrix::CreateTranslation(o + Off(2.2f, 0, 0)), Vector3(0.8f, 0.8f, 0.9f));
             EffectBank::Apply(fx);
             device.SetVertexBuffer(cubeV_.get());
             device.setIndicesProperty(cubeI_.get());
             device.DrawIndexedPrimitives(PrimitiveType::TriangleList, 0, 0, 24, 0, 12);
         }
-        gizmos_.Label(o + Vector3(-2.2f, 0.9f, 0), "36 vertices", Color(255, 230, 150, 255), 0.5f);
+        gizmos_.Label(o + Off(-2.2f, 0.9f, 0), "36 vertices", Color(255, 230, 150, 255), 0.5f);
         gizmos_.Label(o + Vector3(0, 0.9f, 0), "8 vertices + indices", Color(255, 230, 150, 255), 0.5f);
-        gizmos_.Label(o + Vector3(2.2f, 0.9f, 0), "24 vertices + indices", Color(255, 230, 150, 255), 0.5f);
+        gizmos_.Label(o + Off(2.2f, 0.9f, 0), "24 vertices + indices", Color(255, 230, 150, 255), 0.5f);
     }
 
     // ---- primitive types ----------------------------------------------------------------------
@@ -516,7 +516,7 @@ private:
             const auto make = [&](int k, std::vector<Vnt>& v, std::vector<std::uint16_t>& idx, std::uint16_t base) {
                 const float a = static_cast<float>(k) * 0.35f, r = 0.15f * std::sqrt(static_cast<float>(k)) + 0.3f;
                 const Vector3 c(std::cos(a) * r, 0.0f, std::sin(a) * r);
-                const Vector3 p[4] = {c + Vector3(-0.07f, 0, -0.07f), c + Vector3(0.07f, 0, -0.07f), c + Vector3(0, 0, 0.08f), c + Vector3(0, 0.16f, 0)};
+                const Vector3 p[4] = {c + Off(-0.07f, 0, -0.07f), c + Off(0.07f, 0, -0.07f), c + Off(0, 0, 0.08f), c + Vector3(0, 0.16f, 0)};
                 for (const Vector3& q : p) v.emplace_back(q, Vector3::Normalize(q - c + Vector3(0, 0.05f, 0)), Vector2(0, 0));
                 for (const int q : {0, 1, 3, 1, 2, 3, 2, 0, 3, 0, 2, 1}) idx.push_back(static_cast<std::uint16_t>(base + q));
             };

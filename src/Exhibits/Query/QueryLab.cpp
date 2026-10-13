@@ -148,7 +148,7 @@ private:
     {
         if (!view_) return;
         const Vector3 c = R().centre;
-        const Vector3 eye = c + Vector3(0, 1.4f, 7.5f);
+        const Vector3 eye = c + Off(0, 1.4f, 7.5f);
         const Matrix view = Matrix::CreateLookAt(eye, c + Vector3(0, 1.2f, 0), Vector3::Up);
         const Matrix proj = Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(50.0f), view_->Aspect(), 0.1f, 60.0f);
         view_->Render(ctx, view, proj, eye, [this, &ctx, c](const DrawContext& sub) { DrawOcclusionScene(sub, c); }, Color(40, 50, 70, 255));
@@ -168,12 +168,12 @@ private:
         S().shapes->Plane().Draw(d);
         // The occluder: a tall wall between the camera and the sphere, drawn first so it fills the depth buffer.
         fx_->setDiffuseColorProperty(Vector3(0.85f, 0.45f, 0.3f));
-        fx_->setWorldProperty(Matrix::CreateScale(1.8f, 2.8f, 0.2f) * Matrix::CreateTranslation(c + Vector3(wallX_, 1.4f, sphereZ_ - 3.2f)));
+        fx_->setWorldProperty(Matrix::CreateScale(1.8f, 2.8f, 0.2f) * Matrix::CreateTranslation(c + Off(wallX_, 1.4f, sphereZ_ - 3.2f)));
         EffectBank::Apply(*fx_);
         S().shapes->Cube().Draw(d);
         // The tested object.
         fx_->setDiffuseColorProperty(Vector3(0.35f, 0.7f, 0.95f));
-        fx_->setWorldProperty(Matrix::CreateScale(1.6f) * Matrix::CreateTranslation(c + Vector3(0, 1.0f, sphereZ_ - 8.0f + 3.0f)));
+        fx_->setWorldProperty(Matrix::CreateScale(1.6f) * Matrix::CreateTranslation(c + Off(0, 1.0f, sphereZ_ - 8.0f + 3.0f)));
         EffectBank::Apply(*fx_);
         if (supported_ && query_) {
             // Collect the previous result before reusing the query.

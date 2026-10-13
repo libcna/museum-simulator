@@ -124,7 +124,7 @@ Spawn MuseumPlan::SpawnPoint(int cell) const
     // Keep the arrival point inside small rooms.
     x = std::clamp(x, -r.halfW + 0.8f, r.halfW - 0.8f);
     z = std::clamp(z, -r.halfD + 0.8f, r.halfD - 0.8f);
-    s.eye = r.ToWorld(x, 1.65f, z);
+    s.eye = r.WorldAt(x, 1.65f, z);   // the door is described in world walls, not in the room's local frame
     s.yaw = std::atan2(-dx, -dz);
     if (r.kind == CellKind::Elevator) s.yaw += 3.14159265f;   // arrive facing the doors, ready to step out
     return s;

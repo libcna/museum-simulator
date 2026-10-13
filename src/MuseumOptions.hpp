@@ -36,6 +36,7 @@ struct MuseumOptions {
     bool listViews = false;            // print the reference views, one per line (no window) and exit
     bool showHelp = false;
     bool validate = false;              // check the catalogue (no window) and exit with the result
+    bool listTurnedRooms = false;       // print the key of every room whose local frame is turned (entered from the north) and exit
     bool listRooms = false;             // print every room key, one per line (no window) and exit
     bool inventory = false;             // print the museum's counts as JSON (no window) and exit
 

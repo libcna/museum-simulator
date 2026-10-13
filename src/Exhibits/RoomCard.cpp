@@ -34,9 +34,11 @@ void AddRoomCard(RoomBuilder& b, Services& s, const RoomDef& room)
     spec.lines.push_back({badge, false, room.origin == ApiOrigin::Xna ? Kit::kXna : room.origin == ApiOrigin::CnaExtension ? Kit::kCnaExt : Kit::kApp});
 
     // Beside the door, on the door's wall: to the left of it as seen from inside the room.
-    const float wallSpan = (door.wall == Wall::North || door.wall == Wall::South) ? room.halfW : room.halfD;
-    float along = door.along - (door.width * 0.5f + 0.35f + kWidth * 0.5f);
-    if (along - kWidth * 0.5f < -wallSpan + 0.3f) along = door.along + (door.width * 0.5f + 0.35f + kWidth * 0.5f);
+    const Wall doorWall = room.LocalWall(door.wall);
+    const float doorAlong = door.along * room.AlongSign();
+    const float wallSpan = (doorWall == Wall::North || doorWall == Wall::South) ? room.halfW : room.halfD;
+    float along = doorAlong - (door.width * 0.5f + 0.35f + kWidth * 0.5f);
+    if (along - kWidth * 0.5f < -wallSpan + 0.3f) along = doorAlong + (door.width * 0.5f + 0.35f + kWidth * 0.5f);
     if (std::abs(along) + kWidth * 0.5f > wallSpan - 0.2f) return;   // a very small room: no space for a card
-    b.AddWallSign(door.wall, along, 2.35f, kWidth, kHeight, spec);
+    b.AddWallSign(doorWall, along, 2.35f, kWidth, kHeight, spec);
 }

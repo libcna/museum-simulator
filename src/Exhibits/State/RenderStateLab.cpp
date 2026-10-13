@@ -246,8 +246,8 @@ private:
         r.setFillModeProperty(wire_ && canWire ? FillMode::WireFrame : FillMode::Solid);
         if (wire_ && !canWire) gizmos_.Label(o + Vector3(0, 1.8f, 0), "WireFrame is not available on this renderer: drawing Solid", Color(255, 170, 140, 255), 0.55f);
         ctx.device.setRasterizerStateProperty(r);
-        Solid(ctx, S().shapes->Sphere(), Matrix::CreateScale(2.0f) * Matrix::CreateRotationY(time_ * 0.4f) * Matrix::CreateTranslation(o + Vector3(-1.4f, 0, 0)), Vector3(0.5f, 0.8f, 1.0f));
-        Solid(ctx, S().shapes->Cone(), Matrix::CreateScale(1.6f, 2.0f, 1.6f) * Matrix::CreateRotationY(time_ * 0.4f) * Matrix::CreateTranslation(o + Vector3(1.6f, -1.0f, 0)), Vector3(1.0f, 0.7f, 0.4f));
+        Solid(ctx, S().shapes->Sphere(), Matrix::CreateScale(2.0f) * Matrix::CreateRotationY(time_ * 0.4f) * Matrix::CreateTranslation(o + Off(-1.4f, 0, 0)), Vector3(0.5f, 0.8f, 1.0f));
+        Solid(ctx, S().shapes->Cone(), Matrix::CreateScale(1.6f, 2.0f, 1.6f) * Matrix::CreateRotationY(time_ * 0.4f) * Matrix::CreateTranslation(o + Off(1.6f, -1.0f, 0)), Vector3(1.0f, 0.7f, 0.4f));
     }
 
     void DrawBias(const DrawContext& ctx)
@@ -277,7 +277,7 @@ private:
         s.setDepthBufferFunctionProperty(fns[fn_]);
         d.setDepthStencilStateProperty(s);
         d.setRasterizerStateProperty(RasterizerState::CullClockwise);
-        const Vector3 a = o + Vector3(-0.5f, 0, 0.8f), b = o + Vector3(0.5f, 0, -0.8f);   // a is nearer to a visitor in the south
+        const Vector3 a = o + Off(-0.5f, 0, 0.8f), b = o + Off(0.5f, 0, -0.8f);   // a is nearer to a visitor in the south
         for (int i = 0; i < 2; ++i) {
             const bool nearCube = (i == 0) == nearFirst_;
             Solid(ctx, S().shapes->Cube(), Matrix::CreateScale(1.7f) * Matrix::CreateRotationY(0.5f) * Matrix::CreateTranslation(nearCube ? a : b), nearCube ? Vector3(0.95f, 0.35f, 0.3f) : Vector3(0.3f, 0.5f, 1.0f));
@@ -291,7 +291,7 @@ private:
     {
         GraphicsDevice& d = ctx.device;
         // A solid post and three glass panes at different depths.
-        Solid(ctx, S().shapes->Cylinder(), Matrix::CreateScale(0.5f, 2.6f, 0.5f) * Matrix::CreateTranslation(o + Vector3(0, -1.3f, -0.2f)), Vector3(0.8f, 0.6f, 0.4f));
+        Solid(ctx, S().shapes->Cylinder(), Matrix::CreateScale(0.5f, 2.6f, 0.5f) * Matrix::CreateTranslation(o + Off(0, -1.3f, -0.2f)), Vector3(0.8f, 0.6f, 0.4f));
         struct Pane { float z; Vector3 colour; };
         Pane panes[3] = {{1.2f, {0.9f, 0.3f, 0.3f}}, {0.2f, {0.3f, 0.9f, 0.4f}}, {-0.9f, {0.3f, 0.5f, 1.0f}}};   // farthest from a southern visitor is the lowest z
         if (sorted_) std::sort(std::begin(panes), std::end(panes), [](const Pane& a, const Pane& b) { return a.z < b.z; });
@@ -302,7 +302,7 @@ private:
         d.setDepthStencilStateProperty(s);
         d.setRasterizerStateProperty(RasterizerState::CullNone);
         for (const Pane& p : panes) {
-            BasicEffect& fx = Lit(ctx, Matrix::CreateScale(2.4f, 2.4f, 1.0f) * Matrix::CreateTranslation(o + Vector3(0, 0, p.z)), p.colour);
+            BasicEffect& fx = Lit(ctx, Matrix::CreateScale(2.4f, 2.4f, 1.0f) * Matrix::CreateTranslation(o + Off(0, 0, p.z)), p.colour);
             fx.setAlphaProperty(0.45f);
             EffectBank::Apply(fx);
             S().shapes->Panel().Draw(d);
@@ -338,15 +338,15 @@ private:
         d.setDepthStencilStateProperty(read);
         d.setBlendStateProperty(BlendState::Opaque);
         const Vector3 sky = Vector3(0.35f, 0.55f, 0.95f);
-        { BasicEffect& fx = ctx.fx.Flat(); fx.setWorldProperty(Matrix::CreateTranslation(o + Vector3(0, 0, -0.5f))); fx.setViewProperty(ctx.view.view); fx.setProjectionProperty(ctx.view.projection); EffectBank::Apply(fx);
+        { BasicEffect& fx = ctx.fx.Flat(); fx.setWorldProperty(Matrix::CreateTranslation(o + Off(0, 0, -0.5f))); fx.setViewProperty(ctx.view.view); fx.setProjectionProperty(ctx.view.projection); EffectBank::Apply(fx);
           const Color c(static_cast<std::uint8_t>(sky.X * 255), static_cast<std::uint8_t>(sky.Y * 255), static_cast<std::uint8_t>(sky.Z * 255), static_cast<std::uint8_t>(255));
           const VertexPositionColor q[6] = {{Vector3(-4, -3, 0), c}, {Vector3(4, -3, 0), c}, {Vector3(4, 3, 0), c}, {Vector3(-4, -3, 0), c}, {Vector3(4, 3, 0), c}, {Vector3(-4, 3, 0), c}};
           d.DrawUserPrimitives(PrimitiveType::TriangleList, q, 0, 2); }
-        Solid(ctx, S().shapes->Sphere(), Matrix::CreateScale(1.2f) * Matrix::CreateTranslation(o + Vector3(std::sin(time_) * 0.8f, 0, -1.5f)), Vector3(1.0f, 0.8f, 0.3f));
+        Solid(ctx, S().shapes->Sphere(), Matrix::CreateScale(1.2f) * Matrix::CreateTranslation(o + Off(std::sin(time_) * 0.8f, 0, -1.5f)), Vector3(1.0f, 0.8f, 0.3f));
         d.setDepthStencilStateProperty(DepthStencilState::Default);
         // The surrounding frame.
         d.setRasterizerStateProperty(RasterizerState::CullClockwise);
-        gizmos_.Box(BoundingBox(o + Vector3(-size_ * 0.8f, -size_ * 0.5f, 0), o + Vector3(size_ * 0.8f, size_ * 0.5f, 0.01f)), Color(255, 230, 150, 255));
+        gizmos_.Box(BoundingBox(o + Off(-size_ * 0.8f, -size_ * 0.5f, 0), o + Off(size_ * 0.8f, size_ * 0.5f, 0.01f)), Color(255, 230, 150, 255));
     }
 
     void DrawOutline(const DrawContext& ctx, const Vector3& o)
@@ -355,7 +355,7 @@ private:
         d.Clear(ClearOptions::Stencil, Color(0, 0, 0, 0), 1.0f, 0);
         d.setRasterizerStateProperty(RasterizerState::CullClockwise);
         for (int i = 0; i < 2; ++i) {
-            const Vector3 p = o + Vector3(-1.5f + static_cast<float>(i) * 3.0f, 0, 0);
+            const Vector3 p = o + Off(-1.5f + static_cast<float>(i) * 3.0f, 0, 0);
             const Matrix m = Matrix::CreateRotationY(time_ * 0.6f + static_cast<float>(i)) * Matrix::CreateTranslation(p);
             DepthStencilState write = DepthStencilState::Default;
             write.setStencilEnableProperty(true);
@@ -453,7 +453,7 @@ private:
         const int a = static_cast<int>(alpha_ * 255.0f);
         for (int i = 0; i < 16; ++i) {
             const int col = i % 4, row = i / 4;
-            const Vector3 c = o + Vector3(-3.6f + static_cast<float>(col) * 2.4f, 1.6f - static_cast<float>(row) * 1.3f, 0.0f);
+            const Vector3 c = o + Off(-3.6f + static_cast<float>(col) * 2.4f, 1.6f - static_cast<float>(row) * 1.3f, 0.0f);
             d.setBlendStateProperty(BlendState::Opaque);
             d.setDepthStencilStateProperty(DepthStencilState::None);
             d.setRasterizerStateProperty(RasterizerState::CullNone);
@@ -466,8 +466,8 @@ private:
             bs.setAlphaSourceBlendProperty(Blend::One);
             bs.setAlphaDestinationBlendProperty(Blend::Zero);
             d.setBlendStateProperty(bs);
-            DrawTex(ctx, S().textures->White(), c + Vector3(-0.2f, 0.1f, 0.01f), 0.62f, Color(250, 120, 60, a), 0.0f);
-            DrawTex(ctx, S().textures->White(), c + Vector3(0.2f, -0.1f, 0.02f), 0.62f, Color(60, 150, 250, a), 0.0f);
+            DrawTex(ctx, S().textures->White(), c + Off(-0.2f, 0.1f, 0.01f), 0.62f, Color(250, 120, 60, a), 0.0f);
+            DrawTex(ctx, S().textures->White(), c + Off(0.2f, -0.1f, 0.02f), 0.62f, Color(60, 150, 250, a), 0.0f);
             gizmos_.Label(c + Vector3(0, -0.62f, 0), cfgs[i].name, Color(255, 230, 150, 255), 0.36f);
         }
         d.setBlendStateProperty(BlendState::Opaque);
@@ -499,12 +499,12 @@ private:
         ch = static_cast<ColorWriteChannels>(bits);
         bs.setColorWriteChannelsProperty(ch);
         d.setBlendStateProperty(BlendState::Opaque);
-        DrawTex(ctx, S().textures->White(), o + Vector3(0, 0, -0.05f), 2.3f, Color(30, 30, 40, 255), 0.0f);
+        DrawTex(ctx, S().textures->White(), o + Off(0, 0, -0.05f), 2.3f, Color(30, 30, 40, 255), 0.0f);
         d.setBlendStateProperty(bs);
         d.setDepthStencilStateProperty(DepthStencilState::None);
-        DrawTex(ctx, S().textures->White(), o + Vector3(-0.7f, 0.5f, 0.01f), 1.3f, Color(255, 60, 60, 255), 0.0f);
-        DrawTex(ctx, S().textures->White(), o + Vector3(0.7f, 0.5f, 0.02f), 1.3f, Color(60, 255, 60, 255), 0.0f);
-        DrawTex(ctx, S().textures->White(), o + Vector3(0.0f, -0.7f, 0.03f), 1.3f, Color(60, 60, 255, 255), 0.0f);
+        DrawTex(ctx, S().textures->White(), o + Off(-0.7f, 0.5f, 0.01f), 1.3f, Color(255, 60, 60, 255), 0.0f);
+        DrawTex(ctx, S().textures->White(), o + Off(0.7f, 0.5f, 0.02f), 1.3f, Color(60, 255, 60, 255), 0.0f);
+        DrawTex(ctx, S().textures->White(), o + Off(0.0f, -0.7f, 0.03f), 1.3f, Color(60, 60, 255, 255), 0.0f);
         d.setBlendStateProperty(BlendState::Opaque);
         d.setDepthStencilStateProperty(DepthStencilState::Default);
     }
@@ -522,7 +522,7 @@ private:
         bs.setAlphaDestinationBlendProperty(Blend::Zero);
         bs.setBlendFactorProperty(Color(static_cast<std::uint8_t>(factor_[0] * 255), static_cast<std::uint8_t>(factor_[1] * 255), static_cast<std::uint8_t>(factor_[2] * 255), static_cast<std::uint8_t>(255)));
         d.setBlendStateProperty(bs);
-        DrawTex(ctx, S().textures->White(), o + Vector3(0, 0, 0.02f), 1.2f, Color(255, 230, 40, 255), 0.0f);
+        DrawTex(ctx, S().textures->White(), o + Off(0, 0, 0.02f), 1.2f, Color(255, 230, 40, 255), 0.0f);
         d.setBlendStateProperty(BlendState::Opaque);
         d.setDepthStencilStateProperty(DepthStencilState::Default);
     }

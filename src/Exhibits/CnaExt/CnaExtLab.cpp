@@ -177,7 +177,7 @@ public:
         if (post) {
             const float a = time_ * 0.35f;
             const Vector3 c = R().centre;
-            const Vector3 eye = c + Vector3(std::cos(a) * 5.0f, 2.4f, std::sin(a) * 5.0f);
+            const Vector3 eye = c + Off(std::cos(a) * 5.0f, 2.4f, std::sin(a) * 5.0f);
             scene_->Render(ctx, Matrix::CreateLookAt(eye, c + Vector3(0, 0.5f, 0), Vector3::Up),
                            Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(55.0f), scene_->Aspect(), 0.1f, 60.0f), eye,
                            [this, c](const DrawContext& sub) { DrawDiorama(sub, S(), c + Vector3(0, 0.02f, 0), time_, 3.0f); }, Color(40, 60, 100, 255));
@@ -470,8 +470,8 @@ void main() {
         const Matrix proj = Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(50.0f), 1.6f, 0.4f, 1.6f);
         debug_->addFrustum(BoundingFrustum(view * proj), Color(255, 200, 80, 255));
         for (int i = -4; i <= 4; ++i) {
-            debug_->addLine(c + Vector3(static_cast<float>(i), 0.01f, -4.0f), c + Vector3(static_cast<float>(i), 0.01f, 4.0f), Color(90, 100, 130, 255));
-            debug_->addLine(c + Vector3(-4.0f, 0.01f, static_cast<float>(i)), c + Vector3(4.0f, 0.01f, static_cast<float>(i)), Color(90, 100, 130, 255));
+            debug_->addLine(c + Off(static_cast<float>(i), 0.01f, -4.0f), c + Off(static_cast<float>(i), 0.01f, 4.0f), Color(90, 100, 130, 255));
+            debug_->addLine(c + Off(-4.0f, 0.01f, static_cast<float>(i)), c + Off(4.0f, 0.01f, static_cast<float>(i)), Color(90, 100, 130, 255));
         }
         lines_ = static_cast<int>(debug_->getLineCount());
         debug_->end();

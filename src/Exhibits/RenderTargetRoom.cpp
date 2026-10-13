@@ -74,12 +74,12 @@ public:
     [[nodiscard]] Vector3 MonitorCentre(const MonitorSpec& m, Vector3& right, Vector3& normal) const
     {
         if (m.onNorthWall) {
-            normal = Vector3(0, 0, 1);
-            right = Vector3(1, 0, 0);
+            normal = Off(0, 0, 1);
+            right = Off(1, 0, 0);
             return R().ToWorld(m.along, m.centreY, -R().halfD + 0.06f);
         }
-        normal = Vector3(1, 0, 0);
-        right = Vector3(0, 0, -1);   // looking east at the west wall, "right" is -Z... see below
+        normal = Off(1, 0, 0);
+        right = Off(0, 0, -1);   // looking east at the west wall, "right" is -Z... see below
         return R().ToWorld(-R().halfW + 0.06f, m.centreY, m.along);
     }
 
@@ -127,8 +127,8 @@ public:
             Vector3 right, normal;
             const Vector3 centre = MonitorCentre(m, right, normal);
             Interactable ia;
-            ia.bounds = BoundingBox(centre - Vector3(m.onNorthWall ? m.w / 2 : 0.5f, m.h / 2, m.onNorthWall ? 0.5f : m.w / 2),
-                                    centre + Vector3(m.onNorthWall ? m.w / 2 : 0.5f, m.h / 2, m.onNorthWall ? 0.5f : m.w / 2));
+            ia.bounds = BoundingBox(centre - Off(m.onNorthWall ? m.w / 2 : 0.5f, m.h / 2, m.onNorthWall ? 0.5f : m.w / 2),
+                                    centre + Off(m.onNorthWall ? m.w / 2 : 0.5f, m.h / 2, m.onNorthWall ? 0.5f : m.w / 2));
             ia.maxDistance = 9.0f;
             ia.prompt = [this, i] { return Prompt(i); };
             ia.activate = [this, i] { Press(i); };
@@ -161,7 +161,7 @@ public:
             Vector3 right, normal;
             const MonitorSpec& m = kMonitors[i];
             const Vector3 centre = MonitorCentre(m, right, normal);
-            const BoundingBox box(centre - Vector3(1.9f, 1.4f, 1.9f), centre + Vector3(1.9f, 1.4f, 1.9f));
+            const BoundingBox box(centre - Off(1.9f, 1.4f, 1.9f), centre + Off(1.9f, 1.4f, 1.9f));
             if (rendered_[static_cast<std::size_t>(i)] && !ctx.view.frustum.Intersects(box)) continue;
             RenderFeed(ctx, i);
             rendered_[static_cast<std::size_t>(i)] = true;
@@ -185,12 +185,12 @@ public:
             Vector3 u, v(0, m.h, 0);
             Vector3 origin;
             if (m.onNorthWall) {
-                u = Vector3(m.w, 0, 0);
-                origin = centre - Vector3(m.w / 2, m.h / 2, 0);
+                u = Off(m.w, 0, 0);
+                origin = centre - Off(m.w / 2, m.h / 2, 0);
             } else {
                 // The west wall faces +X; a visitor looking at it has +Z on their left, so the quad runs towards -Z... flipped here:
-                u = Vector3(0, 0, -m.w);
-                origin = centre - Vector3(0, m.h / 2, -m.w / 2);
+                u = Off(0, 0, -m.w);
+                origin = centre - Off(0, m.h / 2, -m.w / 2);
             }
             QuadDraw::Textured(ctx, targets_[static_cast<std::size_t>(i)].get(), origin, u, v);
         }

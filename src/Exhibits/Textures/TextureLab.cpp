@@ -289,7 +289,7 @@ private:
     }
     [[nodiscard]] Matrix At(float x, float y, float z, float yaw = 0.0f, float pitch = 0.0f) const
     {
-        return Matrix::CreateRotationX(pitch) * Matrix::CreateRotationY(yaw) * Matrix::CreateTranslation(R().ToWorld(x, y, z));
+        return Matrix::CreateRotationX(pitch) * Matrix::CreateRotationY(yaw + R().frameYaw) * Matrix::CreateTranslation(R().ToWorld(x, y, z));
     }
 
     void DrawFilter(const DrawContext& ctx)

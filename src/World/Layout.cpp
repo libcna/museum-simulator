@@ -240,5 +240,9 @@ MuseumPlan LayoutMuseum(const std::vector<FloorSpec>& specs)
         m.floors.push_back(floor);
     }
     m.IndexCells();
+    // A room entered through its north wall (the south row of a gallery) is turned half a circle, so that
+    // exhibits written for "door in the south, screens on the north wall" work on both sides of a gallery.
+    for (RoomDef& r : m.rooms)
+        if (r.kind == CellKind::Room && !r.doors.empty() && r.doors.front().wall == Wall::North) r.frameYaw = 3.14159265f;
     return m;
 }

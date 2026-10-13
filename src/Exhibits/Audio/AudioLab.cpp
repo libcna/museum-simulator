@@ -165,7 +165,7 @@ public:
         if (mode_ == Mode::Spatial && spatial_) {
             const float a = time_ * speed_;
             const Vector3 centre = R().ToWorld(0.0f, 1.2f, 0.0f);
-            const Vector3 pos = centre + Vector3(std::cos(a) * radius_, 0, std::sin(a) * radius_);
+            const Vector3 pos = centre + Off(std::cos(a) * radius_, 0, std::sin(a) * radius_);
             const Vector3 vel = Vector3(-std::sin(a), 0, std::cos(a)) * (speed_ * radius_);
             emitterPos_ = pos;
             AudioEmitter emitter;

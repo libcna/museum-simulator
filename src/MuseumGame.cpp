@@ -619,7 +619,7 @@ void MuseumGame::RunScript()
             float x = 0, z = 0, yaw = 0, pitch = 0;
             if (std::sscanf(arg.c_str(), "%f,%f,%f,%f", &x, &z, &yaw, &pitch) >= 3 && shownCell_ >= 0) {
                 const RoomDef& r = museum_->Room(shownCell_);
-                camera_.SetPose(r.ToWorld(x, 1.65f, z), MathHelper::ToRadians(yaw), MathHelper::ToRadians(pitch));
+                camera_.SetPose(r.ToWorld(x, 1.65f, z), MathHelper::ToRadians(yaw) + r.frameYaw, MathHelper::ToRadians(pitch));
             }
         } else if (op == "time") {
             timeOfDay_.SetHours(static_cast<float>(std::atof(arg.c_str())));

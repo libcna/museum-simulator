@@ -410,7 +410,7 @@ private:
         for (const int i : order) {
             const int x = i % cols, y = i / cols;
             fx_->setTextureProperty(S().textures->Get(names[i % 4]));
-            fx_->setWorldProperty(Matrix::CreateScale(cell * 0.9f) * Matrix::CreateTranslation(origin + Vector3((static_cast<float>(x) - static_cast<float>(cols) * 0.5f) * cell, (static_cast<float>(rows) * 0.5f - static_cast<float>(y)) * cell, 0.6f)));
+            fx_->setWorldProperty(Matrix::CreateScale(cell * 0.9f) * Matrix::CreateTranslation(origin + Off((static_cast<float>(x) - static_cast<float>(cols) * 0.5f) * cell, (static_cast<float>(rows) * 0.5f - static_cast<float>(y)) * cell, 0.6f)));
             EffectBank::Apply(*fx_);
             quad.Draw(device);
         }

@@ -27,6 +27,10 @@ public:
     [[nodiscard]] MeshSet& Meshes() { return meshes_; }
     [[nodiscard]] Microsoft::Xna::Framework::Vector3 World(float x, float y, float z) const { return room_.ToWorld(x, y, z); }
 
+    /** The world-space box of a local box (the corners are swapped when the room's frame is turned). */
+    [[nodiscard]] Microsoft::Xna::Framework::BoundingBox LocalBox(const Microsoft::Xna::Framework::Vector3& minLocal,
+                                                                  const Microsoft::Xna::Framework::Vector3& maxLocal) const;
+
     /** Solid furniture. Collides unless `collide` is false. */
     void AddBox(const Microsoft::Xna::Framework::Vector3& minLocal, const Microsoft::Xna::Framework::Vector3& maxLocal,
                 const std::string& texture, float texMeters, const Microsoft::Xna::Framework::Vector3& tint,
@@ -57,7 +61,12 @@ public:
 
     void AddLight(const Microsoft::Xna::Framework::Vector3& localPosition, const Microsoft::Xna::Framework::Vector3& color,
                   float intensity, float radius);
-    void AddCollider(const Microsoft::Xna::Framework::BoundingBox& worldBox) { collision_.AddBox(worldBox); }
+    /** A world-space collider. Corners may come from two ToWorld calls: they are put in order here. */
+    void AddCollider(const Microsoft::Xna::Framework::BoundingBox& worldBox)
+    {
+        collision_.AddBox(Microsoft::Xna::Framework::BoundingBox(Microsoft::Xna::Framework::Vector3::Min(worldBox.Min, worldBox.Max),
+                                                                  Microsoft::Xna::Framework::Vector3::Max(worldBox.Min, worldBox.Max)));
+    }
 
     /** World-space centre of a wall's inner face at `along`, `height` -- plus the outward-from-wall normal. */
     [[nodiscard]] Microsoft::Xna::Framework::Vector3 WallPoint(Wall wall, float along, float height,

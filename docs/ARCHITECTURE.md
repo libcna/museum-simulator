@@ -56,6 +56,23 @@ Hundreds of rooms are never instantiated together. `MuseumWorld` works on the do
 - Exhibits own their GPU objects and release them in destructors; shared effect state is never relied on (every
   exhibit sets everything it uses before drawing).
 
+### The room's local frame
+
+Every exhibit is written for "the door is on the south wall, screens and the main subject face the visitor on the
+north wall". Rooms alternate between the two sides of a gallery, so half of them are entered through their *north* wall
+(`RoomDef::Turned()`, `--list-turned-rooms`). Those rooms have their local frame turned half a circle about the room
+centre (`RoomDef::frameYaw`): `ToWorld(x, y, z)`, `Rotate(offset)`, `LocalWall(wall)` and `Exhibit::Off(x, y, z)` do the
+mapping, `RoomBuilder` (boxes, signs, wall points, facing quads) and `ControlPanel` apply it, and
+`InteractionSystem::Add` puts interactable bounds in order. Rules for exhibit code:
+
+- Positions come from `R().ToWorld(x, y, z)`; a horizontal offset from such a point is `base + Off(dx, dy, dz)`, not
+  `base + Vector3(dx, dy, dz)`.
+- A yaw that faces something placed in local space gets `+ R().frameYaw`; `FarPoint`/`FarYaw`/`FarQuad` already do.
+- Things tied to the real world (the compass and sun on the observation deck, `MuseumPlan::SpawnPoint`) stay in world
+  axes; `RoomDef::WorldAt` is the plain centre-plus-offset.
+- `museum_tests` (`TestRoomFrames`) checks that every room's door is on the local south wall and its arrival view faces
+  the local north wall.
+
 ## Navigation
 
 `UI/FloorMap` (plan and minimap), `UI/DirectoryScreen` (search, tabs, quick travel; floors unlock when their hall or

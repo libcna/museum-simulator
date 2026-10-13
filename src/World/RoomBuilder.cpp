@@ -10,10 +10,17 @@ using namespace Microsoft::Xna::Framework;
 void RoomBuilder::AddBox(const Vector3& minLocal, const Vector3& maxLocal, const std::string& texture, float texMeters,
                          const Vector3& tint, bool collide, BoxFaces faces)
 {
-    const Vector3 lo = room_.ToWorld(minLocal.X, minLocal.Y, minLocal.Z);
-    const Vector3 hi = room_.ToWorld(maxLocal.X, maxLocal.Y, maxLocal.Z);
+    const BoundingBox box = LocalBox(minLocal, maxLocal);
+    const Vector3 lo = box.Min, hi = box.Max;
     meshes_.Opaque(texture).AddBox(lo, hi, texMeters, tint, faces);
     if (collide) collision_.AddBox(BoundingBox(lo, hi));
+}
+
+BoundingBox RoomBuilder::LocalBox(const Vector3& minLocal, const Vector3& maxLocal) const
+{
+    const Vector3 a = room_.ToWorld(minLocal.X, minLocal.Y, minLocal.Z);
+    const Vector3 b = room_.ToWorld(maxLocal.X, maxLocal.Y, maxLocal.Z);
+    return BoundingBox(Vector3::Min(a, b), Vector3::Max(a, b));
 }
 
 Vector3 RoomBuilder::AddPedestal(float x, float z, float size, float height, const std::string& texture, const Vector3& tint)
@@ -40,14 +47,17 @@ void RoomBuilder::AddColumn(float x, float z, float radius, const std::string& t
 
 Vector3 RoomBuilder::WallPoint(Wall wall, float along, float height, Vector3& normalOut) const
 {
+    // `wall` is a wall of the room's local frame; the result is in the world.
+    Vector3 localNormal(0, 0, 1);
+    Vector3 point = room_.Center();
     switch (wall) {
-        case Wall::North: normalOut = Vector3(0, 0, 1); return room_.ToWorld(along, height, -room_.halfD);
-        case Wall::South: normalOut = Vector3(0, 0, -1); return room_.ToWorld(along, height, room_.halfD);
-        case Wall::West: normalOut = Vector3(1, 0, 0); return room_.ToWorld(-room_.halfW, height, along);
-        case Wall::East: normalOut = Vector3(-1, 0, 0); return room_.ToWorld(room_.halfW, height, along);
+        case Wall::North: localNormal = Vector3(0, 0, 1); point = room_.ToWorld(along, height, -room_.halfD); break;
+        case Wall::South: localNormal = Vector3(0, 0, -1); point = room_.ToWorld(along, height, room_.halfD); break;
+        case Wall::West: localNormal = Vector3(1, 0, 0); point = room_.ToWorld(-room_.halfW, height, along); break;
+        case Wall::East: localNormal = Vector3(-1, 0, 0); point = room_.ToWorld(room_.halfW, height, along); break;
     }
-    normalOut = Vector3(0, 0, 1);
-    return room_.Center();
+    normalOut = room_.Rotate(localNormal);
+    return point;
 }
 
 void RoomBuilder::AddWallSign(Wall wall, float along, float centreHeight, float width, float height, SignSpec spec)
@@ -74,8 +84,8 @@ void RoomBuilder::AddStandSign(float x, float z, float yaw, float bottomHeight, 
     spec.pixelHeight = std::max(32, static_cast<int>(height * kPixelsPerMetre));
     const std::string texture = services_.signs->Create(spec);
 
-    // yaw 0 faces +Z (towards a visitor standing south of it); positive yaw turns it towards +X.
-    const Vector3 normal(std::sin(yaw), 0.0f, std::cos(yaw));
+    // yaw 0 faces local +Z (towards a visitor standing south of it); positive yaw turns it towards local +X.
+    const Vector3 normal = room_.Rotate(Vector3(std::sin(yaw), 0.0f, std::cos(yaw)));
     const Vector3 right = Vector3::Normalize(Vector3::Cross(-normal, Vector3::Up));
     const Vector3 centre = room_.ToWorld(x, bottomHeight, z);
     meshes_.Opaque(texture).AddPatch(centre - right * (width * 0.5f), right * width, Vector3(0, height, 0), 0.0f,
@@ -85,7 +95,7 @@ void RoomBuilder::AddStandSign(float x, float z, float yaw, float bottomHeight, 
 void RoomBuilder::AddQuadFacing(const Vector3& centreLocal, float yaw, float width, float height,
                                 const std::string& texture, const Vector3& tint, float emissive, bool transparent)
 {
-    const Vector3 normal(std::sin(yaw), 0.0f, std::cos(yaw));
+    const Vector3 normal = room_.Rotate(Vector3(std::sin(yaw), 0.0f, std::cos(yaw)));
     const Vector3 right = Vector3::Normalize(Vector3::Cross(-normal, Vector3::Up));
     const Vector3 centre = room_.ToWorld(centreLocal.X, centreLocal.Y, centreLocal.Z);
     MeshBuilder& mesh = transparent ? meshes_.Transparent(texture) : meshes_.Opaque(texture);

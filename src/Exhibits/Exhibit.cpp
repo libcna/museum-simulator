@@ -63,6 +63,7 @@ void Exhibit::FarScreenPose(float height, Microsoft::Xna::Framework::Vector3& ce
         case Wall::East: centre = room_.ToWorld(room_.halfW - 0.06f, height, 0.0f); yaw = -1.57079633f; break;
         default: centre = room_.ToWorld(-room_.halfW + 0.06f, height, 0.0f); yaw = 1.57079633f; break;
     }
+    yaw += room_.frameYaw;   // local yaw -> world yaw
 }
 
 Microsoft::Xna::Framework::Vector3 Exhibit::FarPoint(float along, float height, float& yaw) const

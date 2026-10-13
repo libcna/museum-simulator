@@ -207,7 +207,7 @@ public:
         if (!source_ || !screen_) return;
         const float a = time_ * 0.35f;
         const Vector3 c = R().centre + Vector3(0, 0, 0);
-        const Vector3 eye = c + Vector3(std::cos(a) * 5.0f, 2.4f, std::sin(a) * 5.0f);
+        const Vector3 eye = c + Off(std::cos(a) * 5.0f, 2.4f, std::sin(a) * 5.0f);
         source_->Render(ctx, Matrix::CreateLookAt(eye, c + Vector3(0, 0.5f, 0), Vector3::Up),
                         Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(55.0f), source_->Aspect(), 0.1f, 60.0f), eye,
                         [this, c](const DrawContext& sub) { DrawDiorama(sub, S(), c + Vector3(0, 0.02f, 0), time_, 3.0f); }, Color(40, 60, 100, 255));

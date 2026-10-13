@@ -309,7 +309,7 @@ private:
     void DrawGears(const DrawContext& ctx, const Vector3& o)
     {
         const float r1 = 0.62f, r2 = r1 * static_cast<float>(teeth2_) / 12.0f;
-        const Vector3 c1 = o + Vector3(-r2 * 0.5f - 0.1f, 2.2f, 0.0f), c2 = c1 + Vector3(r1 + r2 + 0.12f, 0, 0);
+        const Vector3 c1 = o + Off(-r2 * 0.5f - 0.1f, 2.2f, 0.0f), c2 = c1 + Vector3(r1 + r2 + 0.12f, 0, 0);
         const float a1 = gearAngle_, a2 = -gearAngle_ * 12.0f / static_cast<float>(teeth2_) + MathHelper::Pi / static_cast<float>(teeth2_);
         // Gears lie in the XY plane: rotate the Y-axis meshes onto Z.
         const Matrix flat = Matrix::CreateRotationX(MathHelper::PiOver2);
@@ -323,7 +323,7 @@ private:
     // ---- conveyor --------------------------------------------------------------------------------
     void DrawConveyor(const DrawContext& ctx, const Vector3& o)
     {
-        const Vector3 start = o + Vector3(-3.3f, 0.7f, 0.0f);
+        const Vector3 start = o + Off(-3.3f, 0.7f, 0.0f);
         // The belt is a long quad whose texture coordinates scroll.
         BasicEffect& fx = ctx.fx.World();
         fx.setTextureProperty(S().textures->Get("darkgrid"));
@@ -358,17 +358,17 @@ private:
     [[nodiscard]] Vector3 DoorCentre() const { return R().ToWorld(0.0f, 1.2f, -2.0f); }
     void DrawDoors(const DrawContext& ctx, const Vector3& o)
     {
-        const Vector3 base = o + Vector3(0, 0, -2.0f);
+        const Vector3 base = o + Off(0, 0, -2.0f);
         Draw(ctx, S().shapes->Cube(), Matrix::CreateScale(6.6f, 0.3f, 0.5f) * Matrix::CreateTranslation(base + Vector3(0, 2.75f, 0)), Vector3(0.35f, 0.38f, 0.45f));
         for (int pass = 0; pass < 2; ++pass) {
             const float open = pass == 0 ? doorA_ : Ease(doorB_);
             const float zOff = pass == 0 ? 0.12f : -0.12f;
-            Draw(ctx, S().shapes->Cube(), Matrix::CreateScale(1.5f, 2.6f, 0.1f) * Matrix::CreateTranslation(base + Vector3(-0.8f - open * 1.4f, 1.3f, zOff)), Vector3(0.8f, 0.85f, 0.95f), S().textures->Get("metal"));
-            Draw(ctx, S().shapes->Cube(), Matrix::CreateScale(1.5f, 2.6f, 0.1f) * Matrix::CreateTranslation(base + Vector3(0.8f + open * 1.4f, 1.3f, zOff)), Vector3(0.8f, 0.85f, 0.95f), S().textures->Get("metal"));
-            if (pass == 0) gizmos_.Label(base + Vector3(-3.0f, 2.2f, 0), "Lerp", Color(255, 230, 150, 255), 0.5f);
+            Draw(ctx, S().shapes->Cube(), Matrix::CreateScale(1.5f, 2.6f, 0.1f) * Matrix::CreateTranslation(base + Off(-0.8f - open * 1.4f, 1.3f, zOff)), Vector3(0.8f, 0.85f, 0.95f), S().textures->Get("metal"));
+            Draw(ctx, S().shapes->Cube(), Matrix::CreateScale(1.5f, 2.6f, 0.1f) * Matrix::CreateTranslation(base + Off(0.8f + open * 1.4f, 1.3f, zOff)), Vector3(0.8f, 0.85f, 0.95f), S().textures->Get("metal"));
+            if (pass == 0) gizmos_.Label(base + Off(-3.0f, 2.2f, 0), "Lerp", Color(255, 230, 150, 255), 0.5f);
         }
-        gizmos_.Label(base + Vector3(3.0f, 2.2f, 0), "SmoothStep (front pair)", Color(255, 230, 150, 255), 0.5f);
-        gizmos_.Box(BoundingBox(base + Vector3(-trigger_, 0, -trigger_), base + Vector3(trigger_, 0.05f, trigger_)), distance_ < trigger_ ? Color(110, 255, 140, 255) : Color(200, 200, 210, 255));
+        gizmos_.Label(base + Off(3.0f, 2.2f, 0), "SmoothStep (front pair)", Color(255, 230, 150, 255), 0.5f);
+        gizmos_.Box(BoundingBox(base + Off(-trigger_, 0, -trigger_), base + Off(trigger_, 0.05f, trigger_)), distance_ < trigger_ ? Color(110, 255, 140, 255) : Color(200, 200, 210, 255));
     }
 
     // ---- kinetic ---------------------------------------------------------------------------------
@@ -389,7 +389,7 @@ private:
                 angle = std::sin(ph * 1.3f + t * 11.0f * wave_) * 1.3f;
                 lift = std::cos(ph * 0.9f + t * 7.0f) * 0.5f;
             }
-            const Vector3 pivot = o + Vector3(x, 2.4f + lift, 0);
+            const Vector3 pivot = o + Off(x, 2.4f + lift, 0);
             const Vector3 col(0.4f + 0.6f * t, 0.5f + 0.3f * std::sin(t * 9.0f), 1.0f - 0.7f * t);
             Draw(ctx, S().shapes->Cylinder(), Matrix::CreateScale(0.07f, 1.8f, 0.07f) * Matrix::CreateTranslation(0, -0.9f, 0) * Matrix::CreateRotationZ(angle) * Matrix::CreateTranslation(pivot), col);
             Draw(ctx, S().shapes->Sphere(), Matrix::CreateScale(0.2f) * Matrix::CreateTranslation(0, -1.8f, 0) * Matrix::CreateRotationZ(angle) * Matrix::CreateTranslation(pivot), col);
