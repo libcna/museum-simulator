@@ -375,12 +375,14 @@ protected:
                     gyro_ ? "Gyroscope: " + Fmt(gyroV_.X) + ", " + Fmt(gyroV_.Y) + ", " + Fmt(gyroV_.Z) : std::string("Gyroscope: not available here"),
                     "Haptics.GetHapticsEXT(): " + std::to_string(hapticCount_) + " haptic device(s)",
                     "Power.GetInfoEXT(): " + powerNote_,
+                    padNote_,
+                    "Mouse.GetGlobalPositionEXT: " + globalMouse_,
                     "Mouse-to-touch emulation: " + std::string(TouchPanel::getMouseTouchEmulationEnabledEXT() ? "ON (hold the left button to make a touch)" : "off (a mouse is not a touch screen)"),
                 };
-                float y = 80.0f;
+                float y = 66.0f;
                 for (const std::string& l : lines) {
                     text(l, 30, y, Kit::kText, 0.8f);
-                    y += 52.0f;
+                    y += 44.0f;
                 }
                 break;
             }
@@ -794,6 +796,21 @@ private:
             gyro_ = CNA::Input::Sensors::GetGyroscopeEXT(gyroV_);
         } catch (const std::exception&) {}
         try {
+            // Questions about player one's pad that have an honest answer even with no pad: the extension queries report "nothing there".
+            const PlayerIndex one = PlayerIndex::One;
+            static const char* link[] = {"unknown link", "wired", "wireless"};
+            int battery = -1;
+            const auto power = GamePad::GetPowerInfoEXT(one, battery);
+            padNote_ = std::string("GamePad extensions, player one: ") + link[std::clamp(static_cast<int>(GamePad::GetConnectionStateEXT(one)), 0, 2)] + ", power state " + std::to_string(static_cast<int>(power)) +
+                       (battery >= 0 ? ", battery " + std::to_string(battery) + " %" : "") + ", touchpads " + std::to_string(GamePad::GetTouchpadCountEXT(one)) +
+                       ", firmware " + std::to_string(GamePad::GetFirmwareVersionEXT(one)) + ", serial \"" + GamePad::GetSerialEXT(one) + "\"";
+            int gx = 0, gy = 0;
+            Mouse::GetGlobalPositionEXT(gx, gy);
+            globalMouse_ = std::to_string(gx) + ", " + std::to_string(gy) + " (desktop pixels, whichever window has the pointer)";
+        } catch (const std::exception& e) {
+            padNote_ = std::string("GamePad extensions unavailable: ") + e.what();
+        }
+        try {
             int seconds = -1, percent = -1;
             const auto state = CNA::Input::Power::GetInfoEXT(seconds, percent);
             powerNote_ = "state " + std::to_string(static_cast<int>(state)) + ", " + (percent >= 0 ? std::to_string(percent) + " %" : std::string("no battery percentage"));
@@ -803,6 +820,7 @@ private:
     }
 
     Mode mode_;
+    std::string padNote_ = "GamePad extensions: -", globalMouse_ = "-";
     float time_ = 0.0f;
     // keyboard
     std::vector<Keys> down_;

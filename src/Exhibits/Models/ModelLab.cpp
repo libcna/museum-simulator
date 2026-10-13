@@ -64,6 +64,8 @@ public:
                 p.AddSlider("Spin", 0.0f, 2.0f, spin_, [this](float v) { spin_ = v; });
                 p.AddReadout("Meshes / parts / bones", [this] { return Counts(); });
                 p.AddReadout("Triangles", [this] { return Triangles(); });
+                p.AddReadout("Root bone / its children", [this] { return RootBone(); });
+                p.AddReadout("CopyBoneTransformsTo", [this] { return BoneCopy(); });
                 p.AddReadout("Part effect class", [this] { return EffectName(); });
                 p.AddReadout("BoundingSphere (CNA ext.)", [this] { return Bounds(); });
                 p.AddReadout("Skins / animation payload", [this] { return Payload(); });
@@ -137,6 +139,7 @@ public:
                 p.AddSlider("MetallicFactor", 0.0f, 1.0f, metal_, [this](float v) { metal_ = v; });
                 p.AddSlider("RoughnessFactor", 0.04f, 1.0f, rough_, [this](float v) { rough_ = v; });
                 p.AddReadout("Environment maps", [this] { return std::string("irradiance 16, specular 64 x 5 mips, BRDF 32 x 32"); });
+                p.AddReadout("Renderer uses the environment", [this] { return std::string(S().device->SupportsImageBasedLightingEXT() ? "yes (SupportsImageBasedLightingEXT)" : "no: the light is carried but not shaded"); });
                 break;
             case Mode::Report:
                 p.AddChoice("Model", {"cube", "sphere", "torus", "cone", "star", "knot", "vase", "robot", "tentacle"}, 7, [this](int v) { name_ = kNames[v]; Reload(); });
@@ -485,6 +488,20 @@ private:
         int parts = 0;
         for (ModelMesh* m : model_->getMeshesProperty()) parts += m->getMeshPartsProperty().getCountProperty();
         return std::to_string(model_->getMeshesProperty().getCountProperty()) + " / " + std::to_string(parts) + " / " + std::to_string(model_->getBonesProperty().getCountProperty());
+    }
+    // The bone tree: Model.Root, ModelBone.Children, and the whole palette copied out in one call.
+    [[nodiscard]] std::string RootBone() const
+    {
+        if (!model_ || model_->getRootProperty() == nullptr) return "-";
+        const ModelBone* root = model_->getRootProperty();
+        return "\"" + root->getNameProperty() + "\" / " + std::to_string(root->getChildrenProperty().getCountProperty()) + " child(ren)";
+    }
+    [[nodiscard]] std::string BoneCopy() const
+    {
+        if (!model_) return "-";
+        std::vector<Matrix> bones(static_cast<std::size_t>(model_->getBonesProperty().getCountProperty()));
+        model_->CopyBoneTransformsTo(bones);
+        return std::to_string(bones.size()) + " matrices copied";
     }
     [[nodiscard]] std::string Triangles() const
     {
