@@ -130,6 +130,7 @@ public:
                 p.AddButton("Dispose every second one", [this] { DisposeHalf(); });
                 p.AddButton("Dispose them all", [this] { DisposeAll(); });
                 p.AddButton("Content: Load then Unload()", [this] { UnloadDemo(); });
+                p.AddReadout("Device events: ResourceCreated / ResourceDestroyed", [this] { return std::to_string(deviceCreated_) + " / " + std::to_string(deviceDestroyed_); });
                 p.AddReadout("Created / disposed / alive", [this] { return std::to_string(created_) + " / " + std::to_string(disposedEvents_) + " / " + std::to_string(Alive()); });
                 p.AddReadout("Texture memory alive", [this] { return Kb(static_cast<std::uintmax_t>(Alive()) * kTexDim * kTexDim * 4); });
                 break;
@@ -139,6 +140,11 @@ public:
 
     void OnScreenLoaded() override
     {
+        if (mode_ == Mode::Lifetime) {
+            createdToken_ = S().device->ResourceCreated.Add([this](System::Object*, const ResourceCreatedEventArgs&) { ++deviceCreated_; });
+            destroyedToken_ = S().device->ResourceDestroyed.Add([this](System::Object*, const ResourceDestroyedEventArgs&) { ++deviceDestroyed_; });
+            subscribed_ = true;
+        }
         manager_ = NewManager(S().contentRoot);
         compiledPresent_ = fs::exists(fs::path(S().contentRoot) / "Compiled" / "cnb");
         if (mode_ == Mode::Load) {
@@ -247,6 +253,14 @@ private:
 
     void ReleaseAll()
     {
+        if (subscribed_) {
+            subscribed_ = false;
+            try {
+                S().device->ResourceCreated.Remove(createdToken_);
+                S().device->ResourceDestroyed.Remove(destroyedToken_);
+            } catch (...) {
+            }
+        }
         rows_.clear();
         handles_.clear();
         tex_.clear();
@@ -609,6 +623,9 @@ private:
     }
 
     Mode mode_;
+    std::size_t createdToken_ = 0, destroyedToken_ = 0;
+    bool subscribed_ = false;
+    int deviceCreated_ = 0, deviceDestroyed_ = 0;
     std::unique_ptr<ContentManager> manager_, other_;
     std::vector<std::unique_ptr<ContentManager>> keep_;   // managers whose textures are on screen
     std::vector<Row> rows_;

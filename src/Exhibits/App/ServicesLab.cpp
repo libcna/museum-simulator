@@ -9,6 +9,7 @@
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
 #include "Microsoft/Xna/Framework/GameServiceContainer.hpp"
+#include "Microsoft/Xna/Framework/Graphics/IGraphicsDeviceService.hpp"
 
 using namespace Microsoft::Xna::Framework;
 using namespace Microsoft::Xna::Framework::Graphics;
@@ -57,6 +58,7 @@ public:
         p.AddButton("Sign consumer posts a message", [this] { Consume(1); });
         p.AddButton("Hud consumer asks for both", [this] { Consume(2); });
         p.AddButton("AddService twice (same type)", [this] { AddTwice(); });
+        p.AddButton("Ask the GAME's container for IGraphicsDeviceService", [this] { AskGame(); });
         p.AddReadout("Last result", [this] { return last_; });
         AddInfoSign(b, "GameServiceContainer", {"AddService<T>(provider) files a pointer under the type T; GetService<T>() returns it, or null when nobody", "registered that type. Game.Services is one of these: components use it to find the GraphicsDevice or your own services."});
     }
@@ -129,6 +131,11 @@ private:
         }
         asked_[who] = result;
         last_ = result;
+    }
+    void AskGame()
+    {
+        auto* svc = S().game->getServicesProperty().GetService<IGraphicsDeviceService>();
+        last_ = svc != nullptr ? "Game.Services holds IGraphicsDeviceService: its device is " + std::string(svc->getGraphicsDeviceProperty() != nullptr ? "available" : "null") : "Game.Services has no IGraphicsDeviceService";
     }
     void AddTwice()
     {

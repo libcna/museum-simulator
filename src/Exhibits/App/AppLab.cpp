@@ -16,6 +16,7 @@
 #include "Microsoft/Xna/Framework/Content/ContentManager.hpp"
 #include "Microsoft/Xna/Framework/DrawableGameComponent.hpp"
 #include "Microsoft/Xna/Framework/Game.hpp"
+#include "Microsoft/Xna/Framework/GameComponentCollection.hpp"
 #include "Microsoft/Xna/Framework/GameTime.hpp"
 #include "Microsoft/Xna/Framework/GraphicsDeviceManager.hpp"
 #include "Microsoft/Xna/Framework/Graphics/GraphicsAdapter.hpp"
@@ -91,6 +92,17 @@ public:
 
     ~AppLab() override
     {
+        try {
+            if (S().graphics != nullptr && resetToken_ != 0) {
+                S().graphics->DeviceResetting.Remove(resettingToken_);
+                S().graphics->DeviceReset.Remove(resetToken_);
+            }
+            if (S().game != nullptr && addedToken_ != 0) {
+                S().game->getComponentsProperty().ComponentAdded.Remove(addedToken_);
+                S().game->getComponentsProperty().ComponentRemoved.Remove(removedToken_);
+            }
+        } catch (...) {
+        }
         if (S().game != nullptr)
             for (auto& c : components_) (void)S().game->getComponentsProperty().Remove(c.get());
     }
@@ -113,6 +125,11 @@ public:
                 p.AddReadout("TotalGameTime", [this] { return Fmt(static_cast<float>(S().stats->totalSeconds), " s"); });
                 p.AddReadout("ElapsedGameTime", [this] { return Fmt(S().stats->elapsedMilliseconds, " ms"); });
                 p.AddReadout("IsRunningSlowly", [this] { return std::string(S().stats->runningSlowly ? "TRUE" : "false"); });
+                p.AddReadout("LaunchParameters", [this] {
+                    if (S().game == nullptr) return std::string("-");
+                    const auto& lp = S().game->getLaunchParametersProperty();
+                    return std::to_string(lp.size()) + " entries" + (lp.empty() ? "" : " (e.g. " + lp.begin()->first + ")");
+                });
                 p.AddHeading("Change the loop");
                 p.AddToggle("IsFixedTimeStep", S().game != nullptr && S().game->getIsFixedTimeStepProperty(), [this](bool v) {
                     if (S().game != nullptr) S().game->setIsFixedTimeStepProperty(v);
@@ -142,6 +159,7 @@ public:
                 p.AddHeading("Presentation parameters (live)");
                 p.AddReadout("Back buffer", [this] { return BackBufferText(); });
                 p.AddReadout("Depth / stencil", [this] { return std::to_string(static_cast<int>(S().device->getPresentationParametersProperty().getDepthStencilFormatProperty())) + " (DepthFormat)"; });
+                p.AddReadout("DeviceResetting / DeviceReset events", [this] { return std::to_string(resettingCount_) + " / " + std::to_string(resetCount_); });
                 p.AddReadout("PresentInterval", [this] {
                     static const char* names[] = {"Default", "One (vsync)", "Two", "Immediate"};
                     return std::string(names[std::clamp(static_cast<int>(S().device->getPresentationParametersProperty().getPresentationIntervalProperty()), 0, 3)]);
@@ -169,6 +187,7 @@ public:
                 p.AddReadout("Failure message", [this] { return lastError_; });
                 break;
             case Mode::Components:
+                p.AddReadout("Game.Components added / removed", [this] { return std::to_string(addedCount_) + " / " + std::to_string(removedCount_); });
                 p.AddToggle("Red component: Visible", true, [this](bool v) { SetVisible(0, v); });
                 p.AddToggle("Green component: Visible", true, [this](bool v) { SetVisible(1, v); });
                 p.AddToggle("Blue component: Visible", true, [this](bool v) { SetVisible(2, v); });
@@ -196,6 +215,14 @@ public:
 
     void Load(InteractionSystem&, MuseumWorld&) override
     {
+        if (mode_ == Mode::Viewport && S().graphics != nullptr) {
+            resettingToken_ = S().graphics->DeviceResetting.Add([this](System::Object*, const System::EventArgs&) { ++resettingCount_; });
+            resetToken_ = S().graphics->DeviceReset.Add([this](System::Object*, const System::EventArgs&) { ++resetCount_; });
+        }
+        if (mode_ == Mode::Components && S().game != nullptr) {
+            addedToken_ = S().game->getComponentsProperty().ComponentAdded.Add([this](System::Object*, const GameComponentCollectionEventArgs&) { ++addedCount_; });
+            removedToken_ = S().game->getComponentsProperty().ComponentRemoved.Add([this](System::Object*, const GameComponentCollectionEventArgs&) { ++removedCount_; });
+        }
         if (mode_ == Mode::GameTimeLab) graph_ = std::make_unique<LiveScreen>(S(), 640, 320);
         if (mode_ == Mode::Content && S().game != nullptr) {
             content_ = std::make_unique<Content::ContentManager>(&S().game->getServicesProperty(), S().contentRoot);
@@ -456,6 +483,8 @@ private:
     }
 
     Mode mode_;
+    std::size_t resetToken_ = 0, resettingToken_ = 0, addedToken_ = 0, removedToken_ = 0;
+    int resetCount_ = 0, resettingCount_ = 0, addedCount_ = 0, removedCount_ = 0;
     Gizmos gizmos_;
     float time_ = 0.0f, delay_ = 0.0f, timeBall_ = 0.0f, frameBall_ = 0.0f;
     long long frames_ = 0;
