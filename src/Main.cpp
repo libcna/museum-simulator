@@ -15,6 +15,11 @@ int main(int argc, char** argv)
             return 0;
         }
         // Data-only commands: they need no window, device or content, and their exit status is the result.
+        if (options.listRooms) {
+            for (const RoomDef& r : TheMuseum().rooms)
+                if (r.kind == CellKind::Room) std::printf("%s\n", r.key.c_str());
+            return 0;
+        }
         if (options.validate || options.inventory) {
             const MuseumPlan& museum = TheMuseum();
             const std::vector<std::string> errors = ValidateMuseum(museum);

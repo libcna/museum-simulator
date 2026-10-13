@@ -1,0 +1,465 @@
+// The application model on display: the Game loop and GameTime, GraphicsDevice and adapter information,
+// the back buffer and viewport, ContentManager lifetime and GameComponents. Several rooms, one class.
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <cstdio>
+#include <exception>
+#include <string>
+
+#include "CNA/GraphicsCapability.hpp"
+#include "CNA/RendererCapabilityProfile.hpp"
+#include "Exhibits/ExhibitFactories.hpp"
+#include "Exhibits/ExhibitKit.hpp"
+#include "Exhibits/Math/MathKit.hpp"
+#include "Microsoft/Xna/Framework/Content/ContentLoadException.hpp"
+#include "Microsoft/Xna/Framework/Content/ContentManager.hpp"
+#include "Microsoft/Xna/Framework/DrawableGameComponent.hpp"
+#include "Microsoft/Xna/Framework/Game.hpp"
+#include "Microsoft/Xna/Framework/GameTime.hpp"
+#include "Microsoft/Xna/Framework/GraphicsDeviceManager.hpp"
+#include "Microsoft/Xna/Framework/Graphics/GraphicsAdapter.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PresentationParameters.hpp"
+#include "Rendering/LiveScreen.hpp"
+#include "Rendering/QuadDraw.hpp"
+#include "Rendering/RenderStates.hpp"
+#include "Rendering/TextureLibrary.hpp"
+
+using namespace Microsoft::Xna::Framework;
+using namespace Microsoft::Xna::Framework::Graphics;
+using namespace MathKit;
+
+namespace {
+
+enum class Mode { Lifecycle, GameTimeLab, Device, Viewport, Content, Components };
+
+Mode ParseMode(const std::string& s)
+{
+    if (s == "gametime") return Mode::GameTimeLab;
+    if (s == "device") return Mode::Device;
+    if (s == "viewport") return Mode::Viewport;
+    if (s == "content") return Mode::Content;
+    if (s == "components") return Mode::Components;
+    return Mode::Lifecycle;
+}
+
+// A GameComponent that draws a labelled badge on the screen, to show UpdateOrder / DrawOrder at work.
+class BadgeComponent final : public DrawableGameComponent {
+public:
+    BadgeComponent(Game& game, Services& s, std::string name, Color color, int x, int y)
+        : DrawableGameComponent(game), s_(s), name_(std::move(name)), color_(color), x_(x), y_(y)
+    {
+    }
+    void Update(GameTime& gameTime) override
+    {
+        GameComponent::Update(gameTime);
+        ++updates;
+        lastUpdateOrder = updateSerial++;
+    }
+    void Draw(const GameTime& gameTime) override
+    {
+        DrawableGameComponent::Draw(gameTime);
+        if (s_.sprites == nullptr || s_.font == nullptr) return;
+        const SamplerState sampler = SamplerState::LinearClamp;
+        s_.sprites->Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &sampler, nullptr, nullptr);
+        s_.sprites->Draw(*s_.whiteTexture, Rectangle(x_, y_, 250, 110), color_);
+        s_.sprites->Draw(*s_.whiteTexture, Rectangle(x_, y_, 250, 4), Color(255, 255, 255, 230));
+        const std::string line1 = name_;
+        const std::string line2 = "DrawOrder " + std::to_string(getDrawOrderProperty()) + "   UpdateOrder " + std::to_string(getUpdateOrderProperty());
+        const std::string line3 = "Update calls " + std::to_string(updates);
+        s_.sprites->DrawString(*s_.font, line1, Vector2(static_cast<float>(x_ + 12), static_cast<float>(y_ + 12)), Color::White, 0.0f, Vector2(0, 0), 0.9f, SpriteEffects::None, 0.0f);
+        s_.sprites->DrawString(*s_.font, line2, Vector2(static_cast<float>(x_ + 12), static_cast<float>(y_ + 46)), Color::White, 0.0f, Vector2(0, 0), 0.6f, SpriteEffects::None, 0.0f);
+        s_.sprites->DrawString(*s_.font, line3, Vector2(static_cast<float>(x_ + 12), static_cast<float>(y_ + 72)), Color::White, 0.0f, Vector2(0, 0), 0.6f, SpriteEffects::None, 0.0f);
+        s_.sprites->End();
+    }
+    int updates = 0;
+    int lastUpdateOrder = 0;
+    inline static int updateSerial = 0;
+
+private:
+    Services& s_;
+    std::string name_;
+    Color color_;
+    int x_, y_;
+};
+
+class AppLab final : public Exhibit {
+public:
+    AppLab(const RoomDef& room, Services& services) : Exhibit(room, services), mode_(ParseMode(room.params.Get("mode"))), gizmos_(services) {}
+
+    ~AppLab() override
+    {
+        if (S().game != nullptr)
+            for (auto& c : components_) (void)S().game->getComponentsProperty().Remove(c.get());
+    }
+
+    void BuildStatic(RoomBuilder& b) override
+    {
+        FrameStats* st = S().mutableStats;
+        ControlPanel& p = AddPanel(Title(), -4.8f, 1.5f, 1.8f, MathHelper::PiOver2, 2.1f);
+        switch (mode_) {
+            case Mode::Lifecycle:
+                p.AddHeading("Counters since the museum started");
+                p.AddReadout("Initialize / LoadContent", [] { return std::string("1 / 1"); });
+                p.AddReadout("Update calls", [this] { return std::to_string(S().stats->updates); });
+                p.AddReadout("Draw calls", [this] { return std::to_string(S().stats->draws); });
+                p.AddReadout("Updates / Draws per second", [this] {
+                    char buf[64];
+                    std::snprintf(buf, sizeof buf, "%.0f / %.0f", static_cast<double>(S().stats->updatesPerSecond), static_cast<double>(S().stats->drawsPerSecond));
+                    return std::string(buf);
+                });
+                p.AddReadout("TotalGameTime", [this] { return Fmt(static_cast<float>(S().stats->totalSeconds), " s"); });
+                p.AddReadout("ElapsedGameTime", [this] { return Fmt(S().stats->elapsedMilliseconds, " ms"); });
+                p.AddReadout("IsRunningSlowly", [this] { return std::string(S().stats->runningSlowly ? "TRUE" : "false"); });
+                p.AddHeading("Change the loop");
+                p.AddToggle("IsFixedTimeStep", S().game != nullptr && S().game->getIsFixedTimeStepProperty(), [this](bool v) {
+                    if (S().game != nullptr) S().game->setIsFixedTimeStepProperty(v);
+                });
+                p.AddChoice("TargetElapsedTime", {"1/30 s", "1/60 s", "1/120 s"}, 1, [this](int v) {
+                    if (S().game != nullptr) S().game->setTargetElapsedTimeProperty(System::TimeSpan::FromSeconds(v == 0 ? 1.0 / 30 : (v == 1 ? 1.0 / 60 : 1.0 / 120)));
+                });
+                p.AddButton("Hitch: 40 ms Updates for 60 frames", [st] { if (st != nullptr) st->hitchFrames = 60; });
+                break;
+            case Mode::GameTimeLab:
+                p.AddSlider("Extra delay per Update", 0.0f, 80.0f, delay_, [this, st](float v) { delay_ = v; if (st != nullptr) st->injectedDelayMs = v; }, "%.0f ms", 1.0f);
+                p.AddHeading("Two balls cross the track");
+                p.AddReadout("Time-based speed", [] { return std::string("2.0 m per second"); });
+                p.AddReadout("Frame-based speed", [] { return std::string("0.0333 m per Update"); });
+                p.AddReadout("Updates per second", [this] { return Fmt(S().stats->updatesPerSecond); });
+                p.AddReadout("Frame time", [this] { return Fmt(S().stats->elapsedMilliseconds, " ms"); });
+                break;
+            case Mode::Viewport: {
+                const GraphicsDeviceManager* g = S().graphics;
+                p.AddChoice("Back buffer size", {"960 x 540", "1280 x 720", "1600 x 900", "1920 x 1080"}, 1, [this](int v) {
+                    static const int w[] = {960, 1280, 1600, 1920}, h[] = {540, 720, 900, 1080};
+                    pendingW_ = w[v];
+                    pendingH_ = h[v];
+                });
+                p.AddToggle("Fullscreen", g != nullptr && g->getIsFullScreenProperty(), [this](bool) { pendingToggleFull_ = true; });
+                p.AddToggle("Vertical sync", true, [this](bool v) { pendingVsync_ = v ? 1 : 0; });
+                p.AddHeading("Presentation parameters (live)");
+                p.AddReadout("Back buffer", [this] { return BackBufferText(); });
+                p.AddReadout("Depth / stencil", [this] { return std::to_string(static_cast<int>(S().device->getPresentationParametersProperty().getDepthStencilFormatProperty())) + " (DepthFormat)"; });
+                p.AddReadout("Viewport", [this] { return ViewportText(); });
+                p.AddReadout("Window client bounds", [this] {
+                    const Rectangle r = S().game->getWindowProperty().getClientBoundsProperty();
+                    return std::to_string(r.Width) + " x " + std::to_string(r.Height);
+                });
+                p.AddReadout("Aspect ratio", [this] { return Fmt(S().device->getViewportProperty().getAspectRatioProperty()); });
+                break;
+            }
+            case Mode::Content:
+                p.AddButton("Load 12 textures (ContentManager.Load)", [this] { LoadSet(); });
+                p.AddButton("Load them again (cache hit)", [this] { LoadSet(); });
+                p.AddButton("Unload everything (ContentManager.Unload)", [this] { UnloadSet(); });
+                p.AddButton("Load a file that does not exist", [this] { LoadMissing(); });
+                p.AddHeading("What happened");
+                p.AddReadout("Textures held", [this] { return std::to_string(held_.size()); });
+                p.AddReadout("Last Load time", [this] { return lastLoad_; });
+                p.AddReadout("Failure message", [this] { return lastError_; });
+                break;
+            case Mode::Components:
+                p.AddToggle("Red component: Visible", true, [this](bool v) { SetVisible(0, v); });
+                p.AddToggle("Green component: Visible", true, [this](bool v) { SetVisible(1, v); });
+                p.AddToggle("Blue component: Visible", true, [this](bool v) { SetVisible(2, v); });
+                p.AddSlider("Red DrawOrder", 0.0f, 10.0f, 1.0f, [this](float v) { SetDrawOrder(0, static_cast<int>(v)); }, "%.0f", 1.0f);
+                p.AddSlider("Green DrawOrder", 0.0f, 10.0f, 2.0f, [this](float v) { SetDrawOrder(1, static_cast<int>(v)); }, "%.0f", 1.0f);
+                p.AddSlider("Blue DrawOrder", 0.0f, 10.0f, 3.0f, [this](float v) { SetDrawOrder(2, static_cast<int>(v)); }, "%.0f", 1.0f);
+                p.AddToggle("Green component: Enabled (Update)", true, [this](bool v) { if (components_.size() > 1) components_[1]->setEnabledProperty(v); });
+                p.AddHeading("Game.Components and Game.Services");
+                p.AddReadout("Components registered", [this] { return std::to_string(S().game != nullptr ? S().game->getComponentsProperty().getCountProperty() : 0); });
+                break;
+            case Mode::Device: break;
+        }
+        SignSpec what = Kit::Plate(Title(), Explanation());
+        what.leftAlign = true;
+        what.pixelWidth = 900;
+        b.AddWallSign(Wall::East, 0.0f, 2.4f, 4.4f, 2.0f, what);
+
+        if (mode_ == Mode::Lifecycle) {
+            SignSpec flow = Kit::Plate("The life of a Game", {"Initialize       once, after the device exists", "LoadContent      once: textures, models, sounds", "loop  { Update(gameTime)  ->  Draw(gameTime) }", "UnloadContent    once, when the game ends", "Exiting event, then Dispose"});
+            flow.leftAlign = true;
+            b.AddWallSign(Wall::North, 0.0f, 2.2f, 4.6f, 1.9f, flow);
+        }
+        if (mode_ == Mode::Device) BuildDeviceSigns(b);
+    }
+
+    void Load(InteractionSystem&, MuseumWorld&) override
+    {
+        if (mode_ == Mode::GameTimeLab) graph_ = std::make_unique<LiveScreen>(S(), 640, 320);
+        if (mode_ == Mode::Content && S().game != nullptr) content_ = std::make_unique<Content::ContentManager>(&S().game->getServicesProperty(), S().contentRoot);
+        if (mode_ == Mode::Components && S().game != nullptr) {
+            Game& g = *S().game;
+            const Color cols[3] = {Color(190, 50, 50, 230), Color(50, 160, 70, 230), Color(60, 90, 210, 230)};
+            const char* names[3] = {"Red component", "Green component", "Blue component"};
+            for (int i = 0; i < 3; ++i) {
+                auto c = std::make_shared<BadgeComponent>(g, S(), names[i], cols[i], 30 + i * 70, 330 + i * 40);
+                c->setDrawOrderProperty(i + 1);
+                c->setVisibleProperty(false);   // shown only while the visitor is in this room
+                g.getComponentsProperty().Add(c);
+                components_.push_back(c);
+            }
+        }
+        if (mode_ == Mode::GameTimeLab && S().mutableStats != nullptr) S().mutableStats->injectedDelayMs = delay_;
+    }
+
+    void OnLeave() override
+    {
+        if (mode_ == Mode::GameTimeLab && S().mutableStats != nullptr) S().mutableStats->injectedDelayMs = 0.0f;   // never leave the museum slowed down
+        for (auto& c : components_) c->setVisibleProperty(false);
+    }
+    void OnEnter() override
+    {
+        if (mode_ == Mode::GameTimeLab && S().mutableStats != nullptr) S().mutableStats->injectedDelayMs = delay_;
+        for (std::size_t i = 0; i < components_.size(); ++i) components_[i]->setVisibleProperty(visible_[i]);
+    }
+
+    void Update(const UpdateContext& ctx) override
+    {
+        if (!ctx.nearby) return;
+        time_ += ctx.dt;
+        ++frames_;
+        if (mode_ == Mode::GameTimeLab) {
+            // Time-based: position follows the clock. Frame-based: a fixed step per Update call.
+            timeBall_ = std::fmod(timeBall_ + 2.0f * ctx.dt, 8.0f);
+            frameBall_ = std::fmod(frameBall_ + 0.0333f, 8.0f);
+        }
+        if (mode_ == Mode::Viewport && S().graphics != nullptr) {
+            GraphicsDeviceManager& g = *S().graphics;
+            bool apply = false;
+            if (pendingW_ > 0 && (g.getPreferredBackBufferWidthProperty() != pendingW_ || g.getPreferredBackBufferHeightProperty() != pendingH_)) {
+                g.setPreferredBackBufferWidthProperty(pendingW_);
+                g.setPreferredBackBufferHeightProperty(pendingH_);
+                apply = true;
+            }
+            if (pendingVsync_ >= 0) {
+                g.setSynchronizeWithVerticalRetraceProperty(pendingVsync_ == 1);
+                pendingVsync_ = -1;
+                apply = true;
+            }
+            if (apply) g.ApplyChanges();
+            if (pendingToggleFull_) {
+                pendingToggleFull_ = false;
+                g.ToggleFullScreen();
+            }
+        }
+        if (mode_ == Mode::Components) {
+            for (std::size_t i = 0; i < components_.size(); ++i) visible_[i] = visible_[i];
+            if (ctx.playerInRoom != inRoom_) {
+                inRoom_ = ctx.playerInRoom;
+                for (std::size_t i = 0; i < components_.size(); ++i) components_[i]->setVisibleProperty(inRoom_ && visible_[i]);
+            }
+        }
+    }
+
+    void RenderOffscreen(const DrawContext&) override
+    {
+        if (mode_ != Mode::GameTimeLab || !graph_) return;
+        graph_->Render(Color(12, 16, 28, 255), [this](SpriteBatch& sb, int w, int h) {
+            Texture2D& white = *S().whiteTexture;
+            const float* hist = S().stats->frameHistory;
+            sb.DrawString(*S().font, "ElapsedGameTime per Update (ms)", Vector2(10, 6), Color(255, 226, 150, 255), 0.0f, Vector2(0, 0), 0.8f, SpriteEffects::None, 0.0f);
+            const float top = 40.0f, bottom = static_cast<float>(h) - 26.0f, scale = (bottom - top) / 66.7f;
+            for (const float guide : {16.7f, 33.3f, 50.0f}) {
+                const int y = static_cast<int>(bottom - guide * scale);
+                sb.Draw(white, Rectangle(0, y, w, 1), Color(70, 80, 110, 255));
+                sb.DrawString(*S().font, std::to_string(static_cast<int>(guide + 0.5f)), Vector2(4, static_cast<float>(y) - 14.0f), Color(130, 140, 170, 255), 0.0f, Vector2(0, 0), 0.5f, SpriteEffects::None, 0.0f);
+            }
+            for (int i = 0; i < 120; ++i) {
+                const float v = std::min(hist[i], 66.0f);
+                const int bh = std::max(1, static_cast<int>(v * scale));
+                const Color c = v > 33.0f ? Color(255, 110, 90, 255) : (v > 20.0f ? Color(255, 210, 90, 255) : Color(110, 220, 140, 255));
+                sb.Draw(white, Rectangle(40 + i * 5, static_cast<int>(bottom) - bh, 4, bh), c);
+            }
+        });
+    }
+
+    void DrawOpaque(const DrawContext& ctx) override
+    {
+        if (mode_ == Mode::GameTimeLab) {
+            // Two lanes: the time-based ball and the frame-based ball.
+            for (int lane = 0; lane < 2; ++lane) {
+                const float z = -1.2f + static_cast<float>(lane) * 2.4f;
+                const Vector3 a = R().ToWorld(-3.0f, 0.5f, z), b2 = R().ToWorld(3.0f, 0.5f, z);
+                gizmos_.Line(a, b2, Color(140, 150, 190, 255));
+                const float x = (lane == 0 ? timeBall_ : frameBall_) / 8.0f * 6.0f - 3.0f;
+                gizmos_.SolidSphere(ctx, R().ToWorld(x, 0.5f, z), 0.22f, lane == 0 ? kGreen : kRed);
+                gizmos_.Label(R().ToWorld(-3.0f, 1.0f, z), lane == 0 ? "time-based" : "frame-based", ToColor(lane == 0 ? kGreen * 1.3f : kRed * 1.3f), 0.55f);
+            }
+            if (graph_ && graph_->HasContent()) {
+                RenderStates::SetOpaque3D(ctx.device);
+                QuadDraw::Textured(ctx, graph_->Texture(), R().ToWorld(-2.3f, 1.2f, -R().halfD + 0.1f), Vector3(4.6f, 0, 0), Vector3(0, 2.3f, 0));
+            }
+        } else if (mode_ == Mode::Content) {
+            for (std::size_t i = 0; i < held_.size(); ++i) {
+                const int col = static_cast<int>(i % 6), row = static_cast<int>(i / 6);
+                RenderStates::SetOpaque3D(ctx.device);
+                QuadDraw::Textured(ctx, held_[i].get(), R().ToWorld(-3.0f + static_cast<float>(col) * 1.05f, 1.2f + static_cast<float>(row) * 1.05f, -R().halfD + 0.1f), Vector3(1.0f, 0, 0), Vector3(0, 1.0f, 0));
+            }
+        }
+        gizmos_.Flush(ctx);
+    }
+    void DrawOverlay() override { gizmos_.DrawLabels(); }
+
+private:
+    [[nodiscard]] std::string Title() const
+    {
+        switch (mode_) {
+            case Mode::Lifecycle: return "Game lifecycle";
+            case Mode::GameTimeLab: return "GameTime and frame rate";
+            case Mode::Device: return "GraphicsDevice and renderer";
+            case Mode::Viewport: return "Back buffer, viewport, fullscreen";
+            case Mode::Content: return "ContentManager lifetime";
+            default: return "Game components";
+        }
+    }
+    [[nodiscard]] std::vector<std::string> Explanation() const
+    {
+        switch (mode_) {
+            case Mode::Lifecycle: return {"The museum itself is a CNA Game subclass: Initialize and LoadContent run once, then the loop calls", "Update and Draw. With a fixed time step Update may run several times per Draw to catch up (and", "IsRunningSlowly turns on); a variable step calls each once per frame. Try the hitch button."};
+            case Mode::GameTimeLab: return {"Movement should depend on elapsed time, not on how many frames ran. The green ball moves by", "2 m/s * dt and always takes four seconds; the red one moves a fixed step per Update, so a slow machine", "(add delay) drags it. The graph shows ElapsedGameTime for every recent Update."};
+            case Mode::Device: return {"These panels are generated from the live GraphicsDevice: the renderer in use, the adapter, what the", "device supports (GraphicsCapability) and the detailed renderer capability profile. They differ", "between renderers: compare screenshots of this room across renderers."};
+            case Mode::Viewport: return {"GraphicsDeviceManager holds the preferred back buffer size and fullscreen state; ApplyChanges()", "recreates the back buffer. The Viewport is the part of it that is drawn into. Change the size and watch the museum re-lay out."};
+            case Mode::Content: return {"A ContentManager loads assets by name and caches them until Unload(). This room owns its own manager:", "load a dozen textures, load them again (a cache hit is much faster), unload, or ask for a file that is", "missing: the failure is a ContentLoadException, shown here instead of crashing."};
+            default: return {"GameComponents let a Game be built from parts: each has its own Update and (if drawable) Draw, ordered by", "UpdateOrder and DrawOrder. Three badge components are registered with Game.Components while you are here;", "change their DrawOrder to reorder the overlapping badges, hide one, or disable updates."};
+        }
+    }
+
+    [[nodiscard]] std::string BackBufferText() const
+    {
+        const PresentationParameters& pp = S().device->getPresentationParametersProperty();
+        return std::to_string(pp.getBackBufferWidthProperty()) + " x " + std::to_string(pp.getBackBufferHeightProperty()) + (S().graphics && S().graphics->getIsFullScreenProperty() ? "  fullscreen" : "  windowed");
+    }
+    [[nodiscard]] std::string ViewportText() const
+    {
+        const Viewport v = S().device->getViewportProperty();
+        return std::to_string(v.getXProperty()) + "," + std::to_string(v.getYProperty()) + "  " + std::to_string(v.getWidthProperty()) + " x " + std::to_string(v.getHeightProperty());
+    }
+
+    void SetVisible(std::size_t i, bool v)
+    {
+        if (i >= visible_.size()) return;
+        visible_[i] = v;
+        if (i < components_.size()) components_[i]->setVisibleProperty(inRoom_ && v);
+    }
+    void SetDrawOrder(std::size_t i, int v)
+    {
+        if (i < components_.size()) components_[i]->setDrawOrderProperty(v);
+    }
+
+    void LoadSet()
+    {
+        if (!content_) return;
+        static const char* names[] = {"brick", "stone", "marble", "wood", "tiles", "carpet", "plaster", "metal", "grass", "cobble", "concrete", "gradient"};
+        const auto t0 = std::chrono::steady_clock::now();
+        try {
+            std::vector<std::unique_ptr<Texture2D>> loaded;
+            for (const char* n : names) loaded.push_back(std::make_unique<Texture2D>(content_->Load<Texture2D>(std::string("Textures/") + n)));
+            held_ = std::move(loaded);
+            lastError_ = "-";
+        } catch (const std::exception& e) {
+            lastError_ = e.what();
+        }
+        const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+        char buf[64];
+        std::snprintf(buf, sizeof buf, "%.2f ms for 12 loads", ms);
+        lastLoad_ = buf;
+    }
+    void UnloadSet()
+    {
+        held_.clear();
+        if (content_) content_->Unload();
+        lastLoad_ = "unloaded";
+    }
+    void LoadMissing()
+    {
+        if (!content_) return;
+        try {
+            (void)content_->Load<Texture2D>("Textures/this-asset-does-not-exist");
+            lastError_ = "unexpectedly loaded";
+        } catch (const Content::ContentLoadException& e) {
+            lastError_ = std::string("ContentLoadException: ") + e.what();
+        } catch (const std::exception& e) {
+            lastError_ = std::string("exception: ") + e.what();
+        }
+        if (lastError_.size() > 60) lastError_.resize(60);
+    }
+
+    // The device room: static panels written once from the live device.
+    void BuildDeviceSigns(RoomBuilder& b)
+    {
+        GraphicsDevice& dev = *S().device;
+        const auto yes = [](bool v) { return std::string(v ? "✓  " : "×  "); };
+        SignSpec info;
+        info.leftAlign = true;
+        info.pixelWidth = 900;
+        info.pixelHeight = 640;
+        info.lines.push_back({"Device and adapter", true, Kit::kGold});
+        const auto add = [&](const std::string& t) { info.lines.push_back({t, false, Kit::kText}); };
+        add("Renderer: " + std::string(dev.GetGraphicsRendererName()));
+        add("Profile: " + std::string(dev.getGraphicsProfileProperty() == GraphicsProfile::HiDef ? "HiDef" : "Reach"));
+        const PresentationParameters& pp = dev.getPresentationParametersProperty();
+        add("Back buffer: " + std::to_string(pp.getBackBufferWidthProperty()) + " x " + std::to_string(pp.getBackBufferHeightProperty()));
+        add("MSAA samples: " + std::to_string(pp.getMultiSampleCountProperty()));
+        add("Max texture size: " + std::to_string(dev.GetMaxTextureDimension()));
+        try {
+            const GraphicsAdapter a = GraphicsAdapter::getDefaultAdapterProperty();
+            add("Adapter: " + a.getDescriptionProperty());
+            add("Display: " + std::to_string(a.getCurrentDisplayModeProperty().getWidthProperty()) + " x " + std::to_string(a.getCurrentDisplayModeProperty().getHeightProperty()));
+        } catch (const std::exception&) {
+            add("Adapter: (no display adapter reported)");
+        }
+        b.AddWallSign(Wall::North, 0.0f, 2.3f, 4.2f, 2.5f, info);
+
+        using CNA::GraphicsCapability;
+        SignSpec caps;
+        caps.leftAlign = true;
+        caps.pixelWidth = 900;
+        caps.pixelHeight = 660;
+        caps.lines.push_back({"GraphicsCapability queries", true, Kit::kGold});
+        const std::pair<GraphicsCapability, const char*> list[] = {
+            {GraphicsCapability::ThreeD, "ThreeD"}, {GraphicsCapability::DepthStencilBuffer, "DepthStencilBuffer"}, {GraphicsCapability::MultiSampleAntiAliasing, "MultiSampleAntiAliasing"},
+            {GraphicsCapability::MultipleRenderTargets, "MultipleRenderTargets"}, {GraphicsCapability::AnisotropicFiltering, "AnisotropicFiltering"}, {GraphicsCapability::WireFrame, "WireFrame"},
+            {GraphicsCapability::OcclusionQuery, "OcclusionQuery"}, {GraphicsCapability::CustomEffects, "CustomEffects"}, {GraphicsCapability::Texture3D, "Texture3D"},
+            {GraphicsCapability::MultiStreamVertexInput, "MultiStreamVertexInput"}, {GraphicsCapability::Instancing, "Instancing"}, {GraphicsCapability::StencilBuffer, "StencilBuffer"},
+            {GraphicsCapability::AdditiveBlending, "AdditiveBlending"}, {GraphicsCapability::CompiledEffects, "CompiledEffects"}, {GraphicsCapability::FloatRenderTargets, "FloatRenderTargets"},
+            {GraphicsCapability::HalfFloatRenderTargets, "HalfFloatRenderTargets"}, {GraphicsCapability::HalfFloatTextureLinearFiltering, "HalfFloatTextureLinearFiltering"}};
+        for (const auto& [cap, name] : list) caps.lines.push_back({yes(dev.SupportsCapability(cap)) + name, false, dev.SupportsCapability(cap) ? Color(150, 255, 170, 255) : Color(255, 150, 140, 255)});
+        b.AddWallSign(Wall::West, 0.0f, 2.3f, 4.2f, 3.0f, caps);
+
+        const CNA::RendererCapabilityProfile& profile = dev.GetRendererCapabilityProfileEXT();
+        SignSpec feat;
+        feat.leftAlign = true;
+        feat.pixelWidth = 900;
+        feat.pixelHeight = 760;
+        feat.lines.push_back({"Renderer capability profile (CNA extension)", true, Kit::kCnaExt});
+        for (const CNA::RendererFeature f : CNA::AllRendererFeatures()) {
+            const auto support = profile.GetFeature(f).support;
+            const char* tag = support == CNA::RendererFeatureSupport::Supported ? "✓ " : (support == CNA::RendererFeatureSupport::Restricted ? "~ " : (support == CNA::RendererFeatureSupport::Unsupported ? "× " : "? "));
+            feat.lines.push_back({std::string(tag) + std::string(CNA::GetRendererFeatureName(f)), false,
+                                  support == CNA::RendererFeatureSupport::Supported ? Color(150, 255, 170, 255) : (support == CNA::RendererFeatureSupport::Restricted ? Color(255, 220, 120, 255) : Color(255, 150, 140, 255))});
+        }
+        b.AddWallSign(Wall::South, 0.0f, 2.4f, 4.2f, 3.6f, feat);
+    }
+
+    Mode mode_;
+    Gizmos gizmos_;
+    float time_ = 0.0f, delay_ = 0.0f, timeBall_ = 0.0f, frameBall_ = 0.0f;
+    long long frames_ = 0;
+    std::unique_ptr<LiveScreen> graph_;
+    std::unique_ptr<Content::ContentManager> content_;
+    std::vector<std::unique_ptr<Texture2D>> held_;
+    std::string lastLoad_ = "-", lastError_ = "-";
+    std::vector<std::shared_ptr<BadgeComponent>> components_;
+    std::array<bool, 3> visible_{true, true, true};
+    bool inRoom_ = false;
+    int pendingW_ = 0, pendingH_ = 0, pendingVsync_ = -1;
+    bool pendingToggleFull_ = false;
+};
+
+}  // namespace
+
+std::unique_ptr<Exhibit> MakeAppLab(const RoomDef& room, Services& services)
+{
+    return std::make_unique<AppLab>(room, services);
+}

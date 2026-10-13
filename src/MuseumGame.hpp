@@ -46,6 +46,7 @@ private:
     void TeleportToCell(int cell);
     void ResetToEntrance();
     void UpdateFrameStats(float dt);
+    void RecordLoopStats(const Microsoft::Xna::Framework::GameTime& gameTime);
     void RunScript();
     void StartRide(int floor);
     void OpenDirectory();
@@ -98,6 +99,8 @@ private:
     float bannerAge_ = 99.0f;
     float fpsAccumulator_ = 0.0f;
     int fpsFrames_ = 0;
+    int updatesThisSecond_ = 0;
+    int drawsThisSecond_ = 0;
     std::string rendererName_;
     std::string focusPrompt_;
     bool screenshotDone_ = false;

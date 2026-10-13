@@ -27,8 +27,10 @@ public:
                 const Microsoft::Xna::Framework::Color& clear = Microsoft::Xna::Framework::Color(60, 90, 140, 255));
 
     [[nodiscard]] Microsoft::Xna::Framework::Graphics::Texture2D* Texture() { return target_.get(); }
+    [[nodiscard]] Microsoft::Xna::Framework::Graphics::RenderTarget2D* Target() { return target_.get(); }
     [[nodiscard]] float Aspect() const { return static_cast<float>(width_) / static_cast<float>(height_); }
     [[nodiscard]] bool HasContent() const { return rendered_; }
+    void MarkRendered() { rendered_ = true; }
 
     /** Draws the finished view as a quad facing `yaw` (0 faces +Z) centred at `centre` (world), `width` metres wide. */
     void DrawInRoom(const DrawContext& ctx, const Microsoft::Xna::Framework::Vector3& centre, float yaw, float width);

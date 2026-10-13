@@ -30,6 +30,8 @@ constexpr Entry kEntries[] = {
     {"quaternions", MakeQuaternionLab},
     {"curves", MakeCurveLab},
     {"collision", MakeCollisionLab},
+    {"cameras", MakeCameraLab},
+    {"applab", MakeAppLab},
 };
 
 }  // namespace

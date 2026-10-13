@@ -18,9 +18,13 @@ using namespace Microsoft::Xna::Framework::Graphics;
 
 namespace {
 // Distances are measured on the floor plane, from the visitor to the edge of a cell.
-constexpr float kBuildDistance = 75.0f;     // cells this close (and within two doors) have their architecture built
-constexpr float kLoadDistance = 45.0f;      // cells this close (and within one door) load their exhibit
-constexpr float kKeepDistance = 130.0f;     // built cells beyond this, or beyond kKeepDepth doors, are destroyed
+// Circulation cells (halls, concourses, galleries) are long and always in view, so they are built from far away;
+// exhibit rooms only matter once their doorway is near. "Keep" is larger than "build" so cells do not flicker.
+constexpr float kBuildDistanceCirculation = 80.0f;
+constexpr float kBuildDistanceRoom = 36.0f;
+constexpr float kLoadDistanceCirculation = 45.0f;
+constexpr float kLoadDistanceRoom = 28.0f;
+constexpr float kKeepFactor = 1.6f;         // built cells beyond build distance * this, or beyond kKeepDepth doors, are destroyed
 constexpr int kBuildDepth = 2;
 constexpr int kLoadDepth = 1;
 constexpr int kKeepDepth = 4;
@@ -186,15 +190,18 @@ void MuseumWorld::Activate(int cell, const Vector3& position, bool synchronous)
     for (std::size_t i = 0; i < instances_.size(); ++i) {
         if (!instances_[i]) continue;
         const int d = depth[i];
-        if (d < 0 || d > kKeepDepth || DistanceTo(static_cast<int>(i), position) > kKeepDistance) DestroyCell(static_cast<int>(i));
+        const bool room = museum_.Room(static_cast<int>(i)).kind == CellKind::Room;
+        const float keep = (room ? kBuildDistanceRoom : kBuildDistanceCirculation) * kKeepFactor;
+        if (d < 0 || d > kKeepDepth || DistanceTo(static_cast<int>(i), position) > keep) DestroyCell(static_cast<int>(i));
     }
 
     int budget = synchronous ? 1 << 20 : 1;
     for (const int c : order) {
         const int d = depth[static_cast<std::size_t>(c)];
         const float dist = DistanceTo(c, position);
-        const bool wantBuilt = d <= kBuildDepth && dist < kBuildDistance;
-        const bool wantLoaded = d <= kLoadDepth && dist < kLoadDistance;
+        const bool room = museum_.Room(c).kind == CellKind::Room;
+        const bool wantBuilt = d <= kBuildDepth && dist < (room ? kBuildDistanceRoom : kBuildDistanceCirculation);
+        const bool wantLoaded = d <= kLoadDepth && dist < (room ? kLoadDistanceRoom : kLoadDistanceCirculation);
         const bool essential = d <= kLoadDepth;   // the cell and its direct neighbours must exist at once
         if (wantBuilt && !instances_[static_cast<std::size_t>(c)] && (essential || budget > 0)) {
             BuildCell(c);

@@ -1,6 +1,8 @@
 #include "MuseumGame.hpp"
 
 #include <algorithm>
+#include <chrono>
+#include <cstring>
 #include <cmath>
 #include <cstdio>
 #include <exception>
@@ -92,6 +94,8 @@ void MuseumGame::LoadContent()
     services_.signs = signs_.get();
     services_.audio = audio_.get();
     services_.stats = &stats_;
+    services_.mutableStats = &stats_;
+    services_.graphics = &graphics_;
     services_.whiteTexture = textures_->White();
 
     sky_ = std::make_unique<SkyDome>(services_, timeOfDay_);
@@ -258,11 +262,39 @@ void MuseumGame::HandleSystemKeys()
     }
 }
 
+void MuseumGame::RecordLoopStats(const GameTime& gameTime)
+{
+    ++stats_.updates;
+    ++updatesThisSecond_;
+    stats_.totalSeconds = gameTime.getTotalGameTimeProperty().getTotalSecondsProperty();
+    stats_.elapsedMilliseconds = static_cast<float>(gameTime.getElapsedGameTimeProperty().getTotalMillisecondsProperty());
+    stats_.runningSlowly = gameTime.getIsRunningSlowlyProperty();
+    stats_.fixedStep = getIsFixedTimeStepProperty();
+    stats_.targetMilliseconds = static_cast<float>(getTargetElapsedTimeProperty().getTotalMillisecondsProperty());
+    std::memmove(stats_.frameHistory, stats_.frameHistory + 1, sizeof(stats_.frameHistory) - sizeof(float));
+    stats_.frameHistory[119] = stats_.elapsedMilliseconds;
+    if (stats_.hitchFrames > 0) --stats_.hitchFrames;
+    const float delay = stats_.hitchFrames > 0 ? std::max(stats_.injectedDelayMs, 40.0f) : stats_.injectedDelayMs;
+    if (delay > 0.0f) {   // a deliberate slow Update, for the timing labs
+        const auto until = std::chrono::steady_clock::now() + std::chrono::microseconds(static_cast<long long>(delay * 1000.0f));
+        while (std::chrono::steady_clock::now() < until) {}
+    }
+    if (world_) {
+        stats_.cellsBuilt = world_->Stats().cellsBuilt;
+        stats_.cellsLoaded = world_->Stats().cellsLoaded;
+        stats_.cellsBuiltTotal = world_->Stats().cellsBuiltTotal;
+        stats_.cellsDestroyedTotal = world_->Stats().cellsDestroyedTotal;
+    }
+}
+
 void MuseumGame::UpdateFrameStats(float dt)
 {
     fpsAccumulator_ += dt;
     ++fpsFrames_;
     if (fpsAccumulator_ >= 0.5f) {
+        stats_.updatesPerSecond = static_cast<float>(updatesThisSecond_) / fpsAccumulator_;
+        stats_.drawsPerSecond = static_cast<float>(drawsThisSecond_) / fpsAccumulator_;
+        updatesThisSecond_ = drawsThisSecond_ = 0;
         stats_.fps = static_cast<float>(fpsFrames_) / fpsAccumulator_;
         stats_.frameMilliseconds = fpsAccumulator_ / static_cast<float>(fpsFrames_) * 1000.0f;
         fpsAccumulator_ = 0.0f;
@@ -281,10 +313,12 @@ void MuseumGame::Update(GameTime& gameTime)
         if (++frame_ > 2) Exit();
         return;
     }
+    Game::Update(gameTime);   // GameComponents (the application-model rooms register some)
     float dt = static_cast<float>(gameTime.getElapsedGameTimeProperty().getTotalMillisecondsProperty()) / 1000.0f;
     dt = std::clamp(dt, 0.0f, kMaxFrameSeconds);
     if (options_.fixedTimeStep > 0.0f) dt = options_.fixedTimeStep;
     ++frame_;
+    RecordLoopStats(gameTime);
 
     input_.Update();
     UpdateFrameStats(dt);
@@ -359,8 +393,10 @@ void MuseumGame::Update(GameTime& gameTime)
     if (options_.maxFrames > 0 && frame_ >= options_.maxFrames) Exit();
 }
 
-void MuseumGame::Draw(const GameTime&)
+void MuseumGame::Draw(const GameTime& gameTime)
 {
+    ++stats_.draws;
+    ++drawsThisSecond_;
     GraphicsDevice& device = getGraphicsDeviceProperty();
     if (!world_) {
         device.Clear(Color::DarkSlateGray);
@@ -412,6 +448,7 @@ void MuseumGame::Draw(const GameTime&)
         hud.roomSubtitle = r.subtitle;
         hud.bannerAlpha = bannerAge_ < 4.0f ? std::clamp(std::min(bannerAge_ * 3.0f, (4.0f - bannerAge_) * 1.5f), 0.0f, 1.0f) : 0.0f;
     }
+    Game::Draw(gameTime);     // DrawableGameComponents draw over the scene
     hud_->Draw(hud);
     services_.mainView = nullptr;
     if (directory_->IsOpen()) {
@@ -474,6 +511,11 @@ void MuseumGame::RunScript()
         } else if (op == "floor") {
             const int f = std::atoi(arg.c_str());
             if (f >= 0 && f < static_cast<int>(museum_->floors.size())) TeleportToCell(museum_->floors[static_cast<std::size_t>(f)].hub);
+        } else if (op == "stats") {
+            const WorldStats& w = world_->Stats();
+            Museum::Log("stats", "built %d loaded %d (lifetime built %d destroyed %d) triangles %d  textures %zu  frame %lld  fps %.0f",
+                        w.cellsBuilt, w.cellsLoaded, w.cellsBuiltTotal, w.cellsDestroyedTotal, w.triangles, textures_->Count(), frame_,
+                        static_cast<double>(stats_.fps));
         } else if (op == "directory") {
             if (arg == "close") directory_->Close();
             else OpenDirectory();

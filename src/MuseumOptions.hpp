@@ -26,6 +26,7 @@ struct MuseumOptions {
     std::string script;                 // semicolon-separated test actions, see MuseumGame::RunScript
     bool showHelp = false;
     bool validate = false;              // check the catalogue (no window) and exit with the result
+    bool listRooms = false;             // print every room key, one per line (no window) and exit
     bool inventory = false;             // print the museum's counts as JSON (no window) and exit
 
     static MuseumOptions Parse(int argc, char** argv);

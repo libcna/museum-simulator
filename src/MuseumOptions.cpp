@@ -34,6 +34,7 @@ const char* MuseumOptions::Usage()
         "  --fixed-step SECONDS      advance the simulation by a fixed step per frame\n"
         "  --script \"a;b;c\"          scripted test actions (see src/MuseumGame.cpp, RunScript)\n"
         "  --validate                check the museum's structure (no window); exit status 1 if invalid\n"
+        "  --list-rooms              print the key of every room (no window)\n"
         "  --inventory               print the museum's counts as JSON (no window)\n";
 }
 
@@ -65,6 +66,7 @@ MuseumOptions MuseumOptions::Parse(int argc, char** argv)
         else if (Match(a, "--script", v, i, argc, argv)) o.script = v;
         else if (!std::strcmp(a, "--validate")) o.validate = true;
         else if (!std::strcmp(a, "--inventory")) o.inventory = true;
+        else if (!std::strcmp(a, "--list-rooms")) o.listRooms = true;
         else if (!std::strcmp(a, "--help") || !std::strcmp(a, "-h")) o.showHelp = true;
         else std::fprintf(stderr, "cna-3d-museum: ignoring unknown option '%s'\n", a);
     }

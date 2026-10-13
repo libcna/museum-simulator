@@ -22,6 +22,7 @@ class Shapes;
 class SkyDome;
 class TimeOfDay;
 class MuseumPlan;
+namespace Microsoft::Xna::Framework { class GraphicsDeviceManager; }
 struct SceneView;
 
 /** Per-frame numbers shown on the Information Hall screens and the F3 overlay. */
@@ -34,6 +35,22 @@ struct FrameStats {
     bool fullscreen = false;
     int roomsDrawn = 0;
     int activeVoices = 0;
+
+    // The application model, as seen by the game loop (updated by MuseumGame).
+    long long updates = 0;           // Game.Update calls
+    long long draws = 0;             // Game.Draw calls
+    float updatesPerSecond = 0.0f;
+    float drawsPerSecond = 0.0f;
+    double totalSeconds = 0.0;       // GameTime.TotalGameTime
+    float elapsedMilliseconds = 0.0f;// GameTime.ElapsedGameTime of the latest Update
+    bool runningSlowly = false;      // GameTime.IsRunningSlowly
+    bool fixedStep = false;          // Game.IsFixedTimeStep
+    float targetMilliseconds = 0.0f; // Game.TargetElapsedTime
+    float frameHistory[120] = {};    // recent ElapsedGameTime values, oldest first
+    float injectedDelayMs = 0.0f;    // lab control: burn this long inside every Update
+    int hitchFrames = 0;             // lab control: frames of extra delay left
+    int cellsBuilt = 0, cellsLoaded = 0;   // lazily built world (see MuseumWorld)
+    long long cellsBuiltTotal = 0, cellsDestroyedTotal = 0;
 };
 
 /** Everything an exhibit may use. Pointers are owned by MuseumGame and outlive every exhibit. */
@@ -54,6 +71,8 @@ struct Services {
     Microsoft::Xna::Framework::Graphics::SpriteFont* titleFont = nullptr;
     const FrameStats* stats = nullptr;
     const MuseumPlan* museum = nullptr;
+    Microsoft::Xna::Framework::GraphicsDeviceManager* graphics = nullptr;
+    FrameStats* mutableStats = nullptr;      // labs that change the game loop's behaviour write here
     const SceneView* mainView = nullptr;   // the visitor's camera for this frame (valid during Draw/DrawOverlay)
     Microsoft::Xna::Framework::Graphics::Texture2D* whiteTexture = nullptr;
     std::function<void(int floor)> travelToFloor;   // elevator: ride to a floor's elevator car

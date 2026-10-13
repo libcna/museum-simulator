@@ -131,6 +131,53 @@ WingSpec CollisionWing()
     return w;
 }
 
+WingSpec CameraWing()
+{
+    WingSpec w;
+    w.name = "Cameras";
+    w.tagline = "Orbit, chase, top-down, security, split-screen and mirror cameras";
+    w.theme = "corridor-cool";
+    w.accent = {0.75f, 0.60f, 0.98f};
+    w.spineSide = Wall::East;
+    w.rooms = {
+        Lab("cam-orbit", "Orbit Camera", "A camera circling a target: CreateLookAt from distance, elevation and angle", "cameras", "orbit", {"Matrix.CreateLookAt", "RenderTarget2D", "BoundingFrustum"}),
+        Lab("cam-chase", "Chase Camera", "A spring-smoothed third-person camera following a moving car", "cameras", "chase", {"Matrix.CreateLookAt", "Vector3.Lerp", "GameTime"}),
+        Lab("cam-topdown", "Top-Down and Orthographic", "A map camera with a switch between orthographic and perspective", "cameras", "topdown", {"Matrix.CreateOrthographic", "Matrix.CreateLookAt"}),
+        Lab("cam-security", "Security Camera", "A fixed camera that pans and zooms, with its frustum drawn in the scene", "cameras", "security", {"Matrix.CreatePerspectiveFieldOfView", "BoundingFrustum"}),
+        Lab("cam-fov", "Field of View", "Two cameras, one position, two fields of view side by side", "cameras", "fov", {"Matrix.CreatePerspectiveFieldOfView", "RenderTarget2D"}),
+        Lab("cam-clip", "Near and Far Planes", "Clip planes, depth precision and z-fighting with a large far/near ratio", "cameras", "clip", {"Matrix.CreatePerspectiveFieldOfView", "DepthFormat", "DepthStencilState"}),
+        Lab("cam-transition", "Camera Transitions", "Moving between viewpoints with Vector3.SmoothStep and Quaternion.Slerp", "cameras", "transition", {"Vector3.SmoothStep", "Quaternion.Slerp", "Matrix.CreateWorld"}),
+        Lab("cam-split", "Split Screen", "GraphicsDevice.Viewport used to draw two cameras into one render target", "cameras", "split", {"Viewport", "GraphicsDevice.Viewport", "RenderTarget2D"}),
+        Lab("cam-mirror", "Rear-View Mirror", "A camera at your eyes looking backwards on a mirrored screen", "cameras", "mirror", {"RenderTarget2D", "Matrix.CreateLookAt"}),
+    };
+    return w;
+}
+
+WingSpec AppWing()
+{
+    WingSpec w;
+    w.name = "Application Model";
+    w.tagline = "Game, GameTime, the device, the back buffer, content and components";
+    w.theme = "corridor-cool";
+    w.accent = {0.40f, 0.75f, 0.95f};
+    w.spineSide = Wall::West;
+    w.rooms = {
+        Lab("app-lifecycle", "Game Lifecycle", "Initialize, LoadContent, Update, Draw and UnloadContent with live counters and a fixed/variable step switch", "applab", "lifecycle",
+            {"Game", "GameTime", "Game.IsFixedTimeStep", "Game.TargetElapsedTime"}),
+        Lab("app-gametime", "GameTime and Frame Rate", "Time-based versus frame-based movement, with an artificial slowdown and a frame-time graph", "applab", "gametime",
+            {"GameTime.ElapsedGameTime", "GameTime.TotalGameTime"}),
+        Lab("app-device", "Device and Renderer Report", "The live GraphicsDevice, adapter, GraphicsCapability list and renderer capability profile", "applab", "device",
+            {"GraphicsDevice", "GraphicsAdapter", "GraphicsCapability", "RendererCapabilityProfile", "PresentationParameters"}),
+        Lab("app-viewport", "Back Buffer, Viewport and Fullscreen", "GraphicsDeviceManager.ApplyChanges: resolution, fullscreen and vertical sync at run time", "applab", "viewport",
+            {"GraphicsDeviceManager", "PresentationParameters", "Viewport", "GameWindow.ClientBounds"}),
+        Lab("app-content", "Content Lifetime", "ContentManager.Load, caching, Unload and ContentLoadException with your own manager", "applab", "content",
+            {"ContentManager", "ContentManager.Load", "ContentManager.Unload", "ContentLoadException", "Texture2D"}),
+        Lab("app-components", "Game Components", "GameComponent and DrawableGameComponent with UpdateOrder, DrawOrder, Enabled and Visible", "applab", "components",
+            {"GameComponent", "DrawableGameComponent", "Game.Components"}),
+    };
+    return w;
+}
+
 }  // namespace
 
 FloorSpec MakeFloor1()
@@ -141,9 +188,11 @@ FloorSpec MakeFloor1()
     f.tagline = "The application model, the maths of games, geometry tests and cameras";
     f.theme = "concourse";
     f.accent = {0.40f, 0.75f, 0.95f};
+    f.wings.push_back(AppWing());
     f.wings.push_back(MathWing());
     f.wings.push_back(TransformWing());
     f.wings.push_back(RotationWing());
     f.wings.push_back(CollisionWing());
+    f.wings.push_back(CameraWing());
     return f;
 }
