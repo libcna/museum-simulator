@@ -271,7 +271,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsCapability.WireFrame | `rs-fill` |
 | GraphicsDevice | `info`, `app-device` |
 | GraphicsDevice.Clear | `rs-stencilcount` |
-| GraphicsDevice.DrawIndexedPrimitives | `geo-indexed`, `geo-manybuffers`, `geo-dynindex`, `pf-objects` |
+| GraphicsDevice.DrawIndexedPrimitives | `geo-indexed`, `geo-manybuffers`, `geo-dynindex`, `geo-terrain`, `pf-objects` |
 | GraphicsDevice.DrawInstancedPrimitives | `geo-instancing`, `pf-objects` |
 | GraphicsDevice.DrawPrimitives | `geo-indexed` |
 | GraphicsDevice.DrawUserPrimitives | `geo-triangle`, `geo-primitives`, `cx-points`, `pf-buffers`, `pf-particles`, `rv-geometry` |
@@ -309,7 +309,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | IPackedVector | `vt-packed` |
 | IShadowReceiverEXT | `cx-shadow` |
 | ImageBasedLightEXT | `model-ibl` |
-| IndexBuffer | `particles`, `geo-indexed`, `geo-procedural`, `geo-index32`, `geo-dynindex`, `model-skinfx`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic` |
+| IndexBuffer | `particles`, `geo-indexed`, `geo-procedural`, `geo-index32`, `geo-dynindex`, `geo-terrain`, `model-skinfx`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic` |
 | IndexElementSize | `geo-index32` |
 | InputDevices.GetMiceEXT | `in-devices` |
 | Joysticks.GetCapabilitiesEXT | `in-joystick` |
@@ -327,7 +327,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | MathHelper | `an-pendulum`, `rf-deck` |
 | MathHelper.CatmullRom | `curve-easing` |
 | MathHelper.Hermite | `curve-easing` |
-| MathHelper.Lerp | `curve-easing`, `an-doors` |
+| MathHelper.Lerp | `curve-easing`, `geo-terrain`, `an-doors` |
 | MathHelper.SmoothStep | `curve-easing`, `an-doors` |
 | MathHelper.WrapAngle | `an-walker` |
 | Matrix | `models`, `animation` |
@@ -435,7 +435,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | RasterizerState | `renderstates` |
 | RasterizerState.CullMode | `geo-triangle`, `rs-cull`, `rt-mirror`, `rv-geometry` |
 | RasterizerState.DepthBias | `rs-depthbias` |
-| RasterizerState.FillMode | `geo-procedural`, `rs-fill` |
+| RasterizerState.FillMode | `geo-procedural`, `geo-terrain`, `rs-fill` |
 | RasterizerState.ScissorTestEnable | `sprite-scissor`, `rs-scissor` |
 | RasterizerState.SlopeScaleDepthBias | `rs-depthbias` |
 | Ray.Intersects | `col-ray-box`, `col-ray-sphere`, `col-ray-plane`, `col-pick` |
@@ -536,7 +536,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | TextInputEXT.TextInput | `in-text` |
 | Texture2D | `materials`, `app-content`, `tex-mip`, `rf-garden` |
 | Texture2D.FromStream | `tex-io` |
-| Texture2D.GetData | `sprite-atlas`, `sprite-hit`, `tex-dynamic`, `ct-formats`, `rv-targets` |
+| Texture2D.GetData | `sprite-atlas`, `sprite-hit`, `geo-terrain`, `tex-dynamic`, `ct-formats`, `rv-targets` |
 | Texture2D.SaveAsJpeg | `tex-io` |
 | Texture2D.SaveAsPng | `tex-io` |
 | Texture2D.SetData | `sprite-ui`, `sprite-atlas`, `sprite-anim`, `tex-dynamic` |
@@ -569,11 +569,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Vector3.Subtract | `vec-add` |
 | Vector3.TransformNormal | `mat-normals` |
 | Vector4.Transform | `mat-screen` |
-| VertexBuffer | `geo-indexed`, `geo-procedural`, `geo-manybuffers`, `model-skinfx`, `pf-buffers` |
+| VertexBuffer | `geo-indexed`, `geo-procedural`, `geo-manybuffers`, `geo-terrain`, `model-skinfx`, `pf-buffers` |
 | VertexBufferBinding | `geo-instancing`, `pf-objects` |
 | VertexPositionColor | `geo-triangle` |
 | VertexPositionColorTexture | `tex-uv`, `an-conveyor` |
-| VertexPositionNormalTexture | `geo-dynamic` |
+| VertexPositionNormalTexture | `geo-dynamic`, `geo-terrain` |
 | VertexPositionNormalTextureSkinned | `model-skinfx` |
 | Viewport | `app-viewport`, `cam-split` |
 | Viewport.Project | `mat-screen`, `text-labels` |

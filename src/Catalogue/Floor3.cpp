@@ -44,6 +44,12 @@ WingSpec BuffersWing()
             {"VertexBufferBinding", "GraphicsDevice.DrawInstancedPrimitives", "GraphicsCapability.Instancing"}),
         Geo("geo-dynindex", "Dynamic Index Buffers", "A DynamicIndexBuffer rewritten every frame to draw only the part of a big mesh near a moving point", "dynindex",
             {"DynamicIndexBuffer", "SetDataOptions.Discard", "GraphicsDevice.DrawIndexedPrimitives", "IndexBuffer"}),
+        [] {
+            RoomSpec r = Geo("geo-terrain", "Heightmap Terrain", "A heightmap read with GetData becomes a vertex grid with 16-bit indices, normals from neighbouring heights and a ball that follows the ground", "",
+                             {"Texture2D.GetData", "VertexBuffer", "IndexBuffer", "VertexPositionNormalTexture", "GraphicsDevice.DrawIndexedPrimitives", "RasterizerState.FillMode", "MathHelper.Lerp"});
+            r.exhibit = "terrain-lab";
+            return r;
+        }(),
     };
     return w;
 }

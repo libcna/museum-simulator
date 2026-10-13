@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 33 wings, 248 exhibit rooms (5 open to the sky), 311 walkable cells in all.
+10 floors, 33 wings, 249 exhibit rooms (5 open to the sky), 312 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -218,6 +218,7 @@ Vertex data, buffers, primitives and textures
 | 3.1.07 | `geo-manybuffers` | Many Small Buffers | XNA 4.0 | VertexBuffer, GraphicsDevice.DrawIndexedPrimitives |
 | 3.1.08 | `geo-instancing` | Hardware Instancing | XNA 4.0 | VertexBufferBinding, GraphicsDevice.DrawInstancedPrimitives, GraphicsCapability.Instancing |
 | 3.1.09 | `geo-dynindex` | Dynamic Index Buffers | XNA 4.0 | DynamicIndexBuffer, SetDataOptions.Discard, GraphicsDevice.DrawIndexedPrimitives, IndexBuffer |
+| 3.1.10 | `geo-terrain` | Heightmap Terrain | XNA 4.0 | Texture2D.GetData, VertexBuffer, IndexBuffer, VertexPositionNormalTexture, GraphicsDevice.DrawIndexedPrimitives, RasterizerState.FillMode, MathHelper.Lerp |
 
 **Textures** - Mip levels, filters, addressing, UVs, formats, alpha, cube and volume textures, image encode/decode
 
