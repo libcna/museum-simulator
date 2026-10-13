@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-474 distinct API names are claimed by at least one room.
+476 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -114,6 +114,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BoundingSphere.Intersects | `col-sphere-box` |
 | BoundingSphere.Transform | `model-bounds` |
 | ButtonState | `in-mouse` |
+| Buttons | `in-pad` |
 | Byte4 | `vt-packed` |
 | CNA::Devices::DisplayInfo | `cx-devices` |
 | CNA::Devices::Locale | `cx-devices` |
@@ -221,6 +222,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GamePadCapabilities | `in-players` |
 | GamePadDeadZone | `in-pad` |
 | GamePadState | `in-pad` |
+| GamePadState.IsButtonDown | `in-pad` |
 | GameServiceContainer | `app-services` |
 | GameServiceContainer.AddService | `app-services` |
 | GameServiceContainer.GetService | `app-services` |

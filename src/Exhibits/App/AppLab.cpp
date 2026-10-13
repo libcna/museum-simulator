@@ -224,6 +224,7 @@ public:
             removedToken_ = S().game->getComponentsProperty().ComponentRemoved.Add([this](System::Object*, const GameComponentCollectionEventArgs&) { ++removedCount_; });
         }
         if (mode_ == Mode::GameTimeLab) graph_ = std::make_unique<LiveScreen>(S(), 640, 320);
+        if (mode_ == Mode::Viewport) graph_ = std::make_unique<LiveScreen>(S(), 640, 360);
         if (mode_ == Mode::Content && S().game != nullptr) {
             content_ = std::make_unique<Content::ContentManager>(&S().game->getServicesProperty(), S().contentRoot);
             LoadSet();   // start with something to see: the twelve textures are on the wall when you arrive
@@ -294,6 +295,10 @@ public:
 
     void RenderOffscreen(const DrawContext&) override
     {
+        if (mode_ == Mode::Viewport && graph_) {
+            DrawViewportDiagram();
+            return;
+        }
         if (mode_ != Mode::GameTimeLab || !graph_) return;
         graph_->Render(Color(12, 16, 28, 255), [this](SpriteBatch& sb, int w, int h) {
             Texture2D& white = *S().whiteTexture;
@@ -329,6 +334,13 @@ public:
             if (graph_ && graph_->HasContent()) {
                 RenderStates::SetOpaque3D(ctx.device);
                 { Vector3 o, u, v; FarQuad(0.0f, 1.2f, 4.6f, 2.3f, o, u, v); QuadDraw::Textured(ctx, graph_->Texture(), o, u, v); }
+            }
+        } else if (mode_ == Mode::Viewport) {
+            if (graph_ && graph_->HasContent()) {
+                RenderStates::SetOpaque3D(ctx.device);
+                Vector3 o, u, v;
+                FarQuad(0.0f, 1.0f, 6.4f, 3.6f, o, u, v);
+                QuadDraw::Textured(ctx, graph_->Texture(), o, u, v);
             }
         } else if (mode_ == Mode::Content) {
             for (std::size_t i = 0; i < held_.size(); ++i) {
@@ -370,6 +382,38 @@ private:
         const PresentationParameters& pp = S().device->getPresentationParametersProperty();
         return std::to_string(pp.getBackBufferWidthProperty()) + " x " + std::to_string(pp.getBackBufferHeightProperty()) + (S().graphics && S().graphics->getIsFullScreenProperty() ? "  fullscreen" : "  windowed");
     }
+    // The back buffer, the viewport inside it and the window that shows it, to scale, with SpriteBatch's pixel grid.
+    void DrawViewportDiagram()
+    {
+        // Read the viewport before the live screen's own render target replaces it.
+        const Viewport vp = S().device->getViewportProperty();
+        graph_->Render(Color(12, 16, 28, 255), [this, vp](SpriteBatch& sb, int w, int h) {
+            if (S().font == nullptr) return;
+            Texture2D& white = *S().whiteTexture;
+            const PresentationParameters& pp = S().device->getPresentationParametersProperty();
+            const float bw = static_cast<float>(std::max(1, pp.getBackBufferWidthProperty())), bh = static_cast<float>(std::max(1, pp.getBackBufferHeightProperty()));
+            const float scale = std::min((static_cast<float>(w) - 80.0f) / bw, (static_cast<float>(h) - 110.0f) / bh);
+            const float ox = (static_cast<float>(w) - bw * scale) * 0.5f, oy = 52.0f;
+            const auto rect = [&](float x, float y, float rw, float rh, Color c) { sb.Draw(white, Rectangle(static_cast<int>(x), static_cast<int>(y), std::max(1, static_cast<int>(rw)), std::max(1, static_cast<int>(rh))), c); };
+            const auto text = [&](const std::string& t, float x, float y, Color c, float sc) { sb.DrawString(*S().font, t, Vector2(x, y), c, 0.0f, Vector2(0, 0), sc, SpriteEffects::None, 0.0f); };
+            text("BackBuffer " + std::to_string(pp.getBackBufferWidthProperty()) + " x " + std::to_string(pp.getBackBufferHeightProperty()) + "   (SpriteBatch pixels, origin top-left)", 10, 8, Color(255, 226, 150, 255), 0.7f);
+            rect(ox - 2, oy - 2, bw * scale + 4, bh * scale + 4, Color(90, 100, 140, 255));
+            rect(ox, oy, bw * scale, bh * scale, Color(26, 34, 56, 255));
+            for (int x = 100; x < static_cast<int>(bw); x += 100) rect(ox + static_cast<float>(x) * scale, oy, 1, bh * scale, Color(50, 62, 92, 255));
+            for (int y = 100; y < static_cast<int>(bh); y += 100) rect(ox, oy + static_cast<float>(y) * scale, bw * scale, 1, Color(50, 62, 92, 255));
+            rect(ox + static_cast<float>(vp.getXProperty()) * scale, oy + static_cast<float>(vp.getYProperty()) * scale, static_cast<float>(vp.getWidthProperty()) * scale, 3, Color(110, 230, 150, 255));
+            rect(ox + static_cast<float>(vp.getXProperty()) * scale, oy + static_cast<float>(vp.getYProperty() + vp.getHeightProperty()) * scale - 3, static_cast<float>(vp.getWidthProperty()) * scale, 3, Color(110, 230, 150, 255));
+            rect(ox + static_cast<float>(vp.getXProperty()) * scale, oy + static_cast<float>(vp.getYProperty()) * scale, 3, static_cast<float>(vp.getHeightProperty()) * scale, Color(110, 230, 150, 255));
+            rect(ox + static_cast<float>(vp.getXProperty() + vp.getWidthProperty()) * scale - 3, oy + static_cast<float>(vp.getYProperty()) * scale, 3, static_cast<float>(vp.getHeightProperty()) * scale, Color(110, 230, 150, 255));
+            text("(0, 0)", ox + 6, oy + 4, Color(255, 200, 120, 255), 0.55f);
+            text("(" + std::to_string(pp.getBackBufferWidthProperty()) + ", " + std::to_string(pp.getBackBufferHeightProperty()) + ")", ox + bw * scale - 90, oy + bh * scale - 22, Color(255, 200, 120, 255), 0.55f);
+            text("Viewport " + std::to_string(vp.getXProperty()) + "," + std::to_string(vp.getYProperty()) + "  " + std::to_string(vp.getWidthProperty()) + " x " + std::to_string(vp.getHeightProperty()) +
+                     "   aspect " + Fmt(vp.getAspectRatioProperty()) + "   (green)",
+                 ox, oy + bh * scale + 10, Color(130, 235, 165, 255), 0.62f);
+            text("grid: 100 pixels", ox, oy + bh * scale + 34, Color(130, 140, 170, 255), 0.55f);
+        });
+    }
+
     [[nodiscard]] std::string ViewportText() const
     {
         const Viewport v = S().device->getViewportProperty();
