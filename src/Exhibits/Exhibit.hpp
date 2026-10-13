@@ -65,6 +65,12 @@ protected:
     [[nodiscard]] Wall FarWall() const { return Opposite(DoorWall()); }
     /** Centre and facing (yaw, 0 = +Z) of a screen hung on the far wall `height` metres up. */
     void FarScreenPose(float height, Microsoft::Xna::Framework::Vector3& centre, float& yaw) const;
+    /** A point on the far wall: `along` metres to the right as seen from the door, `height` up; yaw faces into the room. */
+    [[nodiscard]] Microsoft::Xna::Framework::Vector3 FarPoint(float along, float height, float& yaw) const;
+    [[nodiscard]] Microsoft::Xna::Framework::Vector3 FarPoint0(float height) const { float y; return FarPoint(0.0f, height, y); }
+    [[nodiscard]] float FarYaw() const { float y; (void)FarPoint(0.0f, 0.0f, y); return y; }
+    /** Corner and edge vectors of an upright `w` x `h` quad on the far wall, its bottom edge `bottom` up, facing into the room. */
+    void FarQuad(float along, float bottom, float w, float h, Microsoft::Xna::Framework::Vector3& origin, Microsoft::Xna::Framework::Vector3& u, Microsoft::Xna::Framework::Vector3& v) const;
     /** A control console standing in the room (local metres). Create it, and add its rows, in BuildStatic. */
     ControlPanel& AddPanel(const std::string& title, float x, float y, float z, float yaw, float width = 1.8f);
     [[nodiscard]] Services& S() { return services_; }

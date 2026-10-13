@@ -153,7 +153,7 @@ public:
             case Mode::Cull: DrawCull(ctx, o); break;
             case Mode::Fill: DrawFill(ctx, o); break;
             case Mode::DepthBias: DrawBias(ctx); break;
-            case Mode::Scissor: if (view_) view_->DrawInRoom(ctx, R().ToWorld(0.0f, 2.3f, -R().halfD + 0.2f), 0.0f, 6.6f); break;
+            case Mode::Scissor: if (view_) view_->DrawInRoom(ctx, FarPoint0(2.3f), FarYaw(), 6.6f); break;
             case Mode::DepthFunc: DrawDepthFunc(ctx, o); break;
             case Mode::DepthRead: DrawDepthRead(ctx, o); break;
             case Mode::StencilPortal: DrawPortal(ctx, o); break;

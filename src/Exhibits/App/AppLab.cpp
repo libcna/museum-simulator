@@ -179,7 +179,7 @@ public:
         if (mode_ == Mode::Lifecycle) {
             SignSpec flow = Kit::Plate("The life of a Game", {"Initialize       once, after the device exists", "LoadContent      once: textures, models, sounds", "loop  { Update(gameTime)  ->  Draw(gameTime) }", "UnloadContent    once, when the game ends", "Exiting event, then Dispose"});
             flow.leftAlign = true;
-            b.AddWallSign(Wall::North, 0.0f, 2.2f, 4.6f, 1.9f, flow);
+            b.AddWallSign(FarWall(), 0.0f, 2.2f, 4.6f, 1.9f, flow);
         }
         if (mode_ == Mode::Device) BuildDeviceSigns(b);
     }
@@ -288,13 +288,13 @@ public:
             }
             if (graph_ && graph_->HasContent()) {
                 RenderStates::SetOpaque3D(ctx.device);
-                QuadDraw::Textured(ctx, graph_->Texture(), R().ToWorld(-2.3f, 1.2f, -R().halfD + 0.1f), Vector3(4.6f, 0, 0), Vector3(0, 2.3f, 0));
+                { Vector3 o, u, v; FarQuad(0.0f, 1.2f, 4.6f, 2.3f, o, u, v); QuadDraw::Textured(ctx, graph_->Texture(), o, u, v); }
             }
         } else if (mode_ == Mode::Content) {
             for (std::size_t i = 0; i < held_.size(); ++i) {
                 const int col = static_cast<int>(i % 6), row = static_cast<int>(i / 6);
                 RenderStates::SetOpaque3D(ctx.device);
-                QuadDraw::Textured(ctx, held_[i].get(), R().ToWorld(-3.0f + static_cast<float>(col) * 1.05f, 1.2f + static_cast<float>(row) * 1.05f, -R().halfD + 0.1f), Vector3(1.0f, 0, 0), Vector3(0, 1.0f, 0));
+                { Vector3 o, u, v; FarQuad(-2.6f + static_cast<float>(col) * 1.05f, 1.2f + static_cast<float>(row) * 1.05f, 1.0f, 1.0f, o, u, v); QuadDraw::Textured(ctx, held_[i].get(), o, u, v); }
             }
         }
         gizmos_.Flush(ctx);
@@ -409,7 +409,7 @@ private:
         } catch (const std::exception&) {
             add("Adapter: (no display adapter reported)");
         }
-        b.AddWallSign(Wall::North, 0.0f, 2.3f, 4.2f, 2.5f, info);
+        b.AddWallSign(FarWall(), -3.2f, 2.3f, 3.6f, 2.4f, info);
 
         using CNA::GraphicsCapability;
         SignSpec caps;
@@ -425,7 +425,7 @@ private:
             {GraphicsCapability::AdditiveBlending, "AdditiveBlending"}, {GraphicsCapability::CompiledEffects, "CompiledEffects"}, {GraphicsCapability::FloatRenderTargets, "FloatRenderTargets"},
             {GraphicsCapability::HalfFloatRenderTargets, "HalfFloatRenderTargets"}, {GraphicsCapability::HalfFloatTextureLinearFiltering, "HalfFloatTextureLinearFiltering"}};
         for (const auto& [cap, name] : list) caps.lines.push_back({yes(dev.SupportsCapability(cap)) + name, false, dev.SupportsCapability(cap) ? Color(150, 255, 170, 255) : Color(255, 150, 140, 255)});
-        b.AddWallSign(Wall::West, 0.0f, 2.3f, 4.2f, 3.0f, caps);
+        b.AddWallSign(FarWall(), 3.2f, 2.3f, 3.6f, 3.0f, caps);
 
         const CNA::RendererCapabilityProfile& profile = dev.GetRendererCapabilityProfileEXT();
         SignSpec feat;
@@ -439,7 +439,7 @@ private:
             feat.lines.push_back({std::string(tag) + std::string(CNA::GetRendererFeatureName(f)), false,
                                   support == CNA::RendererFeatureSupport::Supported ? Color(150, 255, 170, 255) : (support == CNA::RendererFeatureSupport::Restricted ? Color(255, 220, 120, 255) : Color(255, 150, 140, 255))});
         }
-        b.AddWallSign(Wall::South, 0.0f, 2.4f, 4.2f, 3.6f, feat);
+        b.AddWallSign(Wall::West, 0.0f, 2.4f, 4.2f, 3.6f, feat);
     }
 
     Mode mode_;

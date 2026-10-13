@@ -42,6 +42,41 @@ WingSpec StateWing()
     return w;
 }
 
+WingSpec TargetWing()
+{
+    WingSpec w;
+    w.name = "Render Target Complex";
+    w.tagline = "Off-screen rendering: screens, mirrors, feedback, low resolution and MRT";
+    w.theme = "control-room";
+    w.accent = {0.45f, 0.85f, 0.95f};
+    w.spineSide = Wall::West;
+    const auto rt = [](const char* key, const char* title, const char* subtitle, const char* mode, std::vector<std::string> apis, ApiOrigin origin = ApiOrigin::Xna) {
+        RoomSpec r;
+        r.key = key;
+        r.title = title;
+        r.subtitle = subtitle;
+        r.exhibit = "targets";
+        r.params = {{"mode", mode}};
+        r.width = 14;
+        r.depth = 13;
+        r.height = 5.2f;
+        r.theme = "white-cube";
+        r.apis = std::move(apis);
+        r.origin = origin;
+        return r;
+    };
+    w.rooms = {
+        rt("rt-basic", "Render Target Basics", "RenderTarget2D size, depth format, mip levels and content state", "basic", {"RenderTarget2D", "GraphicsDevice.SetRenderTarget", "DepthFormat"}),
+        rt("rt-lowres", "Low-Resolution Rendering", "A scene drawn tiny and scaled up with Point or Linear sampling", "lowres", {"RenderTarget2D", "SamplerState.PointClamp"}),
+        rt("rt-control", "Control Room", "Six cameras, six render targets, switched to and from the back buffer every frame", "control", {"RenderTarget2D", "GraphicsDevice.SetRenderTarget"}),
+        rt("rt-recursive", "Feedback", "Two render targets ping-pong so a screen shows itself", "recursive", {"RenderTarget2D", "RenderTargetUsage.PreserveContents", "SpriteBatch.Draw"}),
+        rt("rt-mirror", "A Planar Mirror", "A reflected camera rendered to a texture and projected back onto the wall", "mirror", {"RenderTarget2D", "Matrix.CreateLookAt", "RasterizerState.CullMode"}),
+        rt("rt-mrt", "Multiple Render Targets", "One pass writing a grayscale image and an edge map at once", "mrt", {"GraphicsDevice.SetRenderTargets", "RenderTargetBinding", "ShaderEffect"}, ApiOrigin::CnaExtension),
+        rt("rt-formats", "Render Target Formats", "Which SurfaceFormats can be rendered to on this renderer, tested by doing it", "formats", {"SurfaceFormat", "RenderTarget2D.Format", "GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT"}, ApiOrigin::CnaExtension),
+    };
+    return w;
+}
+
 }  // namespace
 
 FloorSpec MakeFloor5()
@@ -53,5 +88,6 @@ FloorSpec MakeFloor5()
     f.theme = "concourse";
     f.accent = {0.95f, 0.55f, 0.55f};
     f.wings.push_back(StateWing());
+    f.wings.push_back(TargetWing());
     return f;
 }

@@ -34,10 +34,11 @@ void MiniView::Render(const DrawContext& main, const Matrix& view, const Matrix&
     rendered_ = true;
 }
 
-void MiniView::DrawInRoom(const DrawContext& ctx, const Vector3& centre, float yaw, float width)
+void MiniView::DrawInRoom(const DrawContext& ctx, const Vector3& centre, float yaw, float width, const SamplerState* sampler)
 {
     if (!rendered_) return;
     RenderStates::SetOpaque3D(ctx.device);
+    if (sampler != nullptr) ctx.device.getSamplerStatesProperty()[0] = *sampler;
     const Vector3 n(std::sin(yaw), 0.0f, std::cos(yaw));
     const Vector3 right = Vector3::Normalize(Vector3::Cross(-n, Vector3::Up)) * width;
     const Vector3 up(0, width / Aspect(), 0);

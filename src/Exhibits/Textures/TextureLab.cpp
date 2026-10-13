@@ -177,7 +177,7 @@ public:
     void DrawOpaque(const DrawContext& ctx) override
     {
         switch (mode_) {
-            case Mode::Mip: if (view_) view_->DrawInRoom(ctx, R().ToWorld(0.0f, 2.2f, -R().halfD + 0.2f), 0.0f, 6.4f); break;
+            case Mode::Mip: if (view_) view_->DrawInRoom(ctx, FarPoint0(2.2f), FarYaw(), 6.4f); break;
             case Mode::Filter: DrawFilter(ctx); break;
             case Mode::Address: DrawAddress(ctx); break;
             case Mode::Uv: DrawUv(ctx); break;

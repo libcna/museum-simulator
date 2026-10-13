@@ -165,7 +165,7 @@ public:
             case Mode::Lights: DrawLights(ctx, o); break;
             case Mode::Material: DrawMaterial(ctx, o); break;
             case Mode::PerPixel: DrawPerPixel(ctx, o); break;
-            case Mode::Fog: if (view_) view_->DrawInRoom(ctx, R().ToWorld(0.0f, 2.3f, -R().halfD + 0.2f), 0.0f, 6.6f); break;
+            case Mode::Fog: if (view_) view_->DrawInRoom(ctx, FarPoint0(2.3f), FarYaw(), 6.6f); break;
             case Mode::Alpha: DrawAlpha(ctx, o); break;
             case Mode::Punctual: DrawPunctual(ctx); break;
             case Mode::Dual: DrawDual(ctx, o); break;

@@ -1,5 +1,7 @@
 #include "Exhibits/Exhibit.hpp"
 
+#include <cmath>
+
 #include "Audio/AudioSystem.hpp"
 #include "Interaction/ControlPanel.hpp"
 
@@ -61,4 +63,26 @@ void Exhibit::FarScreenPose(float height, Microsoft::Xna::Framework::Vector3& ce
         case Wall::East: centre = room_.ToWorld(room_.halfW - 0.06f, height, 0.0f); yaw = -1.57079633f; break;
         default: centre = room_.ToWorld(-room_.halfW + 0.06f, height, 0.0f); yaw = 1.57079633f; break;
     }
+}
+
+Microsoft::Xna::Framework::Vector3 Exhibit::FarPoint(float along, float height, float& yaw) const
+{
+    using Microsoft::Xna::Framework::Vector3;
+    Vector3 centre;
+    FarScreenPose(height, centre, yaw);
+    const Vector3 n(std::sin(yaw), 0, std::cos(yaw));
+    const Vector3 right = Vector3::Normalize(Vector3::Cross(-n, Vector3::Up));
+    return centre + right * along;
+}
+
+void Exhibit::FarQuad(float along, float bottom, float w, float h, Microsoft::Xna::Framework::Vector3& origin, Microsoft::Xna::Framework::Vector3& u, Microsoft::Xna::Framework::Vector3& v) const
+{
+    using Microsoft::Xna::Framework::Vector3;
+    float yaw;
+    const Vector3 c = FarPoint(along, bottom, yaw);
+    const Vector3 n(std::sin(yaw), 0, std::cos(yaw));
+    const Vector3 right = Vector3::Normalize(Vector3::Cross(-n, Vector3::Up));
+    origin = c - right * (w * 0.5f);
+    u = right * w;
+    v = Vector3(0, h, 0);
 }

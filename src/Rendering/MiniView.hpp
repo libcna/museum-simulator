@@ -6,6 +6,7 @@
 #include "Exhibits/Services.hpp"
 #include "Microsoft/Xna/Framework/Color.hpp"
 #include "Microsoft/Xna/Framework/Graphics/RenderTarget2D.hpp"
+#include "Microsoft/Xna/Framework/Graphics/SamplerState.hpp"
 #include "Microsoft/Xna/Framework/Matrix.hpp"
 #include "Microsoft/Xna/Framework/Vector3.hpp"
 
@@ -33,7 +34,8 @@ public:
     void MarkRendered() { rendered_ = true; }
 
     /** Draws the finished view as a quad facing `yaw` (0 faces +Z) centred at `centre` (world), `width` metres wide. */
-    void DrawInRoom(const DrawContext& ctx, const Microsoft::Xna::Framework::Vector3& centre, float yaw, float width);
+    void DrawInRoom(const DrawContext& ctx, const Microsoft::Xna::Framework::Vector3& centre, float yaw, float width,
+                    const Microsoft::Xna::Framework::Graphics::SamplerState* sampler = nullptr);
 
 private:
     Services& s_;
