@@ -36,6 +36,7 @@ constexpr Entry kEntries[] = {
     {"text", MakeTextLab},
     {"geometry", MakeGeometryLab},
     {"textures", MakeTextureLab},
+    {"shaders", MakeShaderLab},
 };
 
 }  // namespace
