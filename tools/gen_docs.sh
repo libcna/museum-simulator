@@ -16,10 +16,10 @@ import sys, re
 path, name, content = sys.argv[1:4]
 text = open(path).read()
 body = open(content).read().rstrip("\n")
-pattern = re.compile(r"(<!-- BEGIN %s -->\n).*?(\n<!-- END %s -->)" % (name, name), re.S)
+pattern = re.compile(r"(<!-- BEGIN %s -->\n).*?(<!-- END %s -->)" % (name, name), re.S)
 if not pattern.search(text):
     sys.exit("%s has no BEGIN/END %s markers" % (path, name))
-open(path, "w").write(pattern.sub(lambda m: m.group(1) + body + m.group(2), text))
+open(path, "w").write(pattern.sub(lambda m: m.group(1) + body + "\n" + m.group(2), text))
 PY
 }
 tmp=${BUILD_DIR:-build}/gen_docs

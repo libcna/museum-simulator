@@ -39,4 +39,415 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
+10 floors, 31 wings, 215 exhibit rooms (5 open to the sky), 276 walkable cells in all.
+
+### Floor 0: Lobby and Introductory Tour
+
+Start here: a first look at what CNA can do
+
+**First Steps** - What CNA is, models, textures, lighting and the sky
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 0.1.01 | `info` | CNA Information Hall | XNA 4.0 | Game, GraphicsDevice, GraphicsAdapter |
+| 0.1.02 | `models` | Model Gallery | XNA 4.0 | Model, ModelMesh, ContentManager, Matrix |
+| 0.1.03 | `materials` | Materials & Textures | XNA 4.0 | Texture2D, SamplerState, SamplerStateCollection |
+| 0.1.04 | `lighting` | Lighting Room | XNA 4.0 | BasicEffect, DirectionalLight, EnableDefaultLighting, PreferPerPixelLighting |
+| 0.1.05 | `sky` | Sky Courtyard | XNA 4.0 | DynamicVertexBuffer, BlendState, DepthStencilState |
+
+**Showcases** - Render state, render targets, particles, animation and audio
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 0.2.01 | `renderstates` | Render State Room | XNA 4.0 | DepthStencilState, RasterizerState, BlendState |
+| 0.2.02 | `rendertarget` | Render Target Room | XNA 4.0 | RenderTarget2D, GraphicsDevice.SetRenderTarget |
+| 0.2.03 | `particles` | Particle Room | XNA 4.0 | DynamicVertexBuffer, IndexBuffer, BlendState |
+| 0.2.04 | `animation` | Animation Room | XNA 4.0 | Matrix, Quaternion, Model |
+| 0.2.05 | `audio` | Audio Room | XNA 4.0 | SoundEffect, SoundEffectInstance, AudioEmitter, AudioListener |
+
+### Floor 1: Fundamentals
+
+The application model, the maths of games, geometry tests and cameras
+
+**Application Model** - Game, GameTime, the device, the back buffer, content and components
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 1.1.01 | `app-lifecycle` | Game Lifecycle | XNA 4.0 | Game, GameTime, Game.IsFixedTimeStep, Game.TargetElapsedTime |
+| 1.1.02 | `app-gametime` | GameTime and Frame Rate | XNA 4.0 | GameTime.ElapsedGameTime, GameTime.TotalGameTime |
+| 1.1.03 | `app-device` | Device and Renderer Report | XNA 4.0 | GraphicsDevice, GraphicsAdapter, GraphicsCapability, RendererCapabilityProfile, PresentationParameters |
+| 1.1.04 | `app-viewport` | Back Buffer, Viewport and Fullscreen | XNA 4.0 | GraphicsDeviceManager, PresentationParameters, Viewport, GameWindow.ClientBounds |
+| 1.1.05 | `app-content` | Content Lifetime | XNA 4.0 | ContentManager, ContentManager.Load, ContentManager.Unload, ContentLoadException, Texture2D |
+| 1.1.06 | `app-components` | Game Components | XNA 4.0 | GameComponent, DrawableGameComponent, Game.Components |
+
+**Vector Mathematics** - Vector3: arithmetic, products, reflection and interpolation
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 1.2.01 | `vec-add` | Adding Vectors | XNA 4.0 | Vector3.Add, Vector3.Subtract |
+| 1.2.02 | `vec-dot` | The Dot Product | XNA 4.0 | Vector3.Dot |
+| 1.2.03 | `vec-cross` | The Cross Product | XNA 4.0 | Vector3.Cross, Vector3.Length |
+| 1.2.04 | `vec-project` | Projection and Rejection | XNA 4.0 | Vector3.Dot, Vector3.Multiply |
+| 1.2.05 | `vec-reflect` | Reflection | XNA 4.0 | Vector3.Reflect, Vector3.Normalize, Plane |
+| 1.2.06 | `vec-lerp` | Interpolation | XNA 4.0 | Vector3.Lerp, Vector3.SmoothStep, Vector3.CatmullRom |
+| 1.2.07 | `vec-normalize` | Length and Normalize | XNA 4.0 | Vector3.Length, Vector3.Normalize, Vector3.Distance |
+
+**Matrices and Transforms** - World, view and projection: how a point reaches the screen
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 1.3.01 | `mat-order` | Transform Order | XNA 4.0 | Matrix.CreateScale, Matrix.CreateRotationY, Matrix.CreateTranslation, Matrix.Multiply |
+| 1.3.02 | `mat-hierarchy` | Parent and Child | XNA 4.0 | Matrix.Multiply, Matrix.Decompose, Matrix.Translation |
+| 1.3.03 | `mat-view` | The View Matrix | XNA 4.0 | Matrix.CreateLookAt, Matrix.Invert, BoundingFrustum |
+| 1.3.04 | `mat-perspective` | Perspective Projection | XNA 4.0 | Matrix.CreatePerspectiveFieldOfView, BoundingFrustum.Contains |
+| 1.3.05 | `mat-ortho` | Orthographic Projection | XNA 4.0 | Matrix.CreateOrthographic, Matrix.CreatePerspectiveFieldOfView |
+| 1.3.06 | `mat-screen` | World to Screen | XNA 4.0 | Viewport.Project, Vector4.Transform, Matrix.Multiply |
+
+**Rotation and Interpolation** - Quaternions, Euler angles, easing functions and curves
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 1.4.01 | `quat-euler` | Euler Angles and Gimbal Lock | XNA 4.0 | Quaternion.CreateFromYawPitchRoll, Matrix.CreateFromQuaternion, Matrix.CreateRotationX |
+| 1.4.02 | `quat-slerp` | Slerp and Lerp | XNA 4.0 | Quaternion.Slerp, Quaternion.Lerp, Quaternion.Normalize, Quaternion.Dot |
+| 1.4.03 | `quat-axis` | Axis and Angle | XNA 4.0 | Quaternion.CreateFromAxisAngle, Quaternion.Concatenate, Quaternion.Inverse |
+| 1.4.04 | `curve-easing` | Easing Functions | XNA 4.0 | MathHelper.Lerp, MathHelper.SmoothStep, MathHelper.Hermite, MathHelper.CatmullRom |
+| 1.4.05 | `curve-spline` | Splines | XNA 4.0 | Vector3.CatmullRom |
+| 1.4.06 | `curve-class` | The Curve Class | XNA 4.0 | Curve, CurveKey, CurveLoopType, CurveTangent |
+| 1.4.07 | `curve-barycentric` | Barycentric Coordinates | XNA 4.0 | Vector3.Barycentric |
+
+**Collision and Geometry** - BoundingBox, BoundingSphere, BoundingFrustum, Plane and Ray
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 1.5.01 | `col-box-box` | Box vs Box | XNA 4.0 | BoundingBox.Intersects, BoundingBox.Contains, ContainmentType |
+| 1.5.02 | `col-sphere-box` | Sphere vs Box | XNA 4.0 | BoundingSphere.Intersects, BoundingSphere.Contains |
+| 1.5.03 | `col-ray-box` | Ray vs Box | XNA 4.0 | Ray.Intersects, BoundingBox |
+| 1.5.04 | `col-ray-sphere` | Ray vs Sphere | XNA 4.0 | Ray.Intersects, BoundingSphere |
+| 1.5.05 | `col-ray-plane` | Ray vs Plane | XNA 4.0 | Ray.Intersects, Plane |
+| 1.5.06 | `col-plane-box` | Which Side of the Plane | XNA 4.0 | Plane.Intersects, Plane.DotCoordinate, PlaneIntersectionType |
+| 1.5.07 | `col-merge` | Fitting and Merging Bounds | XNA 4.0 | BoundingBox.CreateFromPoints, BoundingSphere.CreateFromPoints, BoundingSphere.CreateMerged |
+| 1.5.08 | `col-frustum` | Frustum Culling | XNA 4.0 | BoundingFrustum.Contains, BoundingFrustum, Matrix.CreatePerspectiveFieldOfView |
+| 1.5.09 | `col-pick` | Picking | XNA 4.0 | Ray.Intersects, BoundingBox, BoundingSphere |
+
+**Cameras** - Orbit, chase, top-down, security, split-screen and mirror cameras
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 1.6.01 | `cam-orbit` | Orbit Camera | XNA 4.0 | Matrix.CreateLookAt, RenderTarget2D, BoundingFrustum |
+| 1.6.02 | `cam-chase` | Chase Camera | XNA 4.0 | Matrix.CreateLookAt, Vector3.Lerp, GameTime |
+| 1.6.03 | `cam-topdown` | Top-Down and Orthographic | XNA 4.0 | Matrix.CreateOrthographic, Matrix.CreateLookAt |
+| 1.6.04 | `cam-security` | Security Camera | XNA 4.0 | Matrix.CreatePerspectiveFieldOfView, BoundingFrustum |
+| 1.6.05 | `cam-fov` | Field of View | XNA 4.0 | Matrix.CreatePerspectiveFieldOfView, RenderTarget2D |
+| 1.6.06 | `cam-clip` | Near and Far Planes | XNA 4.0 | Matrix.CreatePerspectiveFieldOfView, DepthFormat, DepthStencilState |
+| 1.6.07 | `cam-transition` | Camera Transitions | XNA 4.0 | Vector3.SmoothStep, Quaternion.Slerp, Matrix.CreateWorld |
+| 1.6.08 | `cam-split` | Split Screen | XNA 4.0 | Viewport, GraphicsDevice.Viewport, RenderTarget2D |
+| 1.6.09 | `cam-mirror` | Rear-View Mirror | XNA 4.0 | RenderTarget2D, Matrix.CreateLookAt |
+
+### Floor 2: Two-Dimensional Rendering
+
+SpriteBatch, SpriteFont and the techniques built on them
+
+**SpriteBatch Basics** - Position, rotation, origin, scale, flips, source rectangles, tint
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 2.1.01 | `sprite-basics` | Sprites: Draw and Its Arguments | XNA 4.0 | SpriteBatch.Begin, SpriteBatch.Draw, SpriteEffects, RenderTarget2D |
+| 2.1.02 | `sprite-origin` | Origin and Rotation | XNA 4.0 | SpriteBatch.Draw, Vector2 |
+| 2.1.03 | `sprite-sheet` | Sprite Sheets | XNA 4.0 | SpriteBatch.Draw, Rectangle, SamplerState.PointClamp |
+| 2.1.04 | `sprite-tint` | Tint and Alpha | XNA 4.0 | Color, Color.Lerp, BlendState.NonPremultiplied |
+
+**Blending, Sorting and Sampling** - BlendState, SpriteSortMode and SamplerState compared visually
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 2.2.01 | `sprite-blend` | BlendState Gallery | XNA 4.0 | BlendState, BlendState.Additive, BlendState.AlphaBlend, Blend, BlendFunction |
+| 2.2.02 | `sprite-sort` | SpriteSortMode and Layer Depth | XNA 4.0 | SpriteSortMode, SpriteBatch.Draw, layerDepth |
+| 2.2.03 | `sprite-sampler` | Filtering and Addressing | XNA 4.0 | SamplerState, TextureFilter, TextureAddressMode |
+
+**Sprite Techniques** - Parallax, UI nine-slice, atlases, scissoring, 2D cameras and batching
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 2.3.01 | `sprite-parallax` | Scrolling and Parallax | XNA 4.0 | SamplerState.LinearWrap, SpriteBatch.Draw |
+| 2.3.02 | `sprite-ui` | UI Panels and Nine-Slice | XNA 4.0 | Texture2D.SetData, SpriteBatch.Draw, Rectangle |
+| 2.3.03 | `sprite-atlas` | Texture Atlases | XNA 4.0 | Texture2D.GetData, Texture2D.SetData, SpriteBatch.Draw |
+| 2.3.04 | `sprite-scissor` | Scissor Clipping | XNA 4.0 | RasterizerState.ScissorTestEnable, GraphicsDevice.ScissorRectangle |
+| 2.3.05 | `sprite-camera` | A 2D Camera Matrix | XNA 4.0 | SpriteBatch.Begin, Matrix.CreateTranslation, Matrix.CreateScale, Matrix.CreateRotationZ |
+| 2.3.06 | `sprite-stress` | Thousands of Sprites | XNA 4.0 | SpriteBatch, SpriteBatch.Draw |
+
+**Text and Fonts** - SpriteFont: layout, measurement, transforms, glyphs, HUDs and world labels
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 2.4.01 | `text-align` | Alignment and Wrapping | XNA 4.0 | SpriteFont.MeasureString, SpriteBatch.DrawString |
+| 2.4.02 | `text-measure` | Measuring Text | XNA 4.0 | SpriteFont.MeasureString, SpriteFont.Spacing, SpriteFont.LineSpacing |
+| 2.4.03 | `text-transform` | Rotating and Scaling Text | XNA 4.0 | SpriteBatch.DrawString, SpriteEffects |
+| 2.4.04 | `text-glyphs` | Glyphs and the Default Character | XNA 4.0 | SpriteFont.Characters, SpriteFont.DefaultCharacter |
+| 2.4.05 | `text-hud` | HUD Text and StringBuilder | XNA 4.0 | SpriteBatch.DrawString, StringBuilder |
+| 2.4.06 | `text-labels` | World Labels | XNA 4.0 | Viewport.Project, SpriteBatch.DrawString |
+
+### Floor 3: Three-Dimensional Fundamentals
+
+Vertex data, buffers, primitives and textures
+
+**Vertices and Buffers** - Triangles, indices, primitive types, dynamic and large meshes, instancing
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 3.1.01 | `geo-triangle` | A Triangle and Its Winding | XNA 4.0 | VertexPositionColor, GraphicsDevice.DrawUserPrimitives, RasterizerState.CullMode |
+| 3.1.02 | `geo-indexed` | Vertex and Index Buffers | XNA 4.0 | VertexBuffer, IndexBuffer, GraphicsDevice.DrawIndexedPrimitives, GraphicsDevice.DrawPrimitives |
+| 3.1.03 | `geo-primitives` | Primitive Types | XNA 4.0 | PrimitiveType, GraphicsDevice.DrawUserPrimitives |
+| 3.1.04 | `geo-dynamic` | Dynamic Vertex Buffers | XNA 4.0 | DynamicVertexBuffer, SetDataOptions, VertexPositionNormalTexture |
+| 3.1.05 | `geo-procedural` | Procedural Geometry | XNA 4.0 | VertexBuffer, IndexBuffer, RasterizerState.FillMode |
+| 3.1.06 | `geo-index32` | 32-Bit Indices | XNA 4.0 | IndexBuffer, IndexElementSize |
+| 3.1.07 | `geo-manybuffers` | Many Small Buffers | XNA 4.0 | VertexBuffer, GraphicsDevice.DrawIndexedPrimitives |
+| 3.1.08 | `geo-instancing` | Hardware Instancing | XNA 4.0 | VertexBufferBinding, GraphicsDevice.DrawInstancedPrimitives, GraphicsCapability.Instancing |
+
+**Textures** - Mip levels, filters, addressing, UVs, formats, alpha, cube and volume textures
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 3.2.01 | `tex-mip` | Mip Levels and Filtering | XNA 4.0 | Texture2D, SamplerState.Filter, SamplerState.MipMapLevelOfDetailBias, SamplerState.MaxMipLevel, SamplerState.MaxAnisotropy |
+| 3.2.02 | `tex-filter` | Magnification Filters | XNA 4.0 | SamplerState.PointClamp, SamplerState.LinearClamp, SamplerState.AnisotropicClamp |
+| 3.2.03 | `tex-address` | Addressing Modes | XNA 4.0 | TextureAddressMode, SamplerState.AddressU |
+| 3.2.04 | `tex-uv` | UV Transforms | XNA 4.0 | VertexPositionColorTexture, SamplerState.LinearWrap |
+| 3.2.05 | `tex-dynamic` | Dynamic Textures and Readback | XNA 4.0 | Texture2D.SetData, Texture2D.GetData |
+| 3.2.06 | `tex-formats` | Surface Formats | XNA 4.0 | SurfaceFormat, PackedVector.Bgr565, PackedVector.Bgra4444, PackedVector.Alpha8, PackedVector.HalfVector4 |
+| 3.2.07 | `tex-alpha` | Alpha: Test, Blend, Opaque | XNA 4.0 | AlphaTestEffect, BlendState.NonPremultiplied, CompareFunction |
+| 3.2.08 | `tex-cube` | Cube Maps and Environment Maps | XNA 4.0 | TextureCube, EnvironmentMapEffect, CubeMapFace |
+| 3.2.09 | `tex-volume` | Volume Textures | XNA 4.0 | Texture3D, Texture3D.SetData, Texture3D.GetData |
+
+### Floor 4: Effects and Lighting
+
+BasicEffect, the stock effects, lighting and custom shaders
+
+**BasicEffect Super-Wing** - Every BasicEffect property with a control, plus DualTextureEffect and the Effect model
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 4.1.01 | `be-combos` | Texture, Vertex Colour, Diffuse | XNA 4.0 | BasicEffect.TextureEnabled, BasicEffect.VertexColorEnabled, BasicEffect.DiffuseColor, BasicEffect.Alpha |
+| 4.1.02 | `be-lights` | Lights and Ambient | XNA 4.0 | BasicEffect.LightingEnabled, BasicEffect.DirectionalLight0, BasicEffect.AmbientLightColor, DirectionalLight, BasicEffect.EnableDefaultLighting |
+| 4.1.03 | `be-material` | Material | XNA 4.0 | BasicEffect.SpecularColor, BasicEffect.SpecularPower, BasicEffect.EmissiveColor |
+| 4.1.04 | `be-perpixel` | Per-Vertex and Per-Pixel Lighting | XNA 4.0 | BasicEffect.PreferPerPixelLighting |
+| 4.1.05 | `be-fog` | Fog | XNA 4.0 | BasicEffect.FogEnabled, BasicEffect.FogColor, BasicEffect.FogStart, BasicEffect.FogEnd |
+| 4.1.06 | `be-alpha` | Alpha and Sorting | XNA 4.0 | BasicEffect.Alpha, BlendState.NonPremultiplied, DepthStencilState.DepthRead |
+| 4.1.07 | `be-punctual` | Point and Spot Lights | CNA extension | PunctualLightEXT, BasicEffect.setPunctualLightEXT |
+| 4.1.08 | `be-dual` | DualTextureEffect | XNA 4.0 | DualTextureEffect, DualTextureEffect.Texture2 |
+| 4.1.09 | `be-model` | The Effect Object Model | XNA 4.0 | Effect, EffectTechnique, EffectPass, EffectParameterCollection |
+
+**Lighting Laboratory** - Directional, point and spot lights, attenuation, colour, many lights, flashlight, emissive
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 4.2.01 | `light-types` | Directional, Point and Spot | CNA extension | DirectionalLight, PunctualLightEXT, BasicEffect |
+| 4.2.02 | `light-falloff` | Attenuation and Range | CNA extension | PunctualLightEXT.Range, BasicEffect |
+| 4.2.03 | `light-coloured` | Coloured Lights | CNA extension | PunctualLightEXT.DiffuseColor, BlendState.Additive |
+| 4.2.04 | `light-many` | Many Lights | CNA extension | PunctualLightEXT, BlendState.Additive, DepthStencilState.DepthBufferFunction |
+| 4.2.05 | `light-flashlight` | Flashlight | CNA extension | PunctualLightKindEXT.Spot, PunctualLightEXT.OuterAngle |
+| 4.2.06 | `light-emissive` | Emissive Materials | XNA 4.0 | BasicEffect.EmissiveColor, BlendState.Additive |
+
+**Shader Laboratory** - CNA extension: GLSL fragment and vertex shaders through ShaderEffect and SpriteBatch
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 4.3.01 | `fx-grade` | Colour Grading | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.02 | `fx-blur` | Blur | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.03 | `fx-pixelate` | Pixelate and Posterise | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.04 | `fx-ripple` | Water Ripple | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.05 | `fx-edge` | Edge Detection | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.06 | `fx-crt` | CRT Look | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.07 | `fx-plasma` | Procedural Shader | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.08 | `fx-vertexwave` | Vertex Shader | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
+
+### Floor 5: Render State and Render Targets
+
+RasterizerState, DepthStencilState, BlendState and off-screen rendering
+
+**Render State Gallery** - RasterizerState, DepthStencilState and BlendState, one idea per room
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 5.1.01 | `rs-cull` | Culling | XNA 4.0 | RasterizerState.CullMode, CullMode |
+| 5.1.02 | `rs-fill` | Fill Mode | XNA 4.0 | RasterizerState.FillMode, GraphicsCapability.WireFrame |
+| 5.1.03 | `rs-depthbias` | Depth Bias and Z-Fighting | XNA 4.0 | RasterizerState.DepthBias, RasterizerState.SlopeScaleDepthBias |
+| 5.1.04 | `rs-scissor` | Scissor Rectangle | XNA 4.0 | RasterizerState.ScissorTestEnable, GraphicsDevice.ScissorRectangle, RenderTarget2D |
+| 5.1.05 | `rs-depthfunc` | Depth Test | XNA 4.0 | DepthStencilState.DepthBufferFunction, DepthStencilState.DepthBufferEnable, CompareFunction |
+| 5.1.06 | `rs-depthread` | Depth Read-Only for Glass | XNA 4.0 | DepthStencilState.DepthRead, DepthStencilState.DepthBufferWriteEnable |
+| 5.1.07 | `rs-portal` | Stencil: a Portal | XNA 4.0 | DepthStencilState.StencilEnable, DepthStencilState.StencilFunction, StencilOperation, ColorWriteChannels |
+| 5.1.08 | `rs-outline` | Stencil: an Outline | XNA 4.0 | DepthStencilState.ReferenceStencil, DepthStencilState.StencilPass, CompareFunction.NotEqual |
+| 5.1.09 | `rs-shadow` | Stencil: a Planar Shadow | XNA 4.0 | Matrix.CreateShadow, DepthStencilState.StencilPass, StencilOperation.Increment |
+| 5.1.10 | `rs-blend` | BlendState Gallery | XNA 4.0 | BlendState, Blend, BlendFunction |
+| 5.1.11 | `rs-colorwrite` | Color Write Channels | XNA 4.0 | BlendState.ColorWriteChannels, ColorWriteChannels |
+| 5.1.12 | `rs-blendfactor` | Blend Factor | XNA 4.0 | BlendState.BlendFactor, Blend.BlendFactor, Blend.InverseBlendFactor |
+
+**Render Target Complex** - Off-screen rendering: screens, mirrors, feedback, low resolution and MRT
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 5.2.01 | `rt-basic` | Render Target Basics | XNA 4.0 | RenderTarget2D, GraphicsDevice.SetRenderTarget, DepthFormat |
+| 5.2.02 | `rt-lowres` | Low-Resolution Rendering | XNA 4.0 | RenderTarget2D, SamplerState.PointClamp |
+| 5.2.03 | `rt-control` | Control Room | XNA 4.0 | RenderTarget2D, GraphicsDevice.SetRenderTarget |
+| 5.2.04 | `rt-recursive` | Feedback | XNA 4.0 | RenderTarget2D, RenderTargetUsage.PreserveContents, SpriteBatch.Draw |
+| 5.2.05 | `rt-mirror` | A Planar Mirror | XNA 4.0 | RenderTarget2D, Matrix.CreateLookAt, RasterizerState.CullMode |
+| 5.2.06 | `rt-mrt` | Multiple Render Targets | CNA extension | GraphicsDevice.SetRenderTargets, RenderTargetBinding, ShaderEffect |
+| 5.2.07 | `rt-formats` | Render Target Formats | CNA extension | SurfaceFormat, RenderTarget2D.Format, GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT |
+
+### Floor 6: Models, Animation and Particles
+
+glTF models and their effects, procedural and skeletal animation, particle systems
+
+**Model Museum** - glTF import, PbrEffect, rigid and skinned animation, instances, bounds, effects
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 6.1.01 | `model-load` | Loading Models | CNA extension | ContentManager.Load<Model>, Model, ModelMesh, ModelMeshPart, Model.BoundingSphereEXT |
+| 6.1.02 | `model-pbr` | Metallic and Rough | CNA extension | PbrEffect, PbrEffect.MetallicFactor, PbrEffect.RoughnessFactor, PbrEffect.EmissiveFactor |
+| 6.1.03 | `model-rigid` | Rigid Animation | CNA extension | ModelAnimationsEXT, ApplyClipToBonesEXT, Model.CopyAbsoluteBoneTransformsTo, ModelBone |
+| 6.1.04 | `model-skinned` | Skinned Animation | CNA extension | SkinningData, AnimationPlayer, SkinnedPbrEffect.SetBoneTransforms |
+| 6.1.05 | `model-instances` | Many Instances | CNA extension | Model.Draw, BoundingFrustum.Contains, Model.BoundingSphereEXT |
+| 6.1.06 | `model-bounds` | Bounding Volumes | CNA extension | ModelMesh.BoundingSphere, Model.BoundingSphereEXT, BoundingSphere.Transform |
+| 6.1.07 | `model-effects` | Swapping Effects | CNA extension | ModelMeshPart.Effect, BasicEffect, PbrEffect |
+| 6.1.08 | `model-report` | Import Report | CNA extension | GltfImportReportEXT, GltfImportDiagnosticEXT |
+
+**Animation Complex** - Procedural animation: motion built from maths and matrix hierarchies
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 6.2.01 | `an-pendulum` | Pendulum Wave | XNA 4.0 | MathHelper, GameTime, Vector3 |
+| 6.2.02 | `an-clock` | A Clock | XNA 4.0 | Matrix.CreateRotationZ, Matrix.Multiply |
+| 6.2.03 | `an-gears` | Meshing Gears | XNA 4.0 | Matrix.CreateRotationY, Matrix.Multiply, MeshBuilder |
+| 6.2.04 | `an-conveyor` | Conveyor | XNA 4.0 | VertexPositionColorTexture, SamplerState.LinearWrap, BoundingBox |
+| 6.2.05 | `an-doors` | Proximity Doors | XNA 4.0 | MathHelper.Lerp, MathHelper.SmoothStep, Vector3.Distance |
+| 6.2.06 | `an-kinetic` | Kinetic Sculpture | XNA 4.0 | Matrix.CreateRotationZ, Matrix.Multiply |
+| 6.2.07 | `an-gyroscope` | Gyroscope | XNA 4.0 | Matrix.CreateRotationX, Matrix.CreateRotationY, Matrix.CreateRotationZ |
+| 6.2.08 | `an-walker` | A Walking Figure | XNA 4.0 | Matrix.Multiply, Matrix.CreateRotationZ, MathHelper.WrapAngle |
+
+**Particle Complex** - Eleven effects from one emitter: every control changes the effect live
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 6.3.01 | `pt-fire` | Fire | XNA 4.0 | DynamicVertexBuffer, SetDataOptions.Discard, IndexBuffer, BlendState.Additive, SpriteBatch |
+| 6.3.02 | `pt-smoke` | Smoke | XNA 4.0 | DynamicVertexBuffer, SetDataOptions.Discard, IndexBuffer, BlendState.Additive, SpriteBatch |
+| 6.3.03 | `pt-sparks` | Sparks | XNA 4.0 | DynamicVertexBuffer, SetDataOptions.Discard, IndexBuffer, BlendState.Additive, SpriteBatch |
+| 6.3.04 | `pt-snow` | Snow | XNA 4.0 | DynamicVertexBuffer, SetDataOptions.Discard, IndexBuffer, BlendState.Additive, SpriteBatch |
+| 6.3.05 | `pt-rain` | Rain | XNA 4.0 | DynamicVertexBuffer, SetDataOptions.Discard, IndexBuffer, BlendState.Additive, SpriteBatch |
+| 6.3.06 | `pt-fountain` | Fountain | XNA 4.0 | DynamicVertexBuffer, SetDataOptions.Discard, IndexBuffer, BlendState.Additive, SpriteBatch |
+| 6.3.07 | `pt-dust` | Dust Motes | XNA 4.0 | DynamicVertexBuffer, SetDataOptions.Discard, IndexBuffer, BlendState.Additive, SpriteBatch |
+| 6.3.08 | `pt-fireworks` | Fireworks | XNA 4.0 | DynamicVertexBuffer, SetDataOptions.Discard, IndexBuffer, BlendState.Additive, SpriteBatch |
+| 6.3.09 | `pt-bubbles` | Bubbles | XNA 4.0 | DynamicVertexBuffer, SetDataOptions.Discard, IndexBuffer, BlendState.Additive, SpriteBatch |
+| 6.3.10 | `pt-leaves` | Falling Leaves | XNA 4.0 | DynamicVertexBuffer, SetDataOptions.Discard, IndexBuffer, BlendState.Additive, SpriteBatch |
+| 6.3.11 | `pt-magic` | Magic Spiral | XNA 4.0 | DynamicVertexBuffer, SetDataOptions.Discard, IndexBuffer, BlendState.Additive, SpriteBatch |
+
+### Floor 7: Audio and Input
+
+Sound, music, keyboards, mice and game pads
+
+**Audio Complex** - SoundEffect, instances, 3D audio, synthesis, generated sounds, music and the microphone
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 7.1.01 | `au-basics` | SoundEffect.Play | XNA 4.0 | SoundEffect.Play, SoundEffect, ContentManager.Load<SoundEffect> |
+| 7.1.02 | `au-layers` | Instances and Layers | XNA 4.0 | SoundEffectInstance, SoundEffectInstance.IsLooped, SoundEffectInstance.Volume, SoundEffectInstance.Pitch, SoundState |
+| 7.1.03 | `au-spatial` | 3D Audio | XNA 4.0 | SoundEffectInstance.Apply3D, AudioEmitter, AudioListener, SoundEffect.DopplerScale, SoundEffect.DistanceScale, SoundEffect.SpeedOfSound |
+| 7.1.04 | `au-synth` | A Synthesiser | XNA 4.0 | DynamicSoundEffectInstance, DynamicSoundEffectInstance.SubmitBuffer, AudioChannels |
+| 7.1.05 | `au-generate` | Generated Sounds | XNA 4.0 | SoundEffect(buffer, sampleRate, channels), AudioChannels |
+| 7.1.06 | `au-master` | Master Volume and Settings | XNA 4.0 | SoundEffect.MasterVolume, SoundEffect.DistanceScale, SoundEffect.DopplerScale, SoundEffect.SpeedOfSound |
+| 7.1.07 | `au-music` | Song and MediaPlayer | XNA 4.0 | Song, MediaPlayer.Play, MediaPlayer.Volume, MediaState |
+| 7.1.08 | `au-mic` | The Microphone | XNA 4.0 | Microphone, Microphone.GetData, NoMicrophoneConnectedException |
+
+**Input Complex** - Keyboard, mouse, game pads, text input, joysticks and the machine's other devices
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 7.2.01 | `in-keyboard` | The Keyboard | XNA 4.0 | Keyboard.GetState, KeyboardState.IsKeyDown, KeyboardState.GetPressedKeys, Keyboard.GetKeyNameEXT, Keyboard.GetModStateEXT |
+| 7.2.02 | `in-edges` | Pressed, Held, Released | XNA 4.0 | KeyboardState, Keys, KeyState |
+| 7.2.03 | `in-mouse` | The Mouse | XNA 4.0 | Mouse.GetState, MouseState, ButtonState, Mouse.IsRelativeMouseModeEXT, Mouse.SetCursor, MouseCursor |
+| 7.2.04 | `in-pad` | The Game Pad | XNA 4.0 | GamePad.GetState, GamePadState, GamePadDeadZone, GamePad.SetVibration, GamePad.KeyboardEmulationEnabledEXT |
+| 7.2.05 | `in-players` | Four Player Slots | XNA 4.0 | PlayerIndex, GamePad.GetCapabilities, GamePadCapabilities, GamePad.GetNameEXT |
+| 7.2.06 | `in-text` | Text Input and Clipboard | CNA extension | TextInputEXT.TextInput, TextInputEXT.StartTextInput, Clipboard.SetTextEXT, Clipboard.GetTextEXT |
+| 7.2.07 | `in-joystick` | Raw Joysticks | CNA extension | Joysticks.GetJoysticksEXT, Joysticks.GetCapabilitiesEXT, Joysticks.GetStateEXT |
+| 7.2.08 | `in-devices` | Other Input Devices | CNA extension | InputDevices.GetMiceEXT, TouchPanel.GetState, TouchPanel.MouseTouchEmulationEnabledEXT, Sensors.GetSensorsEXT, Power.GetInfoEXT |
+
+### Floor 8: Content, Platform and CNA
+
+How assets arrive, what the platform reports, and what CNA adds to XNA
+
+**Content Pipeline** - ContentManager, loose files, compiled .cnb and .xnb, load failures, storage and resource lifetime
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 8.1.01 | `ct-load` | Loading Assets | XNA 4.0 | ContentManager.Load<Texture2D>, ContentManager.Load<SoundEffect>, ContentManager.Load<Model>, ContentManager.RootDirectory |
+| 8.1.02 | `ct-cache` | The ContentManager Cache | XNA 4.0 | ContentManager.Load, ContentManager.Unload, GraphicsResource.IsDisposed |
+| 8.1.03 | `ct-formats` | Loose Image Formats | CNA extension | ContentManager.Load<Texture2D>, Texture2D.GetData |
+| 8.1.04 | `ct-failure` | When Loading Fails | XNA 4.0 | ContentLoadException, ContentManager.Load |
+| 8.1.05 | `ct-pipeline` | The Content Compiler | CNA extension | cna-content, ContentManager.Load, ContentManager.GetContentManifest |
+| 8.1.06 | `ct-storage` | Title Files and Saved Data | XNA 4.0 | TitleContainer.OpenStream, StorageDevice, StorageContainer, StorageDevice.GetStorageRootEXT |
+| 8.1.07 | `ct-lifetime` | Resource Lifetime | XNA 4.0 | GraphicsResource.Dispose, GraphicsResource.IsDisposed, GraphicsResource.Disposing, ContentManager.Unload |
+
+**CNA Extensions** - What CNA adds to XNA 4.0: DebugDraw, post-process effects, engine statistics, point lists and device queries
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 8.2.01 | `cx-debugdraw` | DebugDraw | CNA extension | CNA::Graphics::DebugDraw, DebugDraw.addBox, DebugDraw.addSphere, DebugDraw.addFrustum, DebugDraw.setDepthTested |
+| 8.2.02 | `cx-crt` | CRT Effect | CNA extension | CNA::Graphics::CRTEffect, CRTMaskType, SpriteBatch.Begin(effect) |
+| 8.2.03 | `cx-depth` | Colour Depth Effect | CNA extension | CNA::Graphics::DepthEffect, DepthEffectMode, DitherMode |
+| 8.2.04 | `cx-ascii` | ASCII Post-Process | CNA extension | CNA::Graphics::AsciiPostProcessEffect, AsciiQuantizeMode |
+| 8.2.05 | `cx-stats` | Engine Statistics | CNA extension | CNA::Diagnostics::GetProvider, Snapshot.metrics, Snapshot.resources, SetRuntimeMode |
+| 8.2.06 | `cx-points` | Point Lists | CNA extension | PrimitiveType.PointListEXT, GraphicsDevice.DrawUserPrimitives, GraphicsDevice.SetStringMarkerEXT |
+| 8.2.07 | `cx-devices` | Device Extensions | CNA extension | CNA::Devices::SystemInfo, CNA::Devices::Locale, CNA::Devices::PowerInfo, CNA::Devices::DisplayInfo |
+
+**Platform and Renderer** - The window, the display adapter, the active renderer and the platform, as CNA reports them
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 8.3.01 | `pl-window` | The Game Window | XNA 4.0 | GameWindow.Title, GameWindow.ClientBounds, GameWindow.AllowUserResizing, GameWindow.ClientSizeChanged, Game.Activated, GameWindow.FileDropEXT |
+| 8.3.02 | `pl-adapter` | Adapter and Back Buffer | XNA 4.0 | GraphicsAdapter, DisplayMode, GraphicsDevice.GraphicsProfile, PresentationParameters |
+| 8.3.03 | `pl-renderer` | The Active Renderer | CNA extension | GraphicsDevice.GetRendererCapabilityProfileEXT, RendererFeature, RendererLimit, RendererFormatUsage, GraphicsDevice.GetGraphicsRendererName |
+| 8.3.04 | `pl-platform` | Platform Capabilities | CNA extension | Game.GetPlatformCapabilitiesEXT, PlatformCapabilities |
+
+### Floor 9: Performance and Validation
+
+Stress tests, renderer self-checks, reference scenes and the observation deck
+
+**Performance Lab** - Stress levels for draw calls, sprites, state changes, uploads, render targets, overdraw and particles
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 9.1.01 | `pf-dashboard` | Frame-Time Dashboard | CNA extension | GameTime.ElapsedGameTime, Game.IsRunningSlowly, CNA::Diagnostics::GetProvider, Game.IsFixedTimeStep |
+| 9.1.02 | `pf-objects` | Draw Calls and Instancing | XNA 4.0 | GraphicsDevice.DrawIndexedPrimitives, GraphicsDevice.DrawInstancedPrimitives, VertexBufferBinding, GraphicsCapability.Instancing |
+| 9.1.03 | `pf-sprites` | SpriteBatch Volume | XNA 4.0 | SpriteBatch.Draw, SpriteSortMode, SpriteBatch.Begin |
+| 9.1.04 | `pf-state` | State Changes and Batching | XNA 4.0 | BasicEffect.Texture, EffectPass.Apply, Graphics/TextureBindingChanges |
+| 9.1.05 | `pf-buffers` | Buffer Uploads | XNA 4.0 | DynamicVertexBuffer.SetData, SetDataOptions.Discard, GraphicsDevice.DrawUserPrimitives, VertexBuffer |
+| 9.1.06 | `pf-targets` | Render-Target Switches | XNA 4.0 | GraphicsDevice.SetRenderTarget, RenderTarget2D, Graphics/RenderTargetChanges |
+| 9.1.07 | `pf-overdraw` | Overdraw | XNA 4.0 | SpriteBatch.Draw, BlendState.NonPremultiplied |
+| 9.1.08 | `pf-particles` | CPU Particles | CNA extension | PrimitiveType.PointListEXT, GraphicsDevice.DrawUserPrimitives |
+
+**Renderer Validation** - Self-checking test images: every renderer must pass the same checks with the same stock calls
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 9.2.01 | `rv-geometry` | Geometry and Coverage | XNA 4.0 | RasterizerState.CullMode, GraphicsDevice.Viewport, GraphicsDevice.ScissorRectangle, GraphicsDevice.DrawUserPrimitives |
+| 9.2.02 | `rv-sprites` | SpriteBatch Pixels | XNA 4.0 | SpriteBatch.Draw, SpriteEffects, SamplerState.PointClamp, SamplerState.LinearClamp |
+| 9.2.03 | `rv-blend` | Blending | XNA 4.0 | BlendState, BlendFunction, ColorWriteChannels, Blend.BlendFactor |
+| 9.2.04 | `rv-depth` | Depth Buffer | XNA 4.0 | DepthStencilState, CompareFunction, DepthFormat.Depth24 |
+| 9.2.05 | `rv-shading` | Interpolation, Lighting and Fog | XNA 4.0 | BasicEffect.VertexColorEnabled, BasicEffect.DirectionalLight0, BasicEffect.FogEnabled |
+| 9.2.06 | `rv-sampling` | Texture Sampling | XNA 4.0 | SamplerState.AddressU, TextureAddressMode, TextureFilter |
+| 9.2.07 | `rv-targets` | Render Targets | XNA 4.0 | RenderTarget2D, GraphicsDevice.SetRenderTarget, Texture2D.GetData |
+| 9.2.08 | `rv-camera` | Camera Matrices | XNA 4.0 | Matrix.CreateLookAt, Matrix.CreatePerspectiveFieldOfView, Matrix.CreateOrthographic, BasicEffect.World |
+| 9.2.09 | `rv-effects` | Stock Effects | XNA 4.0 | BasicEffect, AlphaTestEffect, DualTextureEffect |
+
+**Observation Deck** - Open-air rooms under the museum sky: the clock, a garden, a telescope and a weather station
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 9.3.01 | `rf-deck` | Sun, Moon and the Museum Clock | XNA 4.0 | Matrix.CreateLookAt, Vector3, BasicEffect.EmissiveColor, MathHelper |
+| 9.3.02 | `rf-garden` | Terrace Garden | XNA 4.0 | DynamicVertexBuffer, BlendState.NonPremultiplied, Texture2D, SoundEffectInstance |
+| 9.3.03 | `rf-telescope` | Telescope | XNA 4.0 | Matrix.CreatePerspectiveFieldOfView, RenderTarget2D, BasicEffect.FogEnabled, Matrix.CreateLookAt |
+| 9.3.04 | `rf-weather` | Weather Station | XNA 4.0 | PrimitiveType.LineList, DynamicVertexBuffer, SetDataOptions.Discard, SpriteBatch |
+
+**Reference Scenes** - Named viewpoints that the visual regression tool renders and compares
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 9.4.01 | `vr-index` | Reference Scenes | XNA 4.0 | GraphicsDevice.GetBackBufferData, Texture2D.SaveAsPng, Matrix.CreateLookAt |
 <!-- END MAP -->
