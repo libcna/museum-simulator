@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-453 distinct API names are claimed by at least one room.
+457 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -464,10 +464,14 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | StorageDevice.GetStorageRootEXT | `ct-storage` |
 | StringBuilder | `text-hud` |
 | SurfaceFormat | `tex-formats`, `rt-formats` |
+| System.IO.MemoryStream | `tex-io` |
 | TextInputEXT.StartTextInput | `in-text` |
 | TextInputEXT.TextInput | `in-text` |
 | Texture2D | `materials`, `app-content`, `tex-mip`, `rf-garden` |
+| Texture2D.FromStream | `tex-io` |
 | Texture2D.GetData | `sprite-atlas`, `tex-dynamic`, `ct-formats`, `rv-targets` |
+| Texture2D.SaveAsJpeg | `tex-io` |
+| Texture2D.SaveAsPng | `tex-io` |
 | Texture2D.SetData | `sprite-ui`, `sprite-atlas`, `tex-dynamic` |
 | Texture3D | `tex-volume` |
 | Texture3D.GetData | `tex-volume` |

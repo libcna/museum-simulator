@@ -1,5 +1,5 @@
 // Texture laboratory: mip levels, filtering, addressing, UV transforms, dynamic textures, surface formats,
-// alpha, cube maps and volume textures. One class, nine rooms ("mode").
+// alpha, cube maps, volume textures and image encode/decode. One class, ten rooms ("mode").
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -7,6 +7,7 @@
 #include <string>
 
 #include "CNA/GraphicsCapability.hpp"
+#include "Diagnostics/Log.hpp"
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ExhibitKit.hpp"
 #include "Exhibits/Math/MathKit.hpp"
@@ -27,6 +28,7 @@
 #include "Rendering/MiniView.hpp"
 #include "Rendering/RenderStates.hpp"
 #include "Rendering/TextureLibrary.hpp"
+#include "System/IO/MemoryStream.hpp"
 
 using namespace Microsoft::Xna::Framework;
 using namespace Microsoft::Xna::Framework::Graphics;
@@ -34,12 +36,12 @@ using namespace MathKit;
 
 namespace {
 
-enum class Mode { Mip, Filter, Address, Uv, Dynamic, Formats, Alpha, Cube, Volume };
+enum class Mode { Mip, Filter, Address, Uv, Dynamic, Formats, Alpha, Cube, Volume, Io };
 
 Mode ParseMode(const std::string& s)
 {
     static const std::pair<const char*, Mode> table[] = {{"filter", Mode::Filter}, {"address", Mode::Address}, {"uv", Mode::Uv}, {"dynamic", Mode::Dynamic}, {"formats", Mode::Formats},
-                                                         {"alpha", Mode::Alpha}, {"cube", Mode::Cube}, {"volume", Mode::Volume}};
+                                                         {"alpha", Mode::Alpha}, {"cube", Mode::Cube}, {"volume", Mode::Volume}, {"io", Mode::Io}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
     return Mode::Mip;
@@ -107,6 +109,16 @@ public:
                 p.AddReadout("Round trip checksum", [this] { return checksum_; });
                 p.AddReadout("Sampled by stock effects?", [] { return std::string("no: store and read back only"); });
                 break;
+            case Mode::Io:
+                p.AddChoice("Encoder", {"SaveAsPng (lossless)", "SaveAsJpeg (lossy)"}, 0, [this](int v) { jpeg_ = v == 1; ioDirty_ = true; });
+                p.AddChoice("Encoded size", {"64 x 64", "128 x 128 (as is)", "256 x 256"}, 1, [this](int v) { encodeSize_ = 64 << v; ioDirty_ = true; });
+                p.AddChoice("FromStream", {"original size", "fit in 96 x 48", "zoom to 96 x 48"}, 0, [this](int v) { decodeMode_ = v; ioDirty_ = true; });
+                p.AddToggle("Source has transparency", true, [this](bool v) { alphaSource_ = v; ioDirty_ = true; });
+                p.AddButton("Encode and decode again", [this] { ioDirty_ = true; });
+                p.AddReadout("Encoded bytes", [this] { return ioBytes_; });
+                p.AddReadout("Decoded texture", [this] { return ioSize_; });
+                p.AddReadout("Round trip", [this] { return ioError_; });
+                break;
         }
         SignSpec what = Kit::Plate(Title(), Explanation());
         what.leftAlign = true;
@@ -134,6 +146,7 @@ public:
         if (mode_ == Mode::Volume) BuildVolume();
         if (mode_ == Mode::Formats) BuildFormats();
         dirty_ = true;
+        ioDirty_ = true;
     }
 
     void Update(const UpdateContext& ctx) override
@@ -145,6 +158,7 @@ public:
             scrollY_ += scrollV_ * ctx.dt * 0.5f;
         }
         if (mode_ == Mode::Dynamic && (animate_ || dirty_)) UpdateDynamic();
+        if (mode_ == Mode::Io && ioDirty_) RoundTrip();
     }
 
     void RenderOffscreen(const DrawContext& ctx) override
@@ -186,6 +200,7 @@ public:
             case Mode::Alpha: DrawAlpha(ctx); break;
             case Mode::Cube: DrawCube(ctx); break;
             case Mode::Volume: DrawVolume(ctx); break;
+            case Mode::Io: DrawIo(ctx); break;
         }
         gizmos_.Flush(ctx);
     }
@@ -194,7 +209,7 @@ public:
 private:
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"Mip levels and filtering", "Magnification filters", "Texture addressing modes", "UV transforms", "Dynamic textures and readback", "Surface formats", "Alpha: test, blend, opaque", "Cube maps and environment maps", "Volume textures"};
+        static const char* t[] = {"Mip levels and filtering", "Magnification filters", "Texture addressing modes", "UV transforms", "Dynamic textures and readback", "Surface formats", "Alpha: test, blend, opaque", "Cube maps and environment maps", "Volume textures", "Encoding and decoding images"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
@@ -207,6 +222,7 @@ private:
             case Mode::Dynamic: return {"Texture2D.SetData rewrites a texture's pixels at run time (here an animated plasma) and GetData reads", "them back (the centre texel is shown). Readbacks stall the GPU, so games use them sparingly."};
             case Mode::Formats: return {"A texture can store colour in many SurfaceFormats. Fewer bits mean banding (Bgr565, Bgra4444), Alpha8 keeps", "only transparency and HalfVector4 stores 16-bit floats. Support depends on the renderer: unsupported ones say so."};
             case Mode::Alpha: return {"Three ways to treat a texture's alpha: AlphaTestEffect discards pixels below a reference value (cut-out", "foliage, no sorting needed), alpha blending mixes with the background, and opaque ignores alpha."};
+            case Mode::Io: return {"Texture2D.SaveAsPng and SaveAsJpeg encode a texture into any Stream (here a MemoryStream, so nothing touches", "the disk) and Texture2D.FromStream decodes it again, optionally fitting or cropping it. PNG is lossless; JPEG is not and has no alpha."};
             case Mode::Cube: return {"A TextureCube stores six faces. EnvironmentMapEffect samples it by reflection direction, so the sphere", "mirrors a (procedural) sky. Amount blends the reflection in, Fresnel strengthens it at grazing angles."};
             default: return {"A Texture3D has width, height and depth. CNA stores it and reads it back (SetData / GetData); no stock effect", "samples it, so the slices shown are read back into ordinary textures."};
         }
@@ -540,10 +556,108 @@ private:
         gizmos_.Label(R().ToWorld(0.0f, 3.7f, 0.0f), "slice " + std::to_string(z) + " of 32 (read back with GetData)", Color(255, 230, 150, 255), 0.55f);
     }
 
+    // Source image: a colour wheel, fine diagonal lines (hard for JPEG) and, optionally, a transparent corner.
+    [[nodiscard]] std::vector<Color> MakeIoSource(int n) const
+    {
+        std::vector<Color> px(static_cast<std::size_t>(n * n));
+        for (int y = 0; y < n; ++y)
+            for (int x = 0; x < n; ++x) {
+                const float u = static_cast<float>(x) / static_cast<float>(n - 1) - 0.5f, v = static_cast<float>(y) / static_cast<float>(n - 1) - 0.5f;
+                const float hue = std::atan2(v, u) * 0.9549297f + 3.0f;   // 0..6
+                const float r = std::sqrt(u * u + v * v) * 2.0f;
+                const auto ch = [&](float off) { return std::clamp(std::abs(std::fmod(hue + off, 6.0f) - 3.0f) - 1.0f, 0.0f, 1.0f); };
+                float red = ch(0.0f), grn = ch(4.0f), blu = ch(2.0f);
+                const float mix = std::clamp(1.2f - r, 0.0f, 1.0f);
+                red = 1.0f - mix * (1.0f - red); grn = 1.0f - mix * (1.0f - grn); blu = 1.0f - mix * (1.0f - blu);
+                if (((x + y) % 8) < 1) { red *= 0.2f; grn *= 0.2f; blu *= 0.2f; }
+                const bool hole = alphaSource_ && (x > n * 3 / 4) && (y < n / 4);
+                px[static_cast<std::size_t>(y * n + x)] = Color(static_cast<std::uint8_t>(red * 255), static_cast<std::uint8_t>(grn * 255), static_cast<std::uint8_t>(blu * 255), static_cast<std::uint8_t>(hole ? 0 : 255));
+            }
+        return px;
+    }
+
+    void RoundTrip()
+    {
+        ioDirty_ = false;
+        GraphicsDevice& d = *S().device;
+        try {
+            RenderStates::UnbindTextures(d);
+            constexpr int n = 128;
+            const std::vector<Color> src = MakeIoSource(n);
+            ioSource_ = std::make_unique<Texture2D>(d, n, n);
+            ioSource_->SetData(src.data(), n * n);
+            System::IO::MemoryStream encoded;
+            if (jpeg_) ioSource_->SaveAsJpeg(&encoded, encodeSize_, encodeSize_);
+            else ioSource_->SaveAsPng(&encoded, encodeSize_, encodeSize_);
+            const std::vector<SharpRuntime::bytecs> bytes = encoded.ToArray();
+            char buf[96];
+            std::snprintf(buf, sizeof buf, "%zu bytes (raw %d), %.1f%%", bytes.size(), encodeSize_ * encodeSize_ * 4, 100.0 * static_cast<double>(bytes.size()) / (encodeSize_ * encodeSize_ * 4.0));
+            ioBytes_ = buf;
+            System::IO::MemoryStream in(bytes.data(), static_cast<int>(bytes.size()), false);
+            if (decodeMode_ == 0) ioDecoded_ = std::make_unique<Texture2D>(Texture2D::FromStream(d, in));
+            else ioDecoded_ = std::make_unique<Texture2D>(Texture2D::FromStream(d, in, 96, 48, decodeMode_ == 2));
+            ioSize_ = std::to_string(ioDecoded_->getWidthProperty()) + " x " + std::to_string(ioDecoded_->getHeightProperty());
+            if (ioDecoded_->getWidthProperty() == n && ioDecoded_->getHeightProperty() == n) {
+                std::vector<Color> back(src.size());
+                ioDecoded_->GetData(back.data(), n * n);
+                double sum = 0.0;
+                int worst = 0, exact = 0;
+                std::vector<Color> diff(src.size());
+                for (std::size_t i = 0; i < src.size(); ++i) {
+                    const int dr = std::abs(src[i].getRProperty() - back[i].getRProperty()), dg = std::abs(src[i].getGProperty() - back[i].getGProperty());
+                    const int db = std::abs(src[i].getBProperty() - back[i].getBProperty()), da = std::abs(src[i].getAProperty() - back[i].getAProperty());
+                    // Colour under a fully transparent pixel carries no information, so it is not compared.
+                    const bool invisible = src[i].getAProperty() == 0 && back[i].getAProperty() == 0;
+                    const int m = invisible ? 0 : std::max(std::max(dr, dg), std::max(db, da));
+                    if (!invisible) sum += (dr + dg + db + da) / 4.0;
+                    worst = std::max(worst, m);
+                    exact += m == 0;
+                    const auto amp = static_cast<std::uint8_t>(std::min(255, m * 8));
+                    diff[i] = Color(amp, amp, amp, static_cast<std::uint8_t>(255));
+                }
+                std::snprintf(buf, sizeof buf, "%s: mean error %.2f, worst %d", worst == 0 ? "bit-exact" : "differs", sum / static_cast<double>(src.size()), worst);
+                ioError_ = buf;
+                Museum::Log("textures", "image round trip (%s, %d px, decode mode %d): %s, %s", jpeg_ ? "JPEG" : "PNG", encodeSize_, decodeMode_, ioBytes_.c_str(), buf);
+                ioDiff_ = std::make_unique<Texture2D>(d, n, n);
+                ioDiff_->SetData(diff.data(), n * n);
+            } else {
+                ioError_ = "sizes differ: no pixel comparison";
+                Museum::Log("textures", "image round trip (%s, %d px, decode mode %d): %s, decoded %s", jpeg_ ? "JPEG" : "PNG", encodeSize_, decodeMode_, ioBytes_.c_str(), ioSize_.c_str());
+                ioDiff_.reset();
+            }
+        } catch (const std::exception& e) {
+            ioError_ = std::string("failed: ") + std::string(e.what()).substr(0, 60);
+            Museum::Log("textures", "image round trip failed: %s", e.what());
+        }
+    }
+    void DrawIo(const DrawContext& ctx)
+    {
+        GraphicsDevice& device = ctx.device;
+        const auto draw = [&](Texture2D* t, float x, float w, float h) {
+            if (!t) return;
+            Quad(ctx, S().textures->Get("checker"), At(x, 1.9f, -0.02f), w, h, Vector2(0, 0), Vector2(3, 3), SamplerState::PointWrap);
+            device.setBlendStateProperty(BlendState::NonPremultiplied);
+            device.setDepthStencilStateProperty(DepthStencilState::DepthRead);
+            Quad(ctx, t, At(x, 1.9f, 0.0f), w, h, Vector2(0, 0), Vector2(1, 1), SamplerState::PointClamp);
+            device.setBlendStateProperty(BlendState::Opaque);
+            device.setDepthStencilStateProperty(DepthStencilState::Default);
+        };
+        draw(ioSource_.get(), -2.7f, 2.4f, 2.4f);
+        if (ioDecoded_) {
+            const float aspect = static_cast<float>(ioDecoded_->getWidthProperty()) / static_cast<float>(ioDecoded_->getHeightProperty());
+            draw(ioDecoded_.get(), 0.0f, aspect >= 1.0f ? 2.4f : 2.4f * aspect, aspect >= 1.0f ? 2.4f / aspect : 2.4f);
+        }
+        if (ioDiff_) draw(ioDiff_.get(), 2.7f, 2.4f, 2.4f);
+        const Color c(255, 230, 150, 255);
+        gizmos_.Label(R().ToWorld(-2.7f, 3.4f, 0.0f), "source (128 x 128)", c, 0.5f);
+        gizmos_.Label(R().ToWorld(0.0f, 3.4f, 0.0f), std::string(jpeg_ ? "SaveAsJpeg" : "SaveAsPng") + " -> FromStream", c, 0.5f);
+        gizmos_.Label(R().ToWorld(2.7f, 3.4f, 0.0f), "difference x8", c, 0.5f);
+    }
+
     Mode mode_;
     Gizmos gizmos_;
     std::unique_ptr<MiniView> view_;
-    std::unique_ptr<Texture2D> small_, mipTexture_, dyn_, sliceTex_;
+    std::unique_ptr<Texture2D> small_, mipTexture_, dyn_, sliceTex_, ioSource_, ioDecoded_, ioDiff_;
     std::array<std::unique_ptr<Texture2D>, 5> formats_;
     std::array<std::string, 5> status_{"-", "-", "-", "-", "-"};
     std::unique_ptr<TextureCube> cube_;
@@ -551,13 +665,14 @@ private:
     std::unique_ptr<AlphaTestEffect> alphaFx_;
     std::unique_ptr<Texture3D> volume_;
     std::vector<Color> pixels_, volumeData_;
-    std::string readback_ = "-", checksum_ = "-";
+    std::string readback_ = "-", checksum_ = "-", ioBytes_ = "-", ioSize_ = "-", ioError_ = "-";
     double setMs_ = 0.0;
     float time_ = 0.0f, scrollX_ = 0.0f, scrollY_ = 0.0f;
     int filter_ = 0, size_ = 128, fn_ = 0, shownSlice_ = -1;
     float bias_ = 0.0f, maxMip_ = 0.0f, aniso_ = 4.0f, tilt_ = 55.0f, zoom_ = 2.0f, offset_ = 0.0f, scrollU_ = 0.3f, scrollV_ = 0.0f, rot_ = 0.0f, ref_ = 128.0f;
     float amount_ = 0.8f, fresnel_ = 1.0f, speed_ = 0.5f, slice_ = 0.5f;
-    bool dirty_ = true, colouredMips_ = true, animate_ = true;
+    int encodeSize_ = 128, decodeMode_ = 0;
+    bool dirty_ = true, colouredMips_ = true, animate_ = true, jpeg_ = false, alphaSource_ = true, ioDirty_ = true;
 };
 
 }  // namespace

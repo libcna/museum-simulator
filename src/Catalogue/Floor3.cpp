@@ -52,7 +52,7 @@ WingSpec TextureWing()
 {
     WingSpec w;
     w.name = "Textures";
-    w.tagline = "Mip levels, filters, addressing, UVs, formats, alpha, cube and volume textures";
+    w.tagline = "Mip levels, filters, addressing, UVs, formats, alpha, cube and volume textures, image encode/decode";
     w.theme = "corridor-green";
     w.accent = {0.55f, 0.90f, 0.40f};
     w.spineSide = Wall::West;
@@ -73,6 +73,8 @@ WingSpec TextureWing()
         tex("tex-alpha", "Alpha: Test, Blend, Opaque", "AlphaTestEffect with a reference alpha against blending and opaque drawing", "alpha", {"AlphaTestEffect", "BlendState.NonPremultiplied", "CompareFunction"}),
         tex("tex-cube", "Cube Maps and Environment Maps", "A procedural TextureCube reflected by EnvironmentMapEffect", "cube", {"TextureCube", "EnvironmentMapEffect", "CubeMapFace"}),
         tex("tex-volume", "Volume Textures", "Texture3D storage and readback, shown slice by slice", "volume", {"Texture3D", "Texture3D.SetData", "Texture3D.GetData"}),
+        tex("tex-io", "Encoding and Decoding Images", "Texture2D.SaveAsPng and SaveAsJpeg into a stream, then Texture2D.FromStream back with fit and zoom", "io",
+            {"Texture2D.SaveAsPng", "Texture2D.SaveAsJpeg", "Texture2D.FromStream", "System.IO.MemoryStream"}),
     };
     return w;
 }
