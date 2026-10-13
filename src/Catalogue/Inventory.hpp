@@ -23,6 +23,10 @@ struct MuseumInventory {
 MuseumInventory ComputeInventory(const MuseumPlan& museum);
 std::string InventoryAsText(const MuseumPlan& museum);
 std::string InventoryAsJson(const MuseumPlan& museum);
+/** The museum map as Markdown: every floor, wing and room with its number, origin and APIs (docs/MUSEUM_MAP.md). */
+std::string MapAsMarkdown(const MuseumPlan& museum);
+/** CNA API names with the rooms that demonstrate them (the generated part of docs/CNA_COVERAGE.md). */
+std::string CoverageAsMarkdown(const MuseumPlan& museum);
 
 /** Assets the catalogue refers to that do not exist under `contentRoot`; empty when all are present. */
 std::vector<std::string> FindMissingAssets(const MuseumPlan& museum, const std::string& contentRoot);

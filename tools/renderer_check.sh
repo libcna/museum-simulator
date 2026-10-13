@@ -7,7 +7,7 @@ set -u
 cd "$(dirname "$0")/.." || exit 2
 renderers=("$@")
 [ ${#renderers[@]} -gt 0 ] || renderers=(OPENGLES3 OPENGL33 SOFTWARE)
-rooms=(rv-geometry rv-sprites rv-blend rv-depth rv-shading rv-sampling rv-targets rv-effects)
+mapfile -t rooms < <(${MUSEUM_BIN:-${BUILD_DIR:-build}/bin/cna-3d-museum} --list-rooms | grep '^rv-')
 script=""
 for r in "${rooms[@]}"; do script+="goto:$r;wait:10;"; done
 script+="quit"

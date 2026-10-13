@@ -65,6 +65,45 @@ std::string InventoryAsJson(const MuseumPlan& m)
     return out.str();
 }
 
+std::string MapAsMarkdown(const MuseumPlan& m)
+{
+    const MuseumInventory inv = ComputeInventory(m);
+    std::ostringstream out;
+    out << inv.floors << " floors, " << inv.wings << " wings, " << inv.rooms << " exhibit rooms (" << inv.outdoorRooms << " open to the sky), " << inv.cells << " walkable cells in all.\n\n";
+    for (const FloorDef& f : m.floors) {
+        out << "### Floor " << f.index << ": " << f.name << "\n\n" << f.tagline << "\n\n";
+        for (const WingDef& w : m.wings) {
+            if (w.floor != f.index) continue;
+            out << "**" << w.name << "** - " << w.tagline << "\n\n| Room | Key | Title | Origin | APIs |\n|---|---|---|---|---|\n";
+            for (const RoomDef& r : m.rooms) {
+                if (r.kind != CellKind::Room || r.floor != f.index || r.wing != w.index) continue;
+                out << "| " << r.number << " | `" << r.key << "` | " << r.title << " | " << (r.origin == ApiOrigin::Xna ? "XNA 4.0" : "CNA extension") << " | ";
+                for (std::size_t i = 0; i < r.apis.size(); ++i) out << (i ? ", " : "") << r.apis[i];
+                out << " |\n";
+            }
+            out << "\n";
+        }
+    }
+    return out.str();
+}
+
+std::string CoverageAsMarkdown(const MuseumPlan& m)
+{
+    std::map<std::string, std::vector<std::string>> rooms;
+    for (const RoomDef& r : m.rooms) {
+        if (r.kind != CellKind::Room) continue;
+        for (const std::string& api : r.apis) rooms[api].push_back(r.key);
+    }
+    std::ostringstream out;
+    out << rooms.size() << " distinct API names are claimed by at least one room.\n\n| API | Rooms |\n|---|---|\n";
+    for (const auto& [api, keys] : rooms) {
+        out << "| " << api << " | ";
+        for (std::size_t i = 0; i < keys.size(); ++i) out << (i ? ", " : "") << "`" << keys[i] << "`";
+        out << " |\n";
+    }
+    return out.str();
+}
+
 std::vector<std::string> FindMissingAssets(const MuseumPlan& m, const std::string& contentRoot)
 {
     namespace fs = std::filesystem;

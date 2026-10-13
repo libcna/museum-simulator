@@ -8,7 +8,7 @@ Only things that were observed are listed. "Open" means not yet explained.
 - Cause, found with the Renderer Validation floor and a log of the mouse state: SOFTWARE presents a CPU buffer and has no
   native window, so relative mouse mode is unavailable and the pointer can not be re-centred. `Mouse.GetState()` kept
   returning (0, 0); the player controller's fallback read that as a mouse movement of (-centre) every frame and pinned the
-  pitch at its limit. CNA's renderer was never involved: all 70+ self-checks in `rv-*` pass on SOFTWARE.
+  pitch at its limit. CNA's renderer was never involved: all 50 pixel self-checks of the `rv-*` rooms pass on SOFTWARE.
 - Fix (museum): the player controller spends the first frames after capturing the pointer verifying that re-centring works
   and turns mouse look off when it does not; arrow keys and Page Up/Down now look around on every platform.
 - Result: OPENGLES3 vs OPENGL33 screenshots differ in 0.00 % of pixels, OPENGLES3 vs SOFTWARE in 4.6 % (filtering and

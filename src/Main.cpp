@@ -21,6 +21,10 @@ int main(int argc, char** argv)
                 if (r.kind == CellKind::Room) std::printf("%s\n", r.key.c_str());
             return 0;
         }
+        if (options.mapMarkdown || options.coverageMarkdown) {
+            std::fputs((options.mapMarkdown ? MapAsMarkdown(TheMuseum()) : CoverageAsMarkdown(TheMuseum())).c_str(), stdout);
+            return 0;
+        }
         if (options.listViews) {
             for (const ReferenceView& v : ReferenceViews()) std::printf("%s\t%s\t%s\n", v.name, v.room, v.shows);
             return 0;

@@ -171,12 +171,17 @@ void Hud::Draw(const HudState& state)
         }
         if (state.bannerAlpha > 0.01f && !state.roomTitle.empty()) {
             const float a = state.bannerAlpha;
+            // The banner sits between the left edge and the minimap, so its text shrinks to fit rather than being cut.
+            const float maxW = std::max(320.0f, static_cast<float>(w) - 2.0f * 290.0f);
             const Vector2 ts = s_.titleFont->MeasureString(state.roomTitle);
-            const float bw = std::max(ts.X, s_.font->MeasureString(state.roomSubtitle).X) + 80.0f;
+            const Vector2 ss = s_.font->MeasureString(state.roomSubtitle);
+            const float titleScale = std::min(1.0f, (maxW - 80.0f) / std::max(1.0f, ts.X));
+            const float subScale = std::min(1.0f, (maxW - 80.0f) / std::max(1.0f, ss.X));
+            const float bw = std::max(ts.X * titleScale, ss.X * subScale) + 80.0f;
             Rect(static_cast<int>(static_cast<float>(w) / 2.0f - bw / 2.0f), 56, static_cast<int>(bw), 112,
                  Fade(Color(10, 14, 24, 190), a));
-            TextCentred(*s_.titleFont, state.roomTitle, static_cast<float>(w) / 2.0f, 62.0f, Fade(Color(255, 214, 90, 255), a));
-            TextCentred(*s_.font, state.roomSubtitle, static_cast<float>(w) / 2.0f, 126.0f, Fade(Color(230, 235, 245, 255), a));
+            TextCentred(*s_.titleFont, state.roomTitle, static_cast<float>(w) / 2.0f, 62.0f, Fade(Color(255, 214, 90, 255), a), titleScale);
+            TextCentred(*s_.font, state.roomSubtitle, static_cast<float>(w) / 2.0f, 126.0f, Fade(Color(230, 235, 245, 255), a), subScale);
         }
         float ty = static_cast<float>(h) - 40.0f;
         for (auto it = toasts_.rbegin(); it != toasts_.rend(); ++it) {
