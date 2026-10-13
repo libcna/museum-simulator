@@ -46,6 +46,7 @@ private:
     void SetPaused(bool paused);
     void TeleportToCell(int cell);
     void GoToView(const std::string& name);
+    std::string pendingView_;   // a teleport asked for from inside an exhibit's callback runs at the start of the next update
     void ResetToEntrance();
     void UpdateFrameStats(float dt);
     void RecordLoopStats(const Microsoft::Xna::Framework::GameTime& gameTime);

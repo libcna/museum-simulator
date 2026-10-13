@@ -135,7 +135,8 @@ void MuseumGame::LoadContent()
         else Museum::Log("main", "unknown room '%s'", options_.startRoom->c_str());
     }
     if (options_.view) GoToView(*options_.view);
-    services_.showView = [this](const std::string& name) { GoToView(name); };
+    // Deferred: the request comes from a button inside the room we are about to leave, which must not be destroyed under its own callback.
+    services_.showView = [this](const std::string& name) { pendingView_ = name; };
     services_.focusView = [this](const Vector3& eye, float yaw, float pitch) { StartGlide(eye, yaw, pitch); };
     if (options_.startPosition) {
         camera_.SetPosition(*options_.startPosition);
@@ -381,6 +382,11 @@ void MuseumGame::Update(GameTime& gameTime)
     ++frame_;
     RecordLoopStats(gameTime);
 
+    if (!pendingView_.empty()) {
+        const std::string view = std::move(pendingView_);
+        pendingView_.clear();
+        GoToView(view);
+    }
     input_.Update();
     UpdateFrameStats(dt);
     HandleSystemKeys();
