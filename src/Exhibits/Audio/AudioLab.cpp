@@ -93,6 +93,12 @@ public:
                 p.AddSlider("Release (ms)", 20.0f, 1200.0f, release_, [this](float v) { release_ = v; }, "%.0f");
                 p.AddSlider("Octave", 3.0f, 6.0f, octave_, [this](float v) { octave_ = v; }, "%.0f", 1.0f);
                 for (int i = 0; i < 8; ++i) p.AddButton(std::string("Note ") + kNotes[i], [this, i] { PlayNote(i); });
+                p.AddReadout("PendingBufferCount", [this] { return synth_ ? std::to_string(synth_->getPendingBufferCountProperty()) : std::string("-"); });
+                p.AddReadout("Sample size helpers", [this] {
+                    if (!synth_) return std::string("-");
+                    const int bytes = synth_->GetSampleSizeInBytes(System::TimeSpan::FromMilliseconds(100.0));
+                    return std::to_string(bytes) + " bytes = 100 ms (" + Fmt1(static_cast<float>(SoundEffect::GetSampleDuration(bytes, 22050, AudioChannels::Mono).getTotalMillisecondsProperty())) + " ms back)";
+                });
                 break;
             case Mode::Generate:
                 p.AddChoice("Sound", {"Laser", "Explosion", "Bell", "Coin", "Wind"}, 0, [this](int v) { gen_ = v; Generate(); });
@@ -121,6 +127,7 @@ public:
             case Mode::Microphone:
                 p.AddButton("Start / stop capture", [this] { ToggleMic(); });
                 p.AddReadout("Microphones found", [this] { return micCount_; });
+                p.AddReadout("Default microphone", [this] { return MicSummary(); });
                 p.AddReadout("State", [this] { return micState_; });
                 p.AddReadout("Input level", [this] { return Fmt1(micLevel_ * 100.0f) + " %"; });
                 break;
@@ -423,6 +430,17 @@ private:
         } catch (const std::exception& e) {
             micState_ = std::string("unavailable: ") + std::string(e.what()).substr(0, 36);
             micRunning_ = false;
+        }
+    }
+    [[nodiscard]] std::string MicSummary() const
+    {
+        try {
+            Microphone* m = Microphone::getDefaultProperty();
+            if (m == nullptr) return "none: the queries below need one";
+            return std::to_string(m->getSampleRateProperty()) + " Hz, " + std::to_string(static_cast<int>(m->getBufferDurationProperty().getTotalMillisecondsProperty())) + " ms buffer, " +
+                   std::to_string(m->GetSampleSizeInBytes(System::TimeSpan::FromMilliseconds(100.0))) + " bytes per 100 ms" + (m->getIsHeadsetProperty() ? ", headset" : "");
+        } catch (const std::exception&) {
+            return "unavailable";
         }
     }
     void PollMic()

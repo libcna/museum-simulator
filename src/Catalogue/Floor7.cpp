@@ -29,11 +29,11 @@ WingSpec AudioWing()
         au("au-basics", "SoundEffect.Play", "Volume, pitch and pan of fire-and-forget sounds, with overlapping playback", "basics", {"SoundEffect.Play", "SoundEffect", "ContentManager.Load<SoundEffect>"}),
         au("au-layers", "Instances and Layers", "Four looping SoundEffectInstances mixed live: volume, pitch, state", "layers", {"SoundEffectInstance", "SoundEffectInstance.IsLooped", "SoundEffectInstance.Volume", "SoundEffectInstance.Pitch", "SoundState"}),
         au("au-spatial", "3D Audio", "AudioEmitter and AudioListener with distance and Doppler settings", "spatial", {"SoundEffectInstance.Apply3D", "AudioEmitter", "AudioListener", "SoundEffect.DopplerScale", "SoundEffect.DistanceScale", "SoundEffect.SpeedOfSound"}),
-        au("au-synth", "A Synthesiser", "DynamicSoundEffectInstance playing notes computed from waveform formulas", "synth", {"DynamicSoundEffectInstance", "DynamicSoundEffectInstance.SubmitBuffer", "AudioChannels"}),
+        au("au-synth", "A Synthesiser", "DynamicSoundEffectInstance playing notes computed from waveform formulas", "synth", {"DynamicSoundEffectInstance", "DynamicSoundEffectInstance.SubmitBuffer", "AudioChannels", "DynamicSoundEffectInstance.PendingBufferCount", "DynamicSoundEffectInstance.GetSampleSizeInBytes", "SoundEffect.GetSampleDuration"}),
         au("au-generate", "Generated Sounds", "SoundEffect built from a PCM buffer: laser, explosion, bell, coin and wind", "generate", {"SoundEffect(buffer, sampleRate, channels)", "AudioChannels"}),
         au("au-master", "Master Volume and Settings", "SoundEffect.MasterVolume and the static 3D audio properties", "master", {"SoundEffect.MasterVolume", "SoundEffect.DistanceScale", "SoundEffect.DopplerScale", "SoundEffect.SpeedOfSound"}),
         au("au-music", "Song and MediaPlayer", "Streaming music with a queue, pause, repeat and volume", "music", {"Song", "MediaPlayer.Play", "MediaPlayer.Volume", "MediaState"}),
-        au("au-mic", "The Microphone", "Capturing 16-bit PCM and a level meter; reports cleanly when there is no microphone", "microphone", {"Microphone", "Microphone.GetData"}),
+        au("au-mic", "The Microphone", "Capturing 16-bit PCM and a level meter; reports cleanly when there is no microphone", "microphone", {"Microphone", "Microphone.GetData", "Microphone.SampleRate", "Microphone.BufferDuration", "Microphone.GetSampleSizeInBytes", "Microphone.IsHeadset"}),
     };
     return w;
 }
