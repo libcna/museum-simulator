@@ -34,6 +34,17 @@ Found by the museum's own exhibits; fixed in the CNA repository (commit ids are 
 | Content Pipeline / Loose Image Formats | `ContentManager` advertised `.tif`/`.tiff` as loose `Texture2D` extensions, but the image decoder has no TIFF support (`docs/texture-stream-formats.md`): a `.tif` was found and then failed with "unknown image type". | fixed in CNA (`ContentTexture2DLoaders.cpp`) |
 | Platform and Renderer / The Active Renderer | The OPENGLES3/OPENGL33 (EasyGL) capability profile reported `MaxColorAttachments`, `MaxSampledTexturesPerShaderStage`, `MaxVertexInputBindings` and `MaxVertexInputAttributes` as the known value 0 (the interface default), next to a supported `MultipleRenderTargets`. | fixed in CNA (EasyGL now reports the live context's values: 8, 32, 16, 16 here) |
 
+## Open observations (not explained, no CNA change made)
+
+- **Multisampled render target re-bound every frame with `RenderTargetUsage.PreserveContents` shows no smoothing on OPENGLES3**
+  (4 samples asked and reported). The same target drawn once and read back, or sampled through SpriteBatch, *is* smoothed
+  (checks in `rv-targets`), and with `DiscardContents` re-bound every frame it is smoothed too (room `rt-msaa`). The
+  museum therefore uses `DiscardContents` for that room. A minimal repro would be a per-frame re-bind loop in a validation check.
+- A multisample request of 2 returns a target that reports 0 samples on this machine (Mesa llvmpipe); 8 is clamped to 4.
+  This is the driver's capability, reported honestly by `RenderTarget2D.MultiSampleCount`.
+- `OcclusionQuery.PixelCount` on OPENGLES3/OPENGL33 is an any-samples boolean (0 or 1), documented by CNA; the room shows
+  `isPixelCountPreciseEXT()` so this is visible.
+
 ## Observations that are not bugs
 
 - `ContentManager.Load<T>("")` raises `ContentLoadException` whose inner cause is `std::bad_alloc` (the empty name resolves

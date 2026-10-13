@@ -771,6 +771,56 @@ private:
             second.GetData(img.px.data(), static_cast<int>(img.px.size()));
             Add("Render target used as a texture", "red marker still at top-left (0,0)", Rgb(img.At(2, 2)) + " / " + Rgb(img.At(2, 61)), Dist(img.At(2, 2), 255, 0, 0) < 3 && Dist(img.At(2, 61), 0, 0, 0) < 3, img);
         }
+        {   // a multisampled target gives edges intermediate shades; a plain one does not
+            Image sampled;   // the same target, drawn through SpriteBatch into a plain one
+            const auto edgeShades = [&](int samples, int& got, RenderTargetUsage usage = RenderTargetUsage::DiscardContents) {
+                RenderTarget2D ms(d, kSize, kSize, false, SurfaceFormat::Color, DepthFormat::Depth24, samples, usage);
+                got = ms.getMultiSampleCountProperty();
+                d.SetRenderTarget(&ms);
+                d.setViewportProperty(Viewport(0, 0, kSize, kSize));
+                d.setBlendStateProperty(BlendState::Opaque);
+                d.setDepthStencilStateProperty(DepthStencilState::None);
+                d.setRasterizerStateProperty(RasterizerState::CullNone);
+                d.Clear(ClearOptions::Target | ClearOptions::DepthBuffer, Color(0, 0, 0, 255), 1.0f, 0);
+                DrawClip(d, {VertexPositionColor(Vector3(-0.9f, -0.9f, 0.5f), Color::White), VertexPositionColor(Vector3(0.9f, 0.7f, 0.5f), Color::White), VertexPositionColor(Vector3(-0.9f, 0.7f, 0.5f), Color::White)});
+                d.SetRenderTarget(nullptr);
+                // First sample the target as a texture (what the museum's screens do), then read it back directly.
+                RenderTarget2D plain(d, kSize, kSize, false, SurfaceFormat::Color, DepthFormat::None);
+                d.SetRenderTarget(&plain);
+                d.Clear(Color(0, 0, 0, 255));
+                S().sprites->Begin(SpriteSortMode::Deferred, &BlendState::Opaque, &SamplerState::PointClamp, nullptr, nullptr);
+                S().sprites->Draw(ms, Rectangle(0, 0, kSize, kSize), Color::White);
+                S().sprites->End();
+                d.SetRenderTarget(nullptr);
+                sampled.px.assign(static_cast<std::size_t>(kSize * kSize), Color::Black);
+                plain.GetData(sampled.px.data(), static_cast<int>(sampled.px.size()));
+                Image img;
+                img.px.resize(static_cast<std::size_t>(kSize * kSize));
+                ms.GetData(img.px.data(), static_cast<int>(img.px.size()));
+                return img;
+            };
+            if (!d.SupportsCapability(CNA::GraphicsCapability::MultiSampleAntiAliasing)) {
+                Skip("Multisampled target edge shades", "MultiSampleAntiAliasing not supported");
+            } else {
+                try {
+                    int plainGot = 0, msGot = 0;
+                    const Image plain = edgeShades(0, plainGot);
+                    const Image multi = edgeShades(4, msGot);
+                    const auto mid = [](const Color& c) { return c.getRProperty() > 24 && c.getRProperty() < 232; };
+                    const int a = plain.Count(mid), b = multi.Count(mid);
+                    Add("Multisampled target (4 samples asked) smooths edges", "no mid shades without MSAA, some with", std::to_string(a) + " without, " + std::to_string(b) + " with (target reports " + std::to_string(msGot) + " samples)", a == 0 && b > 0, multi);
+                    int keepGot = 0;
+                    const Image kept = edgeShades(4, keepGot, RenderTargetUsage::PreserveContents);
+                    const int c = kept.Count(mid);
+                    Add("Same with RenderTargetUsage.PreserveContents", "smoothed edges as with DiscardContents", std::to_string(c) + " mid-shade pixels read back (target reports " + std::to_string(keepGot) + " samples)", c > 0, kept);
+                    const int viaSprite = sampled.Count(mid);
+                    Add("PreserveContents target drawn with SpriteBatch keeps the smoothing", "mid shades survive being sampled as a texture", std::to_string(viaSprite) + " mid-shade pixels after sampling", viaSprite > 0, sampled);
+                } catch (const std::exception& e) {
+                    d.SetRenderTarget(nullptr);
+                    Add("Multisampled target (4 samples asked) smooths edges", "no exception", e.what(), false, std::nullopt);
+                }
+            }
+        }
         {   // half-float target holds values above 1
             if (!d.SupportsCapability(CNA::GraphicsCapability::HalfFloatRenderTargets)) {
                 Skip("HalfVector4 target holds 1.5", "HalfFloatRenderTargets not supported");

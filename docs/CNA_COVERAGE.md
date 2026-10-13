@@ -8,7 +8,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 
 | Area | Where | State |
 |---|---|---|
-| Game, GameTime, components, services, content, viewport | floor 1 *Application Model* | covered (GameServiceContainer has no room of its own: see gaps) |
+| Game, GameTime, components, GameServiceContainer, content, viewport | floor 1 *Application Model* | covered |
 | Vector, Matrix, Quaternion, Curve, barycentric, projection | floor 1 | covered |
 | BoundingBox/Sphere/Frustum, Ray, Plane, picking | floor 1 *Collision* | covered (`BoundingFrustum.Intersects(Ray)` throws NotImplemented in CNA and is avoided) |
 | Cameras: orbit, chase, top-down, security, FOV, clip, transition, split, mirror | floor 1 *Cameras* | covered |
@@ -19,11 +19,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Punctual point/spot lights (CNAEXT) | floor 4 | covered |
 | ShaderEffect (GLSL source at run time) | floor 4 *Shader Lab* | covered; run-time shader source only (no compiled effects) |
 | RasterizerState, DepthStencilState (incl. stencil), BlendState, SamplerState | floor 5 | covered |
-| RenderTarget2D, MRT, float formats, mirrors | floor 5 | covered |
-| glTF models, PbrEffect, rigid and skinned animation, instancing, import report | floor 6 | covered |
+| RenderTarget2D, MRT, float formats, mirrors, multisampling, OcclusionQuery | floor 5 | covered |
+| glTF models, PbrEffect, image-based lighting, rigid and skinned animation, instancing, import report | floor 6 | covered |
 | Particle systems (application code on CNA dynamic buffers) | floor 6 | covered |
 | SoundEffect, instances, 3D audio, DynamicSoundEffectInstance, Song/MediaPlayer, Microphone | floor 7 | covered |
-| Keyboard, Mouse (relative mode, cursors), GamePad (+ keyboard emulation), PlayerIndex slots, TextInputEXT, Clipboard, Joysticks, devices | floor 7 | covered; every room works with no pad, joystick or touch screen |
+| Keyboard, Mouse (relative mode, cursors), GamePad (+ keyboard emulation), PlayerIndex slots, TextInputEXT, Clipboard, Joysticks, TouchPanel gestures, devices | floor 7 | covered; every room works with no pad, joystick or touch screen |
 | ContentManager (cache, Unload, loose formats, failures), cna-content (.cnb/.xnb), TitleContainer, StorageDevice | floor 8 | covered |
 | DebugDraw, CRTEffect, DepthEffect, AsciiPostProcessEffect (CNA_CNAEXT) | floor 8 | covered |
 | Diagnostics counters and resource list (CNA_DIAGNOSTICS=STATS) | floors 8-9 | covered |
@@ -36,7 +36,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 
 | Feature | Status |
 |---|---|
-| OcclusionQuery, multisampled render targets, image-based lighting (`ImageBasedLightEXT`), `ShaderPackageEXT`, SkinnedEffect, morph targets and material variants, ResourceContentManager, GameServiceContainer room, touch gestures, haptics | planned: see HANDOFF.md |
+| `ShaderPackageEXT`, `SkinnedEffect` (the glTF skinned models use `SkinnedPbrEffect`), morph targets and material variants, `ResourceContentManager`, haptic effects (devices are listed, none played) | planned: see HANDOFF.md |
 | Video playback (`VideoPlayer`) | not implemented: needs CNA_ENABLE_VIDEO (FFmpeg), which this build leaves off |
 | GamerServices, Net (network sessions), avatars | not implemented: networking and online services are outside the museum's scope |
 | `FileDialog`, `MessageBox`, `SystemTray`, `UrlLauncher`, `Camera` (CNA_DEVICES) | not implemented: they open real dialogs or hardware; the room reports whether each is supported |
@@ -46,7 +46,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-369 distinct API names are claimed by at least one room.
+386 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -172,6 +172,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Game.GetPlatformCapabilitiesEXT | `pl-platform` |
 | Game.IsFixedTimeStep | `app-lifecycle`, `pf-dashboard` |
 | Game.IsRunningSlowly | `pf-dashboard` |
+| Game.Services | `app-services` |
 | Game.TargetElapsedTime | `app-lifecycle` |
 | GameComponent | `app-components` |
 | GamePad.GetCapabilities | `in-players` |
@@ -182,6 +183,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GamePadCapabilities | `in-players` |
 | GamePadDeadZone | `in-pad` |
 | GamePadState | `in-pad` |
+| GameServiceContainer | `app-services` |
+| GameServiceContainer.AddService | `app-services` |
+| GameServiceContainer.GetService | `app-services` |
+| GameServiceContainer.RemoveService | `app-services` |
 | GameTime | `app-lifecycle`, `cam-chase`, `an-pendulum` |
 | GameTime.ElapsedGameTime | `app-gametime`, `pf-dashboard` |
 | GameTime.TotalGameTime | `app-gametime` |
@@ -190,6 +195,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GameWindow.ClientSizeChanged | `pl-window` |
 | GameWindow.FileDropEXT | `pl-window` |
 | GameWindow.Title | `pl-window` |
+| GestureType | `in-touch` |
 | GltfImportDiagnosticEXT | `model-report` |
 | GltfImportReportEXT | `model-report` |
 | Graphics/RenderTargetChanges | `pf-targets` |
@@ -197,6 +203,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsAdapter | `info`, `app-device`, `pl-adapter` |
 | GraphicsCapability | `app-device` |
 | GraphicsCapability.Instancing | `geo-instancing`, `pf-objects` |
+| GraphicsCapability.MultiSampleAntiAliasing | `rt-msaa` |
+| GraphicsCapability.OcclusionQuery | `rs-occlusion` |
 | GraphicsCapability.WireFrame | `rs-fill` |
 | GraphicsDevice | `info`, `app-device` |
 | GraphicsDevice.DrawIndexedPrimitives | `geo-indexed`, `geo-manybuffers`, `pf-objects` |
@@ -217,6 +225,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsResource.Dispose | `ct-lifetime` |
 | GraphicsResource.Disposing | `ct-lifetime` |
 | GraphicsResource.IsDisposed | `ct-cache`, `ct-lifetime` |
+| ImageBasedLightEXT | `model-ibl` |
 | IndexBuffer | `particles`, `geo-indexed`, `geo-procedural`, `geo-index32`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic` |
 | IndexElementSize | `geo-index32` |
 | InputDevices.GetMiceEXT | `in-devices` |
@@ -275,14 +284,18 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | MouseCursor | `in-mouse` |
 | MouseState | `in-mouse` |
 | NoMicrophoneConnectedException | `au-mic` |
+| OcclusionQuery | `rs-occlusion` |
+| OcclusionQuery.IsComplete | `rs-occlusion` |
+| OcclusionQuery.PixelCount | `rs-occlusion` |
 | PackedVector.Alpha8 | `tex-formats` |
 | PackedVector.Bgr565 | `tex-formats` |
 | PackedVector.Bgra4444 | `tex-formats` |
 | PackedVector.HalfVector4 | `tex-formats` |
 | PbrEffect | `model-pbr`, `model-effects` |
 | PbrEffect.EmissiveFactor | `model-pbr` |
-| PbrEffect.MetallicFactor | `model-pbr` |
-| PbrEffect.RoughnessFactor | `model-pbr` |
+| PbrEffect.ImageBasedLight | `model-ibl` |
+| PbrEffect.MetallicFactor | `model-pbr`, `model-ibl` |
+| PbrEffect.RoughnessFactor | `model-pbr`, `model-ibl` |
 | Plane | `vec-reflect`, `col-ray-plane` |
 | Plane.DotCoordinate | `col-plane-box` |
 | Plane.Intersects | `col-plane-box` |
@@ -317,8 +330,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | RasterizerState.SlopeScaleDepthBias | `rs-depthbias` |
 | Ray.Intersects | `col-ray-box`, `col-ray-sphere`, `col-ray-plane`, `col-pick` |
 | Rectangle | `sprite-sheet`, `sprite-ui` |
-| RenderTarget2D | `rendertarget`, `cam-orbit`, `cam-fov`, `cam-split`, `cam-mirror`, `sprite-basics`, `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave`, `rs-scissor`, `rt-basic`, `rt-lowres`, `rt-control`, `rt-recursive`, `rt-mirror`, `pf-targets`, `rv-targets`, `rf-telescope` |
+| RenderTarget2D | `rendertarget`, `cam-orbit`, `cam-fov`, `cam-split`, `cam-mirror`, `sprite-basics`, `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave`, `rs-scissor`, `rt-basic`, `rt-lowres`, `rt-control`, `rt-recursive`, `rt-mirror`, `rt-msaa`, `pf-targets`, `rv-targets`, `rf-telescope` |
 | RenderTarget2D.Format | `rt-formats` |
+| RenderTarget2D.MultiSampleCount | `rt-msaa` |
 | RenderTargetBinding | `rt-mrt` |
 | RenderTargetUsage.PreserveContents | `rt-recursive` |
 | RendererCapabilityProfile | `app-device` |
@@ -389,11 +403,14 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Texture3D.GetData | `tex-volume` |
 | Texture3D.SetData | `tex-volume` |
 | TextureAddressMode | `sprite-sampler`, `tex-address`, `rv-sampling` |
-| TextureCube | `tex-cube` |
+| TextureCube | `tex-cube`, `model-ibl` |
 | TextureFilter | `sprite-sampler`, `rv-sampling` |
 | TitleContainer.OpenStream | `ct-storage` |
-| TouchPanel.GetState | `in-devices` |
+| TouchPanel.EnabledGestures | `in-touch` |
+| TouchPanel.GetState | `in-touch`, `in-devices` |
 | TouchPanel.MouseTouchEmulationEnabledEXT | `in-devices` |
+| TouchPanel.ReadGesture | `in-touch` |
+| TouchPanel.SetFinger | `in-touch` |
 | Vector2 | `sprite-origin` |
 | Vector3 | `an-pendulum`, `rf-deck` |
 | Vector3.Add | `vec-add` |

@@ -6,15 +6,18 @@
 #include <array>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <exception>
 #include <string>
 #include <vector>
 
 #include "CNA/Input/Clipboard.hpp"
+#include "CNA/Input/Haptics.hpp"
 #include "CNA/Input/InputDevices.hpp"
 #include "CNA/Input/Joysticks.hpp"
 #include "CNA/Input/Power.hpp"
 #include "CNA/Input/Sensors.hpp"
+#include "Diagnostics/Log.hpp"
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
 #include "Microsoft/Xna/Framework/Input/GamePad.hpp"
@@ -31,12 +34,12 @@ using namespace Microsoft::Xna::Framework::Graphics;
 
 namespace {
 
-enum class Mode { Keyboard, Edges, Mouse, Pad, Players, Text, Joystick, Devices };
+enum class Mode { Keyboard, Edges, Mouse, Pad, Players, Text, Joystick, Devices, Touch };
 
 Mode ParseMode(const std::string& s)
 {
     static const std::pair<const char*, Mode> table[] = {{"edges", Mode::Edges}, {"mouse", Mode::Mouse}, {"pad", Mode::Pad}, {"players", Mode::Players},
-                                                         {"text", Mode::Text},   {"joystick", Mode::Joystick}, {"devices", Mode::Devices}};
+                                                         {"text", Mode::Text},   {"joystick", Mode::Joystick}, {"devices", Mode::Devices}, {"touch", Mode::Touch}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
     return Mode::Keyboard;
@@ -137,6 +140,15 @@ public:
                 p.AddReadout("Joysticks", [this] { return std::to_string(joysticks_.size()); });
                 p.AddReadout("Selected", [this] { return joysticks_.empty() ? std::string("none connected") : joysticks_[static_cast<std::size_t>(selected_)].name; });
                 break;
+            case Mode::Touch:
+                p.AddToggle("Mouse as touch (CNAEXT)", false, [](bool v) { TouchPanel::setMouseTouchEmulationEnabledEXT(v); });
+                p.AddChoice("Enabled gestures", {"Tap, double tap, hold", "Drags and flick", "Pinch", "All of them"}, 3, [this](int v) { SetGestures(v); });
+                p.AddButton("Simulate a tap", [this] { StartSim(1); });
+                p.AddButton("Simulate a drag", [this] { StartSim(2); });
+                p.AddButton("Simulate a pinch", [this] { StartSim(3); });
+                p.AddReadout("Touch points now", [this] { return std::to_string(touches_); });
+                p.AddReadout("Gestures seen", [this] { return std::to_string(gestureCount_); });
+                break;
             case Mode::Devices:
                 p.AddToggle("Mouse as touch (CNAEXT)", false, [](bool v) { TouchPanel::setMouseTouchEmulationEnabledEXT(v); });
                 p.AddReadout("Mice", [this] { return std::to_string(mice_); });
@@ -155,6 +167,15 @@ public:
             subscribed_ = true;
         }
         if (mode_ == Mode::Joystick || mode_ == Mode::Devices) Scan();
+        if (mode_ == Mode::Touch) {
+            savedWidth_ = TouchPanel::getDisplayWidthProperty();
+            savedHeight_ = TouchPanel::getDisplayHeightProperty();
+            savedGestures_ = TouchPanel::getEnabledGesturesProperty();
+            TouchPanel::setDisplayWidthProperty(960);
+            TouchPanel::setDisplayHeightProperty(540);
+            SetGestures(3);
+            touchSetup_ = true;
+        }
     }
 
     void Update(const UpdateContext& ctx) override
@@ -177,6 +198,7 @@ public:
                 break;
             case Mode::Joystick: UpdateJoystick(ctx.dt); break;
             case Mode::Devices: UpdateDevices(); break;
+            case Mode::Touch: UpdateTouch(); break;
         }
     }
 
@@ -327,6 +349,21 @@ protected:
                 }
                 break;
             }
+            case Mode::Touch: {
+                rect(24, 70, 912, 330, Kit::Rgba(18, 24, 38));
+                frame(24, 70, 912, 330, line);
+                for (const Vector2& p : points_) {
+                    const float px = 24.0f + p.X / 960.0f * 912.0f, py = 70.0f + p.Y / 540.0f * 330.0f;
+                    rect(px - 14, py - 14, 28, 28, lit);
+                }
+                float y = 410.0f;
+                for (const std::string& g : gestureLog_) {
+                    text(g, 30, y, Kit::kText, 0.55f);
+                    y += 16.0f;
+                }
+                if (gestureLog_.empty()) text("No gesture yet: press a Simulate button, or switch on Mouse as touch and click and drag here.", 30, 410, Kit::kDim, 0.65f);
+                break;
+            }
             case Mode::Devices: {
                 const std::string lines[] = {
                     "Mice: " + std::to_string(mice_) + "    Keyboards: " + std::to_string(keyboards_) + "    Touch devices: " + std::to_string(touchDevices_),
@@ -334,6 +371,7 @@ protected:
                     "Sensors.GetSensorsEXT(): " + std::to_string(sensorCount_) + " sensor(s)" + (sensorCount_ > 0 ? "" : "   (typical for a desktop)"),
                     accel_ ? "Accelerometer: " + Fmt(accelV_.X) + ", " + Fmt(accelV_.Y) + ", " + Fmt(accelV_.Z) : std::string("Accelerometer: not available here"),
                     gyro_ ? "Gyroscope: " + Fmt(gyroV_.X) + ", " + Fmt(gyroV_.Y) + ", " + Fmt(gyroV_.Z) : std::string("Gyroscope: not available here"),
+                    "Haptics.GetHapticsEXT(): " + std::to_string(hapticCount_) + " haptic device(s)",
                     "Power.GetInfoEXT(): " + powerNote_,
                     "Mouse-to-touch emulation: " + std::string(TouchPanel::getMouseTouchEmulationEnabledEXT() ? "ON (hold the left button to make a touch)" : "off (a mouse is not a touch screen)"),
                 };
@@ -366,7 +404,7 @@ private:
 
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"The keyboard", "Pressed, held, released", "The mouse", "The game pad", "Four player slots", "Text input and the clipboard", "Raw joysticks", "Other input devices"};
+        static const char* t[] = {"The keyboard", "Pressed, held, released", "The mouse", "The game pad", "Four player slots", "Text input and the clipboard", "Raw joysticks", "Other input devices", "Touch and gestures"};
         return t[static_cast<int>(mode_)];
     }
 
@@ -375,6 +413,7 @@ private:
         switch (mode_) {
             case Mode::Keyboard: return {"Keyboard.GetState() returns a snapshot every frame: IsKeyDown(Keys) and GetPressedKeys(). The layout above", "lights each key you hold, including the ones that walk you around. Names come from the active keyboard layout."};
             case Mode::Edges: return {"A snapshot only says whether a key is down. To know it was pressed this frame, compare with last frame's", "KeyboardState: down now and up before is a press, up now and down before is a release. Hold a key, tap it, repeat."};
+            case Mode::Touch: return {"TouchPanel reports touch points and recognises gestures: tap, double tap, hold, drags, flick and pinch. With no touch", "screen, mouse-to-touch emulation (CNAEXT) turns a drag into a touch, and the Simulate buttons move virtual fingers."};
             case Mode::Mouse: return {"Mouse.GetState() gives position, five buttons and the scroll wheel. The museum uses relative mode (CNAEXT) so", "looking never hits a screen edge; there X and Y are movement. Esc frees the pointer and Mouse.SetCursor changes its shape."};
             case Mode::Pad: return {"GamePad.GetState(PlayerIndex.One) reads sticks, triggers, buttons and the D-pad with a dead zone. No pad? Turn on", "CNA's keyboard emulation (WASD stick, arrows right stick, KLJI buttons, TFGH D-pad, QE bumpers, ZC triggers)."};
             case Mode::Players: return {"XNA addresses up to four pads by PlayerIndex. Each slot reports IsConnected, a PacketNumber and, through", "GetCapabilities and CNAEXT queries, its type and name. Emulation always lands on player one."};
@@ -392,7 +431,13 @@ private:
         }
         if (typing_) StopTyping();
         if (mode_ == Mode::Pad || mode_ == Mode::Players) GamePad::setKeyboardEmulationEnabledEXT(false);
-        if (mode_ == Mode::Devices) TouchPanel::setMouseTouchEmulationEnabledEXT(false);
+        if (mode_ == Mode::Devices || mode_ == Mode::Touch) TouchPanel::setMouseTouchEmulationEnabledEXT(false);
+        if (mode_ == Mode::Touch && touchSetup_) {
+            touchSetup_ = false;
+            TouchPanel::setDisplayWidthProperty(savedWidth_);
+            TouchPanel::setDisplayHeightProperty(savedHeight_);
+            TouchPanel::setEnabledGesturesProperty(savedGestures_);
+        }
         if (mode_ == Mode::Mouse) {
             try { Mouse::SetCursor(MouseCursor::getArrowProperty()); } catch (const std::exception&) {}
         }
@@ -631,6 +676,7 @@ private:
             mice_ = static_cast<int>(CNA::Input::InputDevices::GetMiceEXT().size());
             keyboards_ = static_cast<int>(CNA::Input::InputDevices::GetKeyboardsEXT().size());
             touchDevices_ = static_cast<int>(CNA::Input::InputDevices::GetTouchDevicesEXT().size());
+            hapticCount_ = static_cast<int>(CNA::Input::Haptics::GetHapticsEXT().size());
         } catch (const std::exception&) {}
     }
     void UpdateJoystick(float)
@@ -640,6 +686,82 @@ private:
             const auto id = joysticks_[static_cast<std::size_t>(selected_)].id;
             caps_ = CNA::Input::Joysticks::GetCapabilitiesEXT(id);
             state_ = CNA::Input::Joysticks::GetStateEXT(id);
+        } catch (const std::exception&) {}
+    }
+    void SetGestures(int v)
+    {
+        GestureType g = GestureType::None;
+        if (v == 0 || v == 3) g = g | GestureType::Tap | GestureType::DoubleTap | GestureType::Hold;
+        if (v == 1 || v == 3) g = g | GestureType::HorizontalDrag | GestureType::VerticalDrag | GestureType::FreeDrag | GestureType::Flick | GestureType::DragComplete;
+        if (v == 2 || v == 3) g = g | GestureType::Pinch | GestureType::PinchComplete;
+        TouchPanel::setEnabledGesturesProperty(g);
+    }
+    void StartSim(int kind)
+    {
+        simKind_ = kind;
+        simFrame_ = 0;
+    }
+    static const char* GestureName(GestureType t)
+    {
+        switch (t) {
+            case GestureType::Tap: return "Tap";
+            case GestureType::DoubleTap: return "DoubleTap";
+            case GestureType::Hold: return "Hold";
+            case GestureType::HorizontalDrag: return "HorizontalDrag";
+            case GestureType::VerticalDrag: return "VerticalDrag";
+            case GestureType::FreeDrag: return "FreeDrag";
+            case GestureType::Pinch: return "Pinch";
+            case GestureType::Flick: return "Flick";
+            case GestureType::DragComplete: return "DragComplete";
+            case GestureType::PinchComplete: return "PinchComplete";
+            default: return "None";
+        }
+    }
+    void UpdateTouch()
+    {
+        // Virtual fingers for the Simulate buttons, fed through the same entry point the platform's touch events use
+        // (normalised 0..1 positions): a tap, a drag across the panel, or two fingers moving apart.
+        if (simFrame_ >= 0) {
+            const int frames = simKind_ == 1 ? 4 : (simKind_ == 2 ? 30 : 50);
+            const auto event = [](int id, TouchLocationState st, float x, float y, float dx, float dy) { TouchPanel::INTERNAL_onTouchEvent(id, st, x, y, dx, dy); };
+            const float t = static_cast<float>(simFrame_) / static_cast<float>(frames);
+            if (simKind_ == 1) {
+                if (simFrame_ == 0) event(101, TouchLocationState::Pressed, 0.5f, 0.5f, 0, 0);
+                if (simFrame_ == frames - 1) event(101, TouchLocationState::Released, 0.5f, 0.5f, 0, 0);
+            } else if (simKind_ == 2) {
+                const float x = 0.3f + 0.4f * t, y = 0.5f + 0.05f * t;
+                if (simFrame_ == 0) event(101, TouchLocationState::Pressed, x, y, 0, 0);
+                else if (simFrame_ == frames - 1) event(101, TouchLocationState::Released, x, y, 0, 0);
+                else event(101, TouchLocationState::Moved, x, y, 0.4f / static_cast<float>(frames), 0.05f / static_cast<float>(frames));
+            } else {
+                const float ax = 0.5f - 0.06f - 0.17f * t, bx = 0.5f + 0.06f + 0.17f * t, y = 0.5f;
+                const float d = 0.17f / static_cast<float>(frames);
+                if (simFrame_ == 0) {
+                    event(101, TouchLocationState::Pressed, ax, y, 0, 0);
+                    event(102, TouchLocationState::Pressed, bx, y, 0, 0);
+                } else if (simFrame_ == frames - 1) {
+                    event(101, TouchLocationState::Released, ax, y, 0, 0);
+                    event(102, TouchLocationState::Released, bx, y, 0, 0);
+                } else {
+                    event(101, TouchLocationState::Moved, ax, y, -d, 0);
+                    event(102, TouchLocationState::Moved, bx, y, d, 0);
+                }
+            }
+            simFrame_ = simFrame_ + 1 >= frames ? -1 : simFrame_ + 1;
+        }
+        try {
+            const TouchCollection t = TouchPanel::GetState();
+            touches_ = t.getCountProperty();
+            if (std::getenv("MUSEUM_DIAG_TOUCH") != nullptr && (touches_ > 0 || simFrame_ >= 0)) Museum::Log("touch", "frame sim=%d touches=%d gesture-available=%d", simFrame_, touches_, TouchPanel::getIsGestureAvailableProperty() ? 1 : 0);
+            points_.clear();
+            for (int i = 0; i < t.getCountProperty(); ++i) points_.push_back(t[static_cast<std::size_t>(i)].getPositionProperty());
+            int guard = 0;
+            while (TouchPanel::getIsGestureAvailableProperty() && guard++ < 16) {
+                const GestureSample g = TouchPanel::ReadGesture();
+                ++gestureCount_;
+                gestureLog_.insert(gestureLog_.begin(), std::string(GestureName(g.getGestureTypeProperty())) + "   at " + Fmt(g.getPositionProperty().X) + ", " + Fmt(g.getPositionProperty().Y) + "   delta " + Fmt(g.getDeltaProperty().X) + ", " + Fmt(g.getDeltaProperty().Y));
+                if (gestureLog_.size() > 8) gestureLog_.pop_back();
+            }
         } catch (const std::exception&) {}
     }
     void UpdateDevices()
@@ -702,6 +824,12 @@ private:
     int selected_ = 0;
     CNA::Input::JoystickCapabilitiesEXT caps_;
     CNA::Input::JoystickStateEXT state_;
+    int simKind_ = 0, simFrame_ = -1, gestureCount_ = 0, savedWidth_ = 0, savedHeight_ = 0;
+    GestureType savedGestures_ = GestureType::None;
+    bool touchSetup_ = false;
+    std::vector<Vector2> points_;
+    std::vector<std::string> gestureLog_;
+    int hapticCount_ = 0;
     int mice_ = 0, keyboards_ = 0, touchDevices_ = 0, touches_ = 0, touchMax_ = 0, sensorCount_ = 0;
     bool touchConnected_ = false, accel_ = false, gyro_ = false;
     Vector3 accelV_, gyroV_;

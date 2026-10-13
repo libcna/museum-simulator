@@ -153,6 +153,16 @@ WingSpec CameraWing()
     return w;
 }
 
+
+RoomSpec ServicesRoom()
+{
+    RoomSpec r = Lab("app-services", "Game Services", "GameServiceContainer: finding shared objects by type, with and without a registration", "applab", "components",
+                     {"GameServiceContainer", "GameServiceContainer.AddService", "GameServiceContainer.GetService", "GameServiceContainer.RemoveService", "Game.Services"});
+    r.exhibit = "services-lab";
+    r.params = {};
+    return r;
+}
+
 WingSpec AppWing()
 {
     WingSpec w;
@@ -174,6 +184,7 @@ WingSpec AppWing()
             {"ContentManager", "ContentManager.Load", "ContentManager.Unload", "ContentLoadException", "Texture2D"}),
         Lab("app-components", "Game Components", "GameComponent and DrawableGameComponent with UpdateOrder, DrawOrder, Enabled and Visible", "applab", "components",
             {"GameComponent", "DrawableGameComponent", "Game.Components"}),
+        ServicesRoom(),
     };
     return w;
 }

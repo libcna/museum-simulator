@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 31 wings, 215 exhibit rooms (5 open to the sky), 276 walkable cells in all.
+10 floors, 31 wings, 220 exhibit rooms (5 open to the sky), 281 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -79,6 +79,7 @@ The application model, the maths of games, geometry tests and cameras
 | 1.1.04 | `app-viewport` | Back Buffer, Viewport and Fullscreen | XNA 4.0 | GraphicsDeviceManager, PresentationParameters, Viewport, GameWindow.ClientBounds |
 | 1.1.05 | `app-content` | Content Lifetime | XNA 4.0 | ContentManager, ContentManager.Load, ContentManager.Unload, ContentLoadException, Texture2D |
 | 1.1.06 | `app-components` | Game Components | XNA 4.0 | GameComponent, DrawableGameComponent, Game.Components |
+| 1.1.07 | `app-services` | Game Services | XNA 4.0 | GameServiceContainer, GameServiceContainer.AddService, GameServiceContainer.GetService, GameServiceContainer.RemoveService, Game.Services |
 
 **Vector Mathematics** - Vector3: arithmetic, products, reflection and interpolation
 
@@ -279,6 +280,7 @@ RasterizerState, DepthStencilState, BlendState and off-screen rendering
 | 5.1.10 | `rs-blend` | BlendState Gallery | XNA 4.0 | BlendState, Blend, BlendFunction |
 | 5.1.11 | `rs-colorwrite` | Color Write Channels | XNA 4.0 | BlendState.ColorWriteChannels, ColorWriteChannels |
 | 5.1.12 | `rs-blendfactor` | Blend Factor | XNA 4.0 | BlendState.BlendFactor, Blend.BlendFactor, Blend.InverseBlendFactor |
+| 5.1.13 | `rs-occlusion` | Occlusion Query | XNA 4.0 | OcclusionQuery, OcclusionQuery.PixelCount, OcclusionQuery.IsComplete, GraphicsCapability.OcclusionQuery |
 
 **Render Target Complex** - Off-screen rendering: screens, mirrors, feedback, low resolution and MRT
 
@@ -291,6 +293,7 @@ RasterizerState, DepthStencilState, BlendState and off-screen rendering
 | 5.2.05 | `rt-mirror` | A Planar Mirror | XNA 4.0 | RenderTarget2D, Matrix.CreateLookAt, RasterizerState.CullMode |
 | 5.2.06 | `rt-mrt` | Multiple Render Targets | CNA extension | GraphicsDevice.SetRenderTargets, RenderTargetBinding, ShaderEffect |
 | 5.2.07 | `rt-formats` | Render Target Formats | CNA extension | SurfaceFormat, RenderTarget2D.Format, GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT |
+| 5.2.08 | `rt-msaa` | Multisampled Targets | XNA 4.0 | RenderTarget2D.MultiSampleCount, GraphicsCapability.MultiSampleAntiAliasing, RenderTarget2D |
 
 ### Floor 6: Models, Animation and Particles
 
@@ -308,6 +311,7 @@ glTF models and their effects, procedural and skeletal animation, particle syste
 | 6.1.06 | `model-bounds` | Bounding Volumes | CNA extension | ModelMesh.BoundingSphere, Model.BoundingSphereEXT, BoundingSphere.Transform |
 | 6.1.07 | `model-effects` | Swapping Effects | CNA extension | ModelMeshPart.Effect, BasicEffect, PbrEffect |
 | 6.1.08 | `model-report` | Import Report | CNA extension | GltfImportReportEXT, GltfImportDiagnosticEXT |
+| 6.1.09 | `model-ibl` | Image-Based Lighting | CNA extension | ImageBasedLightEXT, PbrEffect.ImageBasedLight, TextureCube, PbrEffect.MetallicFactor, PbrEffect.RoughnessFactor |
 
 **Animation Complex** - Procedural animation: motion built from maths and matrix hierarchies
 
@@ -366,7 +370,8 @@ Sound, music, keyboards, mice and game pads
 | 7.2.05 | `in-players` | Four Player Slots | XNA 4.0 | PlayerIndex, GamePad.GetCapabilities, GamePadCapabilities, GamePad.GetNameEXT |
 | 7.2.06 | `in-text` | Text Input and Clipboard | CNA extension | TextInputEXT.TextInput, TextInputEXT.StartTextInput, Clipboard.SetTextEXT, Clipboard.GetTextEXT |
 | 7.2.07 | `in-joystick` | Raw Joysticks | CNA extension | Joysticks.GetJoysticksEXT, Joysticks.GetCapabilitiesEXT, Joysticks.GetStateEXT |
-| 7.2.08 | `in-devices` | Other Input Devices | CNA extension | InputDevices.GetMiceEXT, TouchPanel.GetState, TouchPanel.MouseTouchEmulationEnabledEXT, Sensors.GetSensorsEXT, Power.GetInfoEXT |
+| 7.2.08 | `in-touch` | Touch and Gestures | XNA 4.0 | TouchPanel.GetState, TouchPanel.ReadGesture, TouchPanel.EnabledGestures, GestureType, TouchPanel.SetFinger |
+| 7.2.09 | `in-devices` | Other Input Devices | CNA extension | InputDevices.GetMiceEXT, TouchPanel.GetState, TouchPanel.MouseTouchEmulationEnabledEXT, Sensors.GetSensorsEXT, Power.GetInfoEXT |
 
 ### Floor 8: Content, Platform and CNA
 

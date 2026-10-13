@@ -70,6 +70,7 @@ WingSpec InputWing()
         in("in-players", "Four Player Slots", "PlayerIndex, IsConnected, packet numbers and capabilities", "players", {"PlayerIndex", "GamePad.GetCapabilities", "GamePadCapabilities", "GamePad.GetNameEXT"}),
         in("in-text", "Text Input and Clipboard", "TextInputEXT characters, Backspace by polling, and copy/paste", "text", {"TextInputEXT.TextInput", "TextInputEXT.StartTextInput", "Clipboard.SetTextEXT", "Clipboard.GetTextEXT"}, ApiOrigin::CnaExtension),
         in("in-joystick", "Raw Joysticks", "Axes, buttons and hats of any connected joystick", "joystick", {"Joysticks.GetJoysticksEXT", "Joysticks.GetCapabilitiesEXT", "Joysticks.GetStateEXT"}, ApiOrigin::CnaExtension),
+        in("in-touch", "Touch and Gestures", "TouchPanel points and gestures: tap, hold, drags, flick and pinch, with simulated fingers", "touch", {"TouchPanel.GetState", "TouchPanel.ReadGesture", "TouchPanel.EnabledGestures", "GestureType", "TouchPanel.SetFinger"}, ApiOrigin::Xna),
         in("in-devices", "Other Input Devices", "Mice, keyboards, touch, sensors and power as the machine reports them", "devices", {"InputDevices.GetMiceEXT", "TouchPanel.GetState", "TouchPanel.MouseTouchEmulationEnabledEXT", "Sensors.GetSensorsEXT", "Power.GetInfoEXT"}, ApiOrigin::CnaExtension),
     };
     return w;

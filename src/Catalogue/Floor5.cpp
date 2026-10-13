@@ -3,6 +3,23 @@
 
 namespace {
 
+
+RoomSpec QueryRoom(const char* key, const char* title, const char* subtitle, const char* mode, std::vector<std::string> apis)
+{
+    RoomSpec r;
+    r.key = key;
+    r.title = title;
+    r.subtitle = subtitle;
+    r.exhibit = "query-lab";
+    r.params = {{"mode", mode}};
+    r.width = 14;
+    r.depth = 13;
+    r.height = 5.2f;
+    r.theme = "white-cube";
+    r.apis = std::move(apis);
+    return r;
+}
+
 WingSpec StateWing()
 {
     WingSpec w;
@@ -38,6 +55,7 @@ WingSpec StateWing()
         rs("rs-blend", "BlendState Gallery", "Sixteen blend factor and function combinations on the same sprites", "blendgallery", {"BlendState", "Blend", "BlendFunction"}),
         rs("rs-colorwrite", "Color Write Channels", "Masking red, green, blue and alpha writes", "colorwrite", {"BlendState.ColorWriteChannels", "ColorWriteChannels"}),
         rs("rs-blendfactor", "Blend Factor", "Blend.BlendFactor mixing by a constant colour from the BlendState", "blendfactor", {"BlendState.BlendFactor", "Blend.BlendFactor", "Blend.InverseBlendFactor"}),
+        QueryRoom("rs-occlusion", "Occlusion Query", "Counting the pixels of an object that survive the depth test, and skipping what cannot be seen", "occlusion", {"OcclusionQuery", "OcclusionQuery.PixelCount", "OcclusionQuery.IsComplete", "GraphicsCapability.OcclusionQuery"}),
     };
     return w;
 }
@@ -73,6 +91,7 @@ WingSpec TargetWing()
         rt("rt-mirror", "A Planar Mirror", "A reflected camera rendered to a texture and projected back onto the wall", "mirror", {"RenderTarget2D", "Matrix.CreateLookAt", "RasterizerState.CullMode"}),
         rt("rt-mrt", "Multiple Render Targets", "One pass writing a grayscale image and an edge map at once", "mrt", {"GraphicsDevice.SetRenderTargets", "RenderTargetBinding", "ShaderEffect"}, ApiOrigin::CnaExtension),
         rt("rt-formats", "Render Target Formats", "Which SurfaceFormats can be rendered to on this renderer, tested by doing it", "formats", {"SurfaceFormat", "RenderTarget2D.Format", "GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT"}, ApiOrigin::CnaExtension),
+        QueryRoom("rt-msaa", "Multisampled Targets", "The same edges at 0, 2, 4 and 8 samples, magnified", "msaa", {"RenderTarget2D.MultiSampleCount", "GraphicsCapability.MultiSampleAntiAliasing", "RenderTarget2D"}),
     };
     return w;
 }

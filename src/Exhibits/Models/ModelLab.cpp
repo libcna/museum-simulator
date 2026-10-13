@@ -20,6 +20,7 @@
 #include "Microsoft/Xna/Framework/Graphics/ModelMeshPart.hpp"
 #include "Microsoft/Xna/Framework/Graphics/PbrEffect.hpp"
 #include "Microsoft/Xna/Framework/Graphics/SkinnedPbrEffect.hpp"
+#include "Exhibits/Models/ProceduralIbl.hpp"
 #include "Rendering/EffectBank.hpp"
 #include "Rendering/RenderStates.hpp"
 
@@ -29,12 +30,12 @@ using namespace MathKit;
 
 namespace {
 
-enum class Mode { Info, Pbr, Rigid, Skinned, Instances, Bounds, Effects, Report };
+enum class Mode { Info, Pbr, Rigid, Skinned, Instances, Bounds, Effects, Report, Ibl };
 
 Mode ParseMode(const std::string& s)
 {
     static const std::pair<const char*, Mode> table[] = {{"pbr", Mode::Pbr}, {"rigid", Mode::Rigid}, {"skinned", Mode::Skinned}, {"instances", Mode::Instances},
-                                                         {"bounds", Mode::Bounds}, {"effects", Mode::Effects}, {"report", Mode::Report}};
+                                                         {"bounds", Mode::Bounds}, {"effects", Mode::Effects}, {"report", Mode::Report}, {"ibl", Mode::Ibl}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
     return Mode::Info;
@@ -100,6 +101,15 @@ public:
                 p.AddChoice("Effect on every part", {"Original (PbrEffect)", "BasicEffect, lit", "BasicEffect, unlit"}, 0, [this](int v) { effectChoice_ = v; ApplyEffects(); });
                 p.AddReadout("ModelMeshPart.Effect", [this] { return EffectName(); });
                 break;
+            case Mode::Ibl:
+                p.AddChoice("Model", {"sphere", "torus", "knot", "vase"}, 0, [this](int v) { static const char* n[] = {"sphere", "torus", "knot", "vase"}; name_ = n[v]; Reload(); });
+                p.AddChoice("Environment", {"Sky", "Sunset", "Studio"}, 0, [this](int v) { env_ = v; iblDirty_ = true; });
+                p.AddToggle("Image-based lighting", true, [this](bool v) { iblOn_ = v; });
+                p.AddSlider("Intensity", 0.0f, 2.0f, iblIntensity_, [this](float v) { iblIntensity_ = v; });
+                p.AddSlider("MetallicFactor", 0.0f, 1.0f, metal_, [this](float v) { metal_ = v; });
+                p.AddSlider("RoughnessFactor", 0.04f, 1.0f, rough_, [this](float v) { rough_ = v; });
+                p.AddReadout("Environment maps", [this] { return std::string("irradiance 16, specular 64 x 5 mips, BRDF 32 x 32"); });
+                break;
             case Mode::Report:
                 p.AddChoice("Model", {"cube", "sphere", "torus", "cone", "star", "knot", "vase", "robot", "tentacle"}, 7, [this](int v) { name_ = kNames[v]; Reload(); });
                 p.AddHeading("GltfImportReportEXT (CNA extension)");
@@ -152,6 +162,7 @@ public:
                 const float scale = FitScale();
                 const Matrix world = Matrix::CreateScale(scale) * Matrix::CreateRotationY(mode_ == Mode::Rigid || mode_ == Mode::Skinned ? spin_t_ * 0.4f : spin_t_) * Matrix::CreateTranslation(o + Vector3(0, mode_ == Mode::Skinned || mode_ == Mode::Rigid ? 0.0f : 1.3f, 0));
                 if (mode_ == Mode::Pbr) ConfigurePbr();
+                if (mode_ == Mode::Ibl) ConfigureIbl(ctx);
                 DrawModel(ctx, world);
                 if (mode_ == Mode::Rigid) DrawBones(ctx, world);
                 if (mode_ == Mode::Skinned && skeleton_ && player_) DrawSkeleton(ctx, world);
@@ -165,7 +176,7 @@ public:
 private:
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"Loading a glTF model", "PbrEffect: metallic and roughness", "Rigid animation from a glTF clip", "Skinned animation", "Many model instances", "Model and mesh bounds", "Swapping a model's effects", "The glTF import report"};
+        static const char* t[] = {"Loading a glTF model", "PbrEffect: metallic and roughness", "Rigid animation from a glTF clip", "Skinned animation", "Many model instances", "Model and mesh bounds", "Swapping a model's effects", "The glTF import report", "Image-based lighting"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
@@ -178,6 +189,7 @@ private:
             case Mode::Instances: return {"Drawing a model many times is one Model.Draw per copy. BoundingFrustum.Contains on the model's bounding", "sphere skips copies you cannot see: stand in the room and look away to watch the drawn count drop."};
             case Mode::Bounds: return {"Every Model has a merged BoundingSphere (CNA extension) and every ModelMesh its own: the standard inputs for", "culling and picking. Spheres are in model space, so they are transformed by the world matrix to draw."};
             case Mode::Effects: return {"A ModelMeshPart's Effect can be replaced: here every part is switched between its PbrEffect and a", "BasicEffect (lit or flat). The geometry never changes; only how it is shaded does."};
+            case Mode::Ibl: return {"ImageBasedLightEXT gives PbrEffect a whole environment instead of a few lights: an irradiance cube for diffuse", "light, a prefiltered specular cube whose mip is the roughness, and a BRDF table. All three are generated in code here."};
             default: return {"CNA reports what the glTF importer did: counts of nodes, skins and clips, plus a diagnostic for anything", "approximated, generated or dropped. Nothing is lost silently: pick a model and read its report."};
         }
     }
@@ -249,6 +261,30 @@ private:
                     pbr->setMetallicFactorProperty(metal_);
                     pbr->setRoughnessFactorProperty(rough_);
                     pbr->setEmissiveFactorProperty(Vector3(emissive_, emissive_ * 0.6f, emissive_ * 0.2f));
+                }
+    }
+
+    void ConfigureIbl(const DrawContext& ctx)
+    {
+        if (iblDirty_ || !ibl_.irradiance) {
+            ibl_ = ProceduralIbl::Build(ctx.device, env_);
+            iblDirty_ = false;
+        }
+        const ImageBasedLightEXT light = iblOn_ ? ibl_.Light(iblIntensity_) : ImageBasedLightEXT{};
+        for (ModelMesh* mesh : model_->getMeshesProperty())
+            for (int i = 0; i < mesh->getMeshPartsProperty().getCountProperty(); ++i)
+                if (auto* pbr = dynamic_cast<PbrEffect*>(mesh->getMeshPartsProperty()[i]->getEffectProperty())) {
+                    pbr->setDiffuseColorProperty(Vector3(0.9f, 0.7f, 0.5f));
+                    pbr->setMetallicFactorProperty(metal_);
+                    pbr->setRoughnessFactorProperty(rough_);
+                    pbr->setImageBasedLightEXT(light);
+                    if (iblOn_) {
+                        // The environment is the light: switch the stock three-light rig off so it is easy to see.
+                        for (DirectionalLight* l : {&pbr->getDirectionalLight0Property(), &pbr->getDirectionalLight1Property(), &pbr->getDirectionalLight2Property()}) l->setEnabledProperty(false);
+                        pbr->setAmbientLightColorProperty(Vector3(0, 0, 0));
+                    } else {
+                        pbr->EnableDefaultLighting();
+                    }
                 }
     }
 
@@ -384,6 +420,10 @@ private:
     }
 
     Mode mode_;
+    ProceduralIbl ibl_;
+    int env_ = 0;
+    bool iblOn_ = true, iblDirty_ = true;
+    float iblIntensity_ = 1.0f;
     Gizmos gizmos_;
     std::string name_;
     std::unique_ptr<Content::ContentManager> content_;

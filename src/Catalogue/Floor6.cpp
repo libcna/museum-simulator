@@ -75,6 +75,7 @@ WingSpec ModelWing()
         mo("model-bounds", "Bounding Volumes", "The merged sphere of a model and the sphere of every mesh", "bounds", {"ModelMesh.BoundingSphere", "Model.BoundingSphereEXT", "BoundingSphere.Transform"}, "robot"),
         mo("model-effects", "Swapping Effects", "Replacing every ModelMeshPart's effect with BasicEffect, lit or flat", "effects", {"ModelMeshPart.Effect", "BasicEffect", "PbrEffect"}),
         mo("model-report", "Import Report", "GltfImportReportEXT: counts and diagnostics for each model the importer read", "report", {"GltfImportReportEXT", "GltfImportDiagnosticEXT"}),
+        mo("model-ibl", "Image-Based Lighting", "ImageBasedLightEXT: an irradiance cube, a prefiltered specular cube and a BRDF table lighting a PBR model", "ibl", {"ImageBasedLightEXT", "PbrEffect.ImageBasedLight", "TextureCube", "PbrEffect.MetallicFactor", "PbrEffect.RoughnessFactor"}, "sphere"),
     };
     return w;
 }

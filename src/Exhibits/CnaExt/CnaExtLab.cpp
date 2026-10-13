@@ -31,6 +31,9 @@
 #endif
 #ifdef CNA_DEVICES
 #include "CNA/Devices/DisplayInfo.hpp"
+#include "CNA/Devices/FileDialog.hpp"
+#include "CNA/Devices/MessageBox.hpp"
+#include "CNA/Devices/SystemTray.hpp"
 #include "CNA/Devices/Locale.hpp"
 #include "CNA/Devices/PowerInfo.hpp"
 #include "CNA/Devices/SystemInfo.hpp"
@@ -473,11 +476,17 @@ private:
             const Rectangle safe = CNA::Devices::DisplayInfo::getSafeAreaProperty(S().game->getWindowProperty());
             lines.push_back("DisplayInfo: safe area " + std::to_string(safe.X) + ", " + std::to_string(safe.Y) + "  " + std::to_string(safe.Width) + " x " + std::to_string(safe.Height));
         } catch (const std::exception& e) { lines.push_back(std::string("DisplayInfo: ") + e.what()); }
+        try {
+            // These open real windows or icons, so the museum only asks whether they are supported.
+            const auto yn = [](bool v) { return v ? "supported" : "not supported"; };
+            lines.push_back(std::string("MessageBox ") + yn(CNA::Devices::MessageBox::getIsSupportedProperty()) + ",  FileDialog " + yn(CNA::Devices::FileDialog::getIsSupportedProperty()) + ",  SystemTray " + yn(CNA::Devices::SystemTray::getIsSupportedProperty()));
+            lines.push_back("(nothing is opened here: the museum never pops up a dialog)");
+        } catch (const std::exception& e) { lines.push_back(std::string("dialogs: ") + e.what()); }
 #endif
-        float y = 80.0f;
+        float y = 70.0f;
         for (const std::string& l : lines) {
-            text(l, 30, y, Kit::kText, 0.75f);
-            y += 48.0f;
+            text(l, 30, y, Kit::kText, 0.7f);
+            y += 42.0f;
         }
     }
 

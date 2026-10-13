@@ -68,9 +68,9 @@ texture is bound (`RenderStates::UnbindTextures`).
 
 ## What is next (priority order)
 
-1. **Gaps listed in `docs/CNA_COVERAGE.md`**: OcclusionQuery, multisampled render targets, image-based lighting
-   (`ImageBasedLightEXT` with a generated environment), `ShaderPackageEXT`, SkinnedEffect, morph targets and material
-   variants, ResourceContentManager, a GameServiceContainer room, touch gestures (mouse-to-touch emulation exists), haptics.
+1. **Gaps listed in `docs/CNA_COVERAGE.md`**: `ShaderPackageEXT`, SkinnedEffect, morph targets and material variants,
+   ResourceContentManager, haptic effects. (Occlusion queries, multisampling, image-based lighting, touch gestures and
+   GameServiceContainer were added after the first audit.)
 2. **Navigation**: stairs/escalators are not implemented (elevators and the directory move you between floors); a
    "you are here" marker exists on the map and minimap.
 3. **Progress**: the set of visited rooms lives only for the session (`StorageContainer` is demonstrated in the *Title Files*
