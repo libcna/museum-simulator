@@ -9,6 +9,7 @@
 #include "Microsoft/Xna/Framework/Graphics/GraphicsDevice.hpp"
 #include "Microsoft/Xna/Framework/Graphics/SpriteBatch.hpp"
 #include "Microsoft/Xna/Framework/Graphics/SpriteFont.hpp"
+#include "Microsoft/Xna/Framework/Graphics/Texture2D.hpp"
 #include "Microsoft/Xna/Framework/Matrix.hpp"
 #include "Microsoft/Xna/Framework/Vector3.hpp"
 
@@ -21,6 +22,7 @@ class Shapes;
 class SkyDome;
 class TimeOfDay;
 class MuseumPlan;
+struct SceneView;
 
 /** Per-frame numbers shown on the Information Hall screens and the F3 overlay. */
 struct FrameStats {
@@ -52,6 +54,8 @@ struct Services {
     Microsoft::Xna::Framework::Graphics::SpriteFont* titleFont = nullptr;
     const FrameStats* stats = nullptr;
     const MuseumPlan* museum = nullptr;
+    const SceneView* mainView = nullptr;   // the visitor's camera for this frame (valid during Draw/DrawOverlay)
+    Microsoft::Xna::Framework::Graphics::Texture2D* whiteTexture = nullptr;
     std::function<void(int floor)> travelToFloor;   // elevator: ride to a floor's elevator car
     std::function<void()> openDirectory;            // the full-screen directory and map
     std::string contentRoot;

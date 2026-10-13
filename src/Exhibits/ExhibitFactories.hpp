@@ -20,3 +20,4 @@ std::unique_ptr<Exhibit> MakeModelGallery(const RoomDef& room, Services& service
 std::unique_ptr<Exhibit> MakeAnimationRoom(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeSkyRoom(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeAudioRoom(const RoomDef& room, Services& services);
+std::unique_ptr<Exhibit> MakeVectorLab(const RoomDef& room, Services& services);

@@ -92,6 +92,7 @@ void MuseumGame::LoadContent()
     services_.signs = signs_.get();
     services_.audio = audio_.get();
     services_.stats = &stats_;
+    services_.whiteTexture = textures_->White();
 
     sky_ = std::make_unique<SkyDome>(services_, timeOfDay_);
     services_.sky = sky_.get();
@@ -370,6 +371,7 @@ void MuseumGame::Draw(const GameTime&)
     camera_.SetLens(kFov, aspect, kNearPlane, kFarPlane);
 
     const SceneView view(camera_.View(), camera_.Projection(), camera_.Position());
+    services_.mainView = &view;
     DrawContext ctx{device, *effects_, view, time_, false};
     effects_->SetCamera(view.view, view.projection);
 
@@ -411,6 +413,7 @@ void MuseumGame::Draw(const GameTime&)
         hud.bannerAlpha = bannerAge_ < 4.0f ? std::clamp(std::min(bannerAge_ * 3.0f, (4.0f - bannerAge_) * 1.5f), 0.0f, 1.0f) : 0.0f;
     }
     hud_->Draw(hud);
+    services_.mainView = nullptr;
     if (directory_->IsOpen()) {
         directory_->Draw(discovered_, hud.floor, shownCell_, camera_.Position(), camera_.Yaw(), vp.getWidthProperty(), vp.getHeightProperty());
     }
@@ -445,6 +448,8 @@ void MuseumGame::SaveScreenshot(const std::string& path)
 // Test scripting (--script "a;b;c"). Steps run one per frame unless they wait:
 //   wait:N          skip N frames            goto:ROOM       teleport to a room's spawn point
 //   pos:x,y,z       set the eye position     look:yaw,pitch  set the view (degrees)
+//   at:x,z,yaw,pitch  stand at a cell-local spot    floor:N   teleport to a floor's hall    ride:N   take the elevator
+//   directory:open|close   open the directory screen    wait:N frames
 //   walk:F,S,N      walk with forward F / strafe S input for N frames (collision applies)
 //   e               press E on whatever is under the crosshair
 //   use:I           activate interactable I directly (index in registration order)
@@ -481,6 +486,13 @@ void MuseumGame::RunScript()
                 camera_.SetPosition(Vector3(x, y, z));
                 const int cell = museum_->CellAt(Vector3(x, y, z));
                 if (cell >= 0) world_->Arrive(cell);
+            }
+        } else if (op == "at") {
+            // at:x,z,yaw,pitch : stand at local (x, z) metres in the current cell, looking as given (degrees).
+            float x = 0, z = 0, yaw = 0, pitch = 0;
+            if (std::sscanf(arg.c_str(), "%f,%f,%f,%f", &x, &z, &yaw, &pitch) >= 3 && shownCell_ >= 0) {
+                const RoomDef& r = museum_->Room(shownCell_);
+                camera_.SetPose(r.ToWorld(x, 1.65f, z), MathHelper::ToRadians(yaw), MathHelper::ToRadians(pitch));
             }
         } else if (op == "look") {
             float yaw = 0, pitch = 0;

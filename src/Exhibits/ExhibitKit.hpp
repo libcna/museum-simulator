@@ -6,9 +6,40 @@
 
 #include "Microsoft/Xna/Framework/Color.hpp"
 #include "Microsoft/Xna/Framework/Vector3.hpp"
+#include "Microsoft/Xna/Framework/Graphics/SpriteFont.hpp"
 #include "Rendering/SignFactory.hpp"
 
 namespace Kit {
+
+/** Splits `text` into lines no wider than `maxPixels` at `scale` (greedy, on spaces). */
+inline std::vector<std::string> Wrap(const Microsoft::Xna::Framework::Graphics::SpriteFont& font, const std::string& text, float maxPixels,
+                                     float scale = 1.0f)
+{
+    std::vector<std::string> lines;
+    std::string line, word;
+    const auto flush = [&] {
+        if (!line.empty()) lines.push_back(line);
+        line.clear();
+    };
+    for (std::size_t i = 0; i <= text.size(); ++i) {
+        if (i == text.size() || text[i] == ' ') {
+            if (word.empty()) continue;
+            const std::string candidate = line.empty() ? word : line + " " + word;
+            if (!line.empty() && font.MeasureString(candidate).X * scale > maxPixels) {
+                flush();
+                line = word;
+            } else {
+                line = candidate;
+            }
+            word.clear();
+        } else {
+            word.push_back(text[i]);
+        }
+    }
+    flush();
+    return lines;
+}
+
 
 inline const Microsoft::Xna::Framework::Color kGold(255, 226, 150, 255);
 inline const Microsoft::Xna::Framework::Color kText(222, 228, 240, 255);

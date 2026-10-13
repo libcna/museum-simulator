@@ -6,6 +6,7 @@
 
 #include "Diagnostics/Log.hpp"
 #include "Exhibits/ExhibitRegistry.hpp"
+#include "Exhibits/RoomCard.hpp"
 #include "Rendering/EffectBank.hpp"
 #include "Rendering/RenderStates.hpp"
 #include "Rendering/SignFactory.hpp"
@@ -104,6 +105,10 @@ void MuseumWorld::BuildCell(int cell)
     if (inst->exhibit) {
         RoomBuilder builder(room, meshes, inst->colliders, lights, services_);
         inst->exhibit->DoBuildStatic(builder);
+    }
+    if (room.kind == CellKind::Room) {
+        RoomBuilder builder(room, meshes, inst->colliders, lights, services_);
+        AddRoomCard(builder, services_, room);
     }
     BoundingBox b = room.Interior();
     b.Min -= Vector3(kWallThickness, 0.1f, kWallThickness);

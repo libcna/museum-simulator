@@ -15,7 +15,7 @@ using namespace Microsoft::Xna::Framework::Graphics;
 
 namespace {
 constexpr int kHeader = 62;
-constexpr int kRowHeight = 58;
+constexpr int kRowHeight = 66;
 constexpr int kPad = 16;
 
 Vector3 Normal(float yaw) { return Vector3(std::sin(yaw), 0.0f, std::cos(yaw)); }
@@ -128,11 +128,13 @@ void ControlPanel::BuildStand(RoomBuilder& b)
     b.AddBox(Vector3(px - 0.05f, 0.0f, pz - 0.05f), Vector3(px + 0.05f, bottom, pz + 0.05f), "metal", 1.0f, Vector3(0.4f, 0.42f, 0.5f), true);
     b.AddBox(Vector3(px - 0.35f, 0.0f, pz - 0.35f), Vector3(px + 0.35f, 0.06f, pz + 0.35f), "metal", 1.0f, Vector3(0.3f, 0.32f, 0.38f), false);
     const Vector3 r = Right(pose_.yaw);
-    const Vector3 lo = Vector3(pose_.x, 0, pose_.z) - r * (pose_.width * 0.5f + 0.05f) - n * 0.07f;
-    const Vector3 hi = Vector3(pose_.x, 0, pose_.z) + r * (pose_.width * 0.5f + 0.05f) - n * 0.01f;
-    b.AddBox(Vector3(std::min(lo.X, hi.X) - 0.02f, pose_.y - h * 0.5f - 0.05f, std::min(lo.Z, hi.Z) - 0.02f),
-             Vector3(std::max(lo.X, hi.X) + 0.02f, pose_.y + h * 0.5f + 0.05f, std::max(lo.Z, hi.Z) + 0.02f), "metal", 1.0f,
-             Vector3(0.18f, 0.19f, 0.23f), false);
+    const float span = pose_.width * 0.5f + 0.05f;
+    const Vector3 c(pose_.x, 0.0f, pose_.z);
+    // Bezel: a slab just behind the screen, a little wider than it, never in front of it.
+    const Vector3 p0 = c - n * 0.08f - r * span;
+    const Vector3 p1 = c - n * 0.012f + r * span;
+    b.AddBox(Vector3(std::min(p0.X, p1.X), pose_.y - h * 0.5f - 0.05f, std::min(p0.Z, p1.Z)),
+             Vector3(std::max(p0.X, p1.X), pose_.y + h * 0.5f + 0.05f, std::max(p0.Z, p1.Z)), "metal", 1.0f, Vector3(0.18f, 0.19f, 0.23f), false);
 }
 
 void ControlPanel::Load(InteractionSystem& interaction)
@@ -182,9 +184,9 @@ std::string ControlPanel::Prompt() const
     if (row < 0) return "Control panel: " + title_;
     const Row& r = rows_[static_cast<std::size_t>(row)];
     switch (r.kind) {
-        case Kind::Slider: return r.label + ": click or drag to set, wheel to nudge";
+        case Kind::Slider: return r.label + "  (click or drag, wheel nudges)";
         case Kind::Toggle: return std::string(r.value > 0.5f ? "Turn off " : "Turn on ") + r.label;
-        case Kind::Choice: return r.label + ": click for next, Q for previous, wheel to step";
+        case Kind::Choice: return r.label + "  (click: next, Q: previous)";
         case Kind::Button: return r.label;
         case Kind::Readout: return r.label;
         default: return title_;
@@ -260,16 +262,16 @@ void ControlPanel::Redraw()
             if (hot) rect(6, y + 2, w - 12, kRowHeight - 4, Color(40, 52, 84, 255));
             switch (r.kind) {
                 case Kind::Heading:
-                    text(*s_.font, r.label, 18.0f, static_cast<float>(y) + 16.0f, Color(255, 214, 90, 255), 0.7f);
+                    text(*s_.font, r.label, 18.0f, static_cast<float>(y) + 16.0f, Color(255, 214, 90, 255), 0.88f);
                     rect(18, y + kRowHeight - 8, w - 36, 2, Color(90, 100, 130, 255));
                     break;
                 case Kind::Slider: {
                     char buf[48];
                     std::snprintf(buf, sizeof buf, r.format, static_cast<double>(r.value));
-                    text(*s_.font, r.label, 18.0f, static_cast<float>(y) + 4.0f, Color(230, 235, 245, 255), 0.66f);
-                    const float vw = s_.font->MeasureString(buf).X * 0.66f;
-                    text(*s_.font, buf, static_cast<float>(w) - 18.0f - vw, static_cast<float>(y) + 4.0f, Color(255, 226, 150, 255), 0.66f);
-                    const int tx = kPad + 4, tw = w - 2 * (kPad + 4), ty = y + 38;
+                    text(*s_.font, r.label, 18.0f, static_cast<float>(y) + 2.0f, Color(230, 235, 245, 255), 0.84f);
+                    const float vw = s_.font->MeasureString(buf).X * 0.84f;
+                    text(*s_.font, buf, static_cast<float>(w) - 18.0f - vw, static_cast<float>(y) + 2.0f, Color(255, 226, 150, 255), 0.84f);
+                    const int tx = kPad + 4, tw = w - 2 * (kPad + 4), ty = y + 44;
                     rect(tx, ty, tw, 10, Color(50, 58, 80, 255));
                     const float t = (r.max > r.min) ? (r.value - r.min) / (r.max - r.min) : 0.0f;
                     rect(tx, ty, static_cast<int>(t * static_cast<float>(tw)), 10, Color(110, 170, 255, 255));
@@ -278,29 +280,29 @@ void ControlPanel::Redraw()
                 }
                 case Kind::Toggle: {
                     const bool on = r.value > 0.5f;
-                    text(*s_.font, r.label, 18.0f, static_cast<float>(y) + 14.0f, Color(230, 235, 245, 255), 0.7f);
+                    text(*s_.font, r.label, 18.0f, static_cast<float>(y) + 16.0f, Color(230, 235, 245, 255), 0.88f);
                     rect(w - 110, y + 12, 86, 32, on ? Color(70, 170, 100, 255) : Color(90, 60, 66, 255));
                     rect(w - 110 + (on ? 52 : 4), y + 16, 30, 24, Color(240, 240, 245, 255));
                     break;
                 }
                 case Kind::Choice: {
                     const std::string v = r.options.empty() ? "" : r.options[static_cast<std::size_t>(r.value)];
-                    text(*s_.font, r.label, 18.0f, static_cast<float>(y) + 14.0f, Color(230, 235, 245, 255), 0.7f);
+                    text(*s_.font, r.label, 18.0f, static_cast<float>(y) + 16.0f, Color(230, 235, 245, 255), 0.88f);
                     const std::string shown = "< " + v + " >";
                     const float vw = s_.font->MeasureString(shown).X * 0.7f;
-                    text(*s_.font, shown, static_cast<float>(w) - 18.0f - vw, static_cast<float>(y) + 14.0f, Color(255, 226, 150, 255), 0.7f);
+                    text(*s_.font, shown, static_cast<float>(w) - 18.0f - vw, static_cast<float>(y) + 16.0f, Color(255, 226, 150, 255), 0.88f);
                     break;
                 }
                 case Kind::Button:
                     rect(18, y + 8, w - 36, kRowHeight - 16, hot ? Color(90, 120, 190, 255) : Color(60, 84, 140, 255));
-                    text(*s_.font, r.label, static_cast<float>(w) * 0.5f - s_.font->MeasureString(r.label).X * 0.35f, static_cast<float>(y) + 14.0f,
-                         Color::White, 0.7f);
+                    text(*s_.font, r.label, static_cast<float>(w) * 0.5f - s_.font->MeasureString(r.label).X * 0.35f, static_cast<float>(y) + 16.0f,
+                         Color::White, 0.88f);
                     break;
                 case Kind::Readout:
-                    text(*s_.font, r.label, 18.0f, static_cast<float>(y) + 14.0f, Color(170, 180, 200, 255), 0.66f);
+                    text(*s_.font, r.label, 18.0f, static_cast<float>(y) + 16.0f, Color(170, 180, 200, 255), 0.84f);
                     {
-                        const float vw = s_.font->MeasureString(r.shown).X * 0.66f;
-                        text(*s_.font, r.shown, static_cast<float>(w) - 18.0f - vw, static_cast<float>(y) + 14.0f, Color(150, 255, 170, 255), 0.66f);
+                        const float vw = s_.font->MeasureString(r.shown).X * 0.84f;
+                        text(*s_.font, r.shown, static_cast<float>(w) - 18.0f - vw, static_cast<float>(y) + 16.0f, Color(150, 255, 170, 255), 0.84f);
                     }
                     break;
             }
