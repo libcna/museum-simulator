@@ -50,6 +50,9 @@ struct WorldStats {
     int cellsDestroyedTotal = 0;
     int triangles = 0;
     double lastBuildMilliseconds = 0.0;
+    int interactablesSeen = 0;     // distinct interactables of every room loaded so far (a panel counts as one)
+    int controlsSeen = 0;          // sliders, toggles, choices and buttons on control panels, plus plain interactables
+    int roomsLoadedEver = 0;       // distinct cells that have been loaded at least once
 };
 
 /**
@@ -116,4 +119,5 @@ private:
     int current_ = -1;
     bool collisionDirty_ = false;
     WorldStats stats_;
+    std::vector<int> interactableCounts_, controlCounts_;  // per cell, -1 until the cell has been loaded once
 };

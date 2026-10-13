@@ -158,6 +158,9 @@ void ControlPanel::Load(InteractionSystem& interaction)
     ia.interact = [this](const InteractEvent& e) { Handle(e); };
     ia.command = [this](const std::string& label, const float* value) { return Press(label, value); };
     interaction.Add(std::move(ia));
+    int interactive = 0;
+    for (const Row& row : rows_) interactive += (row.kind == Kind::Heading || row.kind == Kind::Readout) ? 0 : 1;
+    interaction.AddControls(interactive);
 }
 
 int ControlPanel::RowAt(const Vector3& hit, float& xFraction) const

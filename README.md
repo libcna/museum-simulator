@@ -137,6 +137,7 @@ hardware.
 | `--fixed-step S`, `--frames N` | deterministic, bounded runs |
 | `--validate`, `--inventory`, `--list-rooms`, `--list-views`, `--map-markdown`, `--coverage-markdown` | data-only commands, no window |
 | `--no-audio`, `--volume`, `--width`, `--height`, `--fullscreen` | usual switches |
+| `--no-save`, `--fresh`, `--save` | the visited rooms are kept between runs in CNA's per-user storage (`StorageDevice`); scripted and screenshot runs never touch it unless `--save` |
 
 ## Testing
 
@@ -168,7 +169,7 @@ Details, the per-renderer check matrix and what was found are in [docs/RENDERER_
 ## Known limitations
 
 See [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md). In short: no stairs or escalators (elevators and the directory move
-you between floors); the "visited" set is kept for the session only; real audio output was verified to start and
+you between floors); real audio output was verified to start and
 stream on a PipeWire machine but audibility cannot be judged by a test; Video, networking and avatars are not
 demonstrated (see [docs/CNA_COVERAGE.md](docs/CNA_COVERAGE.md)).
 

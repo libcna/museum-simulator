@@ -50,7 +50,14 @@ MuseumGame::MuseumGame(const MuseumOptions& options) : options_(options), graphi
     getWindowProperty().setAllowUserResizingProperty(true);
 }
 
-MuseumGame::~MuseumGame() = default;
+MuseumGame::~MuseumGame()
+{
+    // CNA does not call Game::UnloadContent when the loop ends, so progress is written here.
+    try {
+        if (progress_ && progressDirty_) progress_->Save(discovered_, *museum_);
+    } catch (...) {
+    }
+}
 
 void MuseumGame::LoadContent()
 {
@@ -118,6 +125,9 @@ void MuseumGame::LoadContent()
         if (audio_) audio_->PlayUi("step", 0.35f, static_cast<float>((frame_ % 5) - 2) * 0.04f);
     };
 
+    progress_ = std::make_unique<ProgressStore>(options_.save);
+    if (!options_.fresh) discovered_ = progress_->Load(*museum_);
+
     // Start in the entrance lobby unless the command line asked for somewhere else.
     ResetToEntrance();
     if (options_.startRoom) {
@@ -153,6 +163,10 @@ void MuseumGame::LoadContent()
 
 void MuseumGame::UnloadContent()
 {
+    if (progress_ && progressDirty_) {
+        progress_->Save(discovered_, *museum_);
+        progressDirty_ = false;
+    }
     if (player_ && player_->MouseCaptured()) player_->SetMouseCaptured(false, 0, 0);
     // Release in reverse dependency order; GPU resources must go before the device does.
     directory_.reset();
@@ -383,6 +397,12 @@ void MuseumGame::Update(GameTime& gameTime)
     }
 
     if (ride_.active) UpdateRide(dt);
+    sinceSave_ += dt;
+    if (progressDirty_ && sinceSave_ > 5.0f && progress_) {
+        progress_->Save(discovered_, *museum_);
+        progressDirty_ = false;
+        sinceSave_ = 0.0f;
+    }
     if (timeRuns_ && !paused_) timeOfDay_.Advance(dt * 0.2f);   // 12 museum minutes per second
     if (!paused_ && ride_.active) {
         time_ += dt;
@@ -399,7 +419,7 @@ void MuseumGame::Update(GameTime& gameTime)
             shownCell_ = cell;
             if (cell >= 0) {
                 bannerAge_ = 0.0f;
-                discovered_.insert(cell);
+                if (discovered_.insert(cell).second) progressDirty_ = true;
             }
         }
         bannerAge_ += dt;
@@ -553,9 +573,9 @@ void MuseumGame::RunScript()
             if (f >= 0 && f < static_cast<int>(museum_->floors.size())) TeleportToCell(museum_->floors[static_cast<std::size_t>(f)].hub);
         } else if (op == "stats") {
             const WorldStats& w = world_->Stats();
-            Museum::Log("stats", "built %d loaded %d (lifetime built %d destroyed %d) triangles %d  textures %zu  frame %lld  fps %.0f",
+            Museum::Log("stats", "built %d loaded %d (lifetime built %d destroyed %d) triangles %d  textures %zu  frame %lld  fps %.0f  interactables %d + %d panel controls in %d loaded cells  visited %zu",
                         w.cellsBuilt, w.cellsLoaded, w.cellsBuiltTotal, w.cellsDestroyedTotal, w.triangles, textures_->Count(), frame_,
-                        static_cast<double>(stats_.fps));
+                        static_cast<double>(stats_.fps), w.interactablesSeen, w.controlsSeen, w.roomsLoadedEver, discovered_.size());
         } else if (op == "directory") {
             if (arg == "close") directory_->Close();
             else OpenDirectory();

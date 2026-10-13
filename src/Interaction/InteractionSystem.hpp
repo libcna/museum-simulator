@@ -45,13 +45,17 @@ public:
     bool Dispatch(const InteractEvent& event);
     /** Convenience: a plain press. */
     bool Activate();
-    void Clear() { items_.clear(); focused_ = -1; }
+    void Clear() { items_.clear(); focused_ = -1; controls_ = 0; }
+    /** Interactive controls inside an interactable (the rows of a control panel): counted for the museum inventory. */
+    void AddControls(int n) { controls_ += n; }
+    [[nodiscard]] int Controls() const { return controls_; }
 
     [[nodiscard]] std::size_t Count() const { return items_.size(); }
     [[nodiscard]] const std::vector<Interactable>& Items() const { return items_; }
     [[nodiscard]] Microsoft::Xna::Framework::Vector3 LastHit() const { return lastHit_; }
 
 private:
+    int controls_ = 0;
     std::vector<Interactable> items_;
     int focused_ = -1;
     Microsoft::Xna::Framework::Vector3 lastHit_;

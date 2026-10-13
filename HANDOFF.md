@@ -73,8 +73,9 @@ texture is bound (`RenderStates::UnbindTextures`).
    GameServiceContainer were added after the first audit.)
 2. **Navigation**: stairs/escalators are not implemented (elevators and the directory move you between floors); a
    "you are here" marker exists on the map and minimap.
-3. **Progress**: the set of visited rooms lives only for the session (`StorageContainer` is demonstrated in the *Title Files*
-   room and could persist it in a few lines).
+3. **Progress** is saved by `src/World/Progress.cpp` (CNA `StorageDevice`/`StorageContainer`, file `progress.txt` under the
+   per-user data folder, one room key per line). Scripted, screenshot and `--frames` runs never write it unless `--save` is
+   given. CNA does not call `Game.UnloadContent` at exit, so the save happens in the `MuseumGame` destructor.
 4. **Outdoors**: floor 0 has the lawn and forecourt; the observation deck is on floor 9. More outdoor rooms (courtyard,
    sculpture park, fountain plaza) and exterior lights that follow the museum clock are not done.
 5. **Polish**: legibility of long screens from the arrival pose (most labs want you to walk two or three metres in),

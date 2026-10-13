@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <set>
+#include "World/Progress.hpp"
 #include <string>
 #include <vector>
 
@@ -92,6 +93,9 @@ private:
     const MuseumPlan* museum_ = nullptr;
     int shownCell_ = -1;
     std::set<int> discovered_;
+    std::unique_ptr<ProgressStore> progress_;
+    bool progressDirty_ = false;
+    float sinceSave_ = 0.0f;
     struct Ride {
         bool active = false;
         bool swapped = false;

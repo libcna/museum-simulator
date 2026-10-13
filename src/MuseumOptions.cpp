@@ -33,6 +33,9 @@ const char* MuseumOptions::Usage()
         "  --screenshot FILE.png [--screenshot-frame N]   save the back buffer and exit\n"
         "  --view NAME               start at a reference view (see --list-views); --no-hud hides the overlay\n"
         "  --list-views              print the reference views: name, room, description (no window)\n"
+        "  --no-save                 do not read or write the saved progress (scripted and screenshot runs never do)\n"
+        "  --save                    keep progress even in a scripted run (to test saving)\n"
+        "  --fresh                   start with no rooms visited (the next save replaces the old progress)\n"
         "  --time HOURS [--time-run] set the museum clock (0..24, default 11); frozen unless --time-run\n"
         "  --fixed-step SECONDS      advance the simulation by a fixed step per frame\n"
         "  --script \"a;b;c\"          scripted test actions (see src/MuseumGame.cpp, RunScript)\n"
@@ -75,6 +78,9 @@ MuseumOptions MuseumOptions::Parse(int argc, char** argv)
         else if (!std::strcmp(a, "--inventory")) o.inventory = true;
         else if (Match(a, "--view", v, i, argc, argv)) o.view = v;
         else if (!std::strcmp(a, "--no-hud")) o.hud = false;
+        else if (!std::strcmp(a, "--no-save")) o.save = false;
+        else if (!std::strcmp(a, "--save")) o.forceSave = true;
+        else if (!std::strcmp(a, "--fresh")) o.fresh = true;
         else if (!std::strcmp(a, "--list-views")) o.listViews = true;
         else if (!std::strcmp(a, "--map-markdown")) o.mapMarkdown = true;
         else if (!std::strcmp(a, "--coverage-markdown")) o.coverageMarkdown = true;
@@ -82,6 +88,8 @@ MuseumOptions MuseumOptions::Parse(int argc, char** argv)
         else if (!std::strcmp(a, "--help") || !std::strcmp(a, "-h")) o.showHelp = true;
         else std::fprintf(stderr, "cna-3d-museum: ignoring unknown option '%s'\n", a);
     }
+    // Runs that drive the museum by script, take a screenshot or stop after N frames are tests: they never touch the saved progress.
+    if (!o.forceSave && (!o.script.empty() || !o.screenshotPath.empty() || o.maxFrames > 0)) o.save = false;
     if (o.width < 320) o.width = 320;
     if (o.height < 200) o.height = 200;
     return o;

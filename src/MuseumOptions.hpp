@@ -27,6 +27,9 @@ struct MuseumOptions {
     float fixedTimeStep = 0.0f;         // >0: advance the simulation by this many seconds per frame
     std::string script;                 // semicolon-separated test actions, see MuseumGame::RunScript
     std::optional<std::string> view;   // start at a named reference view (see --list-views)
+    bool save = true;                  // keep the visited rooms between runs (off for scripted and screenshot runs)
+    bool forceSave = false;            // --save: keep progress even in a scripted run (used to test saving)
+    bool fresh = false;                // ignore the saved progress at start-up
     bool hud = true;                   // false: draw only the 3D scene (screenshots for comparison)
     bool mapMarkdown = false;          // print the museum map as Markdown (no window) and exit
     bool coverageMarkdown = false;     // print the API coverage table as Markdown (no window) and exit

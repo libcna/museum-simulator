@@ -139,6 +139,16 @@ void MuseumWorld::LoadCell(int cell)
     services_.signs->SetScope(&inst.textures);
     inst.exhibit->DoLoad(inst.interaction, *this);
     services_.signs->SetScope(nullptr);
+    // Record how many interactables this cell has (once per cell, whichever visit): the museum's total is the sum.
+    if (interactableCounts_.size() < museum_.rooms.size()) interactableCounts_.assign(museum_.rooms.size(), -1);
+    int& seen = interactableCounts_[static_cast<std::size_t>(cell)];
+    if (seen < 0) ++stats_.roomsLoadedEver;
+    stats_.interactablesSeen += static_cast<int>(inst.interaction.Items().size()) - std::max(0, seen);
+    seen = static_cast<int>(inst.interaction.Items().size());
+    if (controlCounts_.size() < museum_.rooms.size()) controlCounts_.assign(museum_.rooms.size(), 0);
+    int& controls = controlCounts_[static_cast<std::size_t>(cell)];
+    stats_.controlsSeen += inst.interaction.Controls() - controls;
+    controls = inst.interaction.Controls();
 }
 
 void MuseumWorld::DestroyCell(int cell)
