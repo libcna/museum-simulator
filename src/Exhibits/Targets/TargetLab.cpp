@@ -9,14 +9,18 @@
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ExhibitKit.hpp"
 #include "Exhibits/Math/MathKit.hpp"
+#include "Microsoft/Xna/Framework/Graphics/CubeMapFace.hpp"
 #include "Microsoft/Xna/Framework/Graphics/DepthFormat.hpp"
+#include "Microsoft/Xna/Framework/Graphics/EnvironmentMapEffect.hpp"
 #include "Microsoft/Xna/Framework/Graphics/PrimitiveType.hpp"
 #include "Microsoft/Xna/Framework/Graphics/RenderTargetBinding.hpp"
+#include "Microsoft/Xna/Framework/Graphics/RenderTargetCube.hpp"
 #include "Microsoft/Xna/Framework/Graphics/ShaderEffect.hpp"
 #include "Microsoft/Xna/Framework/Graphics/SurfaceFormat.hpp"
 #include "Microsoft/Xna/Framework/Graphics/Viewport.hpp"
 #include "Microsoft/Xna/Framework/Graphics/VertexPositionColorTexture.hpp"
 #include "Rendering/EffectBank.hpp"
+#include "Rendering/LitMesh.hpp"
 #include "Rendering/MiniView.hpp"
 #include "Rendering/QuadDraw.hpp"
 #include "Rendering/RenderStates.hpp"
@@ -28,7 +32,7 @@ using namespace MathKit;
 
 namespace {
 
-enum class Mode { Basic, LowRes, Control, Recursive, Mirror, Mrt, Formats };
+enum class Mode { Basic, LowRes, Control, Recursive, Mirror, Mrt, Formats, Cube };
 
 Mode ParseMode(const std::string& s)
 {
@@ -38,6 +42,7 @@ Mode ParseMode(const std::string& s)
     if (s == "mirror") return Mode::Mirror;
     if (s == "mrt") return Mode::Mrt;
     if (s == "formats") return Mode::Formats;
+    if (s == "cube") return Mode::Cube;
     return Mode::Basic;
 }
 
@@ -108,6 +113,15 @@ public:
                 p.AddReadout("ShaderEffect GLSL", [this] { return effect_ && effect_->IsEffectValid() ? std::string("compiled") : std::string("unavailable"); });
                 p.AddHeading("One pass, two outputs");
                 break;
+            case Mode::Cube:
+                p.AddChoice("Face size", {"16 x 16", "32 x 32", "64 x 64", "128 x 128", "256 x 256"}, 2, [this](int v) { cubeSize_ = 16 << v; dirty_ = true; });
+                p.AddSlider("Refresh every N frames", 1.0f, 12.0f, static_cast<float>(cubeEvery_), [this](float v) { cubeEvery_ = static_cast<int>(v); }, "%.0f", 1.0f);
+                p.AddSlider("EnvironmentMapAmount", 0.0f, 1.0f, cubeAmount_, [this](float v) { cubeAmount_ = v; });
+                p.AddSlider("FresnelFactor (0 = a flat mirror)", 0.0f, 3.0f, cubeFresnel_, [this](float v) { cubeFresnel_ = v; });
+                p.AddToggle("Mip chain on the cube", false, [this](bool v) { cubeMips_ = v; dirty_ = true; });
+                p.AddReadout("RenderTargetCube", [this] { return cube_ ? std::to_string(cube_->getWidthProperty()) + " px per face, 6 faces, " + std::to_string(cube_->getLevelCountProperty()) + " level(s)" : cubeStatus_; });
+                p.AddReadout("Faces drawn per refresh", [] { return std::string("6 (+X -X +Y -Y +Z -Z)"); });
+                break;
             case Mode::Formats:
                 p.AddHeading("SupportsSurfaceFormatAsRenderTargetEXT");
                 for (int i = 0; i < 6; ++i) p.AddReadout(kFormats[i].name, [this, i] { return formatStatus_[static_cast<std::size_t>(i)]; });
@@ -134,6 +148,13 @@ public:
             }
         }
         if (mode_ == Mode::Formats) ProbeFormats();
+        if (mode_ == Mode::Cube) {
+            try {
+                env_ = std::make_unique<EnvironmentMapEffect>(d);
+            } catch (const std::exception& e) {
+                cubeStatus_ = std::string("EnvironmentMapEffect unavailable: ") + e.what();
+            }
+        }
     }
 
     void Update(const UpdateContext& ctx) override
@@ -190,6 +211,7 @@ public:
             case Mode::Recursive: RenderRecursive(ctx, scene); break;
             case Mode::Mirror: RenderMirror(ctx, scene); break;
             case Mode::Mrt: RenderMrt(ctx, scene); break;
+            case Mode::Cube: RenderCube(ctx, scene); break;
             default: break;
         }
         (void)d;
@@ -228,6 +250,7 @@ public:
                 break;
             }
             case Mode::Formats: DrawFormatTiles(ctx); break;
+            case Mode::Cube: DrawCubeReflection(ctx); break;
         }
         RenderStates::SetOpaque3D(ctx.device);
         gizmos_.Flush(ctx);
@@ -241,7 +264,7 @@ private:
 
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"RenderTarget2D basics", "Low-resolution rendering", "A control room of render targets", "Feedback: a screen that sees itself", "A planar mirror", "Multiple render targets", "Render target formats"};
+        static const char* t[] = {"RenderTarget2D basics", "Low-resolution rendering", "A control room of render targets", "Feedback: a screen that sees itself", "A planar mirror", "Multiple render targets", "Render target formats", "A live cube map"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
@@ -252,6 +275,7 @@ private:
             case Mode::Control: return {"Six cameras, six small render targets updated every frame, each a switch away from the back buffer and", "back. Freeze a feed and its target simply keeps the last frame: render targets keep their contents."};
             case Mode::Recursive: return {"Two render targets swap roles every frame: the previous picture is drawn (rotated, faded) into the new one", "under the live scene, so the screen shows a tunnel of itself. Exactly one frame of memory per level."};
             case Mode::Mirror: return {"A real mirror: a second camera sits where your reflection's eye would be (the reflected eye), draws the room", "into a render target, and the mirror shows it with texture coordinates taken from your own view of the wall."};
+            case Mode::Cube: return {"A RenderTargetCube is a cube texture you can draw into, one face at a time: the scene is rendered six times from the", "sphere's centre (SetRenderTarget(cube, face)), then the sphere is drawn with EnvironmentMapEffect using the cube as its mirror."};
             case Mode::Mrt: return {"With MultipleRenderTargets a single draw writes several textures at once (SetRenderTargets). A GLSL ShaderEffect", "declares two outputs: grayscale in target 0 and an edge map in target 1."};
             default: return {"Which surface formats can be rendered into depends on the renderer. Each format is queried, a target is created,", "cleared to a colour and read back: the answer is what the renderer really does, not what a table says."};
         }
@@ -366,6 +390,63 @@ private:
         gizmos_.Label(R().ToWorld(wallX, 4.7f, 0), "mirror", Color(255, 230, 150, 255), 0.55f);
     }
 
+    void RenderCube(const DrawContext& ctx, const std::function<void(const DrawContext&)>& scene)
+    {
+        if (!env_) return;
+        GraphicsDevice& d = ctx.device;
+        if (dirty_ || !cube_) {
+            try {
+                cube_ = std::make_unique<RenderTargetCube>(d, cubeSize_, cubeMips_, SurfaceFormat::Color, DepthFormat::Depth24);
+                cubeStatus_ = "ok";
+            } catch (const std::exception& e) {
+                cube_.reset();
+                cubeStatus_ = std::string("not available: ") + std::string(e.what()).substr(0, 36);
+                Museum::Log("targets", "RenderTargetCube failed: %s", e.what());
+            }
+            dirty_ = false;
+            frame_ = 0;
+        }
+        if (!cube_ || (frame_++ % std::max(1, cubeEvery_)) != 0) return;
+        struct Face { CubeMapFace face; Vector3 dir, up; };
+        static const Face faces[6] = {{CubeMapFace::PositiveX, {1, 0, 0}, {0, 1, 0}},  {CubeMapFace::NegativeX, {-1, 0, 0}, {0, 1, 0}},
+                                      {CubeMapFace::PositiveY, {0, 1, 0}, {0, 0, 1}},  {CubeMapFace::NegativeY, {0, -1, 0}, {0, 0, -1}},
+                                      {CubeMapFace::PositiveZ, {0, 0, 1}, {0, 1, 0}},  {CubeMapFace::NegativeZ, {0, 0, -1}, {0, 1, 0}}};
+        const Vector3 eye = SphereCentre();
+        const Matrix proj = Matrix::CreatePerspectiveFieldOfView(MathHelper::PiOver2, 1.0f, 0.1f, 60.0f);
+        for (const Face& f : faces) {
+            const Matrix view = Matrix::CreateLookAt(eye, eye + f.dir, f.up);
+            const SceneView sceneView(view, proj, eye);
+            const DrawContext sub{d, ctx.fx, sceneView, ctx.time, true};
+            ctx.fx.SetCamera(view, proj);
+            d.SetRenderTarget(cube_.get(), f.face);
+            d.Clear(Color(120, 170, 225, 255), 1.0f);
+            RenderStates::SetOpaque3D(d);
+            scene(sub);
+        }
+        d.SetRenderTarget(static_cast<RenderTarget2D*>(nullptr));
+    }
+
+    [[nodiscard]] Vector3 SphereCentre() const { return R().ToWorld(0.0f, 1.25f, 0.0f); }
+
+    void DrawCubeReflection(const DrawContext& ctx)
+    {
+        GraphicsDevice& d = ctx.device;
+        DrawDiorama(ctx, S(), R().ToWorld(0.0f, 0.02f, 0.0f), time_, 2.4f);
+        if (!env_ || !cube_) return;
+        env_->setEnvironmentMapProperty(cube_.get());
+        env_->setEnvironmentMapAmountProperty(cubeAmount_);
+        env_->setTextureProperty(S().textures->White());
+        env_->setDiffuseColorProperty(Vector3(0.9f, 0.9f, 0.95f));
+        env_->setFresnelFactorProperty(cubeFresnel_);
+        env_->setViewProperty(ctx.view.view);
+        env_->setProjectionProperty(ctx.view.projection);
+        env_->setWorldProperty(Matrix::CreateScale(1.8f) * Matrix::CreateTranslation(SphereCentre()));
+        RenderStates::SetOpaque3D(d);
+        d.setRasterizerStateProperty(RasterizerState::CullClockwise);
+        for (auto& pass : env_->getCurrentTechniqueProperty()->getPassesProperty()) pass.Apply();
+        S().shapes->Sphere().Draw(d);
+    }
+
     void RenderMrt(const DrawContext& ctx, const std::function<void(const DrawContext&)>& scene)
     {
         GraphicsDevice& d = ctx.device;
@@ -411,6 +492,12 @@ private:
         (void)ctx;
     }
 
+    std::unique_ptr<RenderTargetCube> cube_;
+    std::unique_ptr<EnvironmentMapEffect> env_;
+    std::string cubeStatus_ = "-";
+    int cubeSize_ = 64, cubeEvery_ = 1, frame_ = 0;
+    float cubeAmount_ = 1.0f, cubeFresnel_ = 0.0f;
+    bool cubeMips_ = false;
     Mode mode_;
     Gizmos gizmos_;
     std::unique_ptr<MiniView> view_, source_;

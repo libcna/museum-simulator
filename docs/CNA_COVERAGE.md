@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-470 distinct API names are claimed by at least one room.
+472 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -152,7 +152,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ContentManager.RegisterTypeReader | `ct-custom` |
 | ContentManager.RootDirectory | `ct-load` |
 | ContentManager.Unload | `app-content`, `ct-cache`, `ct-lifetime` |
-| CubeMapFace | `tex-cube` |
+| CubeMapFace | `tex-cube`, `rt-cube` |
 | CullMode | `rs-cull` |
 | Curve | `curve-class` |
 | CurveContinuity | `curve-class` |
@@ -198,7 +198,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | EffectPass.Apply | `pf-state` |
 | EffectTechnique | `be-model` |
 | EnableDefaultLighting | `lighting` |
-| EnvironmentMapEffect | `tex-cube` |
+| EnvironmentMapEffect | `tex-cube`, `rt-cube` |
+| EnvironmentMapEffect.EnvironmentMap | `rt-cube` |
 | EvaluateMorphWeightsEXT | `model-morph` |
 | Game | `info`, `app-lifecycle`, `hist-xna` |
 | Game.Activated | `pl-window` |
@@ -255,7 +256,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.ResourceCreated | `ct-lifetime` |
 | GraphicsDevice.ResourceDestroyed | `ct-lifetime` |
 | GraphicsDevice.ScissorRectangle | `sprite-scissor`, `rs-scissor`, `rv-geometry` |
-| GraphicsDevice.SetRenderTarget | `rendertarget`, `rt-basic`, `rt-control`, `pf-targets`, `rv-targets` |
+| GraphicsDevice.SetRenderTarget | `rendertarget`, `rt-basic`, `rt-control`, `rt-cube`, `pf-targets`, `rv-targets` |
 | GraphicsDevice.SetRenderTargets | `rt-mrt` |
 | GraphicsDevice.SetStringMarkerEXT | `cx-points` |
 | GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT | `rt-formats` |
@@ -401,6 +402,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | RenderTarget2D.Format | `rt-formats` |
 | RenderTarget2D.MultiSampleCount | `rt-msaa` |
 | RenderTargetBinding | `rt-mrt` |
+| RenderTargetCube | `rt-cube` |
 | RenderTargetUsage.PreserveContents | `rt-recursive` |
 | RendererCapabilityProfile | `app-device` |
 | RendererFeature | `pl-renderer` |

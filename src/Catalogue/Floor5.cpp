@@ -91,6 +91,8 @@ WingSpec TargetWing()
         rt("rt-mirror", "A Planar Mirror", "A reflected camera rendered to a texture and projected back onto the wall", "mirror", {"RenderTarget2D", "Matrix.CreateLookAt", "RasterizerState.CullMode"}),
         rt("rt-mrt", "Multiple Render Targets", "One pass writing a grayscale image and an edge map at once", "mrt", {"GraphicsDevice.SetRenderTargets", "RenderTargetBinding", "ShaderEffect"}, ApiOrigin::CnaExtension),
         rt("rt-formats", "Render Target Formats", "Which SurfaceFormats can be rendered to on this renderer, tested by doing it", "formats", {"SurfaceFormat", "RenderTarget2D.Format", "GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT"}, ApiOrigin::CnaExtension),
+        rt("rt-cube", "A Live Cube Map", "RenderTargetCube: the scene drawn six times from a sphere's centre, then used as its mirror by EnvironmentMapEffect",
+           "cube", {"RenderTargetCube", "GraphicsDevice.SetRenderTarget", "CubeMapFace", "EnvironmentMapEffect", "EnvironmentMapEffect.EnvironmentMap"}),
         QueryRoom("rt-msaa", "Multisampled Targets", "The same edges at 0, 2, 4 and 8 samples, magnified", "msaa", {"RenderTarget2D.MultiSampleCount", "GraphicsCapability.MultiSampleAntiAliasing", "RenderTarget2D"}),
     };
     return w;
