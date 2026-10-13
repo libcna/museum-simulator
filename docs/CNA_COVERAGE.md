@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-439 distinct API names are claimed by at least one room.
+453 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -141,13 +141,15 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CompareFunction | `tex-alpha`, `rs-depthfunc`, `rv-depth` |
 | CompareFunction.NotEqual | `rs-outline` |
 | ContainmentType | `col-box-box` |
-| ContentLoadException | `app-content`, `ct-failure` |
+| ContentLoadException | `app-content`, `ct-failure`, `ct-custom` |
 | ContentManager | `models`, `app-content` |
 | ContentManager.GetContentManifest | `ct-pipeline` |
 | ContentManager.Load | `app-content`, `ct-cache`, `ct-failure`, `ct-pipeline` |
 | ContentManager.Load<Model> | `model-load`, `ct-load` |
 | ContentManager.Load<SoundEffect> | `au-basics`, `ct-load` |
 | ContentManager.Load<Texture2D> | `ct-load`, `ct-formats` |
+| ContentManager.RegisterCnjLoader | `ct-custom` |
+| ContentManager.RegisterTypeReader | `ct-custom` |
 | ContentManager.RootDirectory | `ct-load` |
 | ContentManager.Unload | `app-content`, `ct-cache`, `ct-lifetime` |
 | CubeMapFace | `tex-cube` |
@@ -199,9 +201,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Game.GetPlatformCapabilitiesEXT | `pl-platform` |
 | Game.IsFixedTimeStep | `app-lifecycle`, `pf-dashboard` |
 | Game.IsRunningSlowly | `pf-dashboard` |
+| Game.LaunchParameters | `app-lifecycle` |
 | Game.Services | `app-services` |
 | Game.TargetElapsedTime | `app-lifecycle` |
 | GameComponent | `app-components` |
+| GameComponentCollection.ComponentAdded | `app-components` |
+| GameComponentCollectionEventArgs | `app-components` |
 | GamePad.GetCapabilities | `in-players` |
 | GamePad.GetNameEXT | `in-players` |
 | GamePad.GetState | `in-pad` |
@@ -242,6 +247,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.GetGraphicsRendererName | `pl-renderer` |
 | GraphicsDevice.GetRendererCapabilityProfileEXT | `pl-renderer` |
 | GraphicsDevice.GraphicsProfile | `pl-adapter` |
+| GraphicsDevice.ResourceCreated | `ct-lifetime` |
+| GraphicsDevice.ResourceDestroyed | `ct-lifetime` |
 | GraphicsDevice.ScissorRectangle | `sprite-scissor`, `rs-scissor`, `rv-geometry` |
 | GraphicsDevice.SetRenderTarget | `rendertarget`, `rt-basic`, `rt-control`, `pf-targets`, `rv-targets` |
 | GraphicsDevice.SetRenderTargets | `rt-mrt` |
@@ -249,12 +256,15 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT | `rt-formats` |
 | GraphicsDevice.Viewport | `cam-split`, `rv-geometry` |
 | GraphicsDeviceManager | `app-viewport` |
+| GraphicsDeviceManager.DeviceReset | `app-viewport` |
+| GraphicsDeviceManager.DeviceResetting | `app-viewport` |
 | GraphicsDeviceStatus | `app-viewport` |
 | GraphicsProfile | `hist-xna` |
 | GraphicsResource.Dispose | `ct-lifetime` |
 | GraphicsResource.Disposing | `ct-lifetime` |
 | GraphicsResource.IsDisposed | `ct-cache`, `ct-lifetime` |
 | HalfVector4 | `vt-packed` |
+| IGraphicsDeviceService | `app-services` |
 | IPackedVector | `vt-packed` |
 | IShadowReceiverEXT | `cx-shadow` |
 | ImageBasedLightEXT | `model-ibl` |
@@ -271,6 +281,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | KeyboardState.GetPressedKeys | `in-keyboard` |
 | KeyboardState.IsKeyDown | `in-keyboard` |
 | Keys | `in-edges` |
+| LaunchParameters | `app-lifecycle` |
+| LooseFileContentTypeReader | `ct-custom` |
 | MathHelper | `an-pendulum`, `rf-deck` |
 | MathHelper.CatmullRom | `curve-easing` |
 | MathHelper.Hermite | `curve-easing` |
@@ -386,6 +398,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | RendererFeature | `pl-renderer` |
 | RendererFormatUsage | `pl-renderer` |
 | RendererLimit | `pl-renderer` |
+| ResourceCreatedEventArgs | `ct-lifetime` |
+| ResourceDestroyedEventArgs | `ct-lifetime` |
 | Rg32 | `vt-packed` |
 | Rgba1010102 | `vt-packed` |
 | Rgba64 | `vt-packed` |

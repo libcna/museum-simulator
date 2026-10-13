@@ -4,6 +4,7 @@
   Content/Formats/sample.{png,jpg,bmp,tga,gif,tif,qoi}   one picture in seven loose-file formats
   Content/Formats/broken.png                              a PNG cut off in the middle (the failure exhibit)
   Content/Formats/notes.txt                               a text file for TitleContainer.OpenStream
+  Content/Custom/{soup.recipe,stew.cnj,mystery.cnj}      sample assets of the custom-type room (hand-written, tiny)
   Content/Pipeline/{picture.png,sound.wav,shape.gltf}     sources the build runs through cna-content
 
 Run from the repository root:  python3 tools/gen_formats.py

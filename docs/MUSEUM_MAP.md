@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 33 wings, 232 exhibit rooms (5 open to the sky), 295 walkable cells in all.
+10 floors, 33 wings, 233 exhibit rooms (5 open to the sky), 296 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -73,13 +73,13 @@ The application model, the maths of games, geometry tests and cameras
 
 | Room | Key | Title | Origin | APIs |
 |---|---|---|---|---|
-| 1.1.01 | `app-lifecycle` | Game Lifecycle | XNA 4.0 | Game, GameTime, Game.IsFixedTimeStep, Game.TargetElapsedTime |
+| 1.1.01 | `app-lifecycle` | Game Lifecycle | XNA 4.0 | Game, GameTime, Game.IsFixedTimeStep, Game.TargetElapsedTime, Game.LaunchParameters, LaunchParameters |
 | 1.1.02 | `app-gametime` | GameTime and Frame Rate | XNA 4.0 | GameTime.ElapsedGameTime, GameTime.TotalGameTime |
 | 1.1.03 | `app-device` | Device and Renderer Report | XNA 4.0 | GraphicsDevice, GraphicsAdapter, GraphicsCapability, RendererCapabilityProfile, PresentationParameters |
-| 1.1.04 | `app-viewport` | Back Buffer, Viewport and Fullscreen | XNA 4.0 | GraphicsDeviceManager, PresentationParameters, PresentInterval, GraphicsDeviceStatus, Viewport, GameWindow.ClientBounds |
+| 1.1.04 | `app-viewport` | Back Buffer, Viewport and Fullscreen | XNA 4.0 | GraphicsDeviceManager, PresentationParameters, PresentInterval, GraphicsDeviceStatus, GraphicsDeviceManager.DeviceReset, GraphicsDeviceManager.DeviceResetting, Viewport, GameWindow.ClientBounds |
 | 1.1.05 | `app-content` | Content Lifetime | XNA 4.0 | ContentManager, ContentManager.Load, ContentManager.Unload, ContentLoadException, Texture2D |
-| 1.1.06 | `app-components` | Game Components | XNA 4.0 | GameComponent, DrawableGameComponent, Game.Components |
-| 1.1.07 | `app-services` | Game Services | XNA 4.0 | GameServiceContainer, GameServiceContainer.AddService, GameServiceContainer.GetService, GameServiceContainer.RemoveService, Game.Services |
+| 1.1.06 | `app-components` | Game Components | XNA 4.0 | GameComponent, DrawableGameComponent, Game.Components, GameComponentCollection.ComponentAdded, GameComponentCollectionEventArgs |
+| 1.1.07 | `app-services` | Game Services | XNA 4.0 | GameServiceContainer, GameServiceContainer.AddService, GameServiceContainer.GetService, GameServiceContainer.RemoveService, Game.Services, IGraphicsDeviceService |
 
 **Vector Mathematics** - Vector3: arithmetic, products, reflection and interpolation
 
@@ -399,7 +399,8 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 | 8.1.04 | `ct-failure` | When Loading Fails | XNA 4.0 | ContentLoadException, ContentManager.Load |
 | 8.1.05 | `ct-pipeline` | The Content Compiler | CNA extension | cna-content, ContentManager.Load, ContentManager.GetContentManifest |
 | 8.1.06 | `ct-storage` | Title Files and Saved Data | XNA 4.0 | TitleContainer.OpenStream, StorageDevice, StorageContainer, StorageDevice.GetStorageRootEXT |
-| 8.1.07 | `ct-lifetime` | Resource Lifetime | XNA 4.0 | GraphicsResource.Dispose, GraphicsResource.IsDisposed, GraphicsResource.Disposing, ContentManager.Unload |
+| 8.1.07 | `ct-custom` | Teaching ContentManager a New Type | CNA extension | ContentManager.RegisterTypeReader, LooseFileContentTypeReader, ContentManager.RegisterCnjLoader, ContentLoadException |
+| 8.1.08 | `ct-lifetime` | Resource Lifetime | XNA 4.0 | GraphicsResource.Dispose, GraphicsResource.IsDisposed, GraphicsResource.Disposing, GraphicsDevice.ResourceCreated, GraphicsDevice.ResourceDestroyed, ResourceCreatedEventArgs, ResourceDestroyedEventArgs, ContentManager.Unload |
 
 **CNA Extensions** - What CNA adds to XNA 4.0: DebugDraw, post-process effects, engine statistics, point lists and device queries
 

@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdio>
 #include <exception>
+#include <fstream>
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -18,6 +19,7 @@
 #include "Microsoft/Xna/Framework/Audio/SoundEffect.hpp"
 #include "Microsoft/Xna/Framework/Content/ContentLoadException.hpp"
 #include "Microsoft/Xna/Framework/Content/ContentManager.hpp"
+#include "Microsoft/Xna/Framework/Content/LooseFileContentTypeReader.hpp"
 #include "Microsoft/Xna/Framework/Graphics/Model.hpp"
 #include "Microsoft/Xna/Framework/Graphics/RenderTarget2D.hpp"
 #include "Microsoft/Xna/Framework/Graphics/Texture2D.hpp"
@@ -34,12 +36,12 @@ namespace fs = std::filesystem;
 
 namespace {
 
-enum class Mode { Load, Cache, Formats, Failure, Pipeline, Storage, Lifetime };
+enum class Mode { Load, Cache, Formats, Failure, Pipeline, Storage, Lifetime, Custom };
 
 Mode ParseMode(const std::string& s)
 {
     static const std::pair<const char*, Mode> table[] = {{"cache", Mode::Cache},       {"formats", Mode::Formats}, {"failure", Mode::Failure}, {"pipeline", Mode::Pipeline},
-                                                         {"storage", Mode::Storage}, {"lifetime", Mode::Lifetime}};
+                                                         {"storage", Mode::Storage}, {"lifetime", Mode::Lifetime}, {"custom", Mode::Custom}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
     return Mode::Load;
@@ -67,6 +69,62 @@ std::string Kb(std::uintmax_t bytes)
 std::string Describe(const std::string& what)
 {
     return what.size() > 74 ? what.substr(0, 71) + "..." : what;
+}
+
+/** An application type loaded through ContentManager: the content system is extensible, nothing here is built in. */
+struct Recipe {
+    std::string name;
+    int minutes = 0;
+    std::vector<std::string> steps;
+};
+
+/** A reader for loose ".recipe" files, registered with ContentManager::RegisterTypeReader<Recipe>. */
+class RecipeFileReader final : public LooseFileContentTypeReader<Recipe> {
+public:
+    [[nodiscard]] std::vector<std::string> GetExtensions() const override { return {".recipe"}; }
+    Recipe Read(const std::string& path, ContentManager&) override
+    {
+        std::ifstream in(path);
+        if (!in) throw ContentLoadException("cannot open " + path);
+        Recipe r;
+        std::string line;
+        while (std::getline(in, line)) {
+            const std::size_t colon = line.find(':');
+            if (colon == std::string::npos) continue;
+            const std::string key = line.substr(0, colon), value = line.size() > colon + 2 ? line.substr(colon + 2) : std::string();
+            if (key == "name") r.name = value;
+            else if (key == "minutes") r.minutes = std::atoi(value.c_str());
+            else if (key == "step") r.steps.push_back(value);
+        }
+        if (r.name.empty()) throw ContentLoadException("a .recipe file needs a name: line (" + path + ")");
+        return r;
+    }
+};
+
+/** A second type, loaded from a .cnj document instead: one type can have a reader or named .cnj loaders, not both. */
+struct Dish : Recipe {};
+
+/** Minimal extraction of the fields this room's .cnj document uses (a real project would use a JSON library). */
+Dish RecipeFromCnj(const std::string& json, ContentManager&)
+{
+    Dish r;
+    const auto text = [&](const std::string& key) {
+        const std::size_t at = json.find("\"" + key + "\"");
+        if (at == std::string::npos) return std::string();
+        const std::size_t open = json.find('"', json.find(':', at) + 1), close = json.find('"', open + 1);
+        return open == std::string::npos || close == std::string::npos ? std::string() : json.substr(open + 1, close - open - 1);
+    };
+    r.name = text("name");
+    if (const std::size_t at = json.find("\"minutes\""); at != std::string::npos) r.minutes = std::atoi(json.c_str() + json.find(':', at) + 1);
+    if (const std::size_t at = json.find("\"steps\""); at != std::string::npos) {
+        const std::size_t end = json.find(']', at);
+        for (std::size_t p = json.find('"', json.find('[', at)); p != std::string::npos && p < end; p = json.find('"', p + 1)) {
+            const std::size_t close = json.find('"', p + 1);
+            r.steps.push_back(json.substr(p + 1, close - p - 1));
+            p = close;
+        }
+    }
+    return r;
 }
 
 /** One line of a result table; textures are kept so the screen can show what was loaded. */
@@ -124,6 +182,13 @@ public:
                 p.AddButton("Delete the save file", [this] { DeleteSave(); });
                 p.AddButton("Read a title file (OpenStream)", [this] { ReadTitleFile(); });
                 p.AddReadout("Container", [this] { return container_ ? container_->getDisplayNameProperty() : std::string("not open"); });
+                break;
+            case Mode::Custom:
+                p.AddButton("Load Custom/soup (a .recipe file)", [this] { CustomLoad(0); });
+                p.AddButton("Load Custom/stew (a .cnj document)", [this] { CustomLoad(1); });
+                p.AddButton("Load Custom/mystery (.cnj, unknown type)", [this] { CustomLoad(2); });
+                p.AddButton("Load a .recipe without registering a reader", [this] { CustomLoad(3); });
+                p.AddReadout("Registered (per manager)", [this] { return std::string("Recipe: a .recipe reader; Dish: a \"Recipe\" .cnj loader"); });
                 break;
             case Mode::Lifetime:
                 p.AddButton("Create 64 textures", [this] { Create(64); });
@@ -221,7 +286,7 @@ private:
 
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"Loading assets", "The ContentManager cache", "Loose image formats", "When loading fails", "The content compiler", "TitleContainer and storage", "Resource lifetime"};
+        static const char* t[] = {"Loading assets", "The ContentManager cache", "Loose image formats", "When loading fails", "The content compiler", "TitleContainer and storage", "Resource lifetime", "Teaching ContentManager a new type"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::string EmptyHint() const
@@ -242,6 +307,7 @@ private:
             case Mode::Failure: return {"A missing, mistyped or corrupt asset raises ContentLoadException: a game catches it and carries on. The museum", "does exactly that, shows the message here and keeps running (nothing is crashed on purpose)."};
             case Mode::Pipeline: return {"cna-content (CNA's content compiler) built the same three sources as .cnb (CNA's format) and .xnb (XNA's) when this", "museum was built. Both load through the same Load<T> call. Sizes are files on disk; times are measured live."};
             case Mode::Storage: return {"TitleContainer.OpenStream reads files shipped with the game; StorageDevice and StorageContainer keep saved data", "per user. CNA stores it under a per-user folder (CNAEXT: SetAppNameEXT and GetStorageRootEXT)."};
+            case Mode::Custom: return {"ContentManager is extensible: RegisterTypeReader teaches it a loose-file format for your own type, and", "RegisterCnjLoader (CNA extension) a named .cnj document type. Load<Recipe> then works like Load<Texture2D>, failures included."};
             default: return {"GraphicsResource objects are disposed explicitly with Dispose(); IsDisposed and the Disposing event let you track", "their lifetime. A texture you copy out of ContentManager outlives Unload(), so dispose it yourself when done."};
         }
     }
@@ -579,6 +645,24 @@ private:
         }
         rows_.push_back(std::move(row));
         if (rows_.size() > 8) rows_.erase(rows_.begin());
+    }
+
+    // --- custom types ------------------------------------------------------------------------------
+    void CustomLoad(int which)
+    {
+        auto m = NewManager(S().contentRoot);
+        const char* assets[] = {"Custom/soup", "Custom/stew", "Custom/mystery", "Custom/soup"};
+        Attempt(std::string("Load<") + (which == 1 || which == 2 ? "Dish" : "Recipe") + ">(\"" + assets[which] + "\")", [&](Row&) {
+            if (which != 3) {
+                m->RegisterTypeReader<Recipe>(std::make_unique<RecipeFileReader>());
+                m->RegisterCnjLoader<Dish>("Recipe", &RecipeFromCnj);
+            }
+            const Recipe r = which == 1 || which == 2 ? static_cast<Recipe>(m->Load<Dish>(assets[which])) : m->Load<Recipe>(assets[which]);
+            std::string steps;
+            for (const std::string& st : r.steps) steps += st + "; ";
+            return r.name + ", " + std::to_string(r.minutes) + " min: " + steps;
+        }, which >= 2);
+        if (rows_.size() > 6) rows_.erase(rows_.begin());
     }
 
     // --- lifetime ----------------------------------------------------------------------------------
