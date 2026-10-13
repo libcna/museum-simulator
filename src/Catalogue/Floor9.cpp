@@ -129,7 +129,7 @@ WingSpec ReferenceWing()
     r.depth = 13;
     r.height = 5.0f;
     r.theme = "white-cube";
-    r.apis = {"GraphicsDevice.GetBackBufferData", "Texture2D.SaveAsPng", "Matrix.CreateLookAt"};
+    r.apis = {"GraphicsDevice.GetBackBufferData", "Matrix.CreateLookAt"};
     r.origin = ApiOrigin::Xna;
     w.rooms = {r};
     return w;

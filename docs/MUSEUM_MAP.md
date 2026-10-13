@@ -369,20 +369,20 @@ Sound, music, keyboards, mice and game pads
 | 7.1.05 | `au-generate` | Generated Sounds | XNA 4.0 | SoundEffect(buffer, sampleRate, channels), AudioChannels |
 | 7.1.06 | `au-master` | Master Volume and Settings | XNA 4.0 | SoundEffect.MasterVolume, SoundEffect.DistanceScale, SoundEffect.DopplerScale, SoundEffect.SpeedOfSound |
 | 7.1.07 | `au-music` | Song and MediaPlayer | XNA 4.0 | Song, MediaPlayer.Play, MediaPlayer.Volume, MediaState |
-| 7.1.08 | `au-mic` | The Microphone | XNA 4.0 | Microphone, Microphone.GetData, NoMicrophoneConnectedException |
+| 7.1.08 | `au-mic` | The Microphone | XNA 4.0 | Microphone, Microphone.GetData |
 
 **Input Complex** - Keyboard, mouse, game pads, text input, joysticks and the machine's other devices
 
 | Room | Key | Title | Origin | APIs |
 |---|---|---|---|---|
 | 7.2.01 | `in-keyboard` | The Keyboard | XNA 4.0 | Keyboard.GetState, KeyboardState.IsKeyDown, KeyboardState.GetPressedKeys, Keyboard.GetKeyNameEXT, Keyboard.GetModStateEXT |
-| 7.2.02 | `in-edges` | Pressed, Held, Released | XNA 4.0 | KeyboardState, Keys, KeyState |
+| 7.2.02 | `in-edges` | Pressed, Held, Released | XNA 4.0 | KeyboardState, Keys |
 | 7.2.03 | `in-mouse` | The Mouse | XNA 4.0 | Mouse.GetState, MouseState, ButtonState, Mouse.IsRelativeMouseModeEXT, Mouse.SetCursor, MouseCursor |
 | 7.2.04 | `in-pad` | The Game Pad | XNA 4.0 | GamePad.GetState, GamePadState, GamePadDeadZone, GamePad.SetVibration, GamePad.KeyboardEmulationEnabledEXT |
 | 7.2.05 | `in-players` | Four Player Slots | XNA 4.0 | PlayerIndex, GamePad.GetCapabilities, GamePadCapabilities, GamePad.GetNameEXT |
 | 7.2.06 | `in-text` | Text Input and Clipboard | CNA extension | TextInputEXT.TextInput, TextInputEXT.StartTextInput, Clipboard.SetTextEXT, Clipboard.GetTextEXT |
 | 7.2.07 | `in-joystick` | Raw Joysticks | CNA extension | Joysticks.GetJoysticksEXT, Joysticks.GetCapabilitiesEXT, Joysticks.GetStateEXT |
-| 7.2.08 | `in-touch` | Touch and Gestures | XNA 4.0 | TouchPanel.GetState, TouchPanel.ReadGesture, TouchPanel.EnabledGestures, GestureType, TouchPanel.SetFinger |
+| 7.2.08 | `in-touch` | Touch and Gestures | XNA 4.0 | TouchPanel.GetState, TouchPanel.ReadGesture, TouchPanel.EnabledGestures, GestureType, TouchPanel.MouseTouchEmulationEnabledEXT |
 | 7.2.09 | `in-devices` | Other Input Devices | CNA extension | InputDevices.GetMiceEXT, TouchPanel.GetState, TouchPanel.MouseTouchEmulationEnabledEXT, Sensors.GetSensorsEXT, Power.GetInfoEXT |
 
 ### Floor 8: Content, Platform and CNA
@@ -476,5 +476,5 @@ Stress tests, renderer self-checks, reference scenes and the observation deck
 
 | Room | Key | Title | Origin | APIs |
 |---|---|---|---|---|
-| 9.4.01 | `vr-index` | Reference Scenes | XNA 4.0 | GraphicsDevice.GetBackBufferData, Texture2D.SaveAsPng, Matrix.CreateLookAt |
+| 9.4.01 | `vr-index` | Reference Scenes | XNA 4.0 | GraphicsDevice.GetBackBufferData, Matrix.CreateLookAt |
 <!-- END MAP -->

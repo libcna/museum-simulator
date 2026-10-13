@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-441 distinct API names are claimed by at least one room.
+437 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -263,7 +263,6 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Joysticks.GetCapabilitiesEXT | `in-joystick` |
 | Joysticks.GetJoysticksEXT | `in-joystick` |
 | Joysticks.GetStateEXT | `in-joystick` |
-| KeyState | `in-edges` |
 | Keyboard.GetKeyNameEXT | `in-keyboard` |
 | Keyboard.GetModStateEXT | `in-keyboard` |
 | Keyboard.GetState | `in-keyboard` |
@@ -318,7 +317,6 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Mouse.SetCursor | `in-mouse` |
 | MouseCursor | `in-mouse` |
 | MouseState | `in-mouse` |
-| NoMicrophoneConnectedException | `au-mic` |
 | NormalizedByte4 | `vt-packed` |
 | NormalizedShort4 | `vt-packed` |
 | OcclusionQuery | `rs-occlusion` |
@@ -454,7 +452,6 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | TextInputEXT.TextInput | `in-text` |
 | Texture2D | `materials`, `app-content`, `tex-mip`, `rf-garden` |
 | Texture2D.GetData | `sprite-atlas`, `tex-dynamic`, `ct-formats`, `rv-targets` |
-| Texture2D.SaveAsPng | `vr-index` |
 | Texture2D.SetData | `sprite-ui`, `sprite-atlas`, `tex-dynamic` |
 | Texture3D | `tex-volume` |
 | Texture3D.GetData | `tex-volume` |
@@ -466,9 +463,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | TitleContainer.OpenStream | `ct-storage` |
 | TouchPanel.EnabledGestures | `in-touch` |
 | TouchPanel.GetState | `in-touch`, `in-devices` |
-| TouchPanel.MouseTouchEmulationEnabledEXT | `in-devices` |
+| TouchPanel.MouseTouchEmulationEnabledEXT | `in-touch`, `in-devices` |
 | TouchPanel.ReadGesture | `in-touch` |
-| TouchPanel.SetFinger | `in-touch` |
 | Vector2 | `sprite-origin` |
 | Vector3 | `an-pendulum`, `rf-deck` |
 | Vector3.Add | `vec-add` |

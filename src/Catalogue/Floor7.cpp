@@ -33,7 +33,7 @@ WingSpec AudioWing()
         au("au-generate", "Generated Sounds", "SoundEffect built from a PCM buffer: laser, explosion, bell, coin and wind", "generate", {"SoundEffect(buffer, sampleRate, channels)", "AudioChannels"}),
         au("au-master", "Master Volume and Settings", "SoundEffect.MasterVolume and the static 3D audio properties", "master", {"SoundEffect.MasterVolume", "SoundEffect.DistanceScale", "SoundEffect.DopplerScale", "SoundEffect.SpeedOfSound"}),
         au("au-music", "Song and MediaPlayer", "Streaming music with a queue, pause, repeat and volume", "music", {"Song", "MediaPlayer.Play", "MediaPlayer.Volume", "MediaState"}),
-        au("au-mic", "The Microphone", "Capturing 16-bit PCM and a level meter; reports cleanly when there is no microphone", "microphone", {"Microphone", "Microphone.GetData", "NoMicrophoneConnectedException"}),
+        au("au-mic", "The Microphone", "Capturing 16-bit PCM and a level meter; reports cleanly when there is no microphone", "microphone", {"Microphone", "Microphone.GetData"}),
     };
     return w;
 }
@@ -64,13 +64,13 @@ WingSpec InputWing()
     };
     w.rooms = {
         in("in-keyboard", "The Keyboard", "Keyboard.GetState, IsKeyDown, GetPressedKeys and layout-aware key names", "keyboard", {"Keyboard.GetState", "KeyboardState.IsKeyDown", "KeyboardState.GetPressedKeys", "Keyboard.GetKeyNameEXT", "Keyboard.GetModStateEXT"}),
-        in("in-edges", "Pressed, Held, Released", "Finding key edges by comparing this frame's state with the last", "edges", {"KeyboardState", "Keys", "KeyState"}),
+        in("in-edges", "Pressed, Held, Released", "Finding key edges by comparing this frame's state with the last", "edges", {"KeyboardState", "Keys"}),
         in("in-mouse", "The Mouse", "Position, five buttons, both wheels, relative mode and cursor shapes", "mouse", {"Mouse.GetState", "MouseState", "ButtonState", "Mouse.IsRelativeMouseModeEXT", "Mouse.SetCursor", "MouseCursor"}, ApiOrigin::Xna),
         in("in-pad", "The Game Pad", "Sticks, triggers, buttons, D-pad, dead zones, vibration and keyboard emulation", "pad", {"GamePad.GetState", "GamePadState", "GamePadDeadZone", "GamePad.SetVibration", "GamePad.KeyboardEmulationEnabledEXT"}),
         in("in-players", "Four Player Slots", "PlayerIndex, IsConnected, packet numbers and capabilities", "players", {"PlayerIndex", "GamePad.GetCapabilities", "GamePadCapabilities", "GamePad.GetNameEXT"}),
         in("in-text", "Text Input and Clipboard", "TextInputEXT characters, Backspace by polling, and copy/paste", "text", {"TextInputEXT.TextInput", "TextInputEXT.StartTextInput", "Clipboard.SetTextEXT", "Clipboard.GetTextEXT"}, ApiOrigin::CnaExtension),
         in("in-joystick", "Raw Joysticks", "Axes, buttons and hats of any connected joystick", "joystick", {"Joysticks.GetJoysticksEXT", "Joysticks.GetCapabilitiesEXT", "Joysticks.GetStateEXT"}, ApiOrigin::CnaExtension),
-        in("in-touch", "Touch and Gestures", "TouchPanel points and gestures: tap, hold, drags, flick and pinch, with simulated fingers", "touch", {"TouchPanel.GetState", "TouchPanel.ReadGesture", "TouchPanel.EnabledGestures", "GestureType", "TouchPanel.SetFinger"}, ApiOrigin::Xna),
+        in("in-touch", "Touch and Gestures", "TouchPanel points and gestures: tap, hold, drags, flick and pinch, with simulated fingers", "touch", {"TouchPanel.GetState", "TouchPanel.ReadGesture", "TouchPanel.EnabledGestures", "GestureType", "TouchPanel.MouseTouchEmulationEnabledEXT"}, ApiOrigin::Xna),
         in("in-devices", "Other Input Devices", "Mice, keyboards, touch, sensors and power as the machine reports them", "devices", {"InputDevices.GetMiceEXT", "TouchPanel.GetState", "TouchPanel.MouseTouchEmulationEnabledEXT", "Sensors.GetSensorsEXT", "Power.GetInfoEXT"}, ApiOrigin::CnaExtension),
     };
     return w;
