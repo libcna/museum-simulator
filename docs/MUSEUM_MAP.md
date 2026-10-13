@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 31 wings, 226 exhibit rooms (5 open to the sky), 287 walkable cells in all.
+10 floors, 32 wings, 229 exhibit rooms (5 open to the sky), 291 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -415,6 +415,14 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 | 8.3.02 | `pl-adapter` | Adapter and Back Buffer | XNA 4.0 | GraphicsAdapter, DisplayMode, GraphicsDevice.GraphicsProfile, PresentationParameters |
 | 8.3.03 | `pl-renderer` | The Active Renderer | CNA extension | GraphicsDevice.GetRendererCapabilityProfileEXT, RendererFeature, RendererLimit, RendererFormatUsage, GraphicsDevice.GetGraphicsRendererName |
 | 8.3.04 | `pl-platform` | Platform Capabilities | CNA extension | Game.GetPlatformCapabilitiesEXT, PlatformCapabilities |
+
+**History and Versions** - Where XNA came from, and what this very build of CNA is made of
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 8.4.01 | `hist-xna` | XNA, 2004 to Today | XNA 4.0 | Game, GraphicsProfile, XNA 4.0 |
+| 8.4.02 | `hist-cna` | This Build of CNA | CNA extension | CNA::GraphicsRendererSelection.GetAvailable, CNA::getGraphicsBackendMaturity, CNA::getGraphicsRendererName |
+| 8.4.03 | `hist-compare` | XNA 4.0 and What CNA Adds | CNA extension | ApiOrigin, XNA 4.0, CNAEXT |
 
 ### Floor 9: Performance and Validation
 

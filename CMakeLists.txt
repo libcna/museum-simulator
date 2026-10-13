@@ -83,7 +83,14 @@ list(REMOVE_ITEM MUSEUM_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/Main.cpp")
 add_library(museum_core STATIC ${MUSEUM_SOURCES})
 target_include_directories(museum_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(museum_core PUBLIC CNA)
+# The CNA revision this build was configured against, shown by the History rooms (read, never typed in).
+execute_process(COMMAND git -C "${CNA_ROOT_DIR}" describe --always --dirty
+                OUTPUT_VARIABLE MUSEUM_CNA_REVISION OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+if(NOT MUSEUM_CNA_REVISION)
+    set(MUSEUM_CNA_REVISION "unknown")
+endif()
 target_compile_definitions(museum_core PUBLIC
+    MUSEUM_CNA_REVISION="${MUSEUM_CNA_REVISION}"
     MUSEUM_VERSION="${PROJECT_VERSION}"
     MUSEUM_SOURCE_CONTENT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/Content")
 

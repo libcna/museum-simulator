@@ -51,3 +51,4 @@ std::unique_ptr<Exhibit> MakeViewsLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeQueryLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeServicesLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeShadowLab(const RoomDef& room, Services& services);
+std::unique_ptr<Exhibit> MakeHistoryLab(const RoomDef& room, Services& services);

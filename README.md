@@ -25,12 +25,12 @@ All images are real frames from the running museum (`tools/readme_shots.sh`), no
 <!-- BEGIN COUNTS -->
 ```
 floors:          10
-wings:           31
-exhibit rooms:   226  (5 outdoors)
-walkable cells:  287  (rooms, galleries, concourses, halls, elevators)
-exhibit kinds:   41
-origin:          180 XNA 4.0, 46 CNA extension, 0 application
-API names:       412
+wings:           32
+exhibit rooms:   229  (5 outdoors)
+walkable cells:  291  (rooms, galleries, concourses, halls, elevators)
+exhibit kinds:   42
+origin:          181 XNA 4.0, 48 CNA extension, 0 application
+API names:       419
   floor 0  10 rooms  Lobby and Introductory Tour
   floor 1  45 rooms  Fundamentals
   floor 2  19 rooms  Two-Dimensional Rendering
@@ -39,7 +39,7 @@ API names:       412
   floor 5  21 rooms  Render State and Render Targets
   floor 6  31 rooms  Models, Animation and Particles
   floor 7  17 rooms  Audio and Input
-  floor 8  20 rooms  Content, Platform and CNA
+  floor 8  23 rooms  Content, Platform and CNA
   floor 9  22 rooms  Performance and Validation
 ```
 <!-- END COUNTS -->
@@ -56,7 +56,7 @@ The numbers above are generated from the museum's own catalogue (`tools/gen_docs
 | 5 | Render state gallery and render-target complex (mirrors, MRT, float targets) |
 | 6 | Models (glTF, PBR), animation, particles |
 | 7 | Audio (3D audio, synthesis, music, microphone) and input (keyboard, mouse, game pad, text, joystick) |
-| 8 | Content pipeline, CNA extensions (DebugDraw, CRT, depth and ASCII effects, statistics, devices), platform queries |
+| 8 | Content pipeline, CNA extensions (DebugDraw, CRT, depth and ASCII effects, shader packages, shadow mapping, statistics, devices), platform queries, a history of XNA and of this build of CNA |
 | 9 | Performance lab, renderer validation, reference scenes, the observation deck |
 
 Maps and indexes: [docs/MUSEUM_MAP.md](docs/MUSEUM_MAP.md) (every room), [docs/CNA_COVERAGE.md](docs/CNA_COVERAGE.md)

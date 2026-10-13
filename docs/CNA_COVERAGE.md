@@ -47,13 +47,14 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-412 distinct API names are claimed by at least one room.
+419 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
 | AlphaModeEXT | `model-material` |
 | AlphaTestEffect | `tex-alpha`, `rv-effects` |
 | AnimationPlayer | `model-skinned` |
+| ApiOrigin | `hist-compare` |
 | ApplyClipToBonesEXT | `model-rigid` |
 | AsciiQuantizeMode | `cx-ascii` |
 | AudioChannels | `au-synth`, `au-generate` |
@@ -116,6 +117,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CNA::Graphics::DebugDraw | `cx-debugdraw` |
 | CNA::Graphics::DepthEffect | `cx-depth` |
 | CNA::Graphics::ShaderPackageEXT | `cx-package` |
+| CNA::GraphicsRendererSelection.GetAvailable | `hist-cna` |
+| CNA::getGraphicsBackendMaturity | `hist-cna` |
+| CNA::getGraphicsRendererName | `hist-cna` |
+| CNAEXT | `hist-compare` |
 | CRTMaskType | `cx-crt` |
 | Clipboard.GetTextEXT | `in-text` |
 | Clipboard.SetTextEXT | `in-text` |
@@ -177,7 +182,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | EnableDefaultLighting | `lighting` |
 | EnvironmentMapEffect | `tex-cube` |
 | EvaluateMorphWeightsEXT | `model-morph` |
-| Game | `info`, `app-lifecycle` |
+| Game | `info`, `app-lifecycle`, `hist-xna` |
 | Game.Activated | `pl-window` |
 | Game.Components | `app-components` |
 | Game.GetPlatformCapabilitiesEXT | `pl-platform` |
@@ -234,6 +239,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.Viewport | `cam-split`, `rv-geometry` |
 | GraphicsDeviceManager | `app-viewport` |
 | GraphicsDeviceStatus | `app-viewport` |
+| GraphicsProfile | `hist-xna` |
 | GraphicsResource.Dispose | `ct-lifetime` |
 | GraphicsResource.Disposing | `ct-lifetime` |
 | GraphicsResource.IsDisposed | `ct-cache`, `ct-lifetime` |
@@ -461,6 +467,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | VertexPositionNormalTexture | `geo-dynamic` |
 | Viewport | `app-viewport`, `cam-split` |
 | Viewport.Project | `mat-screen`, `text-labels` |
+| XNA 4.0 | `hist-xna`, `hist-compare` |
 | cna-content | `ct-pipeline` |
 | layerDepth | `sprite-sort` |
 <!-- END COVERAGE -->

@@ -126,6 +126,38 @@ WingSpec PlatformWing()
     return w;
 }
 
+
+WingSpec HistoryWing()
+{
+    WingSpec w;
+    w.name = "History and Versions";
+    w.tagline = "Where XNA came from, and what this very build of CNA is made of";
+    w.theme = "wood-gallery";
+    w.accent = {0.35f, 0.80f, 0.55f};
+    w.spineSide = Wall::East;
+    const auto hi = [](const char* key, const char* title, const char* subtitle, const char* mode, std::vector<std::string> apis, ApiOrigin origin) {
+        RoomSpec r;
+        r.key = key;
+        r.title = title;
+        r.subtitle = subtitle;
+        r.exhibit = "history-lab";
+        r.params = {{"mode", mode}};
+        r.width = 13;
+        r.depth = 13;
+        r.height = 5.0f;
+        r.theme = "wood-gallery";
+        r.apis = std::move(apis);
+        r.origin = origin;
+        return r;
+    };
+    w.rooms = {
+        hi("hist-xna", "XNA, 2004 to Today", "The releases of XNA Game Studio and what happened to it", "xna", {"Game", "GraphicsProfile", "XNA 4.0"}, ApiOrigin::Xna),
+        hi("hist-cna", "This Build of CNA", "The revision, options, renderers and maturity of the CNA running right now", "cna", {"CNA::GraphicsRendererSelection.GetAvailable", "CNA::getGraphicsBackendMaturity", "CNA::getGraphicsRendererName"}, ApiOrigin::CnaExtension),
+        hi("hist-compare", "XNA 4.0 and What CNA Adds", "How many rooms use XNA features and which extensions the others demonstrate, counted live", "compare", {"ApiOrigin", "XNA 4.0", "CNAEXT"}, ApiOrigin::CnaExtension),
+    };
+    return w;
+}
+
 }  // namespace
 
 FloorSpec MakeFloor8()
@@ -139,5 +171,6 @@ FloorSpec MakeFloor8()
     f.wings.push_back(ContentWing());
     f.wings.push_back(CnaWing());
     f.wings.push_back(PlatformWing());
+    f.wings.push_back(HistoryWing());
     return f;
 }
