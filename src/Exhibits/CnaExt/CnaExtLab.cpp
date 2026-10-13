@@ -18,6 +18,7 @@
 #include "Microsoft/Xna/Framework/BoundingSphere.hpp"
 #include "Microsoft/Xna/Framework/Graphics/BasicEffect.hpp"
 #include "Microsoft/Xna/Framework/Graphics/PrimitiveType.hpp"
+#include "Microsoft/Xna/Framework/Graphics/ShaderEffect.hpp"
 #include "Microsoft/Xna/Framework/Graphics/VertexPositionColor.hpp"
 #include "Rendering/EffectBank.hpp"
 #include "Rendering/MiniView.hpp"
@@ -29,7 +30,6 @@
 #include "CNA/Graphics/DebugDraw.hpp"
 #include "CNA/Graphics/DepthEffect.hpp"
 #include "CNA/Graphics/ShaderPackageEXT.hpp"
-#include "Microsoft/Xna/Framework/Graphics/ShaderEffect.hpp"
 #endif
 #ifdef CNA_DEVICES
 #include "CNA/Devices/DisplayInfo.hpp"
@@ -203,7 +203,7 @@ protected:
         Texture2D& white = *S().whiteTexture;
         const auto text = [&](const std::string& t, float x, float y, Color c, float s = 0.7f) { sb.DrawString(*S().font, t, Vector2(x, y), c, 0.0f, Vector2(0, 0), s, SpriteEffects::None, 0.0f); };
         const bool post = mode_ == Mode::Crt || mode_ == Mode::Depth || mode_ == Mode::Ascii || mode_ == Mode::Package;
-        if (post) {
+        if (post && Available()) {
             DrawPost(sb, white);
             return;
         }

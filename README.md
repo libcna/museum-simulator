@@ -87,7 +87,7 @@ MUSEUM_CMAKE_ARGS="-DCNA_CNAEXT=OFF" RECONFIGURE=1 tools/build.sh    # build wit
 
 The museum switches on three CNA options in its `CMakeLists.txt`: `CNA_CNAEXT` (DebugDraw and the post-process
 effects), `CNA_DEVICES` (device queries) and `CNA_DIAGNOSTICS=STATS` (engine counters). Each exhibit that needs one
-checks for it and says so in the room when it is missing.
+checks for it and says so in the room when it is missing (a build with all three off was tried: it compiles, every room runs, and those rooms show a notice).
 
 The build also compiles `Content/Pipeline/` with CNA's own content compiler (`cna-content`) into `.cnb` and `.xnb`
 files next to the executable; that is what the *Content Compiler* room loads.
