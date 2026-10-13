@@ -1,7 +1,7 @@
 # Suggested tours
 
 Each stop is a room key: type it with `--room KEY`, find it in the directory (`M`), or use the room number on its plaque.
-The keys in `room:` form are checked by `museum_tests`, so this page cannot point at a room that does not exist.
+Every stop below is checked by `museum_tests`, so this page cannot point at a room that does not exist.
 
 ## 1. First hour: what CNA is
 
