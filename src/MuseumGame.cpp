@@ -136,6 +136,7 @@ void MuseumGame::LoadContent()
     }
     if (options_.view) GoToView(*options_.view);
     services_.showView = [this](const std::string& name) { GoToView(name); };
+    services_.focusView = [this](const Vector3& eye, float yaw, float pitch) { StartGlide(eye, yaw, pitch); };
     if (options_.startPosition) {
         camera_.SetPosition(*options_.startPosition);
         world_->Arrive(std::max(0, museum_->CellAt(*options_.startPosition)));
@@ -189,6 +190,15 @@ void MuseumGame::TeleportToCell(int cell)
     const Spawn spawn = museum_->SpawnPoint(cell);
     camera_.SetPose(spawn.eye, spawn.yaw, 0.0f);
     world_->Arrive(cell);
+}
+
+void MuseumGame::StartGlide(const Vector3& eye, float yaw, float pitch)
+{
+    if (ride_.active || glide_.active) return;
+    glide_ = Glide{true, camera_.Position(), eye, camera_.Yaw(), yaw, camera_.Pitch(), pitch, 0.0f};
+    // Turn the short way round.
+    while (glide_.yawTo - glide_.yawFrom > MathHelper::Pi) glide_.yawTo -= MathHelper::TwoPi;
+    while (glide_.yawTo - glide_.yawFrom < -MathHelper::Pi) glide_.yawTo += MathHelper::TwoPi;
 }
 
 void MuseumGame::GoToView(const std::string& name)
@@ -404,7 +414,15 @@ void MuseumGame::Update(GameTime& gameTime)
         sinceSave_ = 0.0f;
     }
     if (timeRuns_ && !paused_) timeOfDay_.Advance(dt * 0.2f);   // 12 museum minutes per second
-    if (!paused_ && ride_.active) {
+    if (!paused_ && glide_.active) {
+        time_ += dt;
+        glide_.time += dt;
+        const float t = std::min(1.0f, glide_.time / 0.45f);
+        const float e = t * t * (3.0f - 2.0f * t);
+        camera_.SetPose(Vector3::Lerp(glide_.from, glide_.to, e), MathHelper::Lerp(glide_.yawFrom, glide_.yawTo, e), MathHelper::Lerp(glide_.pitchFrom, glide_.pitchTo, e));
+        if (t >= 1.0f) glide_.active = false;
+        world_->Update(dt, time_, camera_.Position(), camera_.Forward());
+    } else if (!paused_ && ride_.active) {
         time_ += dt;
         world_->Update(dt, time_, camera_.Position(), camera_.Forward());
     } else if (!paused_) {

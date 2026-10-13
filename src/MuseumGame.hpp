@@ -102,6 +102,13 @@ private:
         int floor = 0;
         float time = 0.0f;
     } ride_;
+    // A short glide of the camera to a good viewing spot (an exhibit's "step up to the screen").
+    struct Glide {
+        bool active = false;
+        Microsoft::Xna::Framework::Vector3 from, to;
+        float yawFrom = 0.0f, yawTo = 0.0f, pitchFrom = 0.0f, pitchTo = 0.0f, time = 0.0f;
+    } glide_;
+    void StartGlide(const Microsoft::Xna::Framework::Vector3& eye, float yaw, float pitch);
     float bannerAge_ = 99.0f;
     float fpsAccumulator_ = 0.0f;
     int fpsFrames_ = 0;

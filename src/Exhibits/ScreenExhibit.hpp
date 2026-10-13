@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "Exhibits/Exhibit.hpp"
+#include "Interaction/InteractionSystem.hpp"
 #include "Exhibits/ExhibitKit.hpp"
 #include "Rendering/LiveScreen.hpp"
 #include "Rendering/QuadDraw.hpp"
@@ -21,9 +22,29 @@ public:
     {
     }
 
-    void Load(InteractionSystem&, MuseumWorld&) override
+    void Load(InteractionSystem& interaction, MuseumWorld&) override
     {
         screen_ = std::make_unique<LiveScreen>(S(), pixelWidth_, pixelHeight_);
+        // "Step up to the screen": most screens are readable only from a few metres, so pressing E on one glides the
+        // visitor to the spot where it fills the view.
+        Microsoft::Xna::Framework::Vector3 centre;
+        float yaw;
+        FarScreenPose(2.6f, centre, yaw);
+        const Microsoft::Xna::Framework::Vector3 n(std::sin(yaw), 0, std::cos(yaw));
+        const Microsoft::Xna::Framework::Vector3 right = Microsoft::Xna::Framework::Vector3::Normalize(Microsoft::Xna::Framework::Vector3::Cross(-n, Microsoft::Xna::Framework::Vector3::Up));
+        const float halfW = widthMetres_ * 0.5f, halfH = widthMetres_ * static_cast<float>(pixelHeight_) / static_cast<float>(pixelWidth_) * 0.5f;
+        Interactable ia;
+        ia.bounds = Microsoft::Xna::Framework::BoundingBox(centre - right * halfW - Microsoft::Xna::Framework::Vector3(0, halfH, 0) - n * 0.3f, centre + right * halfW + Microsoft::Xna::Framework::Vector3(0, halfH, 0) + n * 0.3f);
+        ia.bounds = Microsoft::Xna::Framework::BoundingBox(Microsoft::Xna::Framework::Vector3::Min(ia.bounds.Min, ia.bounds.Max), Microsoft::Xna::Framework::Vector3::Max(ia.bounds.Min, ia.bounds.Max));
+        ia.maxDistance = 12.0f;
+        const float viewDistance = widthMetres_ * 0.58f;
+        const Microsoft::Xna::Framework::Vector3 eye(centre.X + n.X * viewDistance, R().centre.Y + 1.65f, centre.Z + n.Z * viewDistance);
+        const float pitch = std::atan2(centre.Y - (R().centre.Y + 1.65f), viewDistance);
+        ia.prompt = [] { return std::string("Step up to the screen"); };
+        ia.activate = [this, eye, yaw, pitch] {
+            if (S().focusView) S().focusView(eye, yaw, pitch);
+        };
+        interaction.Add(std::move(ia));
         OnScreenLoaded();
     }
 
