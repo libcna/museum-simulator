@@ -496,6 +496,7 @@ void MuseumGame::SaveScreenshot(const std::string& path)
 //   walk:F,S,N      walk with forward F / strafe S input for N frames (collision applies)
 //   e               press E on whatever is under the crosshair
 //   use:I           activate interactable I directly (index in registration order)
+//   press:LABEL[=V] operate the control-panel row whose label contains LABEL (slider value V)
 //   shot:FILE       save a screenshot        quit            exit
 void MuseumGame::RunScript()
 {
@@ -565,6 +566,21 @@ void MuseumGame::RunScript()
                 const auto& items = interaction->Items();
                 if (index < items.size() && items[index].activate) items[index].activate();
             }
+        } else if (op == "press") {
+            // press:<label>[=value]: operate a control-panel row of the room the visitor is in (tests)
+            std::string label = arg;
+            float number = 0.0f;
+            const float* value = nullptr;
+            if (const std::size_t eq = arg.rfind('='); eq != std::string::npos) {
+                label = arg.substr(0, eq);
+                number = static_cast<float>(std::atof(arg.c_str() + eq + 1));
+                value = &number;
+            }
+            bool done = false;
+            if (InteractionSystem* interaction = world_->CurrentInteraction())
+                for (const auto& item : interaction->Items())
+                    if (!done && item.command) done = item.command(label, value);
+            Museum::Log("script", "press '%s': %s", label.c_str(), done ? "done" : "no such control");
         } else if (op == "shot") {
             pendingShot_ = arg;
             scriptWait_ = 2;

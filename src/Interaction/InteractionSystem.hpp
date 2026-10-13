@@ -24,6 +24,7 @@ struct Interactable {
     std::function<std::string()> prompt;                     // shown on the HUD, e.g. "Stop rotation"
     std::function<void()> activate;                          // simple press
     std::function<void(const InteractEvent&)> interact;      // press / drag / wheel with the hit point; optional
+    std::function<bool(const std::string&, const float*)> command;   // test hook: "press:<label>[=value]" from the script runner
     float maxDistance = 3.2f;
     bool wantsHold = false;                                  // keeps focus while the button is held (sliders)
 };

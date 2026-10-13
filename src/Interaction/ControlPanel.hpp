@@ -75,6 +75,8 @@ private:
 
     [[nodiscard]] int RowAt(const Microsoft::Xna::Framework::Vector3& hit, float& xFraction) const;
     void Handle(const InteractEvent& event);
+    /** Scripted use (tests): operates the first row whose label contains `label`. A slider takes `value`. */
+    bool Press(const std::string& label, const float* value);
     void Redraw();
     [[nodiscard]] std::string Prompt() const;
 

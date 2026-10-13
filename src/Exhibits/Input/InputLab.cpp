@@ -82,7 +82,7 @@ const char* PadTypeName(GamePadType t)
 
 class InputLab final : public ScreenExhibit {
 public:
-    InputLab(const RoomDef& room, Services& services) : ScreenExhibit(room, services, 960, 540, 6.0f), mode_(ParseMode(room.params.Get("mode"))) {}
+    InputLab(const RoomDef& room, Services& services) : ScreenExhibit(room, services, 960, 540, 7.6f), mode_(ParseMode(room.params.Get("mode"))) {}
 
     ~InputLab() override { RestoreGlobals(); }
 

@@ -40,6 +40,7 @@ constexpr Entry kEntries[] = {
     {"effects", MakeEffectLab},
     {"audio-lab", MakeAudioLab},
     {"input-lab", MakeInputLab},
+    {"content-lab", MakeContentLab},
     {"anim-lab", MakeAnimLab},
     {"model-lab", MakeModelLab},
     {"particle-lab", MakeParticleLab},

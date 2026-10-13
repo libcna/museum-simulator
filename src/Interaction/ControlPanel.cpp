@@ -156,6 +156,7 @@ void ControlPanel::Load(InteractionSystem& interaction)
     ia.wantsHold = true;
     ia.prompt = [this] { return Prompt(); };
     ia.interact = [this](const InteractEvent& e) { Handle(e); };
+    ia.command = [this](const std::string& label, const float* value) { return Press(label, value); };
     interaction.Add(std::move(ia));
 }
 
@@ -239,6 +240,36 @@ void ControlPanel::Handle(const InteractEvent& e)
             break;
         default: break;
     }
+}
+
+bool ControlPanel::Press(const std::string& label, const float* value)
+{
+    for (Row& r : rows_) {
+        if (r.label.find(label) == std::string::npos) continue;
+        const auto fire = [&](float v) {
+            r.value = v;
+            if (r.onValue) r.onValue(v);
+            dirty_ = true;
+        };
+        switch (r.kind) {
+            case Kind::Button:
+                if (r.onPress) r.onPress();
+                dirty_ = true;
+                return true;
+            case Kind::Toggle: fire(value != nullptr ? (*value > 0.5f ? 1.0f : 0.0f) : (r.value > 0.5f ? 0.0f : 1.0f)); return true;
+            case Kind::Choice: {
+                const int n = std::max(1, static_cast<int>(r.options.size()));
+                fire(value != nullptr ? std::clamp(*value, 0.0f, static_cast<float>(n - 1)) : static_cast<float>((static_cast<int>(r.value) + 1) % n));
+                return true;
+            }
+            case Kind::Slider:
+                if (value == nullptr) return false;
+                fire(std::clamp(*value, r.min, r.max));
+                return true;
+            default: continue;
+        }
+    }
+    return false;
 }
 
 void ControlPanel::Redraw()

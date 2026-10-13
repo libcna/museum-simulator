@@ -58,6 +58,7 @@ FloorSpec MakeFloor4();
 FloorSpec MakeFloor5();
 FloorSpec MakeFloor6();
 FloorSpec MakeFloor7();
+FloorSpec MakeFloor8();
 
 /** All floors in order. */
 std::vector<FloorSpec> AllFloorSpecs();

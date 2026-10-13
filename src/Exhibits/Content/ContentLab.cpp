@@ -1,0 +1,629 @@
+// Content laboratory: what ContentManager does with assets. Loading each asset type with timings, the per-manager
+// cache and Unload, loose image formats, load failures that are caught and reported, the CNA content compiler's
+// .cnb and .xnb outputs against loose files, TitleContainer and StorageContainer, and resource disposal.
+// Nothing here is faked: every figure is measured when you press the button.
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <cstdio>
+#include <exception>
+#include <filesystem>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "Diagnostics/Log.hpp"
+#include "Exhibits/ExhibitFactories.hpp"
+#include "Exhibits/ScreenExhibit.hpp"
+#include "Microsoft/Xna/Framework/Audio/SoundEffect.hpp"
+#include "Microsoft/Xna/Framework/Content/ContentLoadException.hpp"
+#include "Microsoft/Xna/Framework/Content/ContentManager.hpp"
+#include "Microsoft/Xna/Framework/Graphics/Model.hpp"
+#include "Microsoft/Xna/Framework/Graphics/RenderTarget2D.hpp"
+#include "Microsoft/Xna/Framework/Graphics/Texture2D.hpp"
+#include "Microsoft/Xna/Framework/Storage/StorageContainer.hpp"
+#include "Microsoft/Xna/Framework/Storage/StorageDevice.hpp"
+#include "Microsoft/Xna/Framework/TitleContainer.hpp"
+#include "System/IO/Stream.hpp"
+
+using namespace Microsoft::Xna::Framework;
+using namespace Microsoft::Xna::Framework::Audio;
+using namespace Microsoft::Xna::Framework::Content;
+using namespace Microsoft::Xna::Framework::Graphics;
+namespace fs = std::filesystem;
+
+namespace {
+
+enum class Mode { Load, Cache, Formats, Failure, Pipeline, Storage, Lifetime };
+
+Mode ParseMode(const std::string& s)
+{
+    static const std::pair<const char*, Mode> table[] = {{"cache", Mode::Cache},       {"formats", Mode::Formats}, {"failure", Mode::Failure}, {"pipeline", Mode::Pipeline},
+                                                         {"storage", Mode::Storage}, {"lifetime", Mode::Lifetime}};
+    for (const auto& [name, mode] : table)
+        if (s == name) return mode;
+    return Mode::Load;
+}
+
+using Clock = std::chrono::steady_clock;
+
+double MillisSince(Clock::time_point t0)
+{
+    return std::chrono::duration<double, std::milli>(Clock::now() - t0).count();
+}
+
+std::string Fmt(double v, const char* f = "%.2f")
+{
+    char buf[48];
+    std::snprintf(buf, sizeof buf, f, v);
+    return buf;
+}
+
+std::string Kb(std::uintmax_t bytes)
+{
+    return Fmt(static_cast<double>(bytes) / 1024.0, "%.1f") + " KB";
+}
+
+std::string Describe(const std::string& what)
+{
+    return what.size() > 74 ? what.substr(0, 71) + "..." : what;
+}
+
+/** One line of a result table; textures are kept so the screen can show what was loaded. */
+struct Row {
+    std::string name;
+    std::string detail;
+    double ms = 0.0;
+    int status = 0;   // 0 ok, 1 note, 2 failure
+    std::unique_ptr<Texture2D> picture;
+};
+
+class ContentLab final : public ScreenExhibit {
+public:
+    ContentLab(const RoomDef& room, Services& services) : ScreenExhibit(room, services, 960, 540, 7.6f), mode_(ParseMode(room.params.Get("mode"))) {}
+
+    void BuildStatic(RoomBuilder& b) override
+    {
+        ControlPanel& p = AddPanel(Title(), -4.8f, 1.5f, 1.8f, MathHelper::PiOver2, 2.1f);
+        switch (mode_) {
+            case Mode::Load:
+                p.AddButton("Load a Texture2D (png)", [this] { LoadTexture("Textures/brick"); });
+                p.AddButton("Load a SoundEffect (wav)", [this] { LoadSound("Audio/chirp"); });
+                p.AddButton("Load a Model (gltf)", [this] { LoadModel("Models/torus"); });
+                p.AddButton("Load all of them again", [this] { rows_.clear(); LoadTexture("Textures/brick"); LoadTexture("Textures/marble"); LoadSound("Audio/chirp"); LoadModel("Models/torus"); LoadModel("Models/robot"); });
+                p.AddButton("Clear", [this] { rows_.clear(); });
+                p.AddReadout("Content root", [this] { return S().contentRoot; });
+                break;
+            case Mode::Cache:
+                p.AddButton("Load brick (this manager)", [this] { CacheLoad(false); });
+                p.AddButton("Load brick (a new manager)", [this] { CacheLoad(true); });
+                p.AddButton("Unload() this manager", [this] { CacheUnload(); });
+                p.AddReadout("Loads so far", [this] { return std::to_string(loads_); });
+                p.AddReadout("Bar length", [] { return std::string("milliseconds"); });
+                break;
+            case Mode::Formats:
+                p.AddButton("Load every format", [this] { LoadFormats(); });
+                p.AddReadout("Reference", [] { return std::string("sample.png (lossless)"); });
+                break;
+            case Mode::Failure:
+                p.AddButton("Ask for an asset that is missing", [this] { Fail(0); });
+                p.AddButton("Load a PNG as a SoundEffect", [this] { Fail(1); });
+                p.AddButton("Load a truncated PNG", [this] { Fail(2); });
+                p.AddButton("Load an empty name", [this] { Fail(3); });
+                p.AddButton("Load a text file as a Texture2D", [this] { Fail(4); });
+                p.AddReadout("Caught so far", [this] { return std::to_string(rows_.size()); });
+                break;
+            case Mode::Pipeline:
+                p.AddButton("Measure (5 cold loads each)", [this] { MeasurePipeline(); });
+                p.AddReadout("Compiled content", [this] { return compiledPresent_ ? std::string("found next to the executable") : std::string("not found: build with cna-content"); });
+                break;
+            case Mode::Storage:
+                p.AddButton("Open the storage container", [this] { OpenStorage(); });
+                p.AddButton("Write a save file", [this] { WriteSave(); });
+                p.AddButton("Read it back", [this] { ReadSave(); });
+                p.AddButton("Delete the save file", [this] { DeleteSave(); });
+                p.AddButton("Read a title file (OpenStream)", [this] { ReadTitleFile(); });
+                p.AddReadout("Container", [this] { return container_ ? container_->getDisplayNameProperty() : std::string("not open"); });
+                break;
+            case Mode::Lifetime:
+                p.AddButton("Create 64 textures", [this] { Create(64); });
+                p.AddButton("Dispose every second one", [this] { DisposeHalf(); });
+                p.AddButton("Dispose them all", [this] { DisposeAll(); });
+                p.AddButton("Content: Load then Unload()", [this] { UnloadDemo(); });
+                p.AddReadout("Created / disposed / alive", [this] { return std::to_string(created_) + " / " + std::to_string(disposedEvents_) + " / " + std::to_string(Alive()); });
+                p.AddReadout("Texture memory alive", [this] { return Kb(static_cast<std::uintmax_t>(Alive()) * kTexDim * kTexDim * 4); });
+                break;
+        }
+        AddInfoSign(b, Title(), Explanation());
+    }
+
+    void OnScreenLoaded() override
+    {
+        manager_ = NewManager(S().contentRoot);
+        compiledPresent_ = fs::exists(fs::path(S().contentRoot) / "Compiled" / "cnb");
+        if (mode_ == Mode::Load) {
+            LoadTexture("Textures/brick");
+            LoadSound("Audio/chirp");
+            LoadModel("Models/torus");
+        } else if (mode_ == Mode::Formats) {
+            LoadFormats();
+        }
+    }
+
+    void OnLeave() override { ReleaseAll(); }
+    ~ContentLab() override { ReleaseAll(); }
+
+protected:
+    void DrawScreen(SpriteBatch& sb) override
+    {
+        if (S().font == nullptr) return;
+        const SamplerState& smp = SamplerState::LinearClamp;
+        sb.Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &smp, nullptr, nullptr);
+        Texture2D& white = *S().whiteTexture;
+        const auto rect = [&](float x, float y, float w, float h, Color c) { sb.Draw(white, Rectangle(static_cast<int>(x), static_cast<int>(y), static_cast<int>(w), static_cast<int>(h)), c); };
+        const auto text = [&](const std::string& t, float x, float y, Color c, float s = 0.7f) { sb.DrawString(*S().font, t, Vector2(x, y), c, 0.0f, Vector2(0, 0), s, SpriteEffects::None, 0.0f); };
+        text(Title(), 24, 12, Kit::kGold, 1.0f);
+        const Color ok = Kit::Rgba(120, 230, 150), warn = Kit::Rgba(255, 200, 90), bad = Kit::Rgba(255, 130, 120);
+        if (mode_ == Mode::Lifetime) {
+            for (std::size_t i = 0; i < tex_.size(); ++i) {
+                const int cx = static_cast<int>(i % 16), cy = static_cast<int>(i / 16);
+                const bool dead = tex_[i].dead;
+                rect(30.0f + static_cast<float>(cx) * 56.0f, 80.0f + static_cast<float>(cy) * 56.0f, 50, 50, dead ? Kit::Rgba(140, 60, 60) : Kit::Rgba(60, 160, 100));
+            }
+            text("green: a live Texture2D    red: IsDisposed is true (its Disposing event ran)", 30, 330, Kit::kDim, 0.65f);
+            text(lifetimeNote_, 30, 370, Kit::kText, 0.7f);
+        } else if (mode_ == Mode::Cache) {
+            for (std::size_t i = 0; i < rows_.size() && i < 12; ++i) {
+                const Row& r = rows_[rows_.size() - 1 - i];
+                const float y = 66.0f + static_cast<float>(i) * 36.0f;
+                const float w = static_cast<float>(std::min(600.0, r.ms * 40.0 + 4.0));
+                rect(300, y, w, 26, r.status == 1 ? warn : ok);
+                text(r.name, 24, y + 2, Kit::kText, 0.65f);
+                text(Fmt(r.ms) + " ms  " + r.detail, 308, y + 2, Kit::Rgba(20, 20, 20), 0.6f);
+            }
+            if (rows_.empty()) text("Press 'Load brick' a few times, then Unload and load again.", 24, 100, Kit::kDim, 0.8f);
+            text("Every texture returned stays alive here: Unload() only empties the manager's cache.", 24, 500, Kit::kDim, 0.65f);
+        } else {
+            float y = 64.0f;
+            if (rows_.empty()) text(EmptyHint(), 24, 100, Kit::kDim, 0.8f);
+            for (const Row& r : rows_) {
+                const bool hasPic = r.picture != nullptr;
+                const float rowH = hasPic ? 68.0f : 44.0f;
+                if (y + rowH > 520.0f) break;
+                rect(20, y, 920, rowH - 6, Kit::Rgba(24, 30, 46));
+                rect(20, y, 6, rowH - 6, r.status == 0 ? ok : (r.status == 1 ? warn : bad));
+                float x = 36.0f;
+                if (hasPic) {
+                    sb.Draw(*r.picture, Rectangle(34, static_cast<int>(y) + 2, 88, 58), Color::White);
+                    x = 134.0f;
+                }
+                text(r.name, x, y + 4, Kit::kText, 0.75f);
+                text(Describe(r.detail), x, y + 4 + 26, Kit::kDim, 0.6f);
+                if (r.ms > 0.0) text(Fmt(r.ms) + " ms", 830, y + 8, r.status == 2 ? bad : ok, 0.75f);
+                y += rowH;
+            }
+        }
+        sb.End();
+    }
+
+private:
+    static constexpr int kTexDim = 64;
+    struct Tracked {
+        std::unique_ptr<Texture2D> texture;
+        bool dead = false;
+    };
+
+    [[nodiscard]] std::string Title() const
+    {
+        static const char* t[] = {"Loading assets", "The ContentManager cache", "Loose image formats", "When loading fails", "The content compiler", "TitleContainer and storage", "Resource lifetime"};
+        return t[static_cast<int>(mode_)];
+    }
+    [[nodiscard]] std::string EmptyHint() const
+    {
+        switch (mode_) {
+            case Mode::Failure: return "Each button asks for something that cannot load; the exception is caught and shown here.";
+            case Mode::Pipeline: return "Press 'Measure': each asset is loaded from loose files, .cnb and .xnb with a fresh ContentManager.";
+            case Mode::Storage: return "Open the storage container first, then write, read and delete a save file.";
+            default: return "Press a button on the control panel.";
+        }
+    }
+    [[nodiscard]] std::vector<std::string> Explanation() const
+    {
+        switch (mode_) {
+            case Mode::Load: return {"ContentManager.Load<T>(name) turns an asset into a Texture2D, SoundEffect, Model...: here straight from loose", "PNG, WAV and glTF files with no build step. The time is measured with a clock around the call."};
+            case Mode::Cache: return {"Each ContentManager caches what it loaded: the second Load of a name returns the shared asset in microseconds.", "Unload() empties that manager's cache, so the next Load decodes again; copies you hold stay valid, other managers are separate."};
+            case Mode::Formats: return {"With no content build, ContentManager decodes loose image files: PNG, JPEG, BMP, TGA, GIF and QOI. The error", "column compares each decoded picture with the PNG: only JPEG and the 256-colour GIF differ, as they should. TIFF is not supported."};
+            case Mode::Failure: return {"A missing, mistyped or corrupt asset raises ContentLoadException: a game catches it and carries on. The museum", "does exactly that, shows the message here and keeps running (nothing is crashed on purpose)."};
+            case Mode::Pipeline: return {"cna-content (CNA's content compiler) built the same three sources as .cnb (CNA's format) and .xnb (XNA's) when this", "museum was built. Both load through the same Load<T> call. Sizes are files on disk; times are measured live."};
+            case Mode::Storage: return {"TitleContainer.OpenStream reads files shipped with the game; StorageDevice and StorageContainer keep saved data", "per user. CNA stores it under a per-user folder (CNAEXT: SetAppNameEXT and GetStorageRootEXT)."};
+            default: return {"GraphicsResource objects are disposed explicitly with Dispose(); IsDisposed and the Disposing event let you track", "their lifetime. A texture you copy out of ContentManager outlives Unload(), so dispose it yourself when done."};
+        }
+    }
+
+    std::unique_ptr<ContentManager> NewManager(const std::string& root)
+    {
+        return std::make_unique<ContentManager>(&S().game->getServicesProperty(), root);
+    }
+
+    void ReleaseAll()
+    {
+        rows_.clear();
+        handles_.clear();
+        tex_.clear();
+        keep_.clear();
+        container_.reset();
+        manager_.reset();
+        other_.reset();
+    }
+
+    template <typename F>
+    void Attempt(const std::string& name, F&& load, bool expectFailure = false)
+    {
+        Row row;
+        row.name = name;
+        const auto t0 = Clock::now();
+        try {
+            row.detail = load(row);
+            row.ms = MillisSince(t0);
+            row.status = expectFailure ? 1 : 0;
+        } catch (const std::exception& e) {
+            row.ms = MillisSince(t0);
+            row.status = expectFailure ? 1 : 2;
+            row.detail = std::string(typeid(e).name()).find("ContentLoadException") != std::string::npos ? std::string("ContentLoadException: ") + e.what() : std::string("exception: ") + e.what();
+            Museum::Log("content", "%s: %s", name.c_str(), e.what());
+        }
+        rows_.push_back(std::move(row));
+    }
+
+    // --- loading -----------------------------------------------------------------------------------
+    void LoadTexture(const std::string& asset)
+    {
+        auto m = NewManager(S().contentRoot);
+        Attempt("Load<Texture2D>(\"" + asset + "\")", [&](Row& r) {
+            auto tex = std::make_unique<Texture2D>(m->Load<Texture2D>(asset));
+            const std::string d = std::to_string(tex->getWidthProperty()) + " x " + std::to_string(tex->getHeightProperty()) + ", " + std::to_string(tex->getLevelCountProperty()) + " mip level(s)";
+            r.picture = std::move(tex);
+            keep_.push_back(std::move(m));
+            return d;
+        });
+        if (rows_.size() > 6) rows_.erase(rows_.begin());
+    }
+    void LoadSound(const std::string& asset)
+    {
+        auto m = NewManager(S().contentRoot);
+        Attempt("Load<SoundEffect>(\"" + asset + "\")", [&](Row&) {
+            const SoundEffect s = m->Load<SoundEffect>(asset);
+            return "duration " + Fmt(s.getDurationProperty().getTotalSecondsProperty()) + " s";
+        });
+        if (rows_.size() > 6) rows_.erase(rows_.begin());
+    }
+    void LoadModel(const std::string& asset)
+    {
+        auto m = NewManager(S().contentRoot);
+        Attempt("Load<Model>(\"" + asset + "\")", [&](Row&) {
+            const Model model = m->Load<Model>(asset);
+            return std::to_string(model.getMeshesProperty().getCountProperty()) + " mesh(es), " + std::to_string(model.getBonesProperty().getCountProperty()) + " bone(s)";
+        });
+        if (rows_.size() > 6) rows_.erase(rows_.begin());
+    }
+
+    // --- cache -------------------------------------------------------------------------------------
+    void CacheLoad(bool freshManager)
+    {
+        ContentManager* m = manager_.get();
+        if (freshManager) {
+            other_ = NewManager(S().contentRoot);
+            m = other_.get();
+        }
+        Row row;
+        row.name = freshManager ? "new manager" : "this manager";
+        const auto t0 = Clock::now();
+        try {
+            handles_.push_back(std::make_unique<Texture2D>(m->Load<Texture2D>("Textures/brick")));
+            row.ms = MillisSince(t0);
+            ++loads_;
+            row.detail = freshManager ? "(its own cache: a full load)" : (firstLoadDone_ ? "(cached)" : "(first load)");
+            row.status = !freshManager && firstLoadDone_ ? 0 : 1;
+            if (!freshManager) firstLoadDone_ = true;
+        } catch (const std::exception& e) {
+            row.detail = e.what();
+            row.status = 2;
+        }
+        rows_.push_back(std::move(row));
+        if (rows_.size() > 24) rows_.erase(rows_.begin());
+    }
+    void CacheUnload()
+    {
+        if (manager_) manager_->Unload();
+        firstLoadDone_ = false;
+        Row row;
+        row.name = "Unload()";
+        row.detail = "the cache is empty: the next Load decodes the file again";
+        row.status = 1;
+        rows_.push_back(std::move(row));
+    }
+    [[nodiscard]] int Alive() const
+    {
+        int n = 0;
+        if (mode_ == Mode::Lifetime) {
+            for (const Tracked& t : tex_) n += t.dead ? 0 : 1;
+            return n;
+        }
+        for (const auto& h : handles_) n += h->getIsDisposedProperty() ? 0 : 1;
+        return n;
+    }
+
+    // --- formats -----------------------------------------------------------------------------------
+    void LoadFormats()
+    {
+        rows_.clear();
+        std::vector<Color> reference;
+        int refW = 0, refH = 0;
+        for (const char* ext : {"png", "jpg", "bmp", "tga", "gif", "tif", "qoi"}) {
+            const std::string asset = std::string("Formats/sample.") + ext;
+            auto m = NewManager(S().contentRoot);
+            const bool unsupported = std::string(ext) == "tif";   // CNA's decoder is dependency-free and has no TIFF
+            Attempt(asset + (unsupported ? "   (TIFF: not supported by CNA's decoder)" : ""), [&](Row& r) {
+                auto tex = std::make_unique<Texture2D>(m->Load<Texture2D>(asset));
+                std::vector<Color> px(static_cast<std::size_t>(tex->getWidthProperty()) * static_cast<std::size_t>(tex->getHeightProperty()));
+                tex->GetData(px.data(), static_cast<int>(px.size()));
+                std::string note = std::to_string(tex->getWidthProperty()) + " x " + std::to_string(tex->getHeightProperty()) + ", file " + Kb(fs::file_size(fs::path(S().contentRoot) / asset));
+                if (reference.empty()) {
+                    reference = px;
+                    refW = tex->getWidthProperty();
+                    refH = tex->getHeightProperty();
+                } else if (px.size() == reference.size() && tex->getWidthProperty() == refW && tex->getHeightProperty() == refH) {
+                    double sum = 0;
+                    for (std::size_t i = 0; i < px.size(); ++i)
+                        sum += (std::abs(px[i].getRProperty() - reference[i].getRProperty()) + std::abs(px[i].getGProperty() - reference[i].getGProperty()) + std::abs(px[i].getBProperty() - reference[i].getBProperty())) / 3.0;
+                    note += ", mean error vs PNG " + Fmt(sum / static_cast<double>(px.size())) + " / 255";
+                } else {
+                    note += ", different size from the PNG";
+                }
+                r.picture = std::move(tex);
+                keep_.push_back(std::move(m));
+                return note;
+            }, unsupported);
+        }
+    }
+
+    // --- failures ----------------------------------------------------------------------------------
+    void Fail(int which)
+    {
+        auto m = NewManager(S().contentRoot);
+        switch (which) {
+            case 0: Attempt("Load<Texture2D>(\"Textures/does-not-exist\")", [&](Row&) { (void)m->Load<Texture2D>("Textures/does-not-exist"); return std::string("unexpectedly loaded"); }, true); break;
+            case 1: Attempt("Load<SoundEffect>(\"Textures/brick\")", [&](Row&) { (void)m->Load<SoundEffect>("Textures/brick"); return std::string("unexpectedly loaded"); }, true); break;
+            case 2: Attempt("Load<Texture2D>(\"Formats/broken\")  (half a PNG)", [&](Row&) { (void)m->Load<Texture2D>("Formats/broken"); return std::string("unexpectedly loaded"); }, true); break;
+            case 3: Attempt("Load<Texture2D>(\"\")", [&](Row&) { (void)m->Load<Texture2D>(""); return std::string("unexpectedly loaded"); }, true); break;
+            default: Attempt("Load<Texture2D>(\"Formats/notes\")  (a .txt file)", [&](Row&) { (void)m->Load<Texture2D>("Formats/notes"); return std::string("unexpectedly loaded"); }, true); break;
+        }
+        if (rows_.size() > 8) rows_.erase(rows_.begin());
+    }
+
+    // --- pipeline ----------------------------------------------------------------------------------
+    void MeasurePipeline()
+    {
+        rows_.clear();
+        const fs::path root(S().contentRoot);
+        struct Asset { const char* name; const char* ext; int kind; };
+        const Asset assets[] = {{"picture", "png", 0}, {"sound", "wav", 1}, {"shape", "gltf", 2}};
+        const char* labels[3] = {"loose", "cnb", "xnb"};
+        const std::string roots[3] = {(root / "Pipeline").string(), (root / "Compiled" / "cnb").string(), (root / "Compiled" / "xnb").string()};
+        const char* exts[3] = {nullptr, "cnb", "xnb"};
+        for (const Asset& a : assets) {
+            for (int f = 0; f < 3; ++f) {
+                const fs::path file = f == 0 ? fs::path(roots[0]) / (std::string(a.name) + "." + a.ext) : fs::path(roots[f]) / (std::string(a.name) + "." + exts[f]);
+                Row row;
+                row.name = std::string(a.name) + "  (" + labels[f] + ")";
+                if (!fs::exists(file)) {
+                    row.detail = "missing: " + file.filename().string();
+                    row.status = 2;
+                    rows_.push_back(std::move(row));
+                    continue;
+                }
+                const auto size = fs::file_size(file);
+                double total = 0.0;
+                int done = 0;
+                std::string error;
+                for (int i = 0; i < 5; ++i) {
+                    try {
+                        auto m = NewManager(roots[f]);
+                        const auto t0 = Clock::now();
+                        if (a.kind == 0) {
+                            const Texture2D t = m->Load<Texture2D>(a.name);
+                            (void)t;
+                        } else if (a.kind == 1) {
+                            const SoundEffect s = m->Load<SoundEffect>(a.name);
+                            (void)s;
+                        } else {
+                            const Model md = m->Load<Model>(a.name);
+                            (void)md;
+                        }
+                        total += MillisSince(t0);
+                        ++done;
+                    } catch (const std::exception& e) {
+                        error = e.what();
+                        break;
+                    }
+                }
+                row.ms = done > 0 ? total / done : 0.0;
+                row.detail = error.empty() ? "file " + Kb(size) + ", mean of " + std::to_string(done) + " cold loads" : "file " + Kb(size) + ", failed: " + error;
+                row.status = error.empty() ? (f == 0 ? 1 : 0) : 2;
+                rows_.push_back(std::move(row));
+            }
+        }
+        try {
+            ContentManager m(&S().game->getServicesProperty(), roots[0]);
+            const auto& manifest = m.GetContentManifest();
+            Row row;
+            row.name = "GetContentManifest() on Pipeline/";
+            row.detail = std::to_string(manifest.size()) + " asset(s) found under the root";
+            row.status = 1;
+            rows_.push_back(std::move(row));
+        } catch (const std::exception& e) {
+            Museum::Log("content", "manifest: %s", e.what());
+        }
+    }
+
+    // --- storage -----------------------------------------------------------------------------------
+    void OpenStorage()
+    {
+        rows_.clear();
+        Row row;
+        row.name = "StorageDevice";
+        try {
+            Storage::StorageDevice::SetAppNameEXT("cna-3d-museum");
+            std::unique_ptr<System::IAsyncResult> sel = Storage::StorageDevice::BeginShowSelector(nullptr, nullptr);
+            device_ = Storage::StorageDevice::EndShowSelector(sel.get());
+            std::unique_ptr<System::IAsyncResult> open = device_->BeginOpenContainer("MuseumLab", nullptr, nullptr);
+            container_ = device_->EndOpenContainer(open.get());
+            row.detail = "root " + Storage::StorageDevice::GetStorageRootEXT() + "  free " + Fmt(static_cast<double>(device_->getFreeSpaceProperty()) / 1.0e9, "%.1f") + " GB";
+            row.status = 0;
+        } catch (const std::exception& e) {
+            row.detail = std::string("storage unavailable: ") + e.what();
+            row.status = 2;
+        }
+        rows_.push_back(std::move(row));
+    }
+    void WriteSave()
+    {
+        Row row;
+        row.name = "CreateFile(\"lab.sav\")";
+        if (!container_) { row.detail = "open the container first"; row.status = 2; rows_.push_back(std::move(row)); return; }
+        try {
+            ++saveCounter_;
+            const std::string body = "museum-lab save\nwrites=" + std::to_string(saveCounter_) + "\n";
+            auto stream = container_->CreateFile("lab.sav");
+            std::vector<SharpRuntime::bytecs> bytes(body.begin(), body.end());
+            stream->Write(bytes.data(), 0, static_cast<int>(bytes.size()));
+            stream->Close();
+            row.detail = "wrote " + std::to_string(body.size()) + " bytes";
+        } catch (const std::exception& e) {
+            row.detail = e.what();
+            row.status = 2;
+        }
+        rows_.push_back(std::move(row));
+    }
+    void ReadSave()
+    {
+        Row row;
+        row.name = "OpenFile(\"lab.sav\", Open)";
+        if (!container_) { row.detail = "open the container first"; row.status = 2; rows_.push_back(std::move(row)); return; }
+        try {
+            if (!container_->FileExists("lab.sav")) {
+                row.detail = "FileExists is false: nothing saved yet";
+                row.status = 1;
+            } else {
+                auto stream = container_->OpenFile("lab.sav", System::IO::FileMode::Open);
+                std::vector<SharpRuntime::bytecs> bytes(static_cast<std::size_t>(stream->getLengthProperty()));
+                const int n = stream->Read(bytes.data(), 0, static_cast<int>(bytes.size()));
+                stream->Close();
+                std::string s(bytes.begin(), bytes.begin() + n);
+                for (char& c : s) if (c == '\n') c = ' ';
+                row.detail = "read " + std::to_string(n) + " bytes: " + s;
+            }
+        } catch (const std::exception& e) {
+            row.detail = e.what();
+            row.status = 2;
+        }
+        rows_.push_back(std::move(row));
+    }
+    void DeleteSave()
+    {
+        Row row;
+        row.name = "DeleteFile(\"lab.sav\")";
+        try {
+            if (container_ && container_->FileExists("lab.sav")) {
+                container_->DeleteFile("lab.sav");
+                row.detail = "deleted";
+            } else {
+                row.detail = "nothing to delete";
+                row.status = 1;
+            }
+        } catch (const std::exception& e) {
+            row.detail = e.what();
+            row.status = 2;
+        }
+        rows_.push_back(std::move(row));
+    }
+    void ReadTitleFile()
+    {
+        Row row;
+        row.name = "TitleContainer.OpenStream(\"" + std::string("Content/Formats/notes.txt") + "\")";
+        try {
+            auto stream = TitleContainer::OpenStream("Content/Formats/notes.txt");
+            std::vector<SharpRuntime::bytecs> bytes(static_cast<std::size_t>(stream->getLengthProperty()));
+            const int n = stream->Read(bytes.data(), 0, static_cast<int>(bytes.size()));
+            stream->Close();
+            std::string s(bytes.begin(), bytes.begin() + n);
+            for (char& c : s) if (c == '\n') c = ' ';
+            row.detail = s;
+        } catch (const std::exception& e) {
+            row.detail = e.what();
+            row.status = 2;
+        }
+        rows_.push_back(std::move(row));
+        if (rows_.size() > 8) rows_.erase(rows_.begin());
+    }
+
+    // --- lifetime ----------------------------------------------------------------------------------
+    void Create(int n)
+    {
+        for (int i = 0; i < n && tex_.size() < 128; ++i) {
+            Tracked t;
+            t.texture = std::make_unique<Texture2D>(*S().device, kTexDim, kTexDim);
+            const std::size_t index = tex_.size();
+            t.texture->Disposing += [this, index](System::Object*, const System::EventArgs&) {
+                if (index < tex_.size()) tex_[index].dead = true;
+                ++disposedEvents_;
+            };
+            tex_.push_back(std::move(t));
+            ++created_;
+        }
+        lifetimeNote_ = "created " + std::to_string(tex_.size()) + " textures of " + std::to_string(kTexDim) + " x " + std::to_string(kTexDim);
+    }
+    void DisposeHalf()
+    {
+        for (std::size_t i = 0; i < tex_.size(); i += 2)
+            if (!tex_[i].dead) tex_[i].texture->Dispose();
+        lifetimeNote_ = "Dispose() on every second texture";
+    }
+    void DisposeAll()
+    {
+        for (Tracked& t : tex_)
+            if (!t.dead) t.texture->Dispose();
+        lifetimeNote_ = "Dispose() on all of them: memory is returned immediately";
+    }
+    void UnloadDemo()
+    {
+        try {
+            ContentManager m(&S().game->getServicesProperty(), S().contentRoot);
+            Texture2D t = m.Load<Texture2D>("Textures/brick");
+            const bool before = t.getIsDisposedProperty();
+            m.Unload();
+            lifetimeNote_ = std::string("Load then Unload(): IsDisposed was ") + (before ? "true" : "false") + " before and " + (t.getIsDisposedProperty() ? "true" : "false") + " after: the copy you hold survives the manager's cache";
+        } catch (const std::exception& e) {
+            lifetimeNote_ = std::string("failed: ") + e.what();
+        }
+    }
+
+    Mode mode_;
+    std::unique_ptr<ContentManager> manager_, other_;
+    std::vector<std::unique_ptr<ContentManager>> keep_;   // managers whose textures are on screen
+    std::vector<Row> rows_;
+    std::vector<std::unique_ptr<Texture2D>> handles_;
+    std::vector<Tracked> tex_;
+    std::unique_ptr<Storage::StorageDevice> device_;
+    std::unique_ptr<Storage::StorageContainer> container_;
+    int loads_ = 0, created_ = 0, disposedEvents_ = 0, saveCounter_ = 0;
+    bool firstLoadDone_ = false, compiledPresent_ = false;
+    std::string lifetimeNote_ = "press 'Create 64 textures'";
+};
+
+}  // namespace
+
+std::unique_ptr<Exhibit> MakeContentLab(const RoomDef& room, Services& services)
+{
+    return std::make_unique<ContentLab>(room, services);
+}

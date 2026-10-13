@@ -1,0 +1,2 @@
+This file was read with TitleContainer.OpenStream.
+It is shipped beside the executable, not compiled.

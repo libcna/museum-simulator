@@ -57,7 +57,7 @@ Bytes ToPcm16(const std::vector<float>& samples)
 
 class AudioLab final : public ScreenExhibit {
 public:
-    AudioLab(const RoomDef& room, Services& services) : ScreenExhibit(room, services, 960, 540, 6.0f), mode_(ParseMode(room.params.Get("mode"))), rng_(99) {}
+    AudioLab(const RoomDef& room, Services& services) : ScreenExhibit(room, services, 960, 540, 7.6f), mode_(ParseMode(room.params.Get("mode"))), rng_(99) {}
 
     ~AudioLab() override { RestoreGlobals(); }
 

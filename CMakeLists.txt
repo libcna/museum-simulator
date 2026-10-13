@@ -46,6 +46,12 @@ set(CNA_BUILD_EXAMPLES OFF CACHE BOOL   "Build CNA's example applications")
 set(CNA_BUILD_C_API    OFF CACHE BOOL   "Build the CNA C API")
 set(CNA_ENABLE_NET     OFF CACHE BOOL   "Build CNA networking")
 set(CNA_ENABLE_VIDEO   OFF CACHE STRING "Enable FFmpeg video playback")
+# CNA features the museum demonstrates: the CNAEXT graphics extensions (DebugDraw, CRT/ASCII/depth effects,
+# shader packages), device/sensor extensions, and CNA's engine statistics counters. All three are optional:
+# the exhibits that need them check for them and say so in the room when they are missing.
+set(CNA_CNAEXT      ON    CACHE BOOL   "Build CNA's graphics extensions")
+set(CNA_DEVICES     ON    CACHE BOOL   "Build CNA's device extensions")
+set(CNA_DIAGNOSTICS STATS CACHE STRING "CNA diagnostics level (OFF|STATS|FULL)")
 set(EASYGL_BUILD_TESTS    OFF CACHE BOOL "Build easy-gl tests")
 set(EASYGL_BUILD_EXAMPLES OFF CACHE BOOL "Build easy-gl examples")
 set(METAGL_BUILD_TESTS    OFF CACHE BOOL "Build meta-gl tests")
@@ -110,6 +116,19 @@ add_custom_command(TARGET cna-3d-museum POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
         "${CMAKE_CURRENT_SOURCE_DIR}/Content" "$<TARGET_FILE_DIR:cna-3d-museum>/Content"
     COMMENT "Copying Content next to cna-3d-museum")
+
+# Run the Content/Pipeline sources through CNA's own content compiler, once as .cnb (CNA's format) and once as
+# .xnb (XNA's), next to the executable. The Content Pipeline rooms load the results and compare them with the
+# loose source files. If the tool is not available the rooms say so instead of failing.
+if(TARGET cna_content_tool)
+    add_dependencies(cna-3d-museum cna_content_tool)
+    foreach(_fmt cnb xnb)
+        add_custom_command(TARGET cna-3d-museum POST_BUILD
+            COMMAND "$<TARGET_FILE:cna_content_tool>" build "${CMAKE_CURRENT_SOURCE_DIR}/Content/Pipeline"
+                -o "$<TARGET_FILE_DIR:cna-3d-museum>/Content/Compiled/${_fmt}" --format ${_fmt} --quiet
+            COMMENT "Compiling Content/Pipeline to ${_fmt} with cna-content")
+    endforeach()
+endif()
 
 if(WIN32 AND COMMAND cna_copy_sdl_runtime)
     cna_copy_sdl_runtime(cna-3d-museum)
