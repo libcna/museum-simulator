@@ -20,6 +20,7 @@
 #include "Diagnostics/Log.hpp"
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
+#include "Microsoft/Xna/Framework/Input/Buttons.hpp"
 #include "Microsoft/Xna/Framework/Input/GamePad.hpp"
 #include "Microsoft/Xna/Framework/Input/Keyboard.hpp"
 #include "Microsoft/Xna/Framework/Input/Mouse.hpp"
@@ -121,6 +122,7 @@ public:
                 p.AddReadout("SetVibration", [this] { return vibrateNote_; });
                 p.AddReadout("IsConnected", [this] { return std::string(pad_.getIsConnectedProperty() ? "yes" : "no"); });
                 p.AddReadout("Packet number", [this] { return std::to_string(pad_.getPacketNumberProperty()); });
+                p.AddReadout("IsButtonDown(Buttons.*)", [this] { return PressedButtons(); });
                 break;
             case Mode::Players:
                 p.AddToggle("Keyboard emulation (CNAEXT)", false, [](bool v) { GamePad::setKeyboardEmulationEnabledEXT(v); });
@@ -548,6 +550,19 @@ private:
     }
 
     // --- game pad ----------------------------------------------------------------------------------
+    // Every Buttons flag the state reports as down: the bit-flag enum is how XNA asks "is this button held" in one call.
+    [[nodiscard]] std::string PressedButtons() const
+    {
+        static const std::pair<Buttons, const char*> all[] = {{Buttons::A, "A"}, {Buttons::B, "B"}, {Buttons::X, "X"}, {Buttons::Y, "Y"}, {Buttons::Start, "Start"}, {Buttons::Back, "Back"},
+                                                              {Buttons::LeftShoulder, "LB"}, {Buttons::RightShoulder, "RB"}, {Buttons::LeftStick, "LS"}, {Buttons::RightStick, "RS"},
+                                                              {Buttons::DPadUp, "Up"}, {Buttons::DPadDown, "Down"}, {Buttons::DPadLeft, "Left"}, {Buttons::DPadRight, "Right"},
+                                                              {Buttons::LeftTrigger, "LT"}, {Buttons::RightTrigger, "RT"}};
+        std::string held;
+        for (const auto& [flag, name] : all)
+            if (pad_.IsButtonDown(flag)) held += (held.empty() ? "" : " ") + std::string(name);
+        return held.empty() ? std::string("none held") : held;
+    }
+
     template <typename Rect, typename Frame, typename Text>
     void DrawPad(SpriteBatch&, Rect& rect, Frame& frame, Text& text, const GamePadState& s, float x0, float y0, Color lit, Color off, Color line)
     {
