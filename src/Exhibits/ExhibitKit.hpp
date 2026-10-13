@@ -48,6 +48,12 @@ inline const Microsoft::Xna::Framework::Color kXna(120, 200, 255, 255);        /
 inline const Microsoft::Xna::Framework::Color kCnaExt(255, 160, 90, 255);      // "CNA extension" badge
 inline const Microsoft::Xna::Framework::Color kApp(170, 230, 160, 255);        // application-level helper
 
+/** A colour from ints (CNA's Color constructors are ambiguous for mixed integer types). */
+inline Microsoft::Xna::Framework::Color Rgba(int r, int g, int b, int a = 255)
+{
+    return Microsoft::Xna::Framework::Color(static_cast<std::uint8_t>(r), static_cast<std::uint8_t>(g), static_cast<std::uint8_t>(b), static_cast<std::uint8_t>(a));
+}
+
 /** A wing/floor accent as a sign colour. */
 inline Microsoft::Xna::Framework::Color Accent(const Microsoft::Xna::Framework::Vector3& v, float k = 1.0f)
 {
