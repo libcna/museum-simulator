@@ -74,6 +74,39 @@ WingSpec CnaWing()
     return w;
 }
 
+
+WingSpec PlatformWing()
+{
+    WingSpec w;
+    w.name = "Platform and Renderer";
+    w.tagline = "The window, the display adapter, the active renderer and the platform, as CNA reports them";
+    w.theme = "control-room";
+    w.accent = {0.35f, 0.80f, 0.55f};
+    w.spineSide = Wall::West;
+    const auto pl = [](const char* key, const char* title, const char* subtitle, const char* mode, std::vector<std::string> apis, ApiOrigin origin) {
+        RoomSpec r;
+        r.key = key;
+        r.title = title;
+        r.subtitle = subtitle;
+        r.exhibit = "platform-lab";
+        r.params = {{"mode", mode}};
+        r.width = 13;
+        r.depth = 13;
+        r.height = 5.0f;
+        r.theme = "control-room";
+        r.apis = std::move(apis);
+        r.origin = origin;
+        return r;
+    };
+    w.rooms = {
+        pl("pl-window", "The Game Window", "GameWindow title, client bounds, resizing, activation and file drops", "window", {"GameWindow.Title", "GameWindow.ClientBounds", "GameWindow.AllowUserResizing", "GameWindow.ClientSizeChanged", "Game.Activated", "GameWindow.FileDropEXT"}, ApiOrigin::Xna),
+        pl("pl-adapter", "Adapter and Back Buffer", "GraphicsAdapter, display modes, GraphicsProfile and PresentationParameters", "adapter", {"GraphicsAdapter", "DisplayMode", "GraphicsDevice.GraphicsProfile", "PresentationParameters"}, ApiOrigin::Xna),
+        pl("pl-renderer", "The Active Renderer", "Renderer identity, maturity, features, limits and surface-format support", "renderer", {"GraphicsDevice.GetRendererCapabilityProfileEXT", "RendererFeature", "RendererLimit", "RendererFormatUsage", "GraphicsDevice.GetGraphicsRendererName"}, ApiOrigin::CnaExtension),
+        pl("pl-platform", "Platform Capabilities", "What the host platform can do: clipboard, IME, gamepads, haptics, camera, dialogs", "platform", {"Game.GetPlatformCapabilitiesEXT", "PlatformCapabilities"}, ApiOrigin::CnaExtension),
+    };
+    return w;
+}
+
 }  // namespace
 
 FloorSpec MakeFloor8()
@@ -86,5 +119,6 @@ FloorSpec MakeFloor8()
     f.accent = {0.35f, 0.80f, 0.55f};
     f.wings.push_back(ContentWing());
     f.wings.push_back(CnaWing());
+    f.wings.push_back(PlatformWing());
     return f;
 }
