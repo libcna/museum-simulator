@@ -37,7 +37,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 
 | Feature | Status |
 |---|---|
-| `ResourceContentManager`, haptic effects (devices are listed, none played) | planned: see HANDOFF.md |
+| haptic effects (devices are listed, none played) | planned: see HANDOFF.md |
 | XACT audio (`AudioEngine`, `SoundBank`, `WaveBank`, `Cue`) | not implemented: it needs `.xgs`/`.xwb`/`.xsb` files from Microsoft's XACT authoring tool; no sample files ship with CNA and none can be generated here |
 | `MediaLibrary`, albums, playlists, pictures (`Microsoft.Xna.Framework.Media`) | not implemented: they describe a device's media store, which a desktop does not have |
 | Video playback (`VideoPlayer`) | not implemented: needs CNA_ENABLE_VIDEO (FFmpeg), which this build leaves off |
@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-472 distinct API names are claimed by at least one room.
+474 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -141,10 +141,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CompareFunction | `tex-alpha`, `rs-depthfunc`, `rv-depth` |
 | CompareFunction.NotEqual | `rs-outline` |
 | ContainmentType | `col-box-box` |
-| ContentLoadException | `app-content`, `ct-failure`, `ct-custom` |
+| ContentLoadException | `app-content`, `ct-failure`, `ct-custom`, `ct-resource` |
 | ContentManager | `models`, `app-content` |
 | ContentManager.GetContentManifest | `ct-pipeline` |
-| ContentManager.Load | `app-content`, `ct-cache`, `ct-failure`, `ct-pipeline` |
+| ContentManager.Load | `app-content`, `ct-cache`, `ct-failure`, `ct-pipeline`, `ct-resource` |
 | ContentManager.Load<Model> | `model-load`, `ct-load` |
 | ContentManager.Load<SoundEffect> | `au-basics`, `ct-load` |
 | ContentManager.Load<Texture2D> | `ct-load`, `ct-formats` |
@@ -408,6 +408,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | RendererFeature | `pl-renderer` |
 | RendererFormatUsage | `pl-renderer` |
 | RendererLimit | `pl-renderer` |
+| ResourceContentManager | `ct-resource` |
 | ResourceCreatedEventArgs | `ct-lifetime` |
 | ResourceDestroyedEventArgs | `ct-lifetime` |
 | Rg32 | `vt-packed` |
@@ -479,6 +480,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | StringBuilder | `text-hud` |
 | SurfaceFormat | `tex-formats`, `rt-formats` |
 | System.IO.MemoryStream | `tex-io` |
+| System.Resources.ResourceManager | `ct-resource` |
 | TextInputEXT.StartTextInput | `in-text` |
 | TextInputEXT.TextInput | `in-text` |
 | Texture2D | `materials`, `app-content`, `tex-mip`, `rf-garden` |

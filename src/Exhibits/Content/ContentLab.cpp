@@ -3,13 +3,16 @@
 // .cnb and .xnb outputs against loose files, TitleContainer and StorageContainer, and resource disposal.
 // Nothing here is faked: every figure is measured when you press the button.
 #include <algorithm>
+#include <any>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <exception>
 #include <fstream>
 #include <filesystem>
+#include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -20,6 +23,7 @@
 #include "Microsoft/Xna/Framework/Content/ContentLoadException.hpp"
 #include "Microsoft/Xna/Framework/Content/ContentManager.hpp"
 #include "Microsoft/Xna/Framework/Content/LooseFileContentTypeReader.hpp"
+#include "Microsoft/Xna/Framework/Content/ResourceContentManager.hpp"
 #include "Microsoft/Xna/Framework/Graphics/Model.hpp"
 #include "Microsoft/Xna/Framework/Graphics/RenderTarget2D.hpp"
 #include "Microsoft/Xna/Framework/Graphics/Texture2D.hpp"
@@ -27,6 +31,7 @@
 #include "Microsoft/Xna/Framework/Storage/StorageDevice.hpp"
 #include "Microsoft/Xna/Framework/TitleContainer.hpp"
 #include "System/IO/Stream.hpp"
+#include "System/Resources/ResourceManager.hpp"
 
 using namespace Microsoft::Xna::Framework;
 using namespace Microsoft::Xna::Framework::Audio;
@@ -36,12 +41,12 @@ namespace fs = std::filesystem;
 
 namespace {
 
-enum class Mode { Load, Cache, Formats, Failure, Pipeline, Storage, Lifetime, Custom };
+enum class Mode { Load, Cache, Formats, Failure, Pipeline, Storage, Lifetime, Custom, Resource };
 
 Mode ParseMode(const std::string& s)
 {
     static const std::pair<const char*, Mode> table[] = {{"cache", Mode::Cache},       {"formats", Mode::Formats}, {"failure", Mode::Failure}, {"pipeline", Mode::Pipeline},
-                                                         {"storage", Mode::Storage}, {"lifetime", Mode::Lifetime}, {"custom", Mode::Custom}};
+                                                         {"storage", Mode::Storage}, {"lifetime", Mode::Lifetime}, {"custom", Mode::Custom}, {"resource", Mode::Resource}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
     return Mode::Load;
@@ -127,6 +132,14 @@ Dish RecipeFromCnj(const std::string& json, ContentManager&)
     return r;
 }
 
+/** ReadAsset<T> is ContentManager's documented protected seam, the one a resource-backed manager reads through. */
+class MemoryContent final : public ResourceContentManager {
+public:
+    using ResourceContentManager::ReadAsset;
+    MemoryContent(System::IServiceProvider* services, System::Resources::ResourceManager* resources) : ResourceContentManager(services, resources) {}
+    explicit MemoryContent(System::IServiceProvider* services) : ResourceContentManager(services) {}
+};
+
 /** One line of a result table; textures are kept so the screen can show what was loaded. */
 struct Row {
     std::string name;
@@ -190,6 +203,15 @@ public:
                 p.AddButton("Load a .recipe without registering a reader", [this] { CustomLoad(3); });
                 p.AddReadout("Registered (per manager)", [this] { return std::string("Recipe: a .recipe reader; Dish: a \"Recipe\" .cnj loader"); });
                 break;
+            case Mode::Resource:
+                p.AddButton("Load Texture2D \"picture\" from memory", [this] { ResourceLoad(0); });
+                p.AddButton("Load SoundEffect \"sound\" from memory", [this] { ResourceLoad(1); });
+                p.AddButton("Load Model \"shape\" from memory", [this] { ResourceLoad(2); });
+                p.AddButton("Ask for an asset the family does not hold", [this] { ResourceLoad(3); });
+                p.AddButton("A manager built without a resource family", [this] { ResourceLoad(4); });
+                p.AddReadout("Resource family", [this] { return resourceSummary_; });
+                p.AddReadout("Lookups served by ResourceManager", [this] { return std::to_string(resourceServed_); });
+                break;
             case Mode::Lifetime:
                 p.AddButton("Create 64 textures", [this] { Create(64); });
                 p.AddButton("Dispose every second one", [this] { DisposeHalf(); });
@@ -212,6 +234,7 @@ public:
         }
         manager_ = NewManager(S().contentRoot);
         compiledPresent_ = fs::exists(fs::path(S().contentRoot) / "Compiled" / "cnb");
+        if (mode_ == Mode::Resource) BuildResources();
         if (mode_ == Mode::Load) {
             LoadTexture("Textures/brick");
             LoadSound("Audio/chirp");
@@ -286,7 +309,7 @@ private:
 
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"Loading assets", "The ContentManager cache", "Loose image formats", "When loading fails", "The content compiler", "TitleContainer and storage", "Resource lifetime", "Teaching ContentManager a new type"};
+        static const char* t[] = {"Loading assets", "The ContentManager cache", "Loose image formats", "When loading fails", "The content compiler", "TitleContainer and storage", "Resource lifetime", "Teaching ContentManager a new type", "Content from memory"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::string EmptyHint() const
@@ -307,9 +330,76 @@ private:
             case Mode::Failure: return {"A missing, mistyped or corrupt asset raises ContentLoadException: a game catches it and carries on. The museum", "does exactly that, shows the message here and keeps running (nothing is crashed on purpose)."};
             case Mode::Pipeline: return {"cna-content (CNA's content compiler) built the same three sources as .cnb (CNA's format) and .xnb (XNA's) when this", "museum was built. Both load through the same Load<T> call. Sizes are files on disk; times are measured live."};
             case Mode::Storage: return {"TitleContainer.OpenStream reads files shipped with the game; StorageDevice and StorageContainer keep saved data", "per user. CNA stores it under a per-user folder (CNAEXT: SetAppNameEXT and GetStorageRootEXT)."};
+            case Mode::Resource: return {"ResourceContentManager serves assets from a resource family instead of the content folder: a game can embed its", "compiled .xnb files in the executable. Here three .xnb files are held in memory behind a System.Resources.ResourceManager."};
             case Mode::Custom: return {"ContentManager is extensible: RegisterTypeReader teaches it a loose-file format for your own type, and", "RegisterCnjLoader (CNA extension) a named .cnj document type. Load<Recipe> then works like Load<Texture2D>, failures included."};
             default: return {"GraphicsResource objects are disposed explicitly with Dispose(); IsDisposed and the Disposing event let you track", "their lifetime. A texture you copy out of ContentManager outlives Unload(), so dispose it yourself when done."};
         }
+    }
+
+    // The compiled .xnb files as byte strings, as if they were linked into the program; the ResourceManager serves them by name.
+    void BuildResources()
+    {
+        resources_.clear();
+        resourceBytes_.clear();
+        std::uintmax_t bytes = 0;
+        for (const char* name : {"picture", "sound", "shape"}) {
+            std::ifstream in(fs::path(S().contentRoot) / "Compiled" / "xnb" / (std::string(name) + ".xnb"), std::ios::binary);
+            if (!in) continue;
+            std::string data((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+            bytes += data.size();
+            resourceBytes_[name] = std::vector<std::uint8_t>(data.begin(), data.end());
+            resources_[name] = std::move(data);
+        }
+        resourceManager_ = std::make_unique<System::Resources::ResourceManager>(
+            "Museum.Resources", [](std::string_view, std::string_view, std::string_view) -> std::optional<std::string> { return std::nullopt; },
+            [this](std::string_view, std::string_view culture, std::string_view name) -> std::optional<std::any> {
+                if (!culture.empty()) return std::nullopt;
+                const auto it = resourceBytes_.find(std::string(name));
+                if (it == resourceBytes_.end()) return std::nullopt;
+                ++resourceServed_;
+                return std::any(it->second);   // a binary resource: the compiled .xnb file
+            });
+        resourceSummary_ = resources_.empty() ? std::string("no compiled .xnb found: build with cna-content") : std::to_string(resources_.size()) + " assets, " + Kb(bytes) + " in memory";
+    }
+
+    void ResourceLoad(int what)
+    {
+        if (what == 4) {
+            Attempt("ResourceContentManager(services).ReadAsset<Texture2D>(\"picture\")", [&](Row&) {
+                MemoryContent bare(&S().game->getServicesProperty());
+                auto t = std::make_unique<Texture2D>(bare.ReadAsset<Texture2D>("picture", {}));
+                return std::string("loaded?!");
+            }, true);
+            return;
+        }
+        if (!resourceManager_) return;
+        const std::string asset = what == 0 ? "picture" : (what == 1 ? "sound" : (what == 2 ? "shape" : "unlisted"));
+        auto m = std::make_unique<MemoryContent>(&S().game->getServicesProperty(), resourceManager_.get());
+        if (what == 0) {
+            Attempt("ResourceContentManager.ReadAsset<Texture2D>(\"picture\")", [&](Row& r) {
+                auto tex = std::make_unique<Texture2D>(m->ReadAsset<Texture2D>(asset, {}));
+                const std::string d = std::to_string(tex->getWidthProperty()) + " x " + std::to_string(tex->getHeightProperty()) + " pixels, from " + Kb(resources_[asset].size()) + " held in memory";
+                r.picture = std::move(tex);
+                return d;
+            });
+        } else if (what == 1) {
+            Attempt("ResourceContentManager.ReadAsset<SoundEffect>(\"sound\")", [&](Row&) {
+                const SoundEffect s = m->ReadAsset<SoundEffect>(asset, {});
+                return "duration " + Fmt(s.getDurationProperty().getTotalSecondsProperty()) + " s, from " + Kb(resources_[asset].size());
+            });
+        } else if (what == 2) {
+            Attempt("ResourceContentManager.ReadAsset<Model>(\"shape\")", [&](Row&) {
+                const Model model = m->ReadAsset<Model>(asset, {});
+                return std::to_string(model.getMeshesProperty().getCountProperty()) + " mesh(es), from " + Kb(resources_[asset].size());
+            });
+        } else {
+            Attempt("ResourceContentManager.ReadAsset<Texture2D>(\"unlisted\")", [&](Row&) {
+                auto t = std::make_unique<Texture2D>(m->ReadAsset<Texture2D>(asset, {}));
+                return std::string("loaded?!");
+            }, true);
+        }
+        keep_.push_back(std::move(m));
+        if (rows_.size() > 6) rows_.erase(rows_.begin());
     }
 
     std::unique_ptr<ContentManager> NewManager(const std::string& root)
@@ -711,6 +801,11 @@ private:
     bool subscribed_ = false;
     int deviceCreated_ = 0, deviceDestroyed_ = 0;
     std::unique_ptr<ContentManager> manager_, other_;
+    std::unique_ptr<System::Resources::ResourceManager> resourceManager_;
+    std::map<std::string, std::string> resources_;
+    std::map<std::string, std::vector<std::uint8_t>> resourceBytes_;
+    std::string resourceSummary_ = "-";
+    int resourceServed_ = 0;
     std::vector<std::unique_ptr<ContentManager>> keep_;   // managers whose textures are on screen
     std::vector<Row> rows_;
     std::vector<std::unique_ptr<Texture2D>> handles_;

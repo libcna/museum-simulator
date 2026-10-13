@@ -83,7 +83,7 @@ texture is bound (`RenderStates::UnbindTextures`).
 
 ## What is next (priority order)
 
-1. **Gaps listed in `docs/CNA_COVERAGE.md`**: ResourceContentManager, haptic effects (SkinnedEffect now has `model-skinfx`). (Occlusion queries,
+1. **Gaps listed in `docs/CNA_COVERAGE.md`**: haptic effects (SkinnedEffect has `model-skinfx`, ResourceContentManager `ct-resource`, RenderTargetCube `rt-cube`, texture encode/decode `tex-io`). (Occlusion queries,
    multisampling, image-based lighting, morph targets, material variants, shader packages, touch gestures and
    GameServiceContainer were added after the first audit.)
 2. **Navigation**: stairs/escalators are not implemented (elevators and the directory move you between floors); a
