@@ -51,6 +51,7 @@ struct FloorSpec {
 
 /** Each content file defines one floor. */
 FloorSpec MakeFloor0();
+FloorSpec MakeFloor1();
 
 /** All floors in order. */
 std::vector<FloorSpec> AllFloorSpecs();

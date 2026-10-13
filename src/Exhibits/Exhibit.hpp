@@ -1,11 +1,14 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 
 #include "Exhibits/Services.hpp"
+#include "Interaction/ControlPanel.hpp"
 #include "World/Catalogue.hpp"
 
 struct Voice3D;
+
 
 class RoomBuilder;
 class InteractionSystem;
@@ -48,9 +51,17 @@ public:
     virtual void OnEnter() {}
     virtual void OnLeave() {}
 
+    // The museum calls these wrappers: they service the exhibit's control panels, then the virtual hooks.
+    void DoBuildStatic(RoomBuilder& builder);
+    void DoLoad(InteractionSystem& interaction, MuseumWorld& world);
+    void DoRenderOffscreen(const DrawContext& ctx);
+    void DoDrawOpaque(const DrawContext& ctx);
+
 protected:
     /** A looping positional voice that is released when the exhibit is destroyed. Null when audio is off. */
     Voice3D* CreateLoop(const std::string& sound, const Microsoft::Xna::Framework::Vector3& position, float volume, float radius);
+    /** A control console standing in the room (local metres). Create it, and add its rows, in BuildStatic. */
+    ControlPanel& AddPanel(const std::string& title, float x, float y, float z, float yaw, float width = 1.8f);
     [[nodiscard]] Services& S() { return services_; }
     [[nodiscard]] const Services& S() const { return services_; }
     [[nodiscard]] const RoomDef& R() const { return room_; }
@@ -59,4 +70,5 @@ private:
     const RoomDef& room_;
     Services& services_;
     std::vector<Voice3D*> voices_;
+    std::vector<std::unique_ptr<ControlPanel>> panels_;
 };

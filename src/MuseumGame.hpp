@@ -46,6 +46,8 @@ private:
     void ResetToEntrance();
     void UpdateFrameStats(float dt);
     void RunScript();
+    void StartRide(int floor);
+    void UpdateRide(float dt);
     void SaveScreenshot(const std::string& path);
 
     MuseumOptions options_;
@@ -83,6 +85,12 @@ private:
     const MuseumPlan* museum_ = nullptr;
     int shownCell_ = -1;
     std::set<int> discovered_;
+    struct Ride {
+        bool active = false;
+        bool swapped = false;
+        int floor = 0;
+        float time = 0.0f;
+    } ride_;
     float bannerAge_ = 99.0f;
     float fpsAccumulator_ = 0.0f;
     int fpsFrames_ = 0;

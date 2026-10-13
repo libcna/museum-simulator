@@ -199,5 +199,11 @@ void Hud::Draw(const HudState& state)
     }
     if (state.showHelp && !state.paused) DrawHelp(w, h);
     if (state.paused) DrawPause(state, w, h);
+    if (state.fade > 0.001f) {
+        Rect(0, 0, w, h, Fade(Color(0, 0, 0, 255), state.fade));
+        if (!state.fadeText.empty())
+            TextCentred(*s_.titleFont, state.fadeText, static_cast<float>(w) / 2.0f, static_cast<float>(h) / 2.0f - 30.0f,
+                        Fade(Color(255, 214, 90, 255), state.fade), 0.8f);
+    }
     s_.sprites->End();
 }

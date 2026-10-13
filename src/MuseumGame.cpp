@@ -101,6 +101,7 @@ void MuseumGame::LoadContent()
     for (const std::string& problem : ValidateMuseum(*museum_)) Museum::Log("catalogue", "INVALID: %s", problem.c_str());
     world_ = std::make_unique<MuseumWorld>(services_, *museum_);
     hud_ = std::make_unique<Hud>(services_);
+    services_.travelToFloor = [this](int floor) { StartRide(floor); };
 
     PlayerController::Settings settings;
     settings.mouseSensitivity = options_.mouseSensitivity;
@@ -168,6 +169,32 @@ void MuseumGame::ResetToEntrance()
     const RoomDef& lobby = museum_->Room(museum_->floors.front().hub);
     camera_.SetPose(lobby.ToWorld(0.0f, 1.65f, lobby.halfD * 0.55f), 0.0f, 0.0f);
     world_->Arrive(lobby.index);
+}
+
+// Riding an elevator: fade out, swap the visitor into the target floor's elevator car while the screen is
+// black, fade back in. The cars sit at the same x/z on every floor, so the swap is invisible.
+namespace {
+constexpr float kRideSwapAt = 1.1f;
+constexpr float kRideLength = 2.3f;
+}
+
+void MuseumGame::StartRide(int floor)
+{
+    if (ride_.active || floor < 0 || floor >= static_cast<int>(museum_->floors.size())) return;
+    ride_ = {true, false, floor, 0.0f};
+    audio_->PlayUi("chirp", 0.5f, -0.4f);
+}
+
+void MuseumGame::UpdateRide(float dt)
+{
+    ride_.time += dt;
+    if (!ride_.swapped && ride_.time >= kRideSwapAt) {
+        ride_.swapped = true;
+        TeleportToCell(museum_->floors[static_cast<std::size_t>(ride_.floor)].elevator);
+        audio_->PlayUi("arpeggio", 0.35f, 0.3f);
+        hud_->Toast("Floor " + std::to_string(ride_.floor) + ": " + museum_->floors[static_cast<std::size_t>(ride_.floor)].name, 3.5f);
+    }
+    if (ride_.time >= kRideLength) ride_.active = false;
 }
 
 void MuseumGame::SetPaused(bool paused)
@@ -251,7 +278,11 @@ void MuseumGame::Update(GameTime& gameTime)
 
     RunScript();
 
-    if (!paused_) {
+    if (ride_.active) UpdateRide(dt);
+    if (!paused_ && ride_.active) {
+        time_ += dt;
+        world_->Update(dt, time_, camera_.Position(), camera_.Forward());
+    } else if (!paused_) {
         time_ += dt;
         player_->SetBaseY(museum_->floors[static_cast<std::size_t>(museum_->FloorAt(camera_.Position().Y))].baseY);
         player_->Update(dt, camera_, world_->Collision(), input_, true);
@@ -332,6 +363,12 @@ void MuseumGame::Draw(const GameTime&)
     hud.playerPosition = camera_.Position();
     hud.playerYaw = camera_.Yaw();
     hud.rendererName = rendererName_;
+    if (ride_.active) {
+        const float t = ride_.time;
+        hud.fade = std::clamp(std::min(t / 0.5f, (kRideLength - t) / 0.5f), 0.0f, 1.0f);
+        if (t > 0.5f && t < kRideLength - 0.5f)
+            hud.fadeText = "Floor " + std::to_string(ride_.floor) + "  " + museum_->floors[static_cast<std::size_t>(ride_.floor)].name;
+    }
     hud.cell = shownCell_;
     hud.floor = museum_->FloorAt(camera_.Position().Y);
     hud.discovered = &discovered_;
@@ -394,6 +431,11 @@ void MuseumGame::RunScript()
         } else if (op == "goto") {
             if (const RoomDef* r = museum_->FindByKey(arg)) TeleportToCell(r->index);
             else Museum::Log("script", "goto: unknown room '%s'", arg.c_str());
+        } else if (op == "floor") {
+            const int f = std::atoi(arg.c_str());
+            if (f >= 0 && f < static_cast<int>(museum_->floors.size())) TeleportToCell(museum_->floors[static_cast<std::size_t>(f)].hub);
+        } else if (op == "ride") {
+            StartRide(std::atoi(arg.c_str()));
         } else if (op == "pos") {
             float x = 0, y = 1.65f, z = 0;
             if (std::sscanf(arg.c_str(), "%f,%f,%f", &x, &y, &z) == 3) {

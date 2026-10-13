@@ -103,7 +103,7 @@ void MuseumWorld::BuildCell(int cell)
     inst->exhibit = CreateExhibit(room, services_);
     if (inst->exhibit) {
         RoomBuilder builder(room, meshes, inst->colliders, lights, services_);
-        inst->exhibit->BuildStatic(builder);
+        inst->exhibit->DoBuildStatic(builder);
     }
     BoundingBox b = room.Interior();
     b.Min -= Vector3(kWallThickness, 0.1f, kWallThickness);
@@ -128,7 +128,7 @@ void MuseumWorld::LoadCell(int cell)
     ++stats_.cellsLoaded;
     if (!inst.exhibit) return;
     services_.signs->SetScope(&inst.textures);
-    inst.exhibit->Load(inst.interaction, *this);
+    inst.exhibit->DoLoad(inst.interaction, *this);
     services_.signs->SetScope(nullptr);
 }
 
@@ -271,7 +271,7 @@ void MuseumWorld::RenderOffscreen(const DrawContext& ctx)
     const Vector3 eye = ctx.view.eye;
     for (auto& inst : instances_) {
         if (!inst || !inst->loaded || !inst->exhibit) continue;
-        if (DistanceTo(inst->index, eye) < kSimulationDistance) inst->exhibit->RenderOffscreen(ctx);
+        if (DistanceTo(inst->index, eye) < kSimulationDistance) inst->exhibit->DoRenderOffscreen(ctx);
     }
 }
 
@@ -307,7 +307,7 @@ void MuseumWorld::Draw(const DrawContext& ctx)
     }
     for (const int c : visible) {
         const RoomInstance* inst = instances_[static_cast<std::size_t>(c)].get();
-        if (inst && inst->loaded && inst->exhibit) inst->exhibit->DrawOpaque(ctx);
+        if (inst && inst->loaded && inst->exhibit) inst->exhibit->DoDrawOpaque(ctx);
     }
 
     // Transparent surfaces last, no depth writes, so glass and particles blend over everything solid.

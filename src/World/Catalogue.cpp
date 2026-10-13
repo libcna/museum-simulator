@@ -126,6 +126,7 @@ Spawn MuseumPlan::SpawnPoint(int cell) const
     z = std::clamp(z, -r.halfD + 0.8f, r.halfD - 0.8f);
     s.eye = r.ToWorld(x, 1.65f, z);
     s.yaw = std::atan2(-dx, -dz);
+    if (r.kind == CellKind::Elevator) s.yaw += 3.14159265f;   // arrive facing the doors, ready to step out
     return s;
 }
 

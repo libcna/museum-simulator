@@ -19,6 +19,8 @@ struct HudState {
     bool audioMuted = false;
     float mouseSensitivityScale = 1.0f;
     float volume = 1.0f;
+    float fade = 0.0f;           // 0..1 black overlay (elevator rides)
+    std::string fadeText;
     int cell = -1;               // current cell index, -1 outside
     int floor = 0;
     const std::set<int>* discovered = nullptr;
