@@ -3,7 +3,7 @@
 Working notes for whoever continues this project (human or agent). Everything marked *checked* was run on the date
 given; anything unverified says so. Counts are not repeated here: run `build/bin/cna-3d-museum --validate`.
 
-## State (checked 2026-10-13)
+## State (checked 2026-10-13, extended 2026-10-14)
 
 - Ten floors (0-9), all built from the catalogue in `src/Catalogue/FloorN.cpp`; `docs/MUSEUM_MAP.md` lists every room and
   `build/bin/cna-3d-museum --validate` prints the current counts (they are generated, not copied here).
@@ -12,6 +12,15 @@ given; anything unverified says so. Counts are not repeated here: run `build/bin
   room and operates every control on OPENGLES3, OPENGL33 and SOFTWARE with exit status 0; `tools/renderer_check.sh` passes
   every pixel check on the same three renderers; `tools/reference.sh compare` is within the limit on OPENGLES3;
   `tools/nav_test.sh` rides to all ten floors; `tools/leak_check.sh` shows no growth over three tours.
+- **2026-10-14 additions, all run through `tools/tour.sh -f 3 -p` on OPENGLES3 (plus OPENGL33 / SOFTWARE for the graphical ones),
+  `museum_tests` and the screenshots checked by eye:** `tex-io` (SaveAsPng/SaveAsJpeg/FromStream through a MemoryStream),
+  `model-skinfx` (SkinnedEffect, WeightsPerVertex 1/2/4), `be-model` rebuilt as an Effect reflection lab (parameters, techniques,
+  IEffect interfaces, Clone), `rt-cube` (RenderTargetCube drawn face by face, EnvironmentMapEffect mirror), `ct-resource`
+  (ResourceContentManager over a ResourceManager), `sprite-hit` (per-pixel collision), `sprite-anim`, `mat-billboard`,
+  `mat-reflection`, `mat-normals`, `mat-offcenter`, `rs-stencilcount` (stencil ops, write masks, two-sided), `geo-terrain`, four
+  more fragment shaders (swirl, chromatic, kernel, halftone), plus extra readouts in existing rooms (Viewport.Unproject round trip,
+  Buttons/IsButtonDown, adapter profile and format queries, display colour space, bone tree, pad extension queries).
+- Every room entered through its north wall used to have its content behind the visitor; see "Museum bugs found" below.
 - The audio floor was also run with a real audio device (PipeWire, volume 0.03): the mixer opens and every audio room's
   controls run without errors; whether it is audible cannot be judged by a test. All other runs use Xvfb and the dummy driver.
 - Nothing has been run on a physical gamepad, joystick, touch screen, microphone or a machine without audio: those rooms
