@@ -2,6 +2,8 @@
 // Run with `ctest --test-dir build` or build/bin/museum_tests.
 #include <cmath>
 #include <cstdio>
+#include <fstream>
+#include <sstream>
 #include <queue>
 #include <set>
 #include <string>
@@ -162,6 +164,29 @@ void TestGeneratedDocumentsMentionEveryRoom(const MuseumPlan& m)
     }
 }
 
+void TestToursPointAtRealRooms(const MuseumPlan& m)
+{
+    // docs/TOURS.md names rooms as `room:KEY`; every one must exist.
+    const std::string path = std::string(MUSEUM_SOURCE_CONTENT_DIR) + "/../docs/TOURS.md";
+    std::ifstream in(path);
+    if (!in) {
+        std::printf("note: %s not found, tour links not checked\n", path.c_str());
+        return;
+    }
+    std::stringstream buffer;
+    buffer << in.rdbuf();
+    const std::string text = buffer.str();
+    int found = 0;
+    for (std::size_t at = text.find("`room:"); at != std::string::npos; at = text.find("`room:", at + 1)) {
+        const std::size_t end = text.find('`', at + 1);
+        const std::string key = text.substr(at + 6, end - at - 6);
+        if (key.find('*') != std::string::npos) continue;   // a pattern such as rv-*
+        ++found;
+        Check(m.FindByKey(key) != nullptr, "docs/TOURS.md: room " + key + " exists");
+    }
+    Check(found > 30, "docs/TOURS.md names a good number of rooms");
+}
+
 }  // namespace
 
 int main()
@@ -178,6 +203,7 @@ int main()
     TestEveryFloorIsConnected(m);
     TestReferenceViews(m);
     TestGeneratedDocumentsMentionEveryRoom(m);
+    TestToursPointAtRealRooms(m);
     std::printf("%d checks, %d failed\n%s", g_checks, g_failures, InventoryAsText(m).c_str());
     return g_failures == 0 ? 0 : 1;
 }
