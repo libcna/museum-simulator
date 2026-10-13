@@ -5,12 +5,17 @@ given; anything unverified says so. Counts are not repeated here: run `build/bin
 
 ## State (checked 2026-10-13)
 
-- Ten floors (0-9), all built from the catalogue in `src/Catalogue/FloorN.cpp`; see `docs/MUSEUM_MAP.md` for every room.
-- **Checked this session:** clean configure and build; `museum_tests` and `ctest` pass; `tools/tour.sh` visits every
-  room on OPENGLES3, OPENGL33 and SOFTWARE with exit status 0; `tools/renderer_check.sh` passes all pixel checks on the
-  same three renderers; `tools/reference.sh compare` is within 0.02 % on OPENGLES3.
-- Real audio output was opened and fed on a PipeWire machine (volume 0.03); whether it is audible cannot be judged by a
-  test. Everything else ran on a private Xvfb display with the dummy audio driver.
+- Ten floors (0-9), all built from the catalogue in `src/Catalogue/FloorN.cpp`; `docs/MUSEUM_MAP.md` lists every room and
+  `build/bin/cna-3d-museum --validate` prints the current counts (they are generated, not copied here).
+- **Checked on this date:** clean configure and build of `build/` from scratch (2.5 min with a warm ccache);
+  `museum_tests` (4,000+ checks, includes per-floor door-graph connectivity) and `ctest`; `tools/tour.sh -f 3 -p` visits every
+  room and operates every control on OPENGLES3, OPENGL33 and SOFTWARE with exit status 0; `tools/renderer_check.sh` passes
+  every pixel check on the same three renderers; `tools/reference.sh compare` is within the limit on OPENGLES3;
+  `tools/nav_test.sh` rides to all ten floors; `tools/leak_check.sh` shows no growth over three tours.
+- The audio floor was also run with a real audio device (PipeWire, volume 0.03): the mixer opens and every audio room's
+  controls run without errors; whether it is audible cannot be judged by a test. All other runs use Xvfb and the dummy driver.
+- Nothing has been run on a physical gamepad, joystick, touch screen, microphone or a machine without audio: those rooms
+  report absence cleanly (checked with the hardware missing, which is the only case available here).
 
 ## Where things are
 
