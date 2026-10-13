@@ -358,6 +358,152 @@ def tex_glass():
     img.save("glass.png")
 
 
+def tex_concrete():
+    n = 128
+    noise = fbm(n, 301, 6, 5)
+    img = Image(n, n)
+    for y in range(n):
+        for x in range(n):
+            g = 168 + (noise[y * n + x] - 0.5) * 46
+            if x % 64 == 0 or y % 64 == 0:      # a slab joint every half tile
+                g -= 38
+            img.set(x, y, (clamp8(g), clamp8(g), clamp8(g + 3), 255))
+    img.save("concrete.png")
+
+
+def tex_panel():
+    """White wall panels with thin seams: a quiet laboratory wall."""
+    n = 128
+    noise = fbm(n, 311, 5, 3)
+    img = Image(n, n)
+    for y in range(n):
+        for x in range(n):
+            g = 236 + (noise[y * n + x] - 0.5) * 10
+            if x % 64 < 2 or y % 64 < 2:
+                g -= 40
+            img.set(x, y, (clamp8(g), clamp8(g + 1), clamp8(g + 4), 255))
+    img.save("panel.png")
+
+
+def tex_darkgrid():
+    n = 128
+    img = Image(n, n)
+    for y in range(n):
+        for x in range(n):
+            g = 26 + ((x // 64) + (y // 64)) % 2 * 4
+            if x % 32 < 2 or y % 32 < 2:
+                g = 62
+            img.set(x, y, (clamp8(g), clamp8(g + 4), clamp8(g + 14), 255))
+    img.save("darkgrid.png")
+
+
+def tex_hexagons():
+    n = 128
+    img = Image(n, n)
+    s = 21.0
+    for y in range(n):
+        for x in range(n):
+            # distance to the nearest hexagon centre in a flat-top lattice
+            q = (x / s) * (2.0 / 3.0)
+            r = (-x / s) / 3.0 + (math.sqrt(3.0) / 3.0) * (y / s)
+            cx, cz = q, r
+            cy = -cx - cz
+            rx, ry, rz = round(cx), round(cy), round(cz)
+            dx, dy, dz = abs(rx - cx), abs(ry - cy), abs(rz - cz)
+            edge = 1.0 - max(dx, dy, dz) * 1.8
+            g = 70 + 60 * max(0.0, min(1.0, edge * 3))
+            if edge < 0.12:
+                g = 200
+            img.set(x, y, (clamp8(g * 0.7), clamp8(g * 0.9), clamp8(g + 20), 255))
+    img.save("hexagons.png")
+
+
+def tex_circuit():
+    n = 128
+    rnd = random.Random(331)
+    img = Image(n, n)
+    for y in range(n):
+        for x in range(n):
+            img.set(x, y, (14, 40, 34, 255))
+    for _ in range(60):
+        x, y = rnd.randrange(8, n - 8), rnd.randrange(8, n - 8)
+        for _ in range(rnd.randrange(3, 9)):
+            horizontal = rnd.random() < 0.5
+            length = rnd.randrange(6, 26)
+            for i in range(length):
+                px, py = (x + i, y) if horizontal else (x, y + i)
+                img.set(px % n, py % n, (60, 210, 150, 255))
+            x, y = (x + length, y) if horizontal else (x, y + length)
+        img.set(x % n, y % n, (230, 220, 120, 255))
+    img.save("circuit.png")
+
+
+def tex_sand():
+    n = 128
+    noise = fbm(n, 341, 8, 5)
+    rnd = random.Random(342)
+    img = Image(n, n)
+    for y in range(n):
+        for x in range(n):
+            g = 200 + (noise[y * n + x] - 0.5) * 40 + rnd.random() * 10
+            img.set(x, y, (clamp8(g), clamp8(g * 0.9), clamp8(g * 0.7), 255))
+    img.save("sand.png")
+
+
+def tex_hedge():
+    n = 128
+    noise = fbm(n, 351, 10, 4)
+    rnd = random.Random(352)
+    img = Image(n, n)
+    for y in range(n):
+        for x in range(n):
+            g = 60 + noise[y * n + x] * 80 + rnd.random() * 30
+            img.set(x, y, (clamp8(g * 0.45), clamp8(g), clamp8(g * 0.4), 255))
+    img.save("hedge.png")
+
+
+def tex_rust():
+    n = 128
+    noise = fbm(n, 361, 6, 5)
+    img = Image(n, n)
+    for y in range(n):
+        for x in range(n):
+            v = noise[y * n + x]
+            img.set(x, y, (clamp8(110 + v * 100), clamp8(55 + v * 50), clamp8(30 + v * 25), 255))
+    img.save("rust.png")
+
+
+def tex_gradient():
+    """A horizontal hue ramp with a vertical fade: shows interpolation, filtering and clamping clearly."""
+    n = 128
+    img = Image(n, n)
+    for y in range(n):
+        for x in range(n):
+            h = x / n * 6.0
+            c = [max(0.0, min(1.0, abs(h - 3) - 1)), max(0.0, min(1.0, 2 - abs(h - 2))), max(0.0, min(1.0, 2 - abs(h - 4)))]
+            f = 1.0 - 0.6 * (y / n)
+            img.set(x, y, (clamp8(c[0] * 255 * f), clamp8(c[1] * 255 * f), clamp8(c[2] * 255 * f), 255))
+    img.save("gradient.png")
+
+
+def tex_pixelart():
+    """A 16x16 pixel-art sprite sheet (2x2 frames of 8x8): a coin spinning, for point-sampling demonstrations."""
+    img = Image(16, 16)
+    pal = {".": (0, 0, 0, 0), "o": (120, 80, 0, 255), "y": (255, 214, 60, 255), "h": (255, 245, 170, 255), "s": (200, 150, 20, 255)}
+    frames = [
+        ["..oooo..", ".oyyhyo.", "oyyhyyso", "oyhyyyso", "oyyyyyso", "oyyyysso", ".oysyso.", "..oooo.."],
+        ["..oooo..", ".oyyhyo.", ".oyhyyo.", ".oyhyyo.", ".oyyyso.", ".oyyyso.", ".oysyso.", "..oooo.."],
+        ["...oo...", "..oyho..", "..oyhso.", "..oyyso.", "..oyyso.", "..oyyso.", "..oyso..", "...oo..."],
+        ["..oooo..", ".oyhyyo.", ".oyhyyo.", ".oyyyso.", ".oyyyso.", ".oyyyso.", ".oysyso.", "..oooo.."],
+    ]
+    for f, rows in enumerate(frames):
+        ox, oy = (f % 2) * 8, (f // 2) * 8
+        for y, row in enumerate(rows):
+            for x, ch in enumerate(row):
+                img.set(ox + x, oy + y, pal[ch])
+    img.save("coin.png")
+
+
 def tex_logo():
     """A stylised CNA mark: three coloured bars on a dark plate."""
     n = 256
@@ -817,7 +963,8 @@ def audio_spark():
 def main():
     for fn in (tex_checker, tex_uvgrid, tex_brick, tex_stone, tex_marble, tex_wood, tex_tiles,
                tex_carpet, tex_plaster, tex_metal, tex_grass, tex_cobble, tex_clouds,
-               tex_particle, tex_smoke, tex_glass, tex_logo):
+               tex_particle, tex_smoke, tex_glass, tex_logo, tex_concrete, tex_panel, tex_darkgrid, tex_hexagons,
+               tex_circuit, tex_sand, tex_hedge, tex_rust, tex_gradient, tex_pixelart):
         fn()
     build_models()
     for fn in (audio_ambience, audio_tone, audio_drums, audio_arpeggio, audio_chirp, audio_step,

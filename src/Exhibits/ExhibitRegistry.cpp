@@ -27,6 +27,9 @@ constexpr Entry kEntries[] = {
     {"audio", MakeAudioRoom},
     {"vectors", MakeVectorLab},
     {"transforms", MakeTransformLab},
+    {"quaternions", MakeQuaternionLab},
+    {"curves", MakeCurveLab},
+    {"collision", MakeCollisionLab},
 };
 
 }  // namespace

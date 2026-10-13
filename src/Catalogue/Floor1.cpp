@@ -69,6 +69,68 @@ WingSpec TransformWing()
     return w;
 }
 
+/** One lab room: same shape for every maths room, so the data stays a table. */
+RoomSpec Lab(const char* key, const char* title, const char* subtitle, const char* exhibit, const char* mode, std::vector<std::string> apis)
+{
+    RoomSpec r;
+    r.key = key;
+    r.title = title;
+    r.subtitle = subtitle;
+    r.exhibit = exhibit;
+    r.params = {{"mode", mode}};
+    r.width = 13;
+    r.depth = 13;
+    r.theme = "white-cube";
+    r.apis = std::move(apis);
+    return r;
+}
+
+WingSpec RotationWing()
+{
+    WingSpec w;
+    w.name = "Rotation and Interpolation";
+    w.tagline = "Quaternions, Euler angles, easing functions and curves";
+    w.theme = "corridor-warm";
+    w.accent = {0.98f, 0.70f, 0.35f};
+    w.spineSide = Wall::East;
+    w.rooms = {
+        Lab("quat-euler", "Euler Angles and Gimbal Lock", "Yaw, pitch and roll as a quaternion and as three matrices, and where they stop agreeing", "quaternions", "euler",
+            {"Quaternion.CreateFromYawPitchRoll", "Matrix.CreateFromQuaternion", "Matrix.CreateRotationX"}),
+        Lab("quat-slerp", "Slerp and Lerp", "Quaternion.Slerp turns at constant speed; Lerp then Normalize does not", "quaternions", "slerp",
+            {"Quaternion.Slerp", "Quaternion.Lerp", "Quaternion.Normalize", "Quaternion.Dot"}),
+        Lab("quat-axis", "Axis and Angle", "Quaternion.CreateFromAxisAngle, Concatenate and Inverse", "quaternions", "axisangle",
+            {"Quaternion.CreateFromAxisAngle", "Quaternion.Concatenate", "Quaternion.Inverse"}),
+        Lab("curve-easing", "Easing Functions", "MathHelper.Lerp, SmoothStep, Hermite and CatmullRom graphed side by side", "curves", "easing",
+            {"MathHelper.Lerp", "MathHelper.SmoothStep", "MathHelper.Hermite", "MathHelper.CatmullRom"}),
+        Lab("curve-spline", "Splines", "Vector3.CatmullRom through four control points with a rider", "curves", "spline", {"Vector3.CatmullRom"}),
+        Lab("curve-class", "The Curve Class", "Curve, CurveKey, tangents and loop types", "curves", "curve", {"Curve", "CurveKey", "CurveLoopType", "CurveTangent"}),
+        Lab("curve-barycentric", "Barycentric Coordinates", "Vector3.Barycentric weights inside a triangle", "curves", "barycentric", {"Vector3.Barycentric"}),
+    };
+    return w;
+}
+
+WingSpec CollisionWing()
+{
+    WingSpec w;
+    w.name = "Collision and Geometry";
+    w.tagline = "BoundingBox, BoundingSphere, BoundingFrustum, Plane and Ray";
+    w.theme = "corridor-dark";
+    w.accent = {0.95f, 0.45f, 0.45f};
+    w.spineSide = Wall::West;
+    w.rooms = {
+        Lab("col-box-box", "Box vs Box", "BoundingBox.Intersects and Contains between two axis-aligned boxes", "collision", "box-box", {"BoundingBox.Intersects", "BoundingBox.Contains", "ContainmentType"}),
+        Lab("col-sphere-box", "Sphere vs Box", "BoundingSphere.Intersects and Contains against a box", "collision", "sphere-box", {"BoundingSphere.Intersects", "BoundingSphere.Contains"}),
+        Lab("col-ray-box", "Ray vs Box", "Ray.Intersects(BoundingBox): the distance to the entry point", "collision", "ray-box", {"Ray.Intersects", "BoundingBox"}),
+        Lab("col-ray-sphere", "Ray vs Sphere", "Ray.Intersects(BoundingSphere) with a movable aim", "collision", "ray-sphere", {"Ray.Intersects", "BoundingSphere"}),
+        Lab("col-ray-plane", "Ray vs Plane", "Ray.Intersects(Plane): crossing distance, parallel and backward rays", "collision", "ray-plane", {"Ray.Intersects", "Plane"}),
+        Lab("col-plane-box", "Which Side of the Plane", "Plane.Intersects(BoundingBox) classifies five boxes as Front, Back or Intersecting", "collision", "plane-box", {"Plane.Intersects", "Plane.DotCoordinate", "PlaneIntersectionType"}),
+        Lab("col-merge", "Fitting and Merging Bounds", "CreateFromPoints for boxes and spheres, and CreateMerged", "collision", "merge", {"BoundingBox.CreateFromPoints", "BoundingSphere.CreateFromPoints", "BoundingSphere.CreateMerged"}),
+        Lab("col-frustum", "Frustum Culling", "BoundingFrustum.Contains: fully inside, partly inside or culled", "collision", "frustum", {"BoundingFrustum.Contains", "BoundingFrustum", "Matrix.CreatePerspectiveFieldOfView"}),
+        Lab("col-pick", "Picking", "Your view ray tested with Ray.Intersects against boxes and spheres", "collision", "pick", {"Ray.Intersects", "BoundingBox", "BoundingSphere"}),
+    };
+    return w;
+}
+
 }  // namespace
 
 FloorSpec MakeFloor1()
@@ -81,5 +143,7 @@ FloorSpec MakeFloor1()
     f.accent = {0.40f, 0.75f, 0.95f};
     f.wings.push_back(MathWing());
     f.wings.push_back(TransformWing());
+    f.wings.push_back(RotationWing());
+    f.wings.push_back(CollisionWing());
     return f;
 }

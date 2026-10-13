@@ -330,8 +330,9 @@ void MuseumWorld::Draw(const DrawContext& ctx)
 
 void MuseumWorld::DrawOverlay()
 {
-    for (const int c : visible_) {
-        const RoomInstance* inst = instances_[static_cast<std::size_t>(c)].get();
-        if (inst && inst->loaded && inst->exhibit) inst->exhibit->DrawOverlay();
-    }
+    // Overlays are screen-space (labels, markers) and know nothing about walls, so only the room the
+    // visitor stands in draws them: otherwise a neighbour's labels would float over this room.
+    if (current_ < 0) return;
+    const RoomInstance* inst = instances_[static_cast<std::size_t>(current_)].get();
+    if (inst && inst->loaded && inst->exhibit) inst->exhibit->DrawOverlay();
 }
