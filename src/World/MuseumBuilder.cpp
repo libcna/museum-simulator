@@ -41,7 +41,7 @@ void AddWallRun(const RoomDef& r, MeshSet& meshes, CollisionWorld& collision, Wa
     const float clipLo = alongX ? std::max(a0, -hw) : std::max(a0, -hd);
     const float clipHi = alongX ? std::min(a1, hw) : std::min(a1, hd);
     if (clipHi - clipLo < 0.05f) return;
-    const auto strip = [&](float ya, float yb, float depth, const Vector3& tint) {
+    const auto strip = [&](float ya, float yb, float depth, const Vector3& tint, const char* texture = "wood") {
         Vector3 slo, shi;
         switch (side) {
             case Wall::North: slo = Vector3(c.X + clipLo, c.Y + ya, c.Z - hd); shi = Vector3(c.X + clipHi, c.Y + yb, c.Z - hd + depth); break;
@@ -49,9 +49,11 @@ void AddWallRun(const RoomDef& r, MeshSet& meshes, CollisionWorld& collision, Wa
             case Wall::West: slo = Vector3(c.X - hw, c.Y + ya, c.Z + clipLo); shi = Vector3(c.X - hw + depth, c.Y + yb, c.Z + clipHi); break;
             default: slo = Vector3(c.X + hw - depth, c.Y + ya, c.Z + clipLo); shi = Vector3(c.X + hw, c.Y + yb, c.Z + clipHi); break;
         }
-        meshes.Opaque("wood").AddBox(slo, shi, 1.0f, tint, BoxFaces::All & ~BoxFaces::NegY & ~BoxFaces::PosY, 2.0f);
+        meshes.Opaque(texture).AddBox(slo, shi, 1.0f, tint, BoxFaces::All & ~BoxFaces::NegY & ~BoxFaces::PosY, 2.0f);
     };
     if (y0 - c.Y <= 0.001f) strip(0.0f, 0.16f, 0.04f, kTrim);
+    // Halls, concourses and galleries carry a band in the floor's accent colour, so the floor is recognisable at a glance.
+    if (r.kind != CellKind::Room && r.kind != CellKind::Elevator && y0 - c.Y <= 0.001f) strip(1.05f, 1.3f, 0.05f, r.accent * 0.85f, "white");
     if (!r.openRoof && y1 - c.Y >= r.height - 0.001f) strip(r.height - 0.2f, r.height, 0.06f, Vector3(0.75f, 0.7f, 0.65f));
 }
 

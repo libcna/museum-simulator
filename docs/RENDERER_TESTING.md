@@ -34,9 +34,9 @@ by CNA):
 
 | Renderer | Checks | Pass | Fail | Info |
 |---|---|---|---|---|
-| OPENGLES3 | 51 | 50 | 0 | 1 |
-| OPENGL33 | 51 | 50 | 0 | 1 |
-| SOFTWARE | 51 | 50 | 0 | 1 |
+| OPENGLES3 | 54 | 53 | 0 | 1 |
+| OPENGL33 | 54 | 53 | 0 | 1 |
+| SOFTWARE | 54 | 53 | 0 | 1 |
 
 Run `tools/renderer_check.sh` for the current figures; they are not copied anywhere else.
 
