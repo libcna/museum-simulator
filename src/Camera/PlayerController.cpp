@@ -47,12 +47,12 @@ void PlayerController::Update(float dt, FirstPersonCamera& camera, const Collisi
     float dpitch = 0.0f;
     if (mouseLook && captured_) {
         const MouseState& now = input.Mouse();
-        const MouseState& before = input.PreviousMouse();
         float dx;
         float dy;
         if (relativeMode_) {
-            dx = static_cast<float>(now.getXProperty() - before.getXProperty());
-            dy = static_cast<float>(now.getYProperty() - before.getYProperty());
+            // In relative mode CNA reports the motion since the last read in X/Y (consume-on-read), not a position.
+            dx = static_cast<float>(now.getXProperty());
+            dy = static_cast<float>(now.getYProperty());
         } else {
             dx = static_cast<float>(now.getXProperty() - centreX_);
             dy = static_cast<float>(now.getYProperty() - centreY_);
