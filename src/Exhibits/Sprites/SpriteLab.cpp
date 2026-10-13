@@ -2,7 +2,9 @@
 // into a render target, using exactly the state it demonstrates (sort mode, blend, sampler, rasterizer,
 // transform), next to a control console. The live screen is an ordinary RenderTarget2D shown on the far wall.
 #include <algorithm>
+#include <chrono>
 #include <cmath>
+#include <optional>
 #include <random>
 #include <string>
 
@@ -28,13 +30,13 @@ namespace {
 
 constexpr int kW = 960, kH = 540;
 
-enum class Mode { Basics, Origin, Sheet, Tint, Blend, Sort, Sampler, Parallax, Ui, Atlas, Stress, Scissor, Camera };
+enum class Mode { Basics, Origin, Sheet, Tint, Blend, Sort, Sampler, Parallax, Ui, Atlas, Stress, Scissor, Camera, Hit, Anim };
 
 Mode ParseMode(const std::string& s)
 {
     static const std::pair<const char*, Mode> table[] = {{"origin", Mode::Origin}, {"sheet", Mode::Sheet}, {"tint", Mode::Tint}, {"blend", Mode::Blend}, {"sort", Mode::Sort},
                                                          {"sampler", Mode::Sampler}, {"parallax", Mode::Parallax}, {"ui", Mode::Ui}, {"atlas", Mode::Atlas},
-                                                         {"stress", Mode::Stress}, {"scissor", Mode::Scissor}, {"camera", Mode::Camera}};
+                                                         {"stress", Mode::Stress}, {"scissor", Mode::Scissor}, {"camera", Mode::Camera}, {"hit", Mode::Hit}, {"anim", Mode::Anim}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
     return Mode::Basics;
@@ -123,6 +125,24 @@ public:
                 p.AddSlider("Pan X", -300.0f, 300.0f, posX_ - 480.0f, [this](float v) { posX_ = 480.0f + v; }, "%.0f", 1.0f);
                 p.AddToggle("Follow the player dot", false, [this](bool v) { follow_ = v; });
                 break;
+            case Mode::Hit:
+                p.AddSlider("Moving sprite X", 200.0f, 760.0f, hitX_, [this](float v) { hitX_ = v; auto_ = false; }, "%.0f", 1.0f);
+                p.AddSlider("Moving sprite Y", 120.0f, 420.0f, hitY_, [this](float v) { hitY_ = v; auto_ = false; }, "%.0f", 1.0f);
+                p.AddSlider("Rotation", -180.0f, 180.0f, rot_, [this](float v) { rot_ = v; auto_ = false; }, "%.0f deg", 1.0f);
+                p.AddSlider("Scale", 0.5f, 2.0f, scale_, [this](float v) { scale_ = v; });
+                p.AddToggle("Drift on its own", true, [this](bool v) { auto_ = v; });
+                p.AddReadout("Rectangle.Intersects", [this] { return std::string(rectHit_ ? "true" : "false"); });
+                p.AddReadout("Per-pixel test", [this] { return std::string(pixelHits_ > 0 ? "HIT: " + std::to_string(pixelHits_) + " shared pixels" : "no shared pixel"); });
+                p.AddReadout("Pixels examined", [this] { return std::to_string(pixelsTested_) + " in " + Fmt1(static_cast<float>(testMs_ * 1000.0)) + " us"; });
+                break;
+            case Mode::Anim:
+                p.AddChoice("Clip", {"Idle (frames 0-1)", "Walk (frames 2-5)", "Jump (frames 6-7)", "All eight"}, 1, [this](int v) { clip_ = v; animTime_ = 0.0f; });
+                p.AddChoice("Loop mode", {"Loop", "Ping-pong", "Play once"}, 0, [this](int v) { loop_ = v; animTime_ = 0.0f; });
+                p.AddSlider("Frames per second", 1.0f, 24.0f, fps_, [this](float v) { fps_ = v; }, "%.0f", 1.0f);
+                p.AddToggle("Playing", true, [this](bool v) { playing_ = v; });
+                p.AddToggle("Walk across the screen", true, [this](bool v) { travel_ = v; });
+                p.AddReadout("Frame / source rectangle", [this] { return AnimDescription(); });
+                break;
         }
         AddInfoSign(b, Title(), Explanation());
     }
@@ -132,6 +152,8 @@ public:
         if (mode_ == Mode::Ui) BuildFrameTexture();
         if (mode_ == Mode::Atlas) BuildAtlas();
         if (mode_ == Mode::Stress) EnsureSprites();
+        if (mode_ == Mode::Hit) BuildHitTextures();
+        if (mode_ == Mode::Anim) BuildAnimSheet();
     }
 
     void Update(const UpdateContext& ctx) override
@@ -147,12 +169,23 @@ public:
             }
         }
         if (mode_ == Mode::Parallax) scroll_ += speed_ * 100.0f * ctx.dt;
+        if (mode_ == Mode::Hit && auto_) {
+            hitX_ = 480.0f + std::cos(time_ * 0.5f) * 230.0f;
+            hitY_ = 270.0f + std::sin(time_ * 0.8f) * 110.0f;
+            rot_ = std::fmod(rot_ + 25.0f * ctx.dt + 180.0f, 360.0f) - 180.0f;
+        }
+        if (mode_ == Mode::Anim && playing_) {
+            animTime_ += ctx.dt;
+            if (travel_ && clip_ != 0) walkX_ += walkDir_ * (clip_ == 1 ? 160.0f : 220.0f) * ctx.dt;
+            if (walkX_ > 820.0f) { walkX_ = 820.0f; walkDir_ = -1.0f; }
+            if (walkX_ < 140.0f) { walkX_ = 140.0f; walkDir_ = 1.0f; }
+        }
     }
 
 private:
     [[nodiscard]] std::string Title() const
     {
-        static const char* names[] = {"Sprites: position, rotation, scale and flip", "Sprite origin and rotation", "Sprite sheets and source rectangles", "Colour tint and alpha", "BlendState presets side by side", "SpriteSortMode and layer depth", "SamplerState filtering and addressing", "Scrolling and parallax", "UI panels and nine-slice", "Texture atlases", "Thousands of sprites", "Scissor rectangle clipping", "A 2D camera with a transform matrix"};
+        static const char* names[] = {"Sprites: position, rotation, scale and flip", "Sprite origin and rotation", "Sprite sheets and source rectangles", "Colour tint and alpha", "BlendState presets side by side", "SpriteSortMode and layer depth", "SamplerState filtering and addressing", "Scrolling and parallax", "UI panels and nine-slice", "Texture atlases", "Thousands of sprites", "Scissor rectangle clipping", "A 2D camera with a transform matrix", "Per-pixel collision", "Sprite animation: clips and loop modes"};
         return names[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
@@ -170,6 +203,8 @@ private:
             case Mode::Atlas: return {"An atlas packs several images into one texture so a whole scene needs one texture bind. The four", "tiles are copied into a 128 x 128 texture at run time with GetData and SetData, then drawn by source rectangle."};
             case Mode::Stress: return {"SpriteBatch batches sprites into a few big draw calls. Raise the count to see how many sprites per", "second this renderer can push; the frame rate on your screen is the museum's own, so go gently."};
             case Mode::Scissor: return {"With RasterizerState.ScissorTestEnable and GraphicsDevice.ScissorRectangle, drawing is clipped to a", "rectangle: how scrolling lists and UI panels hide what overflows. Slide the rectangle over a long list."};
+            case Mode::Hit: return {"Two sprites collide when their opaque pixels touch, not when their rectangles do. The cheap test is Rectangle.Intersects", "on the bounding boxes; only if that passes does the exact test read both textures' pixels (GetData). Magenta shows the shared ones."};
+            case Mode::Anim: return {"Animation is a SourceRectangle that changes over time: elapsed seconds times frames-per-second picks the frame. A clip", "is a range of frames; loop mode decides what happens at the end (wrap, bounce back or stop on the last frame)."};
             default: return {"The transformMatrix passed to SpriteBatch.Begin turns a 2D world into a screen: translation pans, scale zooms,", "rotation turns the view. The same sprites are drawn; only the matrix changes."};
         }
     }
@@ -218,6 +253,8 @@ private:
             case Mode::Stress: DrawStress(sb); break;
             case Mode::Scissor: DrawScissor(sb); break;
             case Mode::Camera: DrawCamera(sb); break;
+            case Mode::Hit: DrawHit(sb); break;
+            case Mode::Anim: DrawAnim(sb); break;
         }
     }
 
@@ -577,7 +614,187 @@ private:
         sb.End();
     }
 
+    // --- per-pixel collision -------------------------------------------------------------------
+    static constexpr int kHitSize = 96;
+    void BuildHitTextures()
+    {
+        GraphicsDevice& d = *S().device;
+        std::vector<Color> a(kHitSize * kHitSize, Color(0, 0, 0, 0)), b(kHitSize * kHitSize, Color(0, 0, 0, 0));
+        for (int y = 0; y < kHitSize; ++y)
+            for (int x = 0; x < kHitSize; ++x) {
+                const float dx = static_cast<float>(x) - 47.5f, dy = static_cast<float>(y) - 47.5f;
+                const float r = std::sqrt(dx * dx + dy * dy), ang = std::atan2(dy, dx);
+                // A: a five-pointed star. B: a thin ring with a gap (a crescent).
+                const float star = 46.0f * (0.45f + 0.55f * std::pow(std::abs(std::cos(2.5f * (ang + 1.5708f))), 0.7f));
+                if (r < star) a[static_cast<std::size_t>(y * kHitSize + x)] = Color(255, 210, 90, 255);
+                const bool ring = r > 30.0f && r < 45.0f && !(ang > -0.5f && ang < 0.5f);
+                if (ring) b[static_cast<std::size_t>(y * kHitSize + x)] = Color(90, 190, 255, 255);
+            }
+        hitA_ = std::make_unique<Texture2D>(d, kHitSize, kHitSize);
+        hitB_ = std::make_unique<Texture2D>(d, kHitSize, kHitSize);
+        hitA_->SetData(a.data(), kHitSize * kHitSize);
+        hitB_->SetData(b.data(), kHitSize * kHitSize);
+        // The CPU copy used by the exact test: read back through GetData, as a game would after loading its textures.
+        maskA_.assign(a.size(), 0);
+        maskB_.assign(b.size(), 0);
+        std::vector<Color> back(a.size());
+        hitA_->GetData(back.data(), kHitSize * kHitSize);
+        for (std::size_t i = 0; i < back.size(); ++i) maskA_[i] = back[i].getAProperty() > 0;
+        hitB_->GetData(back.data(), kHitSize * kHitSize);
+        for (std::size_t i = 0; i < back.size(); ++i) maskB_[i] = back[i].getAProperty() > 0;
+    }
+
+    // The bounding rectangle of a sprite drawn at `pos` with origin at its centre, rotated and scaled.
+    static Rectangle SpriteBounds(const Vector2& pos, float rotation, float scale)
+    {
+        const Matrix m = Matrix::CreateTranslation(-48.0f, -48.0f, 0.0f) * Matrix::CreateScale(scale, scale, 1.0f) * Matrix::CreateRotationZ(rotation) * Matrix::CreateTranslation(pos.X, pos.Y, 0.0f);
+        float x0 = 1e9f, y0 = 1e9f, x1 = -1e9f, y1 = -1e9f;
+        for (const Vector2 c : {Vector2(0, 0), Vector2(96, 0), Vector2(0, 96), Vector2(96, 96)}) {
+            const Vector2 p = Vector2::Transform(c, m);
+            x0 = std::min(x0, p.X); y0 = std::min(y0, p.Y); x1 = std::max(x1, p.X); y1 = std::max(y1, p.Y);
+        }
+        return Rectangle(static_cast<int>(std::floor(x0)), static_cast<int>(std::floor(y0)), static_cast<int>(std::ceil(x1 - x0)), static_cast<int>(std::ceil(y1 - y0)));
+    }
+
+    void DrawHit(SpriteBatch& sb)
+    {
+        Backdrop(sb);
+        if (!hitA_ || !hitB_) return;
+        const Vector2 posA(300.0f, 270.0f), posB(hitX_, hitY_);
+        const float sa = 2.2f, sbScale = scale_ * 2.0f, rb = MathHelper::ToRadians(rot_);
+        const Rectangle ra = SpriteBounds(posA, 0.0f, sa), rbRect = SpriteBounds(posB, rb, sbScale);
+        rectHit_ = ra.Intersects(rbRect);
+        hitPixels_.clear();
+        pixelHits_ = 0;
+        pixelsTested_ = 0;
+        const auto t0 = std::chrono::steady_clock::now();
+        if (rectHit_) {
+            const Rectangle both = Rectangle::Intersect(ra, rbRect);
+            const float cb = std::cos(-rb), sbn = std::sin(-rb);
+            for (int y = both.Y; y < both.Y + both.Height; ++y)
+                for (int x = both.X; x < both.X + both.Width; ++x) {
+                    ++pixelsTested_;
+                    const float px = static_cast<float>(x) + 0.5f, py = static_cast<float>(y) + 0.5f;
+                    const int ax = static_cast<int>(std::floor((px - posA.X) / sa + 48.0f)), ay = static_cast<int>(std::floor((py - posA.Y) / sa + 48.0f));
+                    if (ax < 0 || ay < 0 || ax >= kHitSize || ay >= kHitSize || !maskA_[static_cast<std::size_t>(ay * kHitSize + ax)]) continue;
+                    const float vx = px - posB.X, vy = py - posB.Y;   // into B's local space: undo translation, rotation and scale
+                    const int bx = static_cast<int>(std::floor((vx * cb - vy * sbn) / sbScale + 48.0f)), by = static_cast<int>(std::floor((vx * sbn + vy * cb) / sbScale + 48.0f));
+                    if (bx < 0 || by < 0 || bx >= kHitSize || by >= kHitSize || !maskB_[static_cast<std::size_t>(by * kHitSize + bx)]) continue;
+                    ++pixelHits_;
+                    hitPixels_.emplace_back(x, y);
+                }
+        }
+        testMs_ = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+        Begin(sb, SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::PointClamp);
+        sb.Draw(*hitA_, posA, std::nullopt, Color::White, 0.0f, Vector2(48, 48), sa, SpriteEffects::None, 0.0f);
+        sb.Draw(*hitB_, posB, std::nullopt, Color(255, 255, 255, 230), rb, Vector2(48, 48), sbScale, SpriteEffects::None, 0.0f);
+        const Color box = rectHit_ ? Color(255, 120, 100, 255) : Color(110, 230, 150, 255);
+        for (const Rectangle& r : {ra, rbRect}) {
+            sb.Draw(*S().whiteTexture, Rectangle(r.X, r.Y, r.Width, 2), box);
+            sb.Draw(*S().whiteTexture, Rectangle(r.X, r.Y + r.Height - 2, r.Width, 2), box);
+            sb.Draw(*S().whiteTexture, Rectangle(r.X, r.Y, 2, r.Height), box);
+            sb.Draw(*S().whiteTexture, Rectangle(r.X + r.Width - 2, r.Y, 2, r.Height), box);
+        }
+        for (const auto& [x, y] : hitPixels_) sb.Draw(*S().whiteTexture, Rectangle(x, y, 1, 1), Color(255, 40, 220, 255));
+        sb.End();
+        Begin(sb);
+        Text(sb, std::string("rectangles: ") + (rectHit_ ? "overlap" : "apart") + "      pixels: " + (pixelHits_ > 0 ? "COLLISION (" + std::to_string(pixelHits_) + " shared)" : "no collision"), 20, 10,
+             pixelHits_ > 0 ? Color(255, 120, 200, 255) : (rectHit_ ? Color(255, 200, 100, 255) : Color(130, 235, 165, 255)), 0.75f);
+        Text(sb, rectHit_ && pixelHits_ == 0 ? "the bounding boxes overlap, but the sprites do not touch: the case the exact test exists for" : "boxes: Rectangle.Intersects   magenta: pixels opaque in both sprites", 20, 504, Color(150, 160, 190, 255), 0.6f);
+        sb.End();
+    }
+
+    // --- sprite animation ----------------------------------------------------------------------
+    static constexpr int kFrame = 48, kFrames = 8;
+    void BuildAnimSheet()
+    {
+        std::vector<Color> px(static_cast<std::size_t>(kFrame * kFrame * kFrames), Color(0, 0, 0, 0));
+        const auto put = [&](int f, int x, int y, int w, int h, Color c) {
+            for (int yy = y; yy < y + h; ++yy)
+                for (int xx = x; xx < x + w; ++xx)
+                    if (xx >= 0 && xx < kFrame && yy >= 0 && yy < kFrame) px[static_cast<std::size_t>(yy * kFrame * kFrames + f * kFrame + xx)] = c;
+        };
+        const Color body(120, 190, 255, 255), dark(60, 100, 170, 255), eye(255, 240, 160, 255), limb(200, 210, 230, 255);
+        // 0-1 idle (a breath), 2-5 walk (legs swing), 6-7 jump (crouch, then legs tucked).
+        const int bob[8] = {0, 2, 0, 1, 0, 1, 3, -4};
+        const int legA[8] = {0, 0, -5, 0, 5, 0, 0, 0}, legB[8] = {0, 0, 5, 0, -5, 0, 0, 0};
+        for (int f = 0; f < kFrames; ++f) {
+            const int top = 10 - bob[f] + (f == 1 ? 1 : 0);
+            put(f, 14, top + 22, 5, 14 - (f >= 6 ? 6 : 0), limb);           // back leg
+            put(f, 14 + legA[f], top + 22, 5, 14 - (f >= 6 ? 6 : 0), limb);
+            put(f, 29 + legB[f], top + 22, 5, 14 - (f >= 6 ? 6 : 0), limb);
+            put(f, 12, top + 4, 24, 20, body);                                  // torso
+            put(f, 12, top + 20, 24, 4, dark);
+            put(f, 17, top + 9, 4, 4, eye);
+            put(f, 28, top + 9, 4, 4, eye);
+            put(f, 22, top - 3, 4, 7, dark);                                    // antenna
+            put(f, 21, top - 6, 6, 3, Color(255, 120, 120, 255));
+            put(f, 8, top + 8 + (f >= 6 ? -6 : 0), 4, 10, limb);                // arms
+            put(f, 36, top + 8 + (f >= 6 ? -6 : 0), 4, 10, limb);
+        }
+        sheet_ = std::make_unique<Texture2D>(*S().device, kFrame * kFrames, kFrame);
+        sheet_->SetData(px.data(), kFrame * kFrame * kFrames);
+    }
+
+    [[nodiscard]] int ClipStart() const { static const int s[] = {0, 2, 6, 0}; return s[clip_]; }
+    [[nodiscard]] int ClipLength() const { static const int n[] = {2, 4, 2, 8}; return n[clip_]; }
+    // Which frame of the clip is showing at animTime_: elapsed seconds * fps, wrapped, bounced or clamped by the loop mode.
+    [[nodiscard]] int ClipFrame() const
+    {
+        const int n = ClipLength();
+        const int tick = static_cast<int>(animTime_ * fps_);
+        if (loop_ == 0) return tick % n;
+        if (loop_ == 2) return std::min(tick, n - 1);
+        if (n == 1) return 0;
+        const int cycle = 2 * (n - 1), k = tick % cycle;
+        return k < n ? k : cycle - k;
+    }
+    [[nodiscard]] std::string AnimDescription() const
+    {
+        const int f = ClipStart() + ClipFrame();
+        return std::to_string(f) + " of 0-7 / (" + std::to_string(f * kFrame) + ", 0, " + std::to_string(kFrame) + ", " + std::to_string(kFrame) + ")";
+    }
+
+    void DrawAnim(SpriteBatch& sb)
+    {
+        Backdrop(sb);
+        if (!sheet_) return;
+        const int f = ClipStart() + ClipFrame();
+        Begin(sb, SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::PointClamp);
+        // The whole sheet as a filmstrip, the current source rectangle outlined.
+        const int cell = 108;
+        for (int i = 0; i < kFrames; ++i) {
+            const Rectangle dest(40 + i * (cell + 6), 40, cell, cell);
+            sb.Draw(*S().whiteTexture, dest, Color(22, 28, 44, 230));
+            sb.Draw(*sheet_, dest, Rectangle(i * kFrame, 0, kFrame, kFrame), Color::White);
+            const bool inClip = i >= ClipStart() && i < ClipStart() + ClipLength();
+            const Color edge = i == f ? Color(255, 226, 120, 255) : (inClip ? Color(110, 200, 150, 255) : Color(70, 80, 110, 255));
+            const int t = i == f ? 4 : 2;
+            sb.Draw(*S().whiteTexture, Rectangle(dest.X, dest.Y, cell, t), edge);
+            sb.Draw(*S().whiteTexture, Rectangle(dest.X, dest.Y + cell - t, cell, t), edge);
+            sb.Draw(*S().whiteTexture, Rectangle(dest.X, dest.Y, t, cell), edge);
+            sb.Draw(*S().whiteTexture, Rectangle(dest.X + cell - t, dest.Y, t, cell), edge);
+        }
+        // The animated sprite on a floor, drawn with the current frame as its SourceRectangle.
+        sb.Draw(*S().whiteTexture, Rectangle(0, 440, kW, 100), Color(40, 52, 78, 255));
+        const float x = (travel_ && clip_ != 0) ? walkX_ : 480.0f;
+        const float y = clip_ == 2 ? 440.0f - 70.0f * std::abs(std::sin(animTime_ * fps_ * 0.35f)) : 440.0f;
+        sb.Draw(*sheet_, Vector2(x, y), Rectangle(f * kFrame, 0, kFrame, kFrame), Color::White, 0.0f, Vector2(24, 44), 4.0f,
+                walkDir_ < 0.0f && travel_ && clip_ != 0 ? SpriteEffects::FlipHorizontally : SpriteEffects::None, 0.0f);
+        sb.End();
+        Begin(sb);
+        Text(sb, "frame " + std::to_string(f) + " = SourceRectangle(" + std::to_string(f * kFrame) + ", 0, 48, 48)    t = " + Fmt1(animTime_ * 10.0f) + " / 10 s    tick = " + std::to_string(static_cast<int>(animTime_ * fps_)), 20, 170, Color(255, 226, 150, 255), 0.65f);
+        Text(sb, "frame = start + (floor(seconds * fps) mod length);  ping-pong bounces, play-once clamps;  FlipHorizontally when walking left", 20, 196, Color(150, 160, 190, 255), 0.55f);
+        sb.End();
+    }
+
     Mode mode_;
+    std::unique_ptr<Texture2D> hitA_, hitB_, sheet_;
+    std::vector<unsigned char> maskA_, maskB_;
+    std::vector<std::pair<int, int>> hitPixels_;
+    float hitX_ = 420.0f, hitY_ = 270.0f, animTime_ = 0.0f, walkX_ = 300.0f, walkDir_ = 1.0f, testMs_ = 0.0f;
+    bool rectHit_ = false, auto_ = true, playing_ = true, travel_ = true;
+    int pixelHits_ = 0, pixelsTested_ = 0, clip_ = 1, loop_ = 0;
     std::unique_ptr<Texture2D> frame_, atlas_;
     std::vector<Bouncer> sprites_;
     float time_ = 0.0f, scroll_ = 0.0f;

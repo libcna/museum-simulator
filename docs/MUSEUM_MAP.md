@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 33 wings, 237 exhibit rooms (5 open to the sky), 300 walkable cells in all.
+10 floors, 33 wings, 239 exhibit rooms (5 open to the sky), 302 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -182,7 +182,9 @@ SpriteBatch, SpriteFont and the techniques built on them
 | 2.3.03 | `sprite-atlas` | Texture Atlases | XNA 4.0 | Texture2D.GetData, Texture2D.SetData, SpriteBatch.Draw |
 | 2.3.04 | `sprite-scissor` | Scissor Clipping | XNA 4.0 | RasterizerState.ScissorTestEnable, GraphicsDevice.ScissorRectangle |
 | 2.3.05 | `sprite-camera` | A 2D Camera Matrix | XNA 4.0 | SpriteBatch.Begin, Matrix.CreateTranslation, Matrix.CreateScale, Matrix.CreateRotationZ |
-| 2.3.06 | `sprite-stress` | Thousands of Sprites | XNA 4.0 | SpriteBatch, SpriteBatch.Draw |
+| 2.3.06 | `sprite-hit` | Per-Pixel Collision | XNA 4.0 | Rectangle.Intersects, Rectangle.Intersect, Texture2D.GetData, SpriteBatch.Draw |
+| 2.3.07 | `sprite-anim` | Sprite Animation | XNA 4.0 | SpriteBatch.Draw, Rectangle, SpriteEffects.FlipHorizontally, Texture2D.SetData |
+| 2.3.08 | `sprite-stress` | Thousands of Sprites | XNA 4.0 | SpriteBatch, SpriteBatch.Draw |
 
 **Text and Fonts** - SpriteFont: layout, measurement, transforms, glyphs, HUDs and world labels
 

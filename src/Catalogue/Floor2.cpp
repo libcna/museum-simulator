@@ -70,6 +70,10 @@ WingSpec TechniqueWing()
         Sprite("sprite-scissor", "Scissor Clipping", "RasterizerState.ScissorTestEnable and GraphicsDevice.ScissorRectangle clipping a scrolling list", "scissor",
                {"RasterizerState.ScissorTestEnable", "GraphicsDevice.ScissorRectangle"}),
         Sprite("sprite-camera", "A 2D Camera Matrix", "SpriteBatch.Begin with a transformMatrix: pan, zoom and rotate a tile world", "camera", {"SpriteBatch.Begin", "Matrix.CreateTranslation", "Matrix.CreateScale", "Matrix.CreateRotationZ"}),
+        Sprite("sprite-hit", "Per-Pixel Collision", "Rectangle.Intersects as the cheap test and a GetData pixel test as the exact one, with the shared pixels highlighted", "hit",
+               {"Rectangle.Intersects", "Rectangle.Intersect", "Texture2D.GetData", "SpriteBatch.Draw"}),
+        Sprite("sprite-anim", "Sprite Animation", "Clips, loop modes and elapsed-time frame selection with SourceRectangle and SpriteEffects.FlipHorizontally", "anim",
+               {"SpriteBatch.Draw", "Rectangle", "SpriteEffects.FlipHorizontally", "Texture2D.SetData"}),
         Sprite("sprite-stress", "Thousands of Sprites", "One Begin/End with up to twenty thousand animated sprites and live throughput", "stress", {"SpriteBatch", "SpriteBatch.Draw"}),
     };
     return w;

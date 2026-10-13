@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-476 distinct API names are claimed by at least one room.
+477 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -394,11 +394,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | RasterizerState.ScissorTestEnable | `sprite-scissor`, `rs-scissor` |
 | RasterizerState.SlopeScaleDepthBias | `rs-depthbias` |
 | Ray.Intersects | `col-ray-box`, `col-ray-sphere`, `col-ray-plane`, `col-pick` |
-| Rectangle | `vt-rectangle`, `sprite-sheet`, `sprite-ui` |
+| Rectangle | `vt-rectangle`, `sprite-sheet`, `sprite-ui`, `sprite-anim` |
 | Rectangle.Contains | `vt-rectangle` |
 | Rectangle.Inflate | `vt-rectangle` |
-| Rectangle.Intersect | `vt-rectangle` |
-| Rectangle.Intersects | `vt-rectangle` |
+| Rectangle.Intersect | `vt-rectangle`, `sprite-hit` |
+| Rectangle.Intersects | `vt-rectangle`, `sprite-hit` |
 | Rectangle.Union | `vt-rectangle` |
 | RenderTarget2D | `rendertarget`, `cam-orbit`, `cam-fov`, `cam-split`, `cam-mirror`, `sprite-basics`, `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave`, `rs-scissor`, `rt-basic`, `rt-lowres`, `rt-control`, `rt-recursive`, `rt-mirror`, `rt-msaa`, `pf-targets`, `rv-targets`, `rf-telescope` |
 | RenderTarget2D.Format | `rt-formats` |
@@ -464,10 +464,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SpriteBatch | `sprite-stress`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `rf-weather` |
 | SpriteBatch.Begin | `sprite-basics`, `sprite-camera`, `pf-sprites` |
 | SpriteBatch.Begin(effect) | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-vertexwave`, `cx-crt` |
-| SpriteBatch.Draw | `sprite-basics`, `sprite-origin`, `sprite-sheet`, `sprite-sort`, `sprite-parallax`, `sprite-ui`, `sprite-atlas`, `sprite-stress`, `rt-recursive`, `pf-sprites`, `pf-overdraw`, `rv-sprites` |
+| SpriteBatch.Draw | `sprite-basics`, `sprite-origin`, `sprite-sheet`, `sprite-sort`, `sprite-parallax`, `sprite-ui`, `sprite-atlas`, `sprite-hit`, `sprite-anim`, `sprite-stress`, `rt-recursive`, `pf-sprites`, `pf-overdraw`, `rv-sprites` |
 | SpriteBatch.DrawString | `text-align`, `text-transform`, `text-hud`, `text-labels` |
 | SpriteEffect | `be-model` |
 | SpriteEffects | `sprite-basics`, `text-transform`, `rv-sprites` |
+| SpriteEffects.FlipHorizontally | `sprite-anim` |
 | SpriteFont.Characters | `text-glyphs` |
 | SpriteFont.DefaultCharacter | `text-glyphs` |
 | SpriteFont.LineSpacing | `text-measure` |
@@ -487,10 +488,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | TextInputEXT.TextInput | `in-text` |
 | Texture2D | `materials`, `app-content`, `tex-mip`, `rf-garden` |
 | Texture2D.FromStream | `tex-io` |
-| Texture2D.GetData | `sprite-atlas`, `tex-dynamic`, `ct-formats`, `rv-targets` |
+| Texture2D.GetData | `sprite-atlas`, `sprite-hit`, `tex-dynamic`, `ct-formats`, `rv-targets` |
 | Texture2D.SaveAsJpeg | `tex-io` |
 | Texture2D.SaveAsPng | `tex-io` |
-| Texture2D.SetData | `sprite-ui`, `sprite-atlas`, `tex-dynamic` |
+| Texture2D.SetData | `sprite-ui`, `sprite-atlas`, `sprite-anim`, `tex-dynamic` |
 | Texture3D | `tex-volume` |
 | Texture3D.GetData | `tex-volume` |
 | Texture3D.SetData | `tex-volume` |
