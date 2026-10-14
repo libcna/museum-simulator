@@ -40,7 +40,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | haptic effects (devices are listed, none played) | planned: see HANDOFF.md |
 | `MediaLibrary`, albums, playlists, pictures (`Microsoft.Xna.Framework.Media`) | not implemented: they describe a device's media store, which a desktop does not have |
 | Video playback (`VideoPlayer`) | not implemented: needs CNA_ENABLE_VIDEO (FFmpeg), which this build leaves off |
-| GamerServices and Net beyond the basics: leaderboards, friends, invitations, parties, voice, online sessions, a SystemLink session between two machines | not demonstrated: the *Players and Networking* wing covers signed-in gamers, presence, privileges, profiles, achievements, the Guide, PacketWriter/Reader and a Local and a SystemLink session between the two local profiles; the *Avatars* room shows AvatarDescription, AvatarAnimation and AvatarRenderer; the rest needs a second machine or an account service |
+| GamerServices and Net beyond the basics: friends, invitations, parties, voice, online sessions, a SystemLink session between two machines | not demonstrated: the *Players and Networking* wing covers signed-in gamers, presence, privileges, profiles, achievements, the Guide, PacketWriter/Reader and a Local and a SystemLink session between the two local profiles; the *Leaderboards* room writes and reads ratings from the two local profiles; the *Avatars* room shows AvatarDescription, AvatarAnimation and AvatarRenderer; the rest needs a second machine or an account service |
 | `FileDialog`, `MessageBox`, `SystemTray`, `UrlLauncher`, `Camera` (CNA_DEVICES) | not implemented: they open real dialogs or hardware; the room reports whether each is supported |
 | Compiled XNA effects (`.fxb`), C API, Inspector | not implemented: disabled in CNA's default build for the renderers used here |
 | Retired renderers and removed CNA features (for example VULKAN, the post-process chain) | deliberately not demonstrated |
@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-621 distinct API names are claimed by at least one room.
+627 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -286,6 +286,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GameWindow.FileDropEXT | `pl-window` |
 | GameWindow.Title | `pl-window` |
 | Gamer.GetProfile | `gs-players` |
+| Gamer.LeaderboardWriter | `gs-leaderboards` |
 | Gamer.SignedInGamers | `gs-players` |
 | GamerPresenceMode | `gs-players` |
 | GamerProfile | `gs-players` |
@@ -372,6 +373,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | KeyboardState.IsKeyDown | `in-keyboard` |
 | Keys | `in-edges` |
 | LaunchParameters | `app-lifecycle` |
+| LeaderboardEntry | `gs-leaderboards` |
+| LeaderboardIdentity | `gs-leaderboards` |
+| LeaderboardKey | `gs-leaderboards` |
+| LeaderboardReader | `gs-leaderboards` |
+| LeaderboardWriter | `gs-leaderboards` |
 | LocalNetworkGamer.ReceiveData | `net-session` |
 | LocalNetworkGamer.SendData | `net-session` |
 | LooseFileContentTypeReader | `ct-custom` |

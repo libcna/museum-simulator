@@ -3,6 +3,8 @@
 // Without CNA's networking and GamerServices (-DMUSEUM_NETWORKING=OFF) every room here says so instead.
 #include <algorithm>
 #include <cstdio>
+#include <limits>
+#include <memory>
 #include <exception>
 #include <string>
 #include <vector>
@@ -18,6 +20,11 @@
 #include "Microsoft/Xna/Framework/GamerServices/GamerPresence.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/GamerProfile.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/Guide.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/LeaderboardEntry.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/LeaderboardIdentity.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/LeaderboardKey.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/LeaderboardReader.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/LeaderboardWriter.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/MessageBoxIcon.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/SignedInGamer.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/SignedInGamerCollection.hpp"
@@ -29,12 +36,13 @@ using namespace Microsoft::Xna::Framework::Graphics;
 
 namespace {
 
-enum class Mode { Players, Achievements, Guide };
+enum class Mode { Players, Achievements, Guide, Leaderboards };
 
 Mode ParseMode(const std::string& s)
 {
     if (s == "achievements") return Mode::Achievements;
     if (s == "guide") return Mode::Guide;
+    if (s == "leaderboards") return Mode::Leaderboards;
     return Mode::Players;
 }
 
@@ -108,6 +116,20 @@ public:
                 p.AddReadout("Guide.IsVisible", [] { return std::string(Guide::getIsVisibleProperty() ? "true (it owns the keyboard)" : "false"); });
                 p.AddReadout("Answer", [this] { return answer_; });
                 break;
+            case Mode::Leaderboards:
+                p.AddChoice("LeaderboardKey", {"BestScoreLifeTime", "BestScoreRecent", "BestTimeLifeTime", "BestTimeRecent"}, 0, [this](int v) { boardKey_ = v; dirty_ = true; });
+                p.AddChoice("Gamer to write", {"first signed-in", "second signed-in"}, 0, [this](int v) { writer_ = v; });
+                p.AddButton("LeaderboardWriter: add 10 to the rating", [this] { AddRating(10); });
+                p.AddButton("LeaderboardWriter: add 100 to the rating", [this] { AddRating(100); });
+                p.AddButton("LeaderboardWriter: reset the rating", [this] { AddRating(std::numeric_limits<long long>::min()); });
+                p.AddChoice("Page size", {"1", "2", "5"}, 0, [this](int v) { pageSize_ = v == 0 ? 1 : v == 1 ? 2 : 5; dirty_ = true; });
+                p.AddToggle("Read around the first gamer (pivot)", false, [this](bool v) { pivot_ = v; dirty_ = true; });
+                p.AddButton("LeaderboardReader.PageDown", [this] { Page(true); });
+                p.AddButton("LeaderboardReader.PageUp", [this] { Page(false); });
+                p.AddReadout("PageStart / TotalLeaderboardSize", [this] { return std::to_string(pageStart_) + " / " + std::to_string(total_); });
+                p.AddReadout("CanPageDown / CanPageUp", [this] { return YesNo(canDown_) + " / " + YesNo(canUp_); });
+                p.AddReadout("Store", [] { return std::string("CNA's local store, kept between runs"); });
+                break;
         }
 #else
         p.AddReadout("GamerServices", [] { return std::string("not built into this museum"); });
@@ -132,11 +154,16 @@ public:
         if (!ctx.nearby) return;
 #ifdef MUSEUM_NETWORKING
         refresh_ -= ctx.dt;
-        if (refresh_ <= 0.0f) {
+        const bool tick = refresh_ <= 0.0f;
+        if (tick) {
             refresh_ = 0.5f;
             Refresh();
         }
         Poll();
+        if (mode_ == Mode::Leaderboards && (dirty_ || tick)) {
+            ReadBoard(dirty_);
+            dirty_ = false;
+        }
 #endif
     }
 
@@ -164,6 +191,7 @@ protected:
             case Mode::Players: DrawPlayers(rect, text); break;
             case Mode::Achievements: DrawAchievements(rect, text); break;
             case Mode::Guide: DrawGuide(rect, text); break;
+            case Mode::Leaderboards: DrawBoard(rect, text); break;
         }
 #else
         text("This museum was built without CNA's GamerServices and networking (-DMUSEUM_NETWORKING=OFF).", 24, 90, Kit::Rgba(255, 190, 150), 0.7f);
@@ -176,7 +204,7 @@ protected:
 private:
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"Signed-in players", "Achievements", "The Guide"};
+        static const char* t[] = {"Signed-in players", "Achievements", "The Guide", "Leaderboards"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
@@ -184,6 +212,7 @@ private:
         switch (mode_) {
             case Mode::Players: return {"GamerServices models the people playing: Gamer.SignedInGamers lists them, each SignedInGamer carries presence, privileges and defaults,", "and GetProfile returns the gamer score and reputation. CNA signs in two local, offline profiles at start-up so the rooms next door have two players to connect."};
             case Mode::Achievements: return {"An achievement is a key the game awards to the signed-in gamer; the name, text and points come from a catalog the title ships", "(GamerServices/Achievements.json). The museum awards these itself as you explore, and the awards persist in CNA's local store between runs."};
+            case Mode::Leaderboards: return {"A leaderboard ranks gamers by a rating. LeaderboardWriter hands a gamer its own entry to set; LeaderboardReader pages through the ranked list or reads", "the page around one gamer. CNA keeps the ratings in its local store, so they are still here next time; the two signed-in profiles are the only gamers it can rank offline."};
             default: return {"The Guide is the platform's overlay: message boxes, text input, sign-in. While it is visible it owns the keyboard, controller and mouse and", "the game reads them released; the museum also stops moving you. Trial mode can be simulated to test a demo build's limits."};
         }
     }
@@ -267,6 +296,63 @@ private:
             }
         } catch (const std::exception& e) {
             lastError_ = e.what();
+        }
+    }
+
+    SignedInGamer* Nth(int n)
+    {
+        auto* gamers = Gamer::getSignedInGamersProperty();
+        if (gamers == nullptr || gamers->getCountProperty() == 0) return nullptr;
+        return (*gamers)[std::min(n, gamers->getCountProperty() - 1)];
+    }
+    [[nodiscard]] LeaderboardIdentity BoardId() const
+    {
+        static constexpr LeaderboardKey keys[] = {LeaderboardKey::BestScoreLifeTime, LeaderboardKey::BestScoreRecent, LeaderboardKey::BestTimeLifeTime, LeaderboardKey::BestTimeRecent};
+        return LeaderboardIdentity::Create(keys[std::clamp(boardKey_, 0, 3)]);
+    }
+    void AddRating(long long delta)
+    {
+        try {
+            SignedInGamer* g = Nth(writer_);
+            if (g == nullptr) return;
+            LeaderboardEntry* entry = g->getLeaderboardWriterProperty().GetLeaderboard(BoardId());
+            entry->setRatingProperty(delta == std::numeric_limits<long long>::min() ? 0 : entry->getRatingProperty() + delta);
+            dirty_ = true;
+        } catch (const std::exception& e) {
+            boardError_ = std::string(e.what()).substr(0, 60);
+        }
+    }
+    void Page(bool down)
+    {
+        try {
+            if (!reader_) return;
+            if (down && reader_->getCanPageDownProperty()) reader_->PageDown();
+            if (!down && reader_->getCanPageUpProperty()) reader_->PageUp();
+            ReadBoard(false);
+        } catch (const std::exception& e) {
+            boardError_ = std::string(e.what()).substr(0, 60);
+        }
+    }
+    // A new LeaderboardReader.Read starts at the top (or around the pivot); paging moves the same reader.
+    void ReadBoard(bool fresh)
+    {
+        try {
+            if (fresh || !reader_) {
+                reader_ = std::make_unique<LeaderboardReader>(pivot_ && Nth(0) != nullptr ? LeaderboardReader::Read(BoardId(), Nth(0), pageSize_) : LeaderboardReader::Read(BoardId(), 0, pageSize_));
+            }
+            rows_.clear();
+            const auto entries = reader_->getEntriesProperty();
+            for (int i = 0; i < entries.getCountProperty(); ++i) {
+                const LeaderboardEntry& e = entries[i];
+                rows_.push_back({e.getRankingEXTProperty(), e.getGamerProperty() != nullptr ? e.getGamerProperty()->getGamertagProperty() : std::string("?"), e.getRatingProperty()});
+            }
+            pageStart_ = reader_->getPageStartProperty();
+            total_ = reader_->getTotalLeaderboardSizeProperty();
+            canDown_ = reader_->getCanPageDownProperty();
+            canUp_ = reader_->getCanPageUpProperty();
+            boardError_.clear();
+        } catch (const std::exception& e) {
+            boardError_ = std::string(e.what()).substr(0, 60);
         }
     }
 
@@ -373,6 +459,26 @@ private:
     }
 
     template <typename Rect, typename Text>
+    void DrawBoard(Rect& rect, Text& text)
+    {
+        text(std::string("LeaderboardReader.Read(") + (pivot_ ? "id, gamer, " : "id, 0, ") + std::to_string(pageSize_) + ")   page " + std::to_string(pageStart_ / std::max(pageSize_, 1) + 1), 24, 62, Kit::kText, 0.65f);
+        if (!boardError_.empty()) text(boardError_, 24, 96, Kit::Rgba(255, 190, 150), 0.6f);
+        long long best = 1;
+        for (const Row& r : rows_) best = std::max(best, r.rating);
+        for (std::size_t i = 0; i < rows_.size() && i < 5; ++i) {
+            const Row& r = rows_[i];
+            const float y = 110.0f + static_cast<float>(i) * 70.0f;
+            rect(24, y, 912, 60, Color(22, 30, 46, 235));
+            const float w = 620.0f * static_cast<float>(r.rating) / static_cast<float>(best);
+            rect(300, y + 36, std::max(w, 2.0f), 16, r.rank == 1 ? Kit::kGold : Kit::Rgba(110, 170, 255));
+            text("#" + std::to_string(r.rank), 36, y + 10, r.rank == 1 ? Kit::kGold : Kit::kText, 0.85f);
+            text(r.tag, 110, y + 10, Kit::kText, 0.85f);
+            text("Rating " + std::to_string(r.rating), 300, y + 8, Kit::kDim, 0.55f);
+        }
+        if (rows_.empty()) text("This page has no entries: ranked gamers are those with a rating above zero.", 24, 120, Kit::kDim, 0.6f);
+    }
+
+    template <typename Rect, typename Text>
     void DrawGuide(Rect& rect, Text& text)
     {
         text("Guide.IsVisible: " + std::string(Guide::getIsVisibleProperty() ? "true" : "false") + "     Guide.IsTrialMode: " + std::string(Guide::getIsTrialModeProperty() ? "true" : "false"), 24, 66, Kit::kText, 0.65f);
@@ -384,6 +490,16 @@ private:
         if (Guide::getIsTrialModeProperty()) text("TRIAL MODE: a demo build would lock the full game here.", 24, 290, Kit::Rgba(255, 200, 120), 0.8f);
     }
 
+    struct Row {
+        int rank;
+        std::string tag;
+        long long rating;
+    };
+    std::unique_ptr<LeaderboardReader> reader_;
+    std::vector<Row> rows_;
+    int boardKey_ = 0, writer_ = 0, pageSize_ = 1, pageStart_ = 0, total_ = 0;
+    bool pivot_ = false, dirty_ = true, canDown_ = false, canUp_ = false;
+    std::string boardError_;
     struct Tile {
         std::string key, name, description;
         int score = 0;

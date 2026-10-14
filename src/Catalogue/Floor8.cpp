@@ -193,6 +193,8 @@ WingSpec PlayersWing()
              {"Gamer.SignedInGamers", "SignedInGamer.Presence", "SignedInGamer.Privileges", "SignedInGamer.GameDefaults", "Gamer.GetProfile", "GamerProfile", "SignedInGamer.SignedIn", "GamerPresenceMode"}),
         room("gs-achievements", "Achievements", "A catalog the title ships, awards kept by the framework: the museum awards them as you explore", "players-lab", "achievements",
              {"SignedInGamer.AwardAchievement", "SignedInGamer.GetAchievements", "Achievement", "AchievementCollection"}),
+        room("gs-leaderboards", "Leaderboards", "LeaderboardWriter sets a gamer's rating, LeaderboardReader pages through the ranking or reads around one gamer", "players-lab", "leaderboards",
+             {"LeaderboardWriter", "LeaderboardEntry", "LeaderboardReader", "LeaderboardIdentity", "LeaderboardKey", "Gamer.LeaderboardWriter"}),
         room("gs-guide", "The Guide", "Message boxes and text input drawn by the platform overlay, trial mode and notification position", "players-lab", "guide",
              {"Guide.BeginShowMessageBox", "Guide.EndShowMessageBox", "Guide.BeginShowKeyboardInput", "Guide.IsTrialMode", "Guide.SimulateTrialMode", "Guide.IsVisible", "Guide.NotificationPosition", "MessageBoxIcon"}),
         room("gs-avatar", "Avatars", "AvatarDescription, AvatarAnimation and AvatarRenderer: CNA's original avatars standing in the museum's own scene", "avatar-lab", "avatar",
