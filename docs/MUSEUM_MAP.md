@@ -284,7 +284,7 @@ BasicEffect, the stock effects, lighting and custom shaders
 | 4.3.11 | `fx-halftone` | Halftone | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
 | 4.3.12 | `fx-vertexwave` | Vertex Shader | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
 | 4.3.13 | `fx-colormatrix` | Colour Matrix | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D, ColorMatrixEffect, ColorMatrixEffect.SetColorMatrix, ColorMatrixEffect.SetColorOffset, Matrix |
-| 4.3.14 | `fx-compiled` | Compiled XNA Effects | XNA 4.0 | Effect, Effect(GraphicsDevice, byte[]), Effect.Parameters, Effect.Techniques, EffectParameter, EffectParameter.SetValue, EffectTechnique, EffectPass, EffectParameterClass, EffectParameterType, GraphicsCapability.CompiledEffects, SpriteBatch.Begin |
+| 4.3.14 | `fx-compiled` | Compiled XNA Effects | XNA 4.0 | Effect, Effect(GraphicsDevice, byte[]), Effect.Parameters, Effect.Techniques, EffectParameter, EffectParameter.SetValue, EffectParameter.GetValueSingle, EffectParameter.GetValueVector2, EffectTechnique, EffectPass, EffectParameterClass, EffectParameterType, GraphicsCapability.CompiledEffects, SpriteBatch.Begin |
 
 ### Floor 5: Render State and Render Targets
 

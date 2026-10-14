@@ -49,7 +49,7 @@ WingSpec ShaderWing()
         RoomSpec fb = sh("fx-compiled", "Compiled XNA Effects", "Effect(device, bytes) loads an .fxb built by XNA's effect compiler; where the renderer cannot run one, the room says so", "compiled");
         fb.exhibit = "fxb-lab";
         fb.params = {};
-        fb.apis = {"Effect", "Effect(GraphicsDevice, byte[])", "Effect.Parameters", "Effect.Techniques", "EffectParameter", "EffectParameter.SetValue", "EffectTechnique", "EffectPass", "EffectParameterClass", "EffectParameterType",
+        fb.apis = {"Effect", "Effect(GraphicsDevice, byte[])", "Effect.Parameters", "Effect.Techniques", "EffectParameter", "EffectParameter.SetValue", "EffectParameter.GetValueSingle", "EffectParameter.GetValueVector2", "EffectTechnique", "EffectPass", "EffectParameterClass", "EffectParameterType",
                    "GraphicsCapability.CompiledEffects", "SpriteBatch.Begin"};
         fb.origin = ApiOrigin::Xna;
         w.rooms.push_back(fb);

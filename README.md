@@ -30,7 +30,7 @@ exhibit rooms:   274  (5 outdoors)
 walkable cells:  339  (rooms, galleries, concourses, halls, elevators)
 exhibit kinds:   57
 origin:          218 XNA 4.0, 56 CNA extension, 0 application
-API names:       730
+API names:       732
   floor 0  10 rooms  Lobby and Introductory Tour
   floor 1  53 rooms  Fundamentals
   floor 2  23 rooms  Two-Dimensional Rendering

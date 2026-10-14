@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-730 distinct API names are claimed by at least one room.
+732 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -250,6 +250,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Effect.Techniques | `fx-compiled` |
 | EffectAnnotation | `be-model` |
 | EffectParameter | `be-model`, `fx-compiled` |
+| EffectParameter.GetValueSingle | `fx-compiled` |
+| EffectParameter.GetValueVector2 | `fx-compiled` |
 | EffectParameter.SetValue | `fx-compiled` |
 | EffectParameterClass | `be-model`, `fx-compiled` |
 | EffectParameterCollection | `be-model` |

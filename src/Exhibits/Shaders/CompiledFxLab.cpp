@@ -61,6 +61,7 @@ public:
         p.AddReadout("Effect", [this] { return status_; });
         p.AddReadout("Parameters", [this] { return parameters_; });
         p.AddReadout("Techniques", [this] { return techniques_; });
+        p.AddReadout("Read back (GetValue*)", [this] { return readBack_; });
         AddInfoSign(b, "Compiled XNA Effects",
                     {"An XNA project compiles its .fx files into Effect assets. CNA loads that binary (Effect(device, bytes), or a ContentManager reading the Effect from an .xnb) and reflects it like XNA does,",
                      "but runs it only where the renderer reports CompiledEffects (FNA3D). CNA embeds no HLSL compiler: this one was built with XNA Game Studio 4.0 from Content/Effects/blur2tap.fx."});
@@ -100,6 +101,10 @@ protected:
                 effect_->getParametersProperty()["Weight"]->SetValue(weight_);
                 const float w = tex != nullptr ? static_cast<float>(std::max(1, tex->getWidthProperty())) : 256.0f, h = tex != nullptr ? static_cast<float>(std::max(1, tex->getHeightProperty())) : 256.0f;
                 effect_->getParametersProperty()["Offset"]->SetValue(Vector2(offset_.X / w, offset_.Y / h));
+                const Vector2 o = effect_->getParametersProperty()["Offset"]->GetValueVector2();
+                char rb[96];
+                std::snprintf(rb, sizeof rb, "Weight %.2f, Offset (%.4f, %.4f)", static_cast<double>(effect_->getParametersProperty()["Weight"]->GetValueSingle()), static_cast<double>(o.X), static_cast<double>(o.Y));
+                readBack_ = rb;
             }
             sb.Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::LinearClamp, nullptr, nullptr, run ? effect_.get() : nullptr);
             if (tex != nullptr) sb.Draw(*tex, Rectangle(500, 70, 400, 400), Color::White);
@@ -141,7 +146,7 @@ private:
     float weight_ = 0.5f;
     Vector2 offset_{6.0f, 0.0f};
     int picture_ = 0;
-    std::string capability_ = "-", status_ = "-", parameters_ = "-", techniques_ = "-";
+    std::string capability_ = "-", status_ = "-", parameters_ = "-", techniques_ = "-", readBack_ = "-";
 };
 
 }  // namespace
