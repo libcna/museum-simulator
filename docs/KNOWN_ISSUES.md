@@ -84,3 +84,13 @@ Found by the museum's own exhibits; fixed in the CNA repository (commit ids are 
   resource but keep their own disposed flag): measured in the *Resource Lifetime* room.
 - With CNA's keyboard-emulated gamepad on, WASD also drives the emulated left stick; the museum's player controller
   ignores the pad while emulation is on so the visitor is not moved twice.
+
+
+## Unexplained: one heap corruption during a fuzz run
+
+`tools/tour.sh -f 3 -z 30 -s 3` on OPENGLES3 aborted once with glibc's "corrupted double-linked list (not small)" late in the tour
+(after the Resource room). It followed three caught exceptions from the Sprite scissor room (a scissor rectangle larger than the
+surface, since fixed). The same sequence did not reproduce afterwards: not in an unfixed AddressSanitizer + UBSan build (the three
+exceptions were thrown again, no report), not in a fixed ASan build, and not in a fixed normal build (exit 0, 0 exhibit errors).
+It may be a fault in a system library that ASan does not instrument (llvmpipe), or CNA state left behind when an exception left a
+`SpriteBatch` open. Watch for it in long fuzz runs.
