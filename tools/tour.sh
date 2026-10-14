@@ -2,7 +2,7 @@
 # Visits every room (or the ones named) for a few frames each on a private virtual display and reports
 # errors, exceptions and the museum's own resource counters. Exit status 0 only if nothing went wrong.
 #   tools/tour.sh [-f FRAMES] [-p] [-z N] [-s SEED] [room-key ...]      -p: also operate every control of every room (smoke test)
-#                                                       -z N: then N random control actions per room (fuzz; repeatable; -s SEED picks the sequence; the whole script is one argument, so keep N below ~35)
+#                                                       -z N: then N random control actions per room (fuzz; repeatable; -s SEED picks the sequence; the script goes through a file, so N is not limited by the command line)
 set -u
 cd "$(dirname "$0")/.." || exit 2
 frames=12
@@ -25,7 +25,9 @@ for k in "${keys[@]}"; do script+="goto:$k;wait:$frames;"; [ $press = 1 ] && scr
 script+="stats;quit"
 echo "touring ${#keys[@]} rooms, $frames frames each ..."
 start=$(date +%s)
-MUSEUM_TIMEOUT=${MUSEUM_TIMEOUT:-1500} tools/run.sh "$script" --no-audio > "${BUILD_DIR:-build}/tour.log" 2>&1
+# The script goes through a file: with many rooms and fuzz steps it outgrows the longest command-line argument the kernel allows.
+printf '%s' "$script" > "${BUILD_DIR:-build}/tour.script"
+MUSEUM_TIMEOUT=${MUSEUM_TIMEOUT:-1500} tools/run.sh "@${BUILD_DIR:-build}/tour.script" --no-audio > "${BUILD_DIR:-build}/tour.log" 2>&1
 status=$?
 end=$(date +%s)
 grep -E "\[museum\]\[(script|stats|main)\]|exception|ERROR|FAILED|INVALID|Assertion" "${BUILD_DIR:-build}/tour.log" | grep -v "^\[museum\]\[models\]" | grep -v "pressall: [0-9]* panel" | tail -15

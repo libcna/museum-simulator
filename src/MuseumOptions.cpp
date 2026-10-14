@@ -1,6 +1,8 @@
 #include "MuseumOptions.hpp"
 
 #include <cstdio>
+#include <fstream>
+#include <sstream>
 #include <cstdlib>
 #include <cstring>
 
@@ -39,6 +41,7 @@ const char* MuseumOptions::Usage()
         "  --time HOURS [--time-run] set the museum clock (0..24, default 11); frozen unless --time-run\n"
         "  --fixed-step SECONDS      advance the simulation by a fixed step per frame\n"
         "  --script \"a;b;c\"          scripted test actions (see src/MuseumGame.cpp, RunScript)\n"
+        "  --script-file PATH        the same, read from a file (a long tour does not fit in one command-line argument)\n"
         "  --validate                check the museum's structure (no window); exit status 1 if invalid\n"
         "  --list-rooms              print the key of every room (no window)\n"
         "  --list-turned-rooms       print the rooms entered from the north (their local frame is turned half a circle)\n"
@@ -75,6 +78,15 @@ MuseumOptions MuseumOptions::Parse(int argc, char** argv)
         else if (!std::strcmp(a, "--time-run")) o.timeRuns = true;
         else if (Match(a, "--fixed-step", v, i, argc, argv)) o.fixedTimeStep = static_cast<float>(std::atof(v));
         else if (Match(a, "--script", v, i, argc, argv)) o.script = v;
+        else if (Match(a, "--script-file", v, i, argc, argv)) {
+            // The same script read from a file (one action per line or separated by ';'): a long tour does not fit in one argument.
+            std::ifstream in(v);
+            std::stringstream text;
+            text << in.rdbuf();
+            o.script = text.str();
+            for (char& c : o.script) if (c == '\n' || c == '\r') c = ';';
+            if (!in) std::fprintf(stderr, "cna-3d-museum: cannot read the script file '%s'\n", v);
+        }
         else if (!std::strcmp(a, "--validate")) o.validate = true;
         else if (!std::strcmp(a, "--inventory")) o.inventory = true;
         else if (Match(a, "--view", v, i, argc, argv)) o.view = v;
