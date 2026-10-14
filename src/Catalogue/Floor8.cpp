@@ -61,6 +61,20 @@ WingSpec ContentWing()
             r.origin = ApiOrigin::Xna;
             return r;
         }(),
+        []{
+            RoomSpec r;
+            r.key = "ct-fontbuild";
+            r.title = "Building a Font";
+            r.subtitle = "FontDescriptionProcessor rasterises a TrueType file into a glyph atlas at run time; the text on the screen is drawn with the font it made";
+            r.exhibit = "fontbuild-lab";
+            r.width = 13;
+            r.depth = 13;
+            r.height = 5.0f;
+            r.theme = "workshop";
+            r.apis = {"FontDescription", "FontDescriptionProcessor", "FontDescriptionStyle", "SpriteFontContent", "FontDescription.Characters", "FontDescription.DefaultCharacter", "ContentIdentity", "SpriteFont", "SpriteFont.MeasureString", "SpriteBatch.DrawString"};
+            r.origin = ApiOrigin::Xna;
+            return r;
+        }(),
         ct("ct-storage", "Title Files and Saved Data", "TitleContainer.OpenStream, StorageDevice and StorageContainer", "storage", {"TitleContainer.OpenStream", "StorageDevice", "StorageContainer", "StorageContainer.CreateDirectory", "StorageContainer.DeleteDirectory", "StorageContainer.DirectoryExists", "StorageContainer.GetFileNames", "StorageContainer.GetDirectoryNames", "StorageDevice.GetStorageRootEXT", "StorageDevice.DeleteContainer", "StorageDevice.TotalSpace", "StorageDevice.FreeSpace"}),
         ct("ct-custom", "Teaching ContentManager a New Type", "Your own types loaded through ContentManager: a loose-file reader and a named .cnj loader", "custom", {"ContentManager.RegisterTypeReader", "LooseFileContentTypeReader", "ContentManager.RegisterCnjLoader", "ContentLoadException"}, ApiOrigin::CnaExtension),
         ct("ct-reader", "Content Readers", "An .xnb file with your own type: a ContentTypeReader registered under the name the file records", "reader",

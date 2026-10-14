@@ -51,7 +51,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-929 distinct API names are claimed by at least one room.
+937 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -223,6 +223,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CompareFunction | `tex-alpha`, `rs-depthfunc`, `rv-depth` |
 | CompareFunction.NotEqual | `rs-outline` |
 | ContainmentType | `col-box-box` |
+| ContentIdentity | `ct-fontbuild` |
 | ContentItem | `ct-intermediate` |
 | ContentLoadException | `app-content`, `ct-failure`, `ct-custom`, `ct-resource`, `pl-exceptions` |
 | ContentManager | `models`, `app-content` |
@@ -329,6 +330,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | EnvironmentMapEffect | `tex-cube`, `rt-cube` |
 | EnvironmentMapEffect.EnvironmentMap | `rt-cube` |
 | EvaluateMorphWeightsEXT | `model-morph` |
+| FontDescription | `ct-fontbuild` |
+| FontDescription.Characters | `ct-fontbuild` |
+| FontDescription.DefaultCharacter | `ct-fontbuild` |
+| FontDescriptionProcessor | `ct-fontbuild` |
+| FontDescriptionStyle | `ct-fontbuild` |
 | FriendCollection | `on-friends` |
 | FriendGamer | `on-friends` |
 | FriendGamer.IsAway | `on-friends` |
@@ -853,20 +859,22 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SpriteBatch.Begin | `sprite-basics`, `sprite-camera`, `sprite-tilemap`, `fx-compiled`, `rt-bloom`, `pl-exceptions`, `pf-sprites` |
 | SpriteBatch.Begin(effect) | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `cx-crt` |
 | SpriteBatch.Draw | `sprite-basics`, `sprite-origin`, `sprite-sheet`, `sprite-sort`, `sprite-parallax`, `sprite-ui`, `sprite-atlas`, `sprite-hit`, `sprite-anim`, `sprite-tilemap`, `sprite-lights`, `sprite-stress`, `rt-recursive`, `pf-sprites`, `pf-overdraw`, `rv-sprites` |
-| SpriteBatch.DrawString | `text-align`, `text-transform`, `text-hud`, `text-labels` |
+| SpriteBatch.DrawString | `text-align`, `text-transform`, `text-hud`, `text-labels`, `ct-fontbuild` |
 | SpriteBatch.End | `pl-exceptions` |
 | SpriteEffect | `be-model` |
 | SpriteEffects | `sprite-basics`, `text-transform`, `rv-sprites` |
 | SpriteEffects.FlipHorizontally | `sprite-anim` |
+| SpriteFont | `ct-fontbuild` |
 | SpriteFont.Characters | `text-glyphs` |
 | SpriteFont.CroppingEXT | `text-glyphs` |
 | SpriteFont.DefaultCharacter | `text-glyphs` |
 | SpriteFont.GlyphBoundsEXT | `text-glyphs` |
 | SpriteFont.KerningEXT | `text-glyphs` |
 | SpriteFont.LineSpacing | `text-measure` |
-| SpriteFont.MeasureString | `text-align`, `text-measure` |
+| SpriteFont.MeasureString | `text-align`, `text-measure`, `ct-fontbuild` |
 | SpriteFont.Spacing | `text-measure` |
 | SpriteFont.TextureEXT | `text-glyphs` |
+| SpriteFontContent | `ct-fontbuild` |
 | SpriteSortMode | `sprite-sort`, `pf-sprites` |
 | StencilOperation | `rs-portal`, `rs-stencilcount` |
 | StencilOperation.Increment | `rs-shadow` |
