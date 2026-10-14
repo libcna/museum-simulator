@@ -3,7 +3,12 @@
 Working notes for whoever continues this project (human or agent). Everything marked *checked* was run on the date
 given; anything unverified says so. Counts are not repeated here: run `build/bin/cna-3d-museum --validate`.
 
-## State (checked 2026-10-13, extended 2026-10-14)
+## State (checked 2026-10-13, extended 2026-10-14 and 2026-10-15)
+
+- **2026-10-15 full battery (`tools/check_all.sh`, OPENGLES3): all nine steps green**, 284 rooms, `museum_tests` 7,327 checks. Also run on 2026-10-14/15:
+  multi-renderer `tours -p` (FNA3D, WEBGPU, SDL_GPU) 0 exhibit errors; ASan+UBSan tour over 283 rooms and fuzz seed 8 clean; Wine SOFTWARE 286 rooms
+  and, after the CNA fix `d3f1a9e51`, Wine DIRECTX9 286 rooms with 0 exhibit errors; `room_diff` over 284 rooms (OPENGL33 and SOFTWARE).
+  One unexplained heap abort in a Release fuzz run (seed 8, see KNOWN_ISSUES) did not reproduce under ASan or malloc checking.
 
 - Ten floors (0-9), all built from the catalogue in `src/Catalogue/FloorN.cpp`; `docs/MUSEUM_MAP.md` lists every room and
   `build/bin/cna-3d-museum --validate` prints the current counts (they are generated, not copied here).
