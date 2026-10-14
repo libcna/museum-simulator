@@ -101,7 +101,7 @@ WingSpec TextWing()
         text("text-measure", "Measuring Text", "MeasureString boxes, Spacing and LineSpacing on a private font", "measure", {"SpriteFont.MeasureString", "SpriteFont.Spacing", "SpriteFont.LineSpacing"}),
         text("text-transform", "Rotating and Scaling Text", "DrawString with rotation, origin, per-axis scale, flips, per-character colour and text on a circle", "transform",
              {"SpriteBatch.DrawString", "SpriteEffects"}),
-        text("text-glyphs", "Glyphs and the Default Character", "The font's character set and what happens with characters it does not have", "glyphs", {"SpriteFont.Characters", "SpriteFont.DefaultCharacter"}),
+        text("text-glyphs", "Glyphs and the Default Character", "The font's character set and what happens with characters it does not have", "glyphs", {"SpriteFont.GlyphBoundsEXT", "SpriteFont.CroppingEXT", "SpriteFont.KerningEXT", "SpriteFont.TextureEXT", "SpriteFont.Characters", "SpriteFont.DefaultCharacter"}),
         text("text-hud", "HUD Text and StringBuilder", "A health bar, animated score, clock and the StringBuilder overload of DrawString", "hud", {"SpriteBatch.DrawString", "StringBuilder"}),
         text("text-labels", "World Labels", "Labels above 3D objects with Viewport.Project and edge pointers for off-screen targets", "labels", {"Viewport.Project", "SpriteBatch.DrawString"}),
     };

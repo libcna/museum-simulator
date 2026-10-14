@@ -47,7 +47,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-698 distinct API names are claimed by at least one room.
+702 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -653,10 +653,14 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SpriteEffects | `sprite-basics`, `text-transform`, `rv-sprites` |
 | SpriteEffects.FlipHorizontally | `sprite-anim` |
 | SpriteFont.Characters | `text-glyphs` |
+| SpriteFont.CroppingEXT | `text-glyphs` |
 | SpriteFont.DefaultCharacter | `text-glyphs` |
+| SpriteFont.GlyphBoundsEXT | `text-glyphs` |
+| SpriteFont.KerningEXT | `text-glyphs` |
 | SpriteFont.LineSpacing | `text-measure` |
 | SpriteFont.MeasureString | `text-align`, `text-measure` |
 | SpriteFont.Spacing | `text-measure` |
+| SpriteFont.TextureEXT | `text-glyphs` |
 | SpriteSortMode | `sprite-sort`, `pf-sprites` |
 | StencilOperation | `rs-portal`, `rs-stencilcount` |
 | StencilOperation.Increment | `rs-shadow` |

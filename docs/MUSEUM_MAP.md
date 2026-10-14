@@ -200,7 +200,7 @@ SpriteBatch, SpriteFont and the techniques built on them
 | 2.4.01 | `text-align` | Alignment and Wrapping | XNA 4.0 | SpriteFont.MeasureString, SpriteBatch.DrawString |
 | 2.4.02 | `text-measure` | Measuring Text | XNA 4.0 | SpriteFont.MeasureString, SpriteFont.Spacing, SpriteFont.LineSpacing |
 | 2.4.03 | `text-transform` | Rotating and Scaling Text | XNA 4.0 | SpriteBatch.DrawString, SpriteEffects |
-| 2.4.04 | `text-glyphs` | Glyphs and the Default Character | XNA 4.0 | SpriteFont.Characters, SpriteFont.DefaultCharacter |
+| 2.4.04 | `text-glyphs` | Glyphs and the Default Character | XNA 4.0 | SpriteFont.GlyphBoundsEXT, SpriteFont.CroppingEXT, SpriteFont.KerningEXT, SpriteFont.TextureEXT, SpriteFont.Characters, SpriteFont.DefaultCharacter |
 | 2.4.05 | `text-hud` | HUD Text and StringBuilder | XNA 4.0 | SpriteBatch.DrawString, StringBuilder |
 | 2.4.06 | `text-labels` | World Labels | XNA 4.0 | Viewport.Project, SpriteBatch.DrawString |
 

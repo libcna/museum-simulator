@@ -65,6 +65,8 @@ public:
                 break;
             case Mode::Glyphs:
                 p.AddToggle("DefaultCharacter = '?'", true, [this](bool v) { useDefault_ = v; if (font_) font_->setDefaultCharacterProperty(v ? std::optional<charcs>('?') : std::nullopt); });
+                p.AddSlider("Inspect a glyph (index)", 0.0f, 94.0f, static_cast<float>(inspect_), [this](float v) { inspect_ = static_cast<int>(v); }, "%.0f", 1.0f);
+                p.AddReadout("Glyph", [this] { return GlyphText(); });
                 p.AddReadout("Glyphs in this font", [this] { return std::to_string(font_ ? font_->getCharactersProperty().size() : 0); });
                 p.AddReadout("MeasureString(\"Příliš\")", [this] { return Attempt("Příliš"); });
                 p.AddReadout("MeasureString(\"Ωmega\")", [this] { return Attempt("Ωmega"); });
@@ -332,6 +334,7 @@ private:
                 ++row;
             }
         }
+        DrawInspector(sb);
         Str(sb, useDefault_ ? "DefaultCharacter = '?': unknown glyphs are substituted" : "No DefaultCharacter: unknown glyphs throw", 24, 330, Color(255, 226, 150, 255), 0.8f);
         if (useDefault_) {
             try {
@@ -341,6 +344,34 @@ private:
         } else {
             Str(sb, "(the line is not drawn: drawing it would throw)", 24, 380, Color(255, 150, 140, 255), 0.8f);
         }
+    }
+
+    // The glyph as the font stores it: a rectangle of the atlas texture, the cropping that was trimmed away and the kerning triple (left bearing, width, right bearing).
+    [[nodiscard]] std::string GlyphText() const
+    {
+        if (!font_) return "-";
+        const auto& chars = font_->getCharactersProperty();
+        if (chars.empty()) return "-";
+        const std::size_t i = std::min<std::size_t>(static_cast<std::size_t>(inspect_), chars.size() - 1);
+        const Rectangle& g = font_->getGlyphBoundsEXT()[i];
+        const Rectangle& c = font_->getCroppingEXT()[i];
+        const Vector3& k = font_->getKerningEXT()[i];
+        char buf[200];
+        std::snprintf(buf, sizeof buf, "'%c'  bounds %d,%d %dx%d  crop %d,%d  kerning %.1f / %.1f / %.1f", chars[i] < 128 ? static_cast<char>(chars[i]) : '?', g.X, g.Y, g.Width, g.Height, c.X, c.Y, static_cast<double>(k.X), static_cast<double>(k.Y), static_cast<double>(k.Z));
+        return buf;
+    }
+    void DrawInspector(SpriteBatch& sb)
+    {
+        if (!font_ || font_->getCharactersProperty().empty()) return;
+        const std::size_t i = std::min<std::size_t>(static_cast<std::size_t>(inspect_), font_->getCharactersProperty().size() - 1);
+        const Rectangle g = font_->getGlyphBoundsEXT()[i];
+        const Rectangle c = font_->getCroppingEXT()[i];
+        const int scale = std::max(1, std::min(220 / std::max(1, g.Width + 8), 220 / std::max(1, g.Height + 8)));
+        sb.Draw(*S().whiteTexture, Rectangle(660, 170, 240, 150), Color(30, 36, 56, 255));
+        // The cell the glyph occupies once uncropped, then the stored pixels inside it.
+        sb.Draw(*S().whiteTexture, Rectangle(680, 180, (c.Width > 0 ? c.Width : g.Width) * scale, (c.Height > 0 ? c.Height : g.Height) * scale), Color(60, 70, 110, 255));
+        sb.Draw(font_->getTextureEXT(), Rectangle(680 + (c.X) * scale, 180 + (c.Y) * scale, g.Width * scale, g.Height * scale), g, Color::White);
+        Str(sb, GlyphText(), 24, 300, Color(170, 180, 210, 255), 0.55f);
     }
 
     void DrawHud(SpriteBatch& sb)
@@ -372,7 +403,7 @@ private:
     std::vector<Target> targets_;
     float time_ = 0.0f;
     float width_ = 620.0f, scale_ = 0.9f, scaleY_ = 1.2f, speed_ = 0.8f, spacing_ = 0.0f, lineSpacing_ = 27.0f, health_ = 72.0f, shownScore_ = 0.0f;
-    int align_ = 0, score_ = 1250;
+    int align_ = 0, score_ = 1250, inspect_ = 33;
     bool wrap_ = true, flip_ = false, useDefault_ = true, useBuilder_ = true, pointers_ = true;
 };
 
