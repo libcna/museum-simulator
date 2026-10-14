@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -20,6 +21,7 @@
 #include "Diagnostics/Log.hpp"
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
+#include "Microsoft/Xna/Framework/Graphics/Texture2D.hpp"
 #include "Microsoft/Xna/Framework/Input/Buttons.hpp"
 #include "Microsoft/Xna/Framework/Input/GamePad.hpp"
 #include "Microsoft/Xna/Framework/Input/Keyboard.hpp"
@@ -109,7 +111,7 @@ public:
                 p.AddReadout("Longest hold", [this] { return Fmt(longest_) + " s"; });
                 break;
             case Mode::Mouse:
-                p.AddChoice("Cursor shape (Esc shows it)", {"Arrow", "Crosshair", "Hand", "IBeam", "No", "SizeAll", "Wait"}, 0, [this](int v) { SetCursor(v); });
+                p.AddChoice("Cursor shape (Esc shows it)", {"Arrow", "Crosshair", "Hand", "IBeam", "No", "SizeAll", "Wait", "WaitArrow", "SizeNS", "SizeWE", "SizeNESW", "SizeNWSE", "FromTexture2D (a ring made here)"}, 0, [this](int v) { SetCursor(v); });
                 p.AddReadout("Position X, Y", [this] { return std::to_string(mx_) + ", " + std::to_string(my_); });
                 p.AddReadout("Wheel (vertical)", [this] { return std::to_string(wheel_); });
                 p.AddReadout("Wheel (horizontal)", [this] { return std::to_string(hwheel_); });
@@ -549,6 +551,28 @@ private:
                 case 4: Mouse::SetCursor(MouseCursor::getNoProperty()); break;
                 case 5: Mouse::SetCursor(MouseCursor::getSizeAllProperty()); break;
                 case 6: Mouse::SetCursor(MouseCursor::getWaitProperty()); break;
+                case 7: Mouse::SetCursor(MouseCursor::getWaitArrowProperty()); break;
+                case 8: Mouse::SetCursor(MouseCursor::getSizeNSProperty()); break;
+                case 9: Mouse::SetCursor(MouseCursor::getSizeWEProperty()); break;
+                case 10: Mouse::SetCursor(MouseCursor::getSizeNESWProperty()); break;
+                case 11: Mouse::SetCursor(MouseCursor::getSizeNWSEProperty()); break;
+                case 12: {
+                    // A cursor from a Texture2D: a 32 x 32 ring with a dot, hot spot in the middle.
+                    if (!ringTexture_) {
+                        std::vector<Color> px(32 * 32, Color(0, 0, 0, 0));
+                        for (int y = 0; y < 32; ++y)
+                            for (int x = 0; x < 32; ++x) {
+                                const float d = std::sqrt((static_cast<float>(x) - 15.5f) * (static_cast<float>(x) - 15.5f) + (static_cast<float>(y) - 15.5f) * (static_cast<float>(y) - 15.5f));
+                                if (d > 11.0f && d < 14.5f) px[static_cast<std::size_t>(y * 32 + x)] = Color(255, 210, 80, 255);
+                                else if (d < 2.5f) px[static_cast<std::size_t>(y * 32 + x)] = Color(255, 255, 255, 255);
+                            }
+                        ringTexture_ = std::make_unique<Texture2D>(*S().device, 32, 32);
+                        ringTexture_->SetData(px.data(), 32 * 32);
+                    }
+                    customCursor_ = std::make_unique<MouseCursor>(MouseCursor::FromTexture2D(*ringTexture_, 16, 16));
+                    Mouse::SetCursor(*customCursor_);
+                    break;
+                }
                 default: Mouse::SetCursor(MouseCursor::getArrowProperty()); break;
             }
         } catch (const std::exception&) {}
@@ -829,6 +853,8 @@ private:
     std::vector<Keys> down_;
     CNA::Input::KeyModifiersEXT mods_ = static_cast<CNA::Input::KeyModifiersEXT>(0);
     bool names_ = true;
+    std::unique_ptr<Texture2D> ringTexture_;
+    std::unique_ptr<MouseCursor> customCursor_;
     std::string lastKey_ = "(none yet)";
     // edges
     int watch_ = 0, presses_ = 0, releases_ = 0;

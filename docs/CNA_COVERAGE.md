@@ -47,7 +47,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-697 distinct API names are claimed by at least one room.
+698 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -467,6 +467,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Mouse.IsRelativeMouseModeEXT | `in-mouse` |
 | Mouse.SetCursor | `in-mouse` |
 | MouseCursor | `in-mouse` |
+| MouseCursor.FromTexture2D | `in-mouse` |
 | MouseState | `in-mouse` |
 | NetworkGamer.IsHost | `net-session` |
 | NetworkGamer.IsLocal | `net-session` |

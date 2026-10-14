@@ -408,7 +408,7 @@ Sound, music, keyboards, mice and game pads
 |---|---|---|---|---|
 | 7.2.01 | `in-keyboard` | The Keyboard | XNA 4.0 | Keyboard.GetState, KeyboardState.IsKeyDown, KeyboardState.GetPressedKeys, Keyboard.GetKeyNameEXT, Keyboard.GetModStateEXT |
 | 7.2.02 | `in-edges` | Pressed, Held, Released | XNA 4.0 | KeyboardState, Keys |
-| 7.2.03 | `in-mouse` | The Mouse | XNA 4.0 | Mouse.GetState, MouseState, ButtonState, Mouse.IsRelativeMouseModeEXT, Mouse.SetCursor, MouseCursor |
+| 7.2.03 | `in-mouse` | The Mouse | XNA 4.0 | Mouse.GetState, MouseState, ButtonState, Mouse.IsRelativeMouseModeEXT, Mouse.SetCursor, MouseCursor, MouseCursor.FromTexture2D |
 | 7.2.04 | `in-pad` | The Game Pad | XNA 4.0 | GamePad.GetState, GamePadState, GamePadDeadZone, Buttons, GamePadState.IsButtonDown, GamePadState.IsButtonUp, GamePadState.Equals, GamePad.SetVibration, GamePad.KeyboardEmulationEnabledEXT |
 | 7.2.05 | `in-players` | Four Player Slots | XNA 4.0 | PlayerIndex, GamePad.GetCapabilities, GamePadCapabilities, GamePad.GetNameEXT |
 | 7.2.06 | `in-text` | Text Input and Clipboard | CNA extension | TextInputEXT.TextInput, TextInputEXT.StartTextInput, Clipboard.SetTextEXT, Clipboard.GetTextEXT |
