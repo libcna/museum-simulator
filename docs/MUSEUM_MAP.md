@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 34 wings, 258 exhibit rooms (5 open to the sky), 322 walkable cells in all.
+10 floors, 34 wings, 259 exhibit rooms (5 open to the sky), 323 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -318,7 +318,8 @@ RasterizerState, DepthStencilState, BlendState and off-screen rendering
 | 5.2.06 | `rt-mrt` | Multiple Render Targets | CNA extension | GraphicsDevice.SetRenderTargets, RenderTargetBinding, ShaderEffect |
 | 5.2.07 | `rt-formats` | Render Target Formats | CNA extension | SurfaceFormat, RenderTarget2D.Format, GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT |
 | 5.2.08 | `rt-cube` | A Live Cube Map | XNA 4.0 | RenderTargetCube, GraphicsDevice.SetRenderTarget, CubeMapFace, EnvironmentMapEffect, EnvironmentMapEffect.EnvironmentMap |
-| 5.2.09 | `rt-msaa` | Multisampled Targets | XNA 4.0 | RenderTarget2D.MultiSampleCount, GraphicsCapability.MultiSampleAntiAliasing, RenderTarget2D, RasterizerState.MultiSampleAntiAlias |
+| 5.2.09 | `rt-bloom` | Bloom from Blending | XNA 4.0 | BlendFunction.ReverseSubtract, BlendState.Additive, RenderTarget2D, SpriteBatch.Begin, SamplerState.LinearClamp |
+| 5.2.10 | `rt-msaa` | Multisampled Targets | XNA 4.0 | RenderTarget2D.MultiSampleCount, GraphicsCapability.MultiSampleAntiAliasing, RenderTarget2D, RasterizerState.MultiSampleAntiAlias |
 
 ### Floor 6: Models, Animation and Particles
 

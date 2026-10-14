@@ -1,6 +1,7 @@
 // Render-target laboratory: RenderTarget2D from the basics to a control room with six feeds, feedback,
 // a planar mirror, multiple render targets and format support. One class, seven rooms ("mode").
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <exception>
 #include <string>
@@ -33,7 +34,7 @@ using namespace MathKit;
 
 namespace {
 
-enum class Mode { Basic, LowRes, Control, Recursive, Mirror, Mrt, Formats, Cube };
+enum class Mode { Basic, LowRes, Control, Recursive, Mirror, Mrt, Formats, Cube, Bloom };
 
 Mode ParseMode(const std::string& s)
 {
@@ -44,6 +45,7 @@ Mode ParseMode(const std::string& s)
     if (s == "mrt") return Mode::Mrt;
     if (s == "formats") return Mode::Formats;
     if (s == "cube") return Mode::Cube;
+    if (s == "bloom") return Mode::Bloom;
     return Mode::Basic;
 }
 
@@ -124,6 +126,14 @@ public:
                 p.AddReadout("RenderTargetCube", [this] { return cube_ ? std::to_string(cube_->getWidthProperty()) + " px per face, 6 faces, " + std::to_string(cube_->getLevelCountProperty()) + " level(s)" : cubeStatus_; });
                 p.AddReadout("Faces drawn per refresh", [] { return std::string("6 (+X -X +Y -Y +Z -Z)"); });
                 break;
+            case Mode::Bloom:
+                p.AddSlider("Threshold (ReverseSubtract colour)", 0.2f, 0.95f, bloomThreshold_, [this](float v) { bloomThreshold_ = v; });
+                p.AddSlider("Intensity (additive tint)", 0.0f, 1.0f, bloomIntensity_, [this](float v) { bloomIntensity_ = v; });
+                p.AddChoice("Blur levels", {"1  (1/2 size)", "2  (1/4 size)", "3  (1/8 size)"}, 2, [this](int v) { bloomLevels_ = v + 1; });
+                p.AddToggle("Bloom on", true, [this](bool v) { bloomOn_ = v; });
+                p.AddReadout("Render targets per frame", [this] { return std::to_string(2 + bloomLevels_ + 1) + " (bright pass, " + std::to_string(bloomLevels_) + " levels, composite)"; });
+                p.AddReadout("Shaders used", [] { return std::string("none: only BlendState and SpriteBatch"); });
+                break;
             case Mode::Formats:
                 p.AddHeading("SupportsSurfaceFormatAsRenderTargetEXT");
                 for (int i = 0; i < 6; ++i) p.AddReadout(kFormats[i].name, [this, i] { return formatStatus_[static_cast<std::size_t>(i)]; });
@@ -163,6 +173,13 @@ public:
             } catch (const std::exception& e) {
                 Museum::Log("targets", "MRT shader: %s", e.what());
             }
+        }
+        if (mode_ == Mode::Bloom) {
+            source_ = std::make_unique<MiniView>(S(), 480, 270);
+            const auto make = [&](int w, int h) { return std::make_unique<RenderTarget2D>(d, w, h, false, SurfaceFormat::Color, DepthFormat::None); };
+            bright_ = make(480, 270);
+            out_ = make(480, 270);
+            for (int i = 0; i < 3; ++i) chain_[static_cast<std::size_t>(i)] = make(480 >> (i + 1), 270 >> (i + 1));
         }
         if (mode_ == Mode::Formats) ProbeFormats();
         if (mode_ == Mode::Cube) {
@@ -229,6 +246,7 @@ public:
             case Mode::Mirror: RenderMirror(ctx, scene); break;
             case Mode::Mrt: RenderMrt(ctx, scene); break;
             case Mode::Cube: RenderCube(ctx, scene); break;
+            case Mode::Bloom: RenderBloom(ctx); break;
             default: break;
         }
         (void)d;
@@ -268,6 +286,7 @@ public:
             }
             case Mode::Formats: DrawFormatTiles(ctx); break;
             case Mode::Cube: DrawCubeReflection(ctx); break;
+            case Mode::Bloom: DrawBloom(ctx); break;
         }
         RenderStates::SetOpaque3D(ctx.device);
         gizmos_.Flush(ctx);
@@ -281,7 +300,7 @@ private:
 
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"RenderTarget2D basics", "Low-resolution rendering", "A control room of render targets", "Feedback: a screen that sees itself", "A planar mirror", "Multiple render targets", "Render target formats", "A live cube map"};
+        static const char* t[] = {"RenderTarget2D basics", "Low-resolution rendering", "A control room of render targets", "Feedback: a screen that sees itself", "A planar mirror", "Multiple render targets", "Render target formats", "A live cube map", "Bloom from blending alone"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
@@ -293,6 +312,7 @@ private:
             case Mode::Recursive: return {"Two render targets swap roles every frame: the previous picture is drawn (rotated, faded) into the new one", "under the live scene, so the screen shows a tunnel of itself. Exactly one frame of memory per level."};
             case Mode::Mirror: return {"A real mirror: a second camera sits where your reflection's eye would be (the reflected eye), draws the room", "into a render target, and the mirror shows it with texture coordinates taken from your own view of the wall."};
             case Mode::Cube: return {"A RenderTargetCube is a cube texture you can draw into, one face at a time: the scene is rendered six times from the", "sphere's centre (SetRenderTarget(cube, face)), then the sphere is drawn with EnvironmentMapEffect using the cube as its mirror."};
+            case Mode::Bloom: return {"Bloom needs no shader: subtract a threshold with BlendFunction.ReverseSubtract to keep only the bright part, shrink it through a", "chain of smaller render targets with linear filtering (each step doubles it, so it spreads), then add the chain back over the scene."};
             case Mode::Mrt: return {"With MultipleRenderTargets a single draw writes several textures at once (SetRenderTargets). A GLSL ShaderEffect", "declares two outputs: grayscale in target 0 and an edge map in target 1."};
             default: return {"Which surface formats can be rendered into depends on the renderer. Each format is queried, a target is created,", "cleared to a colour and read back: the answer is what the renderer really does, not what a table says."};
         }
@@ -464,6 +484,92 @@ private:
         S().shapes->Sphere().Draw(d);
     }
 
+    // Bloom with nothing but blending. Every step is a SpriteBatch draw into a render target:
+    //   bright   = scene, then a flat grey drawn with ReverseSubtract (dest - source), which clamps at 0: only what exceeds the threshold survives
+    //   chain[i] = the previous image drawn twice, additively, at half size with a linear sampler: the shrink blurs and the second draw doubles
+    //   out      = the scene, then every chain level added back at full size (linear again, so each upscale blurs once more)
+    void RenderBloom(const DrawContext& ctx)
+    {
+        GraphicsDevice& d = ctx.device;
+        if (!source_ || !bright_ || !out_) return;
+        const Vector3 stage = R().ToWorld(0.0f, 0.02f, 0.0f);
+        const float a = time_ * 0.35f;
+        const Vector3 eye = stage + Off(std::cos(a) * 5.0f, 2.4f, std::sin(a) * 5.0f);
+        source_->Render(ctx, Matrix::CreateLookAt(eye, stage + Vector3(0, 0.5f, 0), Vector3::Up),
+                        Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(55.0f), source_->Aspect(), 0.1f, 60.0f), eye,
+                        [this, stage](const DrawContext& sub) {
+                            DrawDiorama(sub, S(), stage, time_, 3.0f);
+                            for (int i = 0; i < 3; ++i) {   // three lamps far brighter than anything else in the picture
+                                const float t = time_ * 0.7f + static_cast<float>(i) * 2.09f;
+                                gizmos_.SolidSphere(sub, stage + Off(std::cos(t) * 1.8f, 1.4f + 0.3f * std::sin(t * 1.7f), std::sin(t) * 1.8f), 0.16f, Vector3(1.0f, 0.95f, 0.8f));
+                            }
+                        }, Color(40, 60, 100, 255));
+        SpriteBatch& sb = *S().sprites;
+        Texture2D& white = *S().whiteTexture;
+        const Rectangle full(0, 0, 480, 270);
+        const auto into = [&](RenderTarget2D& rt, const Color& clear) {
+            RenderStates::UnbindTextures(d);
+            d.SetRenderTarget(&rt);
+            d.setViewportProperty(Viewport(0, 0, rt.getWidthProperty(), rt.getHeightProperty()));
+            d.Clear(clear);
+        };
+        BlendState subtract;
+        subtract.setColorBlendFunctionProperty(BlendFunction::ReverseSubtract);
+        subtract.setColorSourceBlendProperty(Blend::One);
+        subtract.setColorDestinationBlendProperty(Blend::One);
+        subtract.setAlphaBlendFunctionProperty(BlendFunction::Add);
+        subtract.setAlphaSourceBlendProperty(Blend::Zero);
+        subtract.setAlphaDestinationBlendProperty(Blend::One);
+        // 1. the bright pass
+        into(*bright_, Color::Black);
+        sb.Begin(SpriteSortMode::Deferred, &BlendState::Opaque, &SamplerState::LinearClamp, nullptr, nullptr);
+        sb.Draw(*source_->Texture(), full, Color::White);
+        sb.End();
+        const std::uint8_t level = static_cast<std::uint8_t>(std::clamp(bloomThreshold_, 0.0f, 1.0f) * 255.0f);
+        sb.Begin(SpriteSortMode::Deferred, &subtract, &SamplerState::PointClamp, nullptr, nullptr);
+        sb.Draw(white, full, Color(level, level, level, static_cast<std::uint8_t>(255)));
+        sb.End();
+        // 2. the chain
+        RenderTarget2D* previous = bright_.get();
+        for (int i = 0; i < bloomLevels_; ++i) {
+            RenderTarget2D& next = *chain_[static_cast<std::size_t>(i)];
+            into(next, Color::Black);
+            const Rectangle to(0, 0, next.getWidthProperty(), next.getHeightProperty());
+            sb.Begin(SpriteSortMode::Deferred, &BlendState::Additive, &SamplerState::LinearClamp, nullptr, nullptr);
+            sb.Draw(*previous, to, Color::White);
+            sb.Draw(*previous, to, Color::White);
+            sb.End();
+            previous = &next;
+        }
+        // 3. the composite
+        into(*out_, Color::Black);
+        sb.Begin(SpriteSortMode::Deferred, &BlendState::Opaque, &SamplerState::LinearClamp, nullptr, nullptr);
+        sb.Draw(*source_->Texture(), full, Color::White);
+        sb.End();
+        if (bloomOn_) {
+            const std::uint8_t tint = static_cast<std::uint8_t>(std::clamp(bloomIntensity_, 0.0f, 1.0f) * 255.0f);
+            sb.Begin(SpriteSortMode::Deferred, &BlendState::Additive, &SamplerState::LinearClamp, nullptr, nullptr);
+            for (int i = 0; i < bloomLevels_; ++i) sb.Draw(*chain_[static_cast<std::size_t>(i)], full, Color(tint, tint, tint, tint));
+            sb.End();
+        }
+        d.SetRenderTarget(nullptr);
+    }
+
+    void DrawBloom(const DrawContext& ctx)
+    {
+        float yw = 0.0f;
+        const Vector3 big = FarPoint(0.0f, 2.9f, yw);
+        if (out_) DrawTarget(ctx, out_.get(), big, yw, 5.6f, 16.0f / 9.0f, false);
+        const float x[3] = {-3.4f, 0.0f, 3.4f};
+        const char* names[3] = {"scene", "bright pass", "last blur level"};
+        Texture2D* tex[3] = {source_ ? source_->Texture() : nullptr, bright_.get(), chain_[static_cast<std::size_t>(std::max(0, bloomLevels_ - 1))].get()};
+        for (int i = 0; i < 3; ++i) {
+            const Vector3 c = FarPoint(x[i], 0.95f, yw);
+            if (tex[i]) DrawTarget(ctx, tex[i], c, yw, 2.5f, 16.0f / 9.0f, false);
+            gizmos_.Label(c + Vector3(0, 0.85f, 0), names[i], Color(255, 230, 150, 255), 0.45f);
+        }
+    }
+
     void RenderMrt(const DrawContext& ctx, const std::function<void(const DrawContext&)>& scene)
     {
         GraphicsDevice& d = ctx.device;
@@ -523,6 +629,11 @@ private:
         (void)ctx;
     }
 
+    std::unique_ptr<RenderTarget2D> bright_, out_;
+    std::array<std::unique_ptr<RenderTarget2D>, 3> chain_;
+    float bloomThreshold_ = 0.6f, bloomIntensity_ = 1.0f;
+    int bloomLevels_ = 3;
+    bool bloomOn_ = true;
     std::unique_ptr<RenderTargetCube> cube_;
     std::unique_ptr<EnvironmentMapEffect> env_;
     std::string cubeStatus_ = "-";
