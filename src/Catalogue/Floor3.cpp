@@ -30,6 +30,14 @@ WingSpec BuffersWing()
     w.rooms = {
         Geo("geo-triangle", "A Triangle and Its Winding", "Vertex order decides which side faces you; RasterizerState.CullMode removes one", "triangle",
             {"VertexPositionColor", "GraphicsDevice.DrawUserPrimitives", "RasterizerState.CullMode"}),
+        [] {
+            RoomSpec r = Geo("geo-vertextypes", "Vertex Types", "VertexPositionColor, Texture, ColorTexture, NormalTexture and a vertex the museum declares, with the declaration each reports", "",
+                             {"VertexDeclaration", "VertexDeclaration.GetVertexElements", "VertexDeclaration.VertexStride", "VertexElement", "VertexElementFormat", "VertexElementUsage", "VertexPositionColor", "VertexPositionTexture",
+                              "VertexPositionColorTexture", "VertexPositionNormalTexture", "VertexBuffer", "BasicEffect.VertexColorEnabled", "BasicEffect.TextureEnabled"});
+            r.exhibit = "vertextypes-lab";
+            r.params = {};
+            return r;
+        }(),
         Geo("geo-indexed", "Vertex and Index Buffers", "One cube drawn without indices, with 8 shared vertices and with 24 lit vertices", "indexed",
             {"VertexBuffer", "IndexBuffer", "GraphicsDevice.DrawIndexedPrimitives", "GraphicsDevice.DrawPrimitives"}),
         Geo("geo-primitives", "Primitive Types", "TriangleList, TriangleStrip, LineList, LineStrip and the CNA point list from the same vertices", "primitives",

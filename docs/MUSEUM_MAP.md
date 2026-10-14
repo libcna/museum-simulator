@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 36 wings, 279 exhibit rooms (5 open to the sky), 345 walkable cells in all.
+10 floors, 36 wings, 280 exhibit rooms (5 open to the sky), 346 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -213,15 +213,16 @@ Vertex data, buffers, primitives and textures
 | Room | Key | Title | Origin | APIs |
 |---|---|---|---|---|
 | 3.1.01 | `geo-triangle` | A Triangle and Its Winding | XNA 4.0 | VertexPositionColor, GraphicsDevice.DrawUserPrimitives, RasterizerState.CullMode |
-| 3.1.02 | `geo-indexed` | Vertex and Index Buffers | XNA 4.0 | VertexBuffer, IndexBuffer, GraphicsDevice.DrawIndexedPrimitives, GraphicsDevice.DrawPrimitives |
-| 3.1.03 | `geo-primitives` | Primitive Types | XNA 4.0 | PrimitiveType, GraphicsDevice.DrawUserPrimitives |
-| 3.1.04 | `geo-dynamic` | Dynamic Vertex Buffers | XNA 4.0 | DynamicVertexBuffer, SetDataOptions, VertexPositionNormalTexture, GraphicsDevice.DrawUserIndexedPrimitives |
-| 3.1.05 | `geo-procedural` | Procedural Geometry | XNA 4.0 | VertexBuffer, IndexBuffer, RasterizerState.FillMode |
-| 3.1.06 | `geo-index32` | 32-Bit Indices | XNA 4.0 | IndexBuffer, IndexElementSize |
-| 3.1.07 | `geo-manybuffers` | Many Small Buffers | XNA 4.0 | VertexBuffer, GraphicsDevice.DrawIndexedPrimitives |
-| 3.1.08 | `geo-instancing` | Hardware Instancing | XNA 4.0 | VertexBufferBinding, GraphicsDevice.DrawInstancedPrimitives, GraphicsCapability.Instancing |
-| 3.1.09 | `geo-dynindex` | Dynamic Index Buffers | XNA 4.0 | DynamicIndexBuffer, SetDataOptions.Discard, GraphicsDevice.DrawIndexedPrimitives, IndexBuffer |
-| 3.1.10 | `geo-terrain` | Heightmap Terrain | XNA 4.0 | Texture2D.GetData, VertexBuffer, IndexBuffer, VertexPositionNormalTexture, GraphicsDevice.DrawIndexedPrimitives, RasterizerState.FillMode, MathHelper.Lerp |
+| 3.1.02 | `geo-vertextypes` | Vertex Types | XNA 4.0 | VertexDeclaration, VertexDeclaration.GetVertexElements, VertexDeclaration.VertexStride, VertexElement, VertexElementFormat, VertexElementUsage, VertexPositionColor, VertexPositionTexture, VertexPositionColorTexture, VertexPositionNormalTexture, VertexBuffer, BasicEffect.VertexColorEnabled, BasicEffect.TextureEnabled |
+| 3.1.03 | `geo-indexed` | Vertex and Index Buffers | XNA 4.0 | VertexBuffer, IndexBuffer, GraphicsDevice.DrawIndexedPrimitives, GraphicsDevice.DrawPrimitives |
+| 3.1.04 | `geo-primitives` | Primitive Types | XNA 4.0 | PrimitiveType, GraphicsDevice.DrawUserPrimitives |
+| 3.1.05 | `geo-dynamic` | Dynamic Vertex Buffers | XNA 4.0 | DynamicVertexBuffer, SetDataOptions, VertexPositionNormalTexture, GraphicsDevice.DrawUserIndexedPrimitives |
+| 3.1.06 | `geo-procedural` | Procedural Geometry | XNA 4.0 | VertexBuffer, IndexBuffer, RasterizerState.FillMode |
+| 3.1.07 | `geo-index32` | 32-Bit Indices | XNA 4.0 | IndexBuffer, IndexElementSize |
+| 3.1.08 | `geo-manybuffers` | Many Small Buffers | XNA 4.0 | VertexBuffer, GraphicsDevice.DrawIndexedPrimitives |
+| 3.1.09 | `geo-instancing` | Hardware Instancing | XNA 4.0 | VertexBufferBinding, GraphicsDevice.DrawInstancedPrimitives, GraphicsCapability.Instancing |
+| 3.1.10 | `geo-dynindex` | Dynamic Index Buffers | XNA 4.0 | DynamicIndexBuffer, SetDataOptions.Discard, GraphicsDevice.DrawIndexedPrimitives, IndexBuffer |
+| 3.1.11 | `geo-terrain` | Heightmap Terrain | XNA 4.0 | Texture2D.GetData, VertexBuffer, IndexBuffer, VertexPositionNormalTexture, GraphicsDevice.DrawIndexedPrimitives, RasterizerState.FillMode, MathHelper.Lerp |
 
 **Textures** - Mip levels, filters, addressing, UVs, formats, alpha, cube and volume textures, image encode/decode
 

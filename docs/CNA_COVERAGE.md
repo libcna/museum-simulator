@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-777 distinct API names are claimed by at least one room.
+784 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -106,8 +106,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BasicEffect.SpecularColor | `be-material` |
 | BasicEffect.SpecularPower | `be-material` |
 | BasicEffect.Texture | `pf-state` |
-| BasicEffect.TextureEnabled | `be-combos` |
-| BasicEffect.VertexColorEnabled | `be-combos`, `rv-shading` |
+| BasicEffect.TextureEnabled | `geo-vertextypes`, `be-combos` |
+| BasicEffect.VertexColorEnabled | `geo-vertextypes`, `be-combos`, `rv-shading` |
 | BasicEffect.World | `rv-camera` |
 | BasicEffect.setPunctualLightEXT | `be-punctual` |
 | Bgr565 | `vt-packed` |
@@ -803,12 +803,19 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Vector3Converter | `vt-converters` |
 | Vector4.Transform | `mat-screen` |
 | Vector4Converter | `vt-converters` |
-| VertexBuffer | `geo-indexed`, `geo-procedural`, `geo-manybuffers`, `geo-terrain`, `model-skinfx`, `pf-buffers` |
+| VertexBuffer | `geo-vertextypes`, `geo-indexed`, `geo-procedural`, `geo-manybuffers`, `geo-terrain`, `model-skinfx`, `pf-buffers` |
 | VertexBufferBinding | `geo-instancing`, `pf-objects` |
-| VertexPositionColor | `geo-triangle` |
-| VertexPositionColorTexture | `tex-uv`, `an-conveyor` |
-| VertexPositionNormalTexture | `geo-dynamic`, `geo-terrain` |
+| VertexDeclaration | `geo-vertextypes` |
+| VertexDeclaration.GetVertexElements | `geo-vertextypes` |
+| VertexDeclaration.VertexStride | `geo-vertextypes` |
+| VertexElement | `geo-vertextypes` |
+| VertexElementFormat | `geo-vertextypes` |
+| VertexElementUsage | `geo-vertextypes` |
+| VertexPositionColor | `geo-triangle`, `geo-vertextypes` |
+| VertexPositionColorTexture | `geo-vertextypes`, `tex-uv`, `an-conveyor` |
+| VertexPositionNormalTexture | `geo-vertextypes`, `geo-dynamic`, `geo-terrain` |
 | VertexPositionNormalTextureSkinned | `model-skinfx`, `model-skinext` |
+| VertexPositionTexture | `geo-vertextypes` |
 | Video | `au-video` |
 | VideoPlayer | `au-video` |
 | VideoPlayer.GetTexture | `au-video` |
