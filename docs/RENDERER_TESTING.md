@@ -96,7 +96,7 @@ WINEPREFIX=$HOME/.cache/museum-wine SDL_VIDEODRIVER=windows CNA_GRAPHICS_RENDERE
 
 The Windows tree is configured with `-DMUSEUM_NETWORKING=OFF`: CNA's GamerServices needs libcurl, which the MinGW sysroot does not have, so the Players and Networking rooms there say they are not built in (the Avatars, Leaderboards and Net rooms are Linux-only for now). The content pipeline room (`MUSEUM_PIPELINE`) does build and run under Wine.
 
-Under Wine the SOFTWARE renderer draws the lobby identically to Linux and tours all 257 rooms with every control operated (exit 0, 0 exhibit errors, 1,413 s). **DIRECTX9** (Wine's Direct3D on llvmpipe OpenGL) runs
+Under Wine the SOFTWARE renderer draws the lobby identically to Linux and tours all rooms with every control operated (272 rooms on 2026-10-14: exit 0, 0 exhibit errors, 1,313 s; the networking, avatar and video rooms say they are not built in on this tree; 257 rooms earlier took 1,413 s). **DIRECTX9** (Wine's Direct3D on llvmpipe OpenGL) runs
 the whole tour without a crash (58 s) but 11 rooms or stages are switched off by the museum's guard, all with one CNA message:
 `DirectX9Renderer::DrawPrimitivesEx (BasicEffect): stride N with lighting=... vertexColor=... texture=... has no matching CNA
 vertex layout`. The DirectX 9 renderer keys its vertex declaration on the *stride alone* (16, 20, 24, 32 or 52 bytes) and supports
