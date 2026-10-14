@@ -85,7 +85,7 @@ public:
                 p.AddSlider("Near plane", 0.05f, 6.0f, near_, [this](float v) { near_ = v; }, "%.2f");
                 p.AddSlider("Far plane", 4.0f, 60.0f, far_, [this](float v) { far_ = v; }, "%.1f");
                 p.AddHeading("Anything outside [near, far] is clipped");
-                p.AddReadout("Far / near ratio", [this] { return Fmt(far_ / near_); });
+                p.AddReadout("Far / near ratio", [this] { return Fmt(std::max(far_, near_ + 0.5f) / near_); });
                 p.AddReadout("Depth buffer", [] { return std::string("24-bit; high ratios z-fight"); });
                 break;
             case Mode::Transition:
@@ -167,7 +167,7 @@ public:
                 Matrix view = Matrix::CreateLookAt(p.eye, p.target, mode_ == Mode::TopDown ? Off(0, 0, -1) : Vector3::Up);
                 Matrix proj;
                 if (mode_ == Mode::TopDown && ortho_) proj = Matrix::CreateOrthographic(size_, size_ / aspect, 0.5f, 40.0f);
-                else if (mode_ == Mode::Clip) proj = Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(60.0f), aspect, near_, far_);
+                else if (mode_ == Mode::Clip) proj = Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(60.0f), aspect, near_, std::max(far_, near_ + 0.5f));
                 else proj = Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(mode_ == Mode::Security ? fov_ : 60.0f), aspect, 0.1f, 80.0f);
                 a_->Render(ctx, view, proj, p.eye, scene);
             }
@@ -354,7 +354,7 @@ private:
         gizmos_.Line(p.eye, p.target, Color(255, 120, 100, 255));
         const float aspect = 16.0f / 9.0f;
         Matrix proj = Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(mode_ == Mode::Fov ? fov_ : (mode_ == Mode::Security ? fov_ : 60.0f)), aspect, 0.3f, mode_ == Mode::Clip ? near_ + (far_ - near_) * 0.2f : 3.0f);
-        if (mode_ == Mode::Clip) proj = Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(60.0f), aspect, near_, far_);
+        if (mode_ == Mode::Clip) proj = Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(60.0f), aspect, near_, std::max(far_, near_ + 0.5f));
         gizmos_.Frustum(BoundingFrustum(Matrix::CreateLookAt(p.eye, p.target, mode_ == Mode::TopDown ? Off(0, 0, -1) : Vector3::Up) * proj), Color(255, 200, 80, 255));
         gizmos_.Label(p.eye + Vector3(0, 0.25f, 0), "camera", ToColor(kRed * 1.3f), 0.5f);
     }

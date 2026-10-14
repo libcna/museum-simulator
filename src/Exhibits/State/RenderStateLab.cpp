@@ -145,7 +145,7 @@ public:
         view_->Render(ctx, Matrix::CreateLookAt(eye, centre, Vector3::Up), Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(55.0f), view_->Aspect(), 0.1f, 60.0f), eye,
                       [this, &d](const DrawContext& sub) {
                           static RasterizerState sc = [] { RasterizerState r = RasterizerState::CullClockwise; r.setScissorTestEnableProperty(true); return r; }();
-                          d.setScissorRectangleProperty(scissor_ ? Rectangle(static_cast<int>(sx_), 60, static_cast<int>(sw_), 240) : Rectangle(0, 0, 640, 360));
+                          d.setScissorRectangleProperty(scissor_ ? Rectangle(static_cast<int>(sx_), 60, std::min(static_cast<int>(sw_), 640 - static_cast<int>(sx_)), 240) : Rectangle(0, 0, 640, 360));
                           d.setRasterizerStateProperty(scissor_ ? sc : RasterizerState::CullClockwise);
                           DrawDiorama(sub, S(), R().ToWorld(0, 0.02f, 0), time_, 3.0f);
                           d.setScissorRectangleProperty(Rectangle(0, 0, 640, 360));

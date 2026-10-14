@@ -62,6 +62,7 @@ public:
     [[nodiscard]] Microsoft::Xna::Framework::Vector3 Centre() const { return room_.ToWorld(pose_.x, pose_.y, pose_.z); }
 
 private:
+    std::uint32_t fuzzState_ = 2463534242u;
     enum class Kind { Slider, Toggle, Choice, Button, Readout, Heading };
     struct Row {
         Kind kind = Kind::Heading;
@@ -79,6 +80,7 @@ private:
     void Handle(const InteractEvent& event);
     /** Scripted use (tests): operates the first row whose label contains `label`. A slider takes `value`. */
     bool Press(const std::string& label, const float* value);
+    /** Label "*" sweeps every control; label "#" is one random fuzz step (see ControlPanel.cpp). */
     void Redraw();
     [[nodiscard]] std::string Prompt() const;
 

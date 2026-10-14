@@ -624,6 +624,7 @@ void MuseumGame::SaveScreenshot(const std::string& path)
 //   e               press E on whatever is under the crosshair
 //   use:I           activate interactable I directly (index in registration order)
 //   pressall        operate every control of the current room through its whole range (smoke test)
+//   fuzz            one random action (random control, random value) on every panel of the current room
 //   time:H          set the museum clock to hour H (0..24)
 //   press:LABEL[=V] operate the control-panel row whose label contains LABEL (slider value V)
 //   shot:FILE       save a screenshot        quit            exit
@@ -734,6 +735,17 @@ void MuseumGame::RunScript()
                         }
                     }
             Museum::Log("script", "pressall: %d panel(s) exercised", panels);
+        } else if (op == "fuzz") {
+            // fuzz: one random action on every panel of the current room (repeat it with waits in between: tools/tour.sh -z)
+            if (InteractionSystem* interaction = world_->CurrentInteraction())
+                for (const auto& item : interaction->Items())
+                    if (item.command) {
+                        try {
+                            (void)item.command("#", nullptr);
+                        } catch (const std::exception& e) {
+                            ReportInteractionFailure(std::string("fuzz: ") + e.what());
+                        }
+                    }
         } else if (op == "shot") {
             pendingShot_ = arg;
             scriptWait_ = 2;

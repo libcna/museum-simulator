@@ -271,6 +271,35 @@ bool ControlPanel::Press(const std::string& label, const float* value)
         dirty_ = true;
         return true;
     }
+    if (label == "#") {
+        // Fuzz step: one random control gets a random value (the extremes are chosen a quarter of the time, because that is where
+        // renderers and CNA reject things). The generator is the panel's own, so a run is repeatable.
+        std::vector<Row*> live;
+        for (Row& r : rows_)
+            if (r.kind == Kind::Slider || r.kind == Kind::Toggle || r.kind == Kind::Choice || r.kind == Kind::Button) live.push_back(&r);
+        if (live.empty()) return false;
+        const auto next = [this] {
+            fuzzState_ ^= fuzzState_ << 13;
+            fuzzState_ ^= fuzzState_ >> 17;
+            fuzzState_ ^= fuzzState_ << 5;
+            return fuzzState_;
+        };
+        Row& r = *live[next() % live.size()];
+        const float unit = static_cast<float>(next() % 10001) / 10000.0f;
+        switch (r.kind) {
+            case Kind::Slider: {
+                const std::uint32_t pick = next() % 8;
+                r.value = pick == 0 ? r.min : pick == 1 ? r.max : r.min + (r.max - r.min) * unit;
+                if (r.onValue) r.onValue(r.value);
+                break;
+            }
+            case Kind::Toggle: r.value = r.value > 0.5f ? 0.0f : 1.0f; if (r.onValue) r.onValue(r.value); break;
+            case Kind::Choice: r.value = static_cast<float>(next() % std::max<std::size_t>(1, r.options.size())); if (r.onValue) r.onValue(r.value); break;
+            default: if (r.onPress) r.onPress(); break;
+        }
+        dirty_ = true;
+        return true;
+    }
     for (Row& r : rows_) {
         if (r.label.find(label) == std::string::npos) continue;
         const auto fire = [&](float v) {
