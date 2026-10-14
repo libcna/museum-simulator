@@ -18,7 +18,7 @@ VULKAN was retired from CNA on 2026-10-13 and has been removed from the museum's
 |---|---|
 | `tools/renderer_check.sh [R...]` | runs the floor 9 *Renderer Validation* rooms on each renderer; prints PASS/FAIL counts and leaves every check in `build/renderer_check/<R>.checks` |
 | `tools/tour.sh` | walks into every room and runs a few frames: catches exceptions and unsupported-call failures |
-| `tools/reference.sh capture\|compare` | stored images for 24 named views per renderer (`tests/reference/<R>`) |
+| `tools/reference.sh capture\|compare` | stored images for 30 named views (OPENGLES3 only) (`tests/reference/<R>`) |
 | `tools/roomshots.sh`, `tools/shot.sh` | contact sheets and single screenshots for comparing renderers by eye |
 
 ## The Renderer Validation rooms (floor 9)
@@ -46,7 +46,11 @@ Run `tools/renderer_check.sh` for the current figures; they are not copied anywh
 |---|---|---|
 | OPENGLES3 | clean | - |
 | OPENGL33 | clean | 0.00 % of pixels differ by more than 15/255 |
-| SOFTWARE | clean (about 10 minutes for the whole museum) | 4.6 % |
+| SOFTWARE | clean (about 25 minutes for the whole museum under Xvfb) | 4.6 % |
+
+Re-checked on 2026-10-14 with 250 rooms after the room-frame change and the new rooms: `tools/tour.sh -f 3 -p` exits 0 on all three
+renderers (OPENGLES3 65 s, OPENGL33 62 s, SOFTWARE 1,501 s); the stencil, cube-map, SkinnedEffect, terrain and off-centre rooms
+look the same on all three.
 
 ## Findings
 
