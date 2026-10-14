@@ -25,6 +25,9 @@
 #include "Microsoft/Xna/Framework/GamerServices/AvatarBone.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/AvatarDescription.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/AvatarExpression.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/AvatarEye.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/AvatarEyebrow.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/AvatarMouth.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/AvatarRenderer.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/AvatarRendererState.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/Gamer.hpp"
@@ -79,7 +82,10 @@ public:
         p.AddChoice("Body type", {"Female", "Male"}, 1, [this](int v) { bodyType_ = v == 0 ? AvatarBodyType::Female : AvatarBodyType::Male; NewAvatar(); });
         p.AddButton("AvatarDescription.CreateRandom", [this] { NewAvatar(); });
         p.AddButton("The Visitor's own (BeginGetFromGamer)", [this] { FromGamer(); });
-        p.AddChoice("Face override (AvatarExpression)", {"none (the animation's)", "Neutral", "Sad", "Angry", "Confused", "Laughing", "Shocked", "Happy", "Yawning"}, 0, [this](int v) { expression_ = v - 1; });
+        p.AddToggle("Override the face (AvatarExpression)", false, [this](bool v) { faceOverride_ = v; });
+        p.AddChoice("AvatarEye", {"Neutral", "Sad", "Angry", "Confused", "Laughing", "Shocked", "Happy", "Yawning", "Sleeping", "LookUp", "LookDown", "LookLeft", "LookRight", "Blink"}, 6, [this](int v) { eye_ = v; });
+        p.AddChoice("AvatarMouth", {"Neutral", "Sad", "Angry", "Confused", "Laughing", "Shocked", "Happy", "PhoneticO", "PhoneticAi", "PhoneticEe", "PhoneticFv", "PhoneticW", "PhoneticL", "PhoneticDth"}, 6, [this](int v) { mouth_ = v; });
+        p.AddChoice("AvatarEyebrow", {"Neutral", "Sad", "Angry", "Confused", "Raised"}, 4, [this](int v) { eyebrow_ = v; });
         p.AddChoice("Mark a bone (AvatarBone)", {"none", kBones[0].name, kBones[1].name, kBones[2].name, kBones[3].name, kBones[4].name, kBones[5].name, kBones[6].name, kBones[7].name, kBones[8].name}, 1,
                     [this](int v) { bone_ = v - 1; });
         p.AddToggle("Draw the skeleton (ParentBones)", false, [this](bool v) { skeleton_ = v; });
@@ -135,14 +141,15 @@ public:
         renderer_->setWorldProperty(Matrix::CreateRotationY(turn_ + R().frameYaw + MathHelper::Pi) * Matrix::CreateTranslation(plinth_));
         renderer_->setViewProperty(ctx.view.view);
         renderer_->setProjectionProperty(ctx.view.projection);
-        if (expression_ < 0) {
+        if (!faceOverride_) {
             renderer_->Draw(animation_.get());
         } else {
             AvatarExpression face;
-            const int e = std::clamp(expression_, 0, 8);
-            face.setLeftEyeProperty(static_cast<AvatarEye>(e));
-            face.setRightEyeProperty(static_cast<AvatarEye>(e));
-            face.setMouthProperty(static_cast<AvatarMouth>(e));
+            face.setLeftEyeProperty(static_cast<AvatarEye>(eye_));
+            face.setRightEyeProperty(static_cast<AvatarEye>(eye_));
+            face.setMouthProperty(static_cast<AvatarMouth>(mouth_));
+            face.setLeftEyebrowProperty(static_cast<AvatarEyebrow>(eyebrow_));
+            face.setRightEyebrowProperty(static_cast<AvatarEyebrow>(eyebrow_));
             const auto bones = animation_->getBoneTransformsProperty();
             renderer_->Draw(std::vector<Matrix>(bones.begin(), bones.end()), face);
         }
@@ -227,7 +234,8 @@ private:
     std::unique_ptr<AvatarRenderer> renderer_;
     std::unique_ptr<AvatarAnimation> animation_;
     AvatarBodyType bodyType_ = AvatarBodyType::Male;
-    int expression_ = -1;
+    bool faceOverride_ = false;
+    int eye_ = 6, mouth_ = 6, eyebrow_ = 4;
     bool loop_ = true;
     float spin_ = 0.3f, turn_ = 0.0f;
     int bone_ = 0;
