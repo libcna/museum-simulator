@@ -48,6 +48,26 @@ public:
         OnScreenLoaded();
     }
 
+    // A room built around a screen gets a pair of columns flanking it and a bench along the side wall facing the control panel.
+    void Dress(RoomBuilder& b) override
+    {
+        using Microsoft::Xna::Framework::Vector3;
+        const float hw = R().halfW, hd = R().halfD;
+        float cx[2], cz[2];
+        switch (FarWall()) {
+            case Wall::North: for (int i = 0; i < 2; ++i) { cx[i] = (i == 0 ? -1.0f : 1.0f) * (hw - 0.9f); cz[i] = -hd + 0.9f; } break;
+            case Wall::South: for (int i = 0; i < 2; ++i) { cx[i] = (i == 0 ? -1.0f : 1.0f) * (hw - 0.9f); cz[i] = hd - 0.9f; } break;
+            case Wall::East: for (int i = 0; i < 2; ++i) { cx[i] = hw - 0.9f; cz[i] = (i == 0 ? -1.0f : 1.0f) * (hd - 0.9f); } break;
+            default: for (int i = 0; i < 2; ++i) { cx[i] = -hw + 0.9f; cz[i] = (i == 0 ? -1.0f : 1.0f) * (hd - 0.9f); } break;
+        }
+        for (int i = 0; i < 2; ++i) b.AddColumn(cx[i], cz[i], 0.3f, "marble", Vector3(0.92f, 0.92f, 0.98f));
+        // A bench against the east wall (the control panel is on the west wall), unless the screen is on that wall.
+        if (FarWall() != Wall::East && DoorWall() != Wall::East) {
+            b.AddBox(Vector3(hw - 1.0f, 0.0f, -1.7f), Vector3(hw - 0.45f, 0.1f, 1.7f), "stone", 1.0f, Vector3(0.7f, 0.7f, 0.74f));
+            b.AddBox(Vector3(hw - 1.05f, 0.1f, -1.8f), Vector3(hw - 0.4f, 0.42f, 1.8f), "wood", 1.0f, Vector3(0.9f, 0.85f, 0.8f));
+        }
+    }
+
     void RenderOffscreen(const DrawContext&) override
     {
         if (!screen_) return;

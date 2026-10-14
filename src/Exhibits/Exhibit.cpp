@@ -52,6 +52,7 @@ void Exhibit::DoDrawOpaque(const DrawContext& ctx)
 void Exhibit::DoBuildStatic(RoomBuilder& builder)
 {
     BuildStatic(builder);
+    Dress(builder);
     for (auto& panel : panels_) panel->BuildStand(builder);
 }
 

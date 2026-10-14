@@ -39,6 +39,8 @@ public:
 
     /** Adds pedestals, signs, colliders and lights. Called once while the world is built. */
     virtual void BuildStatic(RoomBuilder&) {}
+    /** Furniture that is not part of the demonstration (benches, columns). Called after BuildStatic, before the control panels are stood up. */
+    virtual void Dress(RoomBuilder&) {}
     /** Loads models, creates render targets and registers interactables. Called once after BuildStatic. */
     virtual void Load(InteractionSystem&, MuseumWorld&) {}
     virtual void Update(const UpdateContext&) {}
