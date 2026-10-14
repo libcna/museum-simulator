@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-627 distinct API names are claimed by at least one room.
+633 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -167,6 +167,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CompareFunction | `tex-alpha`, `rs-depthfunc`, `rv-depth` |
 | CompareFunction.NotEqual | `rs-outline` |
 | ContainmentType | `col-box-box` |
+| ContentItem | `ct-intermediate` |
 | ContentLoadException | `app-content`, `ct-failure`, `ct-custom`, `ct-resource` |
 | ContentManager | `models`, `app-content` |
 | ContentManager.GetContentManifest | `ct-pipeline` |
@@ -179,6 +180,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ContentManager.RootDirectory | `ct-load` |
 | ContentManager.Unload | `app-content`, `ct-cache`, `ct-lifetime` |
 | ContentReader | `ct-reader` |
+| ContentTypeDescriptor | `ct-intermediate` |
 | ContentTypeReader | `ct-reader` |
 | ContentTypeReaderManager.AddTypeCreator | `ct-reader` |
 | CubeMapFace | `tex-cube`, `rt-cube` |
@@ -362,6 +364,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | IndexBuffer | `particles`, `geo-indexed`, `geo-procedural`, `geo-index32`, `geo-dynindex`, `geo-terrain`, `model-skinfx`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic` |
 | IndexElementSize | `geo-index32` |
 | InputDevices.GetMiceEXT | `in-devices` |
+| IntermediateSerializer | `ct-intermediate` |
+| IntermediateSerializer.Deserialize | `ct-intermediate` |
+| IntermediateSerializer.Serialize | `ct-intermediate` |
+| InvalidContentException | `ct-intermediate` |
 | Joysticks.GetCapabilitiesEXT | `in-joystick` |
 | Joysticks.GetJoysticksEXT | `in-joystick` |
 | Joysticks.GetStateEXT | `in-joystick` |

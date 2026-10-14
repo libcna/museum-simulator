@@ -91,6 +91,12 @@ if(MUSEUM_NETWORKING AND TARGET CNA_Net AND TARGET CNA_GamerServices)
     target_link_libraries(museum_core PUBLIC CNA_Net CNA_GamerServices)
     target_compile_definitions(museum_core PUBLIC MUSEUM_NETWORKING=1)
 endif()
+# CNA's content pipeline (IntermediateSerializer and the importers) is a build-time library; the Content Pipeline wing runs it in the game.
+option(MUSEUM_PIPELINE "Link CNA's content pipeline library for the Pipeline in the Game room" ON)
+if(MUSEUM_PIPELINE AND TARGET cna_content_pipeline)
+    target_link_libraries(museum_core PUBLIC cna_content_pipeline)
+    target_compile_definitions(museum_core PUBLIC MUSEUM_PIPELINE=1)
+endif()
 # The CNA revision this build was configured against, shown by the History rooms (read, never typed in).
 execute_process(COMMAND git -C "${CNA_ROOT_DIR}" describe --always --dirty
                 OUTPUT_VARIABLE MUSEUM_CNA_REVISION OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)

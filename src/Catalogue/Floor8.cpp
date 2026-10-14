@@ -32,6 +32,20 @@ WingSpec ContentWing()
         ct("ct-formats", "Loose Image Formats", "PNG, JPEG, BMP, TGA, GIF and QOI decoded without a build step (and TIFF, which is not)", "formats", {"ContentManager.Load<Texture2D>", "Texture2D.GetData"}, ApiOrigin::CnaExtension),
         ct("ct-failure", "When Loading Fails", "ContentLoadException for missing, mistyped and corrupt assets", "failure", {"ContentLoadException", "ContentManager.Load"}),
         ct("ct-pipeline", "The Content Compiler", "cna-content builds .cnb and .xnb; loading and sizes compared with loose files", "pipeline", {"cna-content", "ContentManager.Load", "ContentManager.GetContentManifest"}, ApiOrigin::CnaExtension),
+        []{
+            RoomSpec r;
+            r.key = "ct-intermediate";
+            r.title = "The Pipeline in the Game";
+            r.subtitle = "A content type written as XNA intermediate XML and read back, and what the pipeline says about a damaged document";
+            r.exhibit = "pipeline-lab";
+            r.width = 13;
+            r.depth = 13;
+            r.height = 5.0f;
+            r.theme = "workshop";
+            r.apis = {"IntermediateSerializer", "IntermediateSerializer.Serialize", "IntermediateSerializer.Deserialize", "ContentItem", "ContentTypeDescriptor", "InvalidContentException"};
+            r.origin = ApiOrigin::Xna;
+            return r;
+        }(),
         ct("ct-storage", "Title Files and Saved Data", "TitleContainer.OpenStream, StorageDevice and StorageContainer", "storage", {"TitleContainer.OpenStream", "StorageDevice", "StorageContainer", "StorageDevice.GetStorageRootEXT"}),
         ct("ct-custom", "Teaching ContentManager a New Type", "Your own types loaded through ContentManager: a loose-file reader and a named .cnj loader", "custom", {"ContentManager.RegisterTypeReader", "LooseFileContentTypeReader", "ContentManager.RegisterCnjLoader", "ContentLoadException"}, ApiOrigin::CnaExtension),
         ct("ct-reader", "Content Readers", "An .xnb file with your own type: a ContentTypeReader registered under the name the file records", "reader",
