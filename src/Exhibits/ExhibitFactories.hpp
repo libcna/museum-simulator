@@ -52,6 +52,7 @@ std::unique_ptr<Exhibit> MakePlayersLab(const RoomDef& room, Services& services)
 std::unique_ptr<Exhibit> MakeNetLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeAvatarLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakePipelineLab(const RoomDef& room, Services& services);
+std::unique_ptr<Exhibit> MakeConverterLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakePerfLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeValidationLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeRoofLab(const RoomDef& room, Services& services);

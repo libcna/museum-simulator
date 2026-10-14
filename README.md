@@ -26,13 +26,13 @@ All images are real frames from the running museum (`tools/readme_shots.sh`), no
 ```
 floors:          10
 wings:           35
-exhibit rooms:   268  (5 outdoors)
-walkable cells:  333  (rooms, galleries, concourses, halls, elevators)
-exhibit kinds:   51
-origin:          214 XNA 4.0, 54 CNA extension, 0 application
-API names:       633
+exhibit rooms:   269  (5 outdoors)
+walkable cells:  334  (rooms, galleries, concourses, halls, elevators)
+exhibit kinds:   52
+origin:          215 XNA 4.0, 54 CNA extension, 0 application
+API names:       644
   floor 0  10 rooms  Lobby and Introductory Tour
-  floor 1  52 rooms  Fundamentals
+  floor 1  53 rooms  Fundamentals
   floor 2  23 rooms  Two-Dimensional Rendering
   floor 3  20 rooms  Three-Dimensional Fundamentals
   floor 4  28 rooms  Effects and Lighting

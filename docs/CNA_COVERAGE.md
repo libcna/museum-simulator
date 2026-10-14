@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-633 distinct API names are claimed by at least one room.
+644 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -160,6 +160,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Color.PackFromVector4 | `vt-color` |
 | Color.PackedValue | `vt-color` |
 | Color.ToVector3 | `vt-color` |
+| ColorConverter | `vt-converters` |
 | ColorMatrixEffect | `fx-colormatrix` |
 | ColorMatrixEffect.SetColorMatrix | `fx-colormatrix` |
 | ColorMatrixEffect.SetColorOffset | `fx-colormatrix` |
@@ -395,6 +396,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | MathHelper.ToDegrees | `sim-ik` |
 | MathHelper.ToRadians | `sim-ik` |
 | MathHelper.WrapAngle | `an-walker` |
+| MathTypeConverter | `vt-converters` |
+| MathTypeConverter.ConvertFromString | `vt-converters` |
+| MathTypeConverter.ConvertToString | `vt-converters` |
+| MathTypeConverter.GetProperties | `vt-converters` |
 | Matrix | `models`, `animation`, `fx-colormatrix` |
 | Matrix.CreateBillboard | `mat-billboard` |
 | Matrix.CreateConstrainedBillboard | `mat-billboard` |
@@ -497,6 +502,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | PlatformCapabilities | `pl-platform` |
 | PlayerIndex | `in-players` |
 | Point | `vt-rectangle` |
+| PointConverter | `vt-converters` |
 | Power.GetInfoEXT | `in-devices` |
 | PreferPerPixelLighting | `lighting` |
 | PresentInterval | `app-viewport` |
@@ -519,6 +525,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Quaternion.Lerp | `quat-slerp` |
 | Quaternion.Normalize | `quat-slerp` |
 | Quaternion.Slerp | `quat-slerp`, `cam-transition` |
+| QuaternionConverter | `vt-converters` |
 | RasterizerState | `renderstates` |
 | RasterizerState.CullMode | `geo-triangle`, `rs-cull`, `rt-mirror`, `rv-geometry` |
 | RasterizerState.DepthBias | `rs-depthbias` |
@@ -536,6 +543,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Rectangle.IsEmpty | `vt-rectangle` |
 | Rectangle.Location | `vt-rectangle` |
 | Rectangle.Union | `vt-rectangle` |
+| RectangleConverter | `vt-converters` |
 | RenderTarget2D | `rendertarget`, `cam-orbit`, `cam-fov`, `cam-split`, `cam-mirror`, `sprite-basics`, `sprite-lights`, `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `rs-scissor`, `rt-basic`, `rt-lowres`, `rt-control`, `rt-recursive`, `rt-mirror`, `rt-bloom`, `rt-msaa`, `pf-targets`, `rv-targets`, `rf-telescope` |
 | RenderTarget2D.Format | `rt-formats` |
 | RenderTarget2D.MultiSampleCount | `rt-msaa` |
@@ -655,6 +663,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | TouchPanel.MouseTouchEmulationEnabledEXT | `in-touch`, `in-devices` |
 | TouchPanel.ReadGesture | `in-touch` |
 | Vector2 | `sprite-origin` |
+| Vector2Converter | `vt-converters` |
 | Vector3 | `an-pendulum`, `sim-flock`, `sim-integrators`, `rf-deck` |
 | Vector3.Add | `vec-add` |
 | Vector3.Barycentric | `curve-barycentric` |
@@ -671,7 +680,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Vector3.SmoothStep | `vec-lerp`, `cam-transition` |
 | Vector3.Subtract | `vec-add` |
 | Vector3.TransformNormal | `mat-normals` |
+| Vector3Converter | `vt-converters` |
 | Vector4.Transform | `mat-screen` |
+| Vector4Converter | `vt-converters` |
 | VertexBuffer | `geo-indexed`, `geo-procedural`, `geo-manybuffers`, `geo-terrain`, `model-skinfx`, `pf-buffers` |
 | VertexBufferBinding | `geo-instancing`, `pf-objects` |
 | VertexPositionColor | `geo-triangle` |

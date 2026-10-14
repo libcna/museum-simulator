@@ -65,6 +65,19 @@ WingSpec ValueTypeWing()
            {"IPackedVector", "Byte4", "NormalizedByte4", "NormalizedShort4", "Short4", "HalfVector4", "Rgba1010102", "Rgba64", "Bgra4444", "Bgra5551", "Bgr565", "Rg32", "PackedValue"}),
         vt("vt-rectangle", "Rectangle and Point", "Intersects, Intersect, Union, Contains and Inflate computed live on two rectangles", "rect", {"Rectangle", "Rectangle.Intersects", "Rectangle.Intersect", "Rectangle.Union", "Rectangle.Contains", "Rectangle.Inflate", "Rectangle.Bottom", "Rectangle.Location", "Rectangle.IsEmpty", "Point"}),
         vt("vt-color", "Colour", "Color.Lerp, Multiply, FromNonPremultiplied and the packed 32-bit value", "color", {"Color", "Color.Lerp", "Color.Multiply", "Color.FromNonPremultiplied", "Color.PackedValue", "Color.ToVector3", "Color.PackFromVector4"}),
+        []{
+            RoomSpec r;
+            r.key = "vt-converters";
+            r.title = "Type Converters";
+            r.subtitle = "Vector3, Color and Rectangle as text in four cultures: what ConvertToString writes and ConvertFromString refuses";
+            r.exhibit = "converter-lab";
+            r.width = 13;
+            r.depth = 13;
+            r.height = 5.0f;
+            r.theme = "white-cube";
+            r.apis = {"Vector3Converter", "Vector2Converter", "Vector4Converter", "QuaternionConverter", "ColorConverter", "RectangleConverter", "PointConverter", "MathTypeConverter", "MathTypeConverter.ConvertToString", "MathTypeConverter.ConvertFromString", "MathTypeConverter.GetProperties"};
+            return r;
+        }(),
     };
     return w;
 }
