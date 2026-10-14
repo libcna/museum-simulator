@@ -23,7 +23,7 @@ start=$(date +%s)
 MUSEUM_TIMEOUT=${MUSEUM_TIMEOUT:-1500} tools/run.sh "$script" --no-audio > "${BUILD_DIR:-build}/tour.log" 2>&1
 status=$?
 end=$(date +%s)
-grep -E "\[museum\]\[(script|stats)\]|exception|ERROR|FAILED|INVALID|Assertion" "${BUILD_DIR:-build}/tour.log" | grep -v "^\[museum\]\[models\]" | grep -v "pressall: [0-9]* panel" | tail -15
+grep -E "\[museum\]\[(script|stats|main)\]|exception|ERROR|FAILED|INVALID|Assertion" "${BUILD_DIR:-build}/tour.log" | grep -v "^\[museum\]\[models\]" | grep -v "pressall: [0-9]* panel" | tail -15
 caught=$(grep -c "\[museum\]\[exhibit-error\]" "${BUILD_DIR:-build}/tour.log")
 if [ "$caught" -gt 0 ]; then
   echo "$caught exhibit exception(s) were caught (the museum carried on, but a room is broken on this renderer):"
