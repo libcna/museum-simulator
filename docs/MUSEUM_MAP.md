@@ -398,7 +398,7 @@ Sound, music, keyboards, mice and game pads
 | 7.1.01 | `au-basics` | SoundEffect.Play | XNA 4.0 | SoundEffect.Play, SoundEffect, ContentManager.Load<SoundEffect> |
 | 7.1.02 | `au-layers` | Instances and Layers | XNA 4.0 | SoundEffectInstance, SoundEffectInstance.IsLooped, SoundEffectInstance.Volume, SoundEffectInstance.Pitch, SoundState |
 | 7.1.03 | `au-spatial` | 3D Audio | XNA 4.0 | SoundEffectInstance.Apply3D, AudioEmitter, AudioListener, SoundEffect.DopplerScale, SoundEffect.DistanceScale, SoundEffect.SpeedOfSound |
-| 7.1.04 | `au-synth` | A Synthesiser | XNA 4.0 | DynamicSoundEffectInstance, DynamicSoundEffectInstance.SubmitBuffer, AudioChannels, DynamicSoundEffectInstance.PendingBufferCount, DynamicSoundEffectInstance.GetSampleSizeInBytes, SoundEffect.GetSampleDuration |
+| 7.1.04 | `au-synth` | A Synthesiser | XNA 4.0 | DynamicSoundEffectInstance, DynamicSoundEffectInstance.SubmitBuffer, DynamicSoundEffectInstance.SubmitFloatBufferEXT, AudioChannels, DynamicSoundEffectInstance.PendingBufferCount, DynamicSoundEffectInstance.GetSampleSizeInBytes, SoundEffect.GetSampleDuration |
 | 7.1.05 | `au-generate` | Generated Sounds | XNA 4.0 | SoundEffect(buffer, sampleRate, channels), AudioChannels |
 | 7.1.06 | `au-master` | Master Volume and Settings | XNA 4.0 | SoundEffect.MasterVolume, SoundEffect.DistanceScale, SoundEffect.DopplerScale, SoundEffect.SpeedOfSound |
 | 7.1.07 | `au-music` | Song and MediaPlayer | XNA 4.0 | Song, MediaPlayer.Play, MediaPlayer.Volume, SongCollection, MediaQueue, MediaPlayer.Queue, MediaPlayer.MoveNext, MediaPlayer.MovePrevious, MediaPlayer.IsShuffled, MediaPlayer.IsVisualizationEnabled, MediaPlayer.GetVisualizationData, VisualizationData, MediaState |

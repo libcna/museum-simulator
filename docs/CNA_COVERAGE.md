@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-784 distinct API names are claimed by at least one room.
+785 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -242,6 +242,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | DynamicSoundEffectInstance.GetSampleSizeInBytes | `au-synth` |
 | DynamicSoundEffectInstance.PendingBufferCount | `au-synth` |
 | DynamicSoundEffectInstance.SubmitBuffer | `au-synth` |
+| DynamicSoundEffectInstance.SubmitFloatBufferEXT | `au-synth` |
 | DynamicVertexBuffer | `sky`, `particles`, `geo-dynamic`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `rf-garden`, `rf-weather` |
 | DynamicVertexBuffer.SetData | `pf-buffers` |
 | Effect | `be-model`, `fx-compiled` |

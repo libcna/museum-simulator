@@ -100,6 +100,7 @@ public:
                 p.AddChoice("Waveform", {"Sine", "Square", "Sawtooth", "Triangle", "Noise"}, 0, [this](int v) { wave_ = v; });
                 p.AddSlider("Attack (ms)", 1.0f, 300.0f, attack_, [this](float v) { attack_ = v; }, "%.0f");
                 p.AddSlider("Release (ms)", 20.0f, 1200.0f, release_, [this](float v) { release_ = v; }, "%.0f");
+                p.AddToggle("Submit float32 samples (SubmitFloatBufferEXT)", false, [this](bool v) { SetFloatMode(v); });
                 p.AddSlider("Octave", 3.0f, 6.0f, octave_, [this](float v) { octave_ = v; }, "%.0f", 1.0f);
                 for (int i = 0; i < 8; ++i) p.AddButton(std::string("Note ") + kNotes[i], [this, i] { PlayNote(i); });
                 p.AddReadout("PendingBufferCount", [this] { return synth_ ? std::to_string(synth_->getPendingBufferCountProperty()) : std::string("-"); });
@@ -388,6 +389,17 @@ private:
         }
         return out;
     }
+    // The instance plays 16-bit PCM or float32, not both at once: switching stops it first (CNA refuses to switch while it is playing).
+    void SetFloatMode(bool v)
+    {
+        float32_ = v;
+        if (!synth_) return;
+        try {
+            synth_->Stop();
+        } catch (const std::exception& e) {
+            Museum::Log("audio", "synth stop: %s", e.what());
+        }
+    }
     void PlayNote(int i)
     {
         static const float semis[8] = {0, 2, 4, 5, 7, 9, 11, 12};
@@ -396,7 +408,8 @@ private:
         flash_[0] = 1.0f;
         if (!synth_) return;
         try {
-            synth_->SubmitBuffer(ToPcm16(samples_));
+            if (float32_) synth_->SubmitFloatBufferEXT(samples_);
+            else synth_->SubmitBuffer(ToPcm16(samples_));
             if (synth_->getStateProperty() != SoundState::Playing) synth_->Play();
         } catch (const std::exception& e) {
             Museum::Log("audio", "synth: %s", e.what());
@@ -661,6 +674,7 @@ private:
     std::map<std::string, std::unique_ptr<SoundEffect>> cache_;
     std::array<std::unique_ptr<Song>, 2> songs_;
     std::unique_ptr<SongCollection> queue_;
+    bool float32_ = false;
     bool visualize_ = true;
     float visPeakF_ = 0.01f, visPeakW_ = 0.01f;
     Microphone* mic_ = nullptr;
