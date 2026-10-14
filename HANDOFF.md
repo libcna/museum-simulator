@@ -101,19 +101,23 @@ texture is bound (`RenderStates::UnbindTextures`).
 
 ## What is next (priority order)
 
-1. **Gaps listed in `docs/CNA_COVERAGE.md`**: haptic effects (SkinnedEffect has `model-skinfx`, ResourceContentManager `ct-resource`, RenderTargetCube `rt-cube`, texture encode/decode `tex-io`). (Occlusion queries,
-   multisampling, image-based lighting, morph targets, material variants, shader packages, touch gestures and
-   GameServiceContainer were added after the first audit.)
-2. **Navigation**: stairs/escalators are not implemented (elevators and the directory move you between floors); a
+1. **Gaps listed in `docs/CNA_COVERAGE.md`**: haptic effects (no device here), the Media library, video, GamerServices and Net
+   (CNA built without them), device dialogs, compiled `.fx` effects, retired renderers. Stable, testable CNA surface is otherwise
+   covered; the productive way to find more is the cross-renderer tooling below, not the header audit.
+2. **Cross-renderer work** (this is where the real CNA defects came from): run `tools/room_diff.sh R`, `tools/renderer_check.sh`
+   and the sanitizer builds after every batch of rooms; turn each divergence into a validation check first, then fix CNA. Open on
+   CNA's side: FNA3D ignores `PunctualLightEXT`, has no PBR path and no custom shaders; the DIRECTX9 renderer keys vertex layouts on
+   stride (11 rooms switched off under Wine); `RenderTargetCube` upload/readback orientation (REMED-GFX-137, sampling half fixed).
+3. **Navigation**: stairs/escalators are not implemented (elevators and the directory move you between floors); a
    "you are here" marker exists on the map and minimap.
-3. **Progress** is saved by `src/World/Progress.cpp` (CNA `StorageDevice`/`StorageContainer`, file `progress.txt` under the
+4. **Progress** is saved by `src/World/Progress.cpp` (CNA `StorageDevice`/`StorageContainer`, file `progress.txt` under the
    per-user data folder, one room key per line). Scripted, screenshot and `--frames` runs never write it unless `--save` is
    given. CNA does not call `Game.UnloadContent` at exit, so the save happens in the `MuseumGame` destructor.
-4. **Outdoors**: floor 0 has the lawn and forecourt (they now darken with the museum clock); the observation deck is on floor 9.
+5. **Outdoors**: floor 0 has the lawn and forecourt (they darken with the museum clock); the observation deck is on floor 9.
    More outdoor rooms (courtyard, sculpture park, fountain plaza) and exterior lamps are not done.
-5. **Polish**: legibility of long screens from the arrival pose (most labs want you to walk two or three metres in),
-   the marble parallelogram in `vec-cross` shows z-fighting stripes, a few `-Wconversion` warnings remain in older exhibits.
-6. More tests: a leak check on `tools/tour.sh` lifetime counters, and tests for the reference-view list.
+6. **Polish**: legibility of long screens from the arrival pose (most labs want you to walk two or three metres in),
+   the marble parallelogram in `vec-cross` shows z-fighting stripes.
+7. More tests: a unit test for `MuseumWorld::Guard` (needs a device), a leak check over the multi-renderer tours.
 
 ## Intentionally not implemented
 
