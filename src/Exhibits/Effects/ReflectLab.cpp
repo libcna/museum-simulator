@@ -101,8 +101,8 @@ protected:
         const auto text = [&](const std::string& t, float x, float y, Color c, float s = 0.62f) { sb.DrawString(*S().font, t, Vector2(x, y), c, 0.0f, Vector2(0, 0), s, SpriteEffects::None, 0.0f); };
         text(std::string(kEffects[index_]) + ": " + summary_, 24, 12, Kit::kGold, 0.85f);
         rect(20, 64, 920, 2, Kit::Rgba(90, 100, 130));
-        const float cols[] = {30, 330, 440, 560, 640, 760};
-        const char* heads[] = {"Parameter", "Class", "Type", "Size", "Elements", "Semantic / annotations"};
+        const float cols[] = {30, 290, 380, 465, 560, 790};
+        const char* heads[] = {"Parameter", "Class", "Type", "Size", "GetValue*()", "Semantic / notes"};
         for (int i = 0; i < 6; ++i) text(heads[i], cols[i], 72, Kit::kDim, 0.55f);
         const int visibleRows = 12;
         const int total = static_cast<int>(rows_.size());
@@ -145,6 +145,36 @@ private:
         Reflect();
     }
 
+    // The parameter's current value through the GetValue overload its class, type and shape call for.
+    static std::string ValueText(const EffectParameter& p)
+    {
+        char b[96];
+        try {
+            const int rows = p.getRowCountProperty(), cols = p.getColumnCountProperty();
+            switch (p.getParameterTypeProperty()) {
+                case EffectParameterType::Bool: return p.GetValueBoolean() ? "true" : "false";
+                case EffectParameterType::Int32: return std::to_string(p.GetValueInt32());
+                case EffectParameterType::String: return p.GetValueString();
+                case EffectParameterType::Single:
+                    if (p.getParameterClassProperty() == EffectParameterClass::Scalar) { std::snprintf(b, sizeof b, "%.2f", static_cast<double>(p.GetValueSingle())); return b; }
+                    if (p.getParameterClassProperty() == EffectParameterClass::Matrix && rows == 4 && cols == 4) {
+                        const Matrix m = p.GetValueMatrix();
+                        std::snprintf(b, sizeof b, "Matrix, M11 %.2f M44 %.2f", static_cast<double>(m.M11), static_cast<double>(m.M44));
+                        return b;
+                    }
+                    if (p.getParameterClassProperty() == EffectParameterClass::Vector && cols == 2) { const Vector2 v = p.GetValueVector2(); std::snprintf(b, sizeof b, "(%.2f, %.2f)", static_cast<double>(v.X), static_cast<double>(v.Y)); return b; }
+                    if (p.getParameterClassProperty() == EffectParameterClass::Vector && cols == 3) { const Vector3 v = p.GetValueVector3(); std::snprintf(b, sizeof b, "(%.2f, %.2f, %.2f)", static_cast<double>(v.X), static_cast<double>(v.Y), static_cast<double>(v.Z)); return b; }
+                    if (p.getParameterClassProperty() == EffectParameterClass::Vector && cols == 4) { const Vector4 v = p.GetValueVector4(); std::snprintf(b, sizeof b, "(%.2f, %.2f, %.2f, %.2f)", static_cast<double>(v.X), static_cast<double>(v.Y), static_cast<double>(v.Z), static_cast<double>(v.W)); return b; }
+                    return "-";
+                case EffectParameterType::Texture2D: return p.GetValueTexture2D() != nullptr ? "a Texture2D" : "no texture bound";
+                case EffectParameterType::TextureCube: return p.GetValueTextureCube() != nullptr ? "a TextureCube" : "no texture bound";
+                default: return "-";
+            }
+        } catch (const std::exception& e) {
+            return std::string("throws: ") + std::string(e.what()).substr(0, 20);
+        }
+    }
+
     void Reflect()
     {
         Effect& fx = *effect_;
@@ -157,8 +187,10 @@ private:
             std::string extra = p->getSemanticProperty();
             const int ann = p->getAnnotationsProperty().getCountProperty();
             if (ann > 0) extra += (extra.empty() ? "" : ", ") + std::to_string(ann) + " annotations";
+            const int elements = p->getElementsProperty().getCountProperty();
+            if (elements > 0) extra += (extra.empty() ? "" : ", ") + std::to_string(elements) + " elements";
             rows_.push_back({p->getNameProperty(), ClassName(p->getParameterClassProperty()), TypeName(p->getParameterTypeProperty()), size,
-                             std::to_string(p->getElementsProperty().getCountProperty()), extra.empty() ? "-" : extra});
+                             ValueText(*p), extra.empty() ? "-" : extra});
         }
         EffectTechniqueCollection& techs = fx.getTechniquesProperty();
         std::string t = std::to_string(techs.getCountProperty()) + " technique(s): ";
