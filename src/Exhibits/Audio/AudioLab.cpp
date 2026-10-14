@@ -150,8 +150,14 @@ public:
                 p.AddButton("PlayCue: fire and forget", [this] { XactFire(); });
                 for (int i = 0; i < 3; ++i) p.AddSlider(std::string(kXactCategories[i]) + " category volume", 0.0f, 1.0f, catVolume_[static_cast<std::size_t>(i)], [this, i](float v) { XactCategoryVolume(i, v); });
                 p.AddToggle("Pause the Music category", false, [this](bool v) { XactPauseMusic(v); });
+                // Two variables of museum.xgs, each bound to every sound's volume by an RPC curve (0 to -60 dB over the variable's range).
+                p.AddSlider("Cue variable \"Distance\" (Cue.SetVariable, 0..100)", 0.0f, 100.0f, 0.0f, [this](float v) { XactDistance(v); }, "%.0f", 1.0f);
+                p.AddSlider("Global variable \"MasterTrim\" (AudioEngine.SetGlobalVariable)", 0.0f, 1.0f, 1.0f, [this](float v) { XactTrim(v); }, "%.2f", 0.05f);
+                p.AddReadout("Variables read back", [this] { return xVariables_; });
                 p.AddReadout("Cue", [this] { return XactState(); });
+                p.AddReadout("Cue flags", [this] { return XactFlags(); });
                 p.AddReadout("Banks", [this] { return xStatus_; });
+                p.AddReadout("Banks in use / engine", [this] { return XactEngineInfo(); });
                 break;
             case Mode::Microphone:
                 p.AddButton("Start / stop capture", [this] { ToggleMic(); });
@@ -331,7 +337,7 @@ private:
             case Mode::Generate: return {"A SoundEffect can be built from a buffer of PCM bytes instead of a file: here five sound effects are", "synthesised in code, drawn as a waveform and spectrum, then played. No asset files are involved."};
             case Mode::Master: return {"SoundEffect.MasterVolume scales everything the audio engine plays. The static DistanceScale, DopplerScale and", "SpeedOfSound settings shape 3D audio globally; this museum restores them when you leave a room that changes them."};
             case Mode::Music: return {"Song and MediaPlayer play music as a stream, with a queue, pause, repeat and volume of their own. The", "songs are the museum's generated WAV files loaded through the ContentManager."};
-            case Mode::Xact: return {"XACT is XNA's audio authoring route: a settings file (categories), a wave bank (the sounds) and a sound bank (named cues).", "AudioEngine loads them, GetCue gives a Cue you can Play, Pause and Stop; categories mix groups. The files were written by tools/gen_xact.py."};
+            case Mode::Xact: return {"XACT is XNA's audio authoring route: a settings file (categories, variables and RPC curves), a wave bank (the sounds) and a sound bank (named cues).", "AudioEngine loads them, GetCue gives a Cue you can Play, Pause and Stop; categories mix groups. Two variables of the file (Distance per cue, MasterTrim for the whole engine) drive every sound's volume through RPC curves. Written by tools/gen_xact.py."};
             default: return {"Microphone captures 16-bit mono PCM. If the machine has no microphone CNA reports it (the Microphones found", "readout) and nothing is recorded. With one, the level meter shows the signal strength."};
         }
     }
@@ -621,8 +627,10 @@ private:
         static const char* names[5] = {"Tone", "Click", "Arpeggio", "Drums", "Chirp"};
         try {
             xCue_ = xBank_->GetCue(names[xCueIndex_]);
+            xCue_->SetVariable("Distance", xDistance_);   // a new cue starts from the slider, not from the file's initial value
             xCue_->Play();
             xActive_ = true;
+            XactReadVariables();
         } catch (const std::exception& e) {
             xStatus_ = std::string("Play failed: ") + std::string(e.what()).substr(0, 50);
         }
@@ -632,6 +640,58 @@ private:
         if (!xBank_) return;
         static const char* names[5] = {"Tone", "Click", "Arpeggio", "Drums", "Chirp"};
         try { xBank_->PlayCue(names[xCueIndex_]); } catch (const std::exception&) {}
+    }
+    // Variables the .xgs declares; RPC curves in the file turn them into volume. The value is clamped to the declared range and read back.
+    void XactDistance(float v)
+    {
+        try {
+            if (xCue_ != nullptr) xCue_->SetVariable("Distance", v);
+            xDistance_ = v;
+            XactReadVariables();
+        } catch (const std::exception& e) {
+            xVariables_ = std::string("Distance: ") + std::string(e.what()).substr(0, 50);
+        }
+    }
+    void XactTrim(float v)
+    {
+        try {
+            if (xEngine_) xEngine_->SetGlobalVariable("MasterTrim", v);
+            XactReadVariables();
+        } catch (const std::exception& e) {
+            xVariables_ = std::string("MasterTrim: ") + std::string(e.what()).substr(0, 50);
+        }
+    }
+    void XactReadVariables()
+    {
+        try {
+            std::string text = "MasterTrim " + Fmt1(xEngine_ ? xEngine_->GetGlobalVariable("MasterTrim") : 0.0f);
+            text += xCue_ != nullptr ? ", Distance " + Fmt1(xCue_->GetVariable("Distance")) : std::string(", Distance (play a cue first)");
+            xVariables_ = text;
+            Museum::Log("audio", "XACT variables: %s", text.c_str());
+        } catch (const std::exception& e) {
+            xVariables_ = std::string("unavailable: ") + std::string(e.what()).substr(0, 50);
+        }
+    }
+    [[nodiscard]] std::string XactFlags() const
+    {
+        if (xCue_ == nullptr) return "-";
+        try {
+            return std::string("created ") + (xCue_->getIsCreatedProperty() ? "y" : "n") + ", preparing " + (xCue_->getIsPreparingProperty() ? "y" : "n") + ", prepared " + (xCue_->getIsPreparedProperty() ? "y" : "n") +
+                   ", playing " + (xCue_->getIsPlayingProperty() ? "y" : "n") + ", stopping " + (xCue_->getIsStoppingProperty() ? "y" : "n") + ", stopped " + (xCue_->getIsStoppedProperty() ? "y" : "n");
+        } catch (const std::exception&) {
+            return "?";
+        }
+    }
+    [[nodiscard]] std::string XactEngineInfo() const
+    {
+        if (!xEngine_ || !xBank_ || !xWaves_) return "-";
+        try {
+            std::string renderer = "no renderer";
+            if (!xEngine_->getRendererDetailsProperty().empty()) renderer = xEngine_->getRendererDetailsProperty()[0].getFriendlyNameProperty();
+            return std::string("sound bank ") + (xBank_->getIsInUseProperty() ? "in use" : "idle") + ", wave bank " + (xWaves_->getIsInUseProperty() ? "in use" : "idle") + ", content version " + std::to_string(AudioEngine::ContentVersion) + ", " + renderer;
+        } catch (const std::exception&) {
+            return "?";
+        }
     }
     void XactCategoryVolume(int i, float v)
     {
@@ -675,6 +735,8 @@ private:
     std::unique_ptr<AudioEngine> xEngine_;
     std::unique_ptr<WaveBank> xWaves_;
     std::unique_ptr<SoundBank> xBank_;
+    float xDistance_ = 0.0f;
+    std::string xVariables_ = "-";
     Cue* xCue_ = nullptr;
     int xCueIndex_ = 0;
     bool xActive_ = false;

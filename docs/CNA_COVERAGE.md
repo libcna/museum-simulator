@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-909 distinct API names are claimed by at least one room.
+920 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -68,6 +68,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | AudioEmitter | `audio`, `au-spatial` |
 | AudioEngine | `au-xact` |
 | AudioEngine.GetCategory | `au-xact` |
+| AudioEngine.GetGlobalVariable | `au-xact` |
+| AudioEngine.RendererDetails | `au-xact` |
+| AudioEngine.SetGlobalVariable | `au-xact` |
 | AudioEngine.Update | `au-xact` |
 | AudioListener | `audio`, `au-spatial` |
 | AudioStopOptions | `au-xact` |
@@ -237,9 +240,14 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ContentTypeReader | `ct-reader` |
 | ContentTypeReaderManager.AddTypeCreator | `ct-reader` |
 | CubeMapFace | `tex-cube`, `rt-cube` |
+| Cue.GetVariable | `au-xact` |
+| Cue.IsCreated | `au-xact` |
+| Cue.IsPreparing | `au-xact` |
+| Cue.IsStopping | `au-xact` |
 | Cue.Pause | `au-xact` |
 | Cue.Play | `au-xact` |
 | Cue.Resume | `au-xact` |
+| Cue.SetVariable | `au-xact` |
 | Cue.Stop | `au-xact` |
 | CullMode | `rs-cull` |
 | Curve | `curve-class` |
@@ -739,6 +747,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | RenderTargetCube | `rt-cube` |
 | RenderTargetUsage.PreserveContents | `rt-recursive` |
 | RendererCapabilityProfile | `app-device` |
+| RendererDetail.FriendlyName | `au-xact` |
 | RendererFeature | `pl-renderer` |
 | RendererFeature.BaseInstanceDrawing | `geo-instancing` |
 | RendererFormatUsage | `pl-renderer` |
@@ -812,6 +821,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SongCollection | `au-music` |
 | SoundBank | `au-xact` |
 | SoundBank.GetCue | `au-xact` |
+| SoundBank.IsInUse | `au-xact` |
 | SoundBank.PlayCue | `au-xact` |
 | SoundEffect | `audio`, `au-basics` |
 | SoundEffect(buffer, sampleRate, channels) | `au-generate` |
@@ -958,6 +968,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Viewport.Unproject | `mat-screen` |
 | VisualizationData | `au-music` |
 | WaveBank | `au-xact` |
+| WaveBank.IsInUse | `au-xact` |
 | XNA 4.0 | `hist-xna`, `hist-compare` |
 | cna-content | `ct-pipeline` |
 | layerDepth | `sprite-sort` |

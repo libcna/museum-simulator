@@ -49,7 +49,7 @@ WingSpec AudioWing()
         au("au-mic", "The Microphone", "Capturing 16-bit PCM and a level meter; reports cleanly when there is no microphone", "microphone", {"Microphone", "Microphone.GetData", "Microphone.SampleRate", "Microphone.BufferDuration", "Microphone.GetSampleSizeInBytes", "Microphone.IsHeadset"}),
         au("au-xact", "XACT Cues and Banks", "AudioEngine, WaveBank and SoundBank loaded from files written by tools/gen_xact.py; Cue.Play, Pause, Stop and category volumes", "xact",
            {"AudioEngine", "AudioEngine.Update", "AudioEngine.GetCategory", "AudioCategory.SetVolume", "AudioCategory.Pause", "WaveBank", "SoundBank", "SoundBank.GetCue", "SoundBank.PlayCue",
-            "Cue.Play", "Cue.Pause", "Cue.Resume", "Cue.Stop", "AudioStopOptions"}),
+            "Cue.Play", "Cue.Pause", "Cue.Resume", "Cue.Stop", "AudioStopOptions", "Cue.SetVariable", "Cue.GetVariable", "AudioEngine.SetGlobalVariable", "AudioEngine.GetGlobalVariable", "AudioEngine.RendererDetails", "RendererDetail.FriendlyName", "Cue.IsCreated", "Cue.IsPreparing", "Cue.IsStopping", "SoundBank.IsInUse", "WaveBank.IsInUse"}),
     };
     return w;
 }
