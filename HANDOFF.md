@@ -60,7 +60,7 @@ given; anything unverified says so. Counts are not repeated here: run `build/bin
 
 ## Build, run and test
 
-**Sanitizers (checked 2026-10-14):** a full AddressSanitizer + UBSan build (`build-asan/`, configured with `-DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -g1 -Wno-maybe-uninitialized"`, ~4.7 GB, deleted afterwards) toured all 257 rooms with every control operated in 246 s and ran `museum_tests` (6402 checks): no reports after the directory fix above. Leak detection was off (`detect_leaks=0`).
+**Sanitizers (re-checked 2026-10-14 after the Avatars, Leaderboards, pipeline, converters and Video rooms: all 272 rooms with every control operated under ASan+UBSan, exit 0, no reports, `build-asan/` deleted afterwards; the earlier check, on 257 rooms):** a full AddressSanitizer + UBSan build (`build-asan/`, configured with `-DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -g1 -Wno-maybe-uninitialized"`, ~4.7 GB, deleted afterwards) toured all 257 rooms with every control operated in 246 s and ran `museum_tests` (6402 checks): no reports after the directory fix above. Leak detection was off (`detect_leaks=0`).
 
 `tools/check_all.sh` runs the whole battery (a few minutes); the individual tools are:
 
