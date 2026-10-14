@@ -1,4 +1,5 @@
 #include "World/MuseumWorld.hpp"
+#include "Rendering/SkyDome.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -305,11 +306,11 @@ void MuseumWorld::Draw(const DrawContext& ctx)
     GraphicsDevice& device = ctx.device;
     BasicEffect& fx = ctx.fx.World();
 
-    const auto drawBatches = [&](const Zone& zone, const std::vector<DrawBatch>& batches) {
+    const auto drawBatches = [&](const Zone& zone, const std::vector<DrawBatch>& batches, const Vector3& tint = Vector3(1, 1, 1)) {
         const float b = zone.brightness;
         for (const DrawBatch& batch : batches) {
             fx.setTextureProperty(batch.texture);
-            fx.setDiffuseColorProperty(Vector3(b, b, b));
+            fx.setDiffuseColorProperty(Vector3(b * tint.X, b * tint.Y, b * tint.Z));
             EffectBank::Apply(fx);
             batch.mesh->Draw(device);
         }
@@ -325,7 +326,10 @@ void MuseumWorld::Draw(const DrawContext& ctx)
     RenderStates::SetOpaque3D(device);
     ctx.fx.SetCamera(ctx.view.view, ctx.view.projection);
     fx.setWorldProperty(Matrix::getIdentityProperty());
-    if (ctx.view.frustum.Intersects(exterior_.bounds)) drawBatches(exterior_, exterior_.opaque);
+    // The lawn and the forecourt are lit by the sky, not by the baked ceiling lights: they follow the museum clock.
+    const float day = services_.timeOfDay != nullptr ? services_.timeOfDay->Daylight() : 1.0f;
+    const Vector3 skyLight = Vector3::Lerp(Vector3(0.10f, 0.13f, 0.24f), Vector3(1.0f, 1.0f, 1.0f), day);
+    if (ctx.view.frustum.Intersects(exterior_.bounds)) drawBatches(exterior_, exterior_.opaque, skyLight);
     for (const int c : visible) {
         const RoomInstance* inst = instances_[static_cast<std::size_t>(c)].get();
         if (inst) drawBatches(inst->zone, inst->zone.opaque);

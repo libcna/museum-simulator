@@ -100,8 +100,8 @@ texture is bound (`RenderStates::UnbindTextures`).
 3. **Progress** is saved by `src/World/Progress.cpp` (CNA `StorageDevice`/`StorageContainer`, file `progress.txt` under the
    per-user data folder, one room key per line). Scripted, screenshot and `--frames` runs never write it unless `--save` is
    given. CNA does not call `Game.UnloadContent` at exit, so the save happens in the `MuseumGame` destructor.
-4. **Outdoors**: floor 0 has the lawn and forecourt; the observation deck is on floor 9. More outdoor rooms (courtyard,
-   sculpture park, fountain plaza) and exterior lights that follow the museum clock are not done.
+4. **Outdoors**: floor 0 has the lawn and forecourt (they now darken with the museum clock); the observation deck is on floor 9.
+   More outdoor rooms (courtyard, sculpture park, fountain plaza) and exterior lamps are not done.
 5. **Polish**: legibility of long screens from the arrival pose (most labs want you to walk two or three metres in),
    the marble parallelogram in `vec-cross` shows z-fighting stripes, a few `-Wconversion` warnings remain in older exhibits.
 6. More tests: a leak check on `tools/tour.sh` lifetime counters, and tests for the reference-view list.
