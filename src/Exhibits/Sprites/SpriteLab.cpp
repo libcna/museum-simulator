@@ -703,7 +703,8 @@ private:
             r.setScissorTestEnableProperty(true);
             return r;
         }();
-        const Rectangle rect(static_cast<int>(posX_) + 60, 120, static_cast<int>(posY_ + 100.0f), 300);
+        const int left = static_cast<int>(posX_) + 60;
+        const Rectangle rect(left, 120, std::max(1, std::min(static_cast<int>(posY_ + 100.0f), kW - left)), 300);   // the scissor rectangle must fit inside the surface
         device.setScissorRectangleProperty(scissor_ ? rect : Rectangle(0, 0, kW, kH));
         Begin(sb, SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::LinearClamp, scissor_ ? &scissorState : nullptr);
         for (int i = 0; i < 12; ++i) {

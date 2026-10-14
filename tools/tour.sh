@@ -1,25 +1,27 @@
 #!/usr/bin/env bash
 # Visits every room (or the ones named) for a few frames each on a private virtual display and reports
 # errors, exceptions and the museum's own resource counters. Exit status 0 only if nothing went wrong.
-#   tools/tour.sh [-f FRAMES] [-p] [-z N] [room-key ...]      -p: also operate every control of every room (smoke test)
-#                                                       -z N: then N random control actions per room (fuzz; repeatable)
+#   tools/tour.sh [-f FRAMES] [-p] [-z N] [-s SEED] [room-key ...]      -p: also operate every control of every room (smoke test)
+#                                                       -z N: then N random control actions per room (fuzz; repeatable; -s SEED picks the sequence; the whole script is one argument, so keep N below ~35)
 set -u
 cd "$(dirname "$0")/.." || exit 2
 frames=12
 press=0
 fuzz=0
+seed=0
 while [ $# -gt 0 ]; do
   case "$1" in
     -f) frames=$2; shift 2 ;;
     -p) press=1; shift ;;
     -z) fuzz=$2; shift 2 ;;
+    -s) seed=$2; shift 2 ;;
     *) break ;;
   esac
 done
 bin=${MUSEUM_BIN:-${BUILD_DIR:-build}/bin/cna-3d-museum}
 if [ $# -gt 0 ]; then keys=("$@"); else mapfile -t keys < <("$bin" --list-rooms); fi
 script=""
-for k in "${keys[@]}"; do script+="goto:$k;wait:$frames;"; [ $press = 1 ] && script+="pressall;wait:4;"; for ((z = 0; z < fuzz; ++z)); do script+="fuzz;wait:2;"; done; done
+for k in "${keys[@]}"; do script+="goto:$k;wait:$frames;"; [ $press = 1 ] && script+="pressall;wait:4;"; for ((z = 0; z < fuzz; ++z)); do script+="fuzz:${seed};wait:2;"; done; done
 script+="stats;quit"
 echo "touring ${#keys[@]} rooms, $frames frames each ..."
 start=$(date +%s)

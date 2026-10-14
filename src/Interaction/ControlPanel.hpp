@@ -62,7 +62,7 @@ public:
     [[nodiscard]] Microsoft::Xna::Framework::Vector3 Centre() const { return room_.ToWorld(pose_.x, pose_.y, pose_.z); }
 
 private:
-    std::uint32_t fuzzState_ = 2463534242u;
+    std::uint32_t fuzzState_ = 2463534242u, fuzzSeed_ = 0;
     enum class Kind { Slider, Toggle, Choice, Button, Readout, Heading };
     struct Row {
         Kind kind = Kind::Heading;

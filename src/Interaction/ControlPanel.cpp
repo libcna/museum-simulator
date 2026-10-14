@@ -274,6 +274,11 @@ bool ControlPanel::Press(const std::string& label, const float* value)
     if (label == "#") {
         // Fuzz step: one random control gets a random value (the extremes are chosen a quarter of the time, because that is where
         // renderers and CNA reject things). The generator is the panel's own, so a run is repeatable.
+        if (value != nullptr && static_cast<std::uint32_t>(*value) != fuzzSeed_) {   // a new seed re-keys this panel's generator
+            fuzzSeed_ = static_cast<std::uint32_t>(*value);
+            fuzzState_ = 2463534242u ^ (fuzzSeed_ * 2654435761u);
+            if (fuzzState_ == 0) fuzzState_ = 1;
+        }
         std::vector<Row*> live;
         for (Row& r : rows_)
             if (r.kind == Kind::Slider || r.kind == Kind::Toggle || r.kind == Kind::Choice || r.kind == Kind::Button) live.push_back(&r);
