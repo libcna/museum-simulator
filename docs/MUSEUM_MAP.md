@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 34 wings, 256 exhibit rooms (5 open to the sky), 320 walkable cells in all.
+10 floors, 34 wings, 257 exhibit rooms (5 open to the sky), 321 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -281,6 +281,7 @@ BasicEffect, the stock effects, lighting and custom shaders
 | 4.3.10 | `fx-kernel` | Convolution Kernels | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
 | 4.3.11 | `fx-halftone` | Halftone | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
 | 4.3.12 | `fx-vertexwave` | Vertex Shader | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.13 | `fx-colormatrix` | Colour Matrix | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D, ColorMatrixEffect, ColorMatrixEffect.SetColorMatrix, ColorMatrixEffect.SetColorOffset, Matrix |
 
 ### Floor 5: Render State and Render Targets
 

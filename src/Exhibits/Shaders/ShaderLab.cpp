@@ -3,7 +3,9 @@
 // post-processing workflow, written entirely against CNA's public API. Needs a renderer that executes GLSL
 // source (the OpenGL family); other renderers show the unprocessed scene and say why.
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstdio>
 #include <string>
 
 #include "CNA/ShaderLanguageEXT.hpp"
@@ -11,6 +13,8 @@
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
 #include "Exhibits/Shaders/ShaderSources.hpp"
+#include "Microsoft/Xna/Framework/Graphics/ColorMatrixEffect.hpp"
+#include "Rendering/Probes.hpp"
 #include "Microsoft/Xna/Framework/Graphics/ShaderEffect.hpp"
 #include "Microsoft/Xna/Framework/Graphics/SpriteEffects.hpp"
 #include "Rendering/MiniView.hpp"
@@ -62,6 +66,8 @@ uniform float uAmount;
 uniform float uTime;
 uniform float uMode;
 uniform vec2 uTexel;
+uniform mat4 uMatrix;
+uniform vec4 uOffset;
 out vec4 FragColor;
 )";
 
@@ -165,6 +171,10 @@ void main() {
     vec3 scene = texture(texture1, vTexCoord).rgb;
     FragColor = vec4(mix(scene, col * dotMask, uAmount), 1.0);
 })"},
+    {"colormatrix", "Colour matrix", kVertex, R"(void main() {
+    vec4 c = texture(texture1, vTexCoord) * vColor;
+    FragColor = clamp(c * uMatrix + uOffset, 0.0, 1.0);     // SetUniformMat4 hands over the row-major Matrix as is, which GLSL reads as its transpose: c * M is row . (r, g, b, a)
+})"},
     {"vertexwave", "Vertex shader: waving the corners", kVertexWave, R"(void main() {
     FragColor = texture(texture1, vTexCoord) * vColor;      // a plain fragment shader; the vertex stage does the work
 })"},
@@ -196,8 +206,16 @@ public:
     {
         ChooseDialect();
         ControlPanel& p = AddPanel(def_->title, -4.8f, 1.5f, 1.8f, MathHelper::PiOver2, 2.1f);
-        p.AddSlider("uAmount", 0.0f, 1.0f, amount_, [this](float v) { amount_ = v; });
         const std::string key = def_->key;
+        p.AddSlider(key == "colormatrix" ? "Blend: identity to preset" : "uAmount", 0.0f, 1.0f, amount_, [this](float v) { amount_ = v; });
+        if (key == "colormatrix") {
+            p.AddChoice("Preset", {"Grayscale (Rec. 709)", "Sepia", "Invert", "Swap red and blue", "Hue rotation", "Saturation", "Contrast"}, 1, [this](int v) { preset_ = v; });
+            p.AddSlider("Hue (degrees) / saturation / contrast", 0.0f, 1.0f, param_, [this](float v) { param_ = v; });
+            for (int row = 0; row < 4; ++row)
+                p.AddReadout("Matrix row " + std::to_string(row) + (row == 0 ? " (R')" : row == 1 ? " (G')" : row == 2 ? " (B')" : " (A')"), [this, row] { return MatrixRowText(row); });
+            p.AddReadout("Offset", [this] { Vector4 o; (void)BuildMatrix(o); char text[64]; std::snprintf(text, sizeof text, "% .2f % .2f % .2f % .2f", static_cast<double>(o.X), static_cast<double>(o.Y), static_cast<double>(o.Z), static_cast<double>(o.W)); return std::string(text); });
+            p.AddReadout("Run by", [this] { return native_ ? std::string("ColorMatrixEffect (CNAEXT class)") : (effect_ && effect_->IsEffectValid() ? std::string("a ShaderEffect holding the same matrix") : std::string("nothing: no class, no shader dialect here")); });
+        }
         if (key == "grade") p.AddChoice("uMode", {"Grayscale", "Sepia", "Invert", "Duotone"}, 1, [this](int v) { mode_ = static_cast<float>(v); });
         if (key == "pixelate") p.AddToggle("Posterise colours (uMode)", false, [this](bool v) { mode_ = v ? 1.0f : 0.0f; });
         if (key == "kernel") p.AddChoice("uMode", {"Sharpen", "Emboss", "Laplacian outline"}, 1, [this](int v) { mode_ = static_cast<float>(v); });
@@ -234,14 +252,20 @@ public:
         // The sources are written in two dialects: GLSL ES 3.00 (the OpenGL renderers) and WGSL (WebGPU). Anything else,
         // SPIR-V or no source execution at all (FNA3D), gets the scene without the effect and a line saying so.
         ChooseDialect();
+        if (std::string(def_->key) == "colormatrix" && Probes::ColorMatrix(d) == Probes::Answer::Yes) {
+            // The CNA class does the work (only SOFTWARE runs it); no shader is needed.
+            colorEffect_ = std::make_unique<ColorMatrixEffect>(d);
+            native_ = true;
+            supported_ = true;
+        }
         const char* wgsl = ShaderSources::WgslBody(def_->key);
-        if (supported_) {
+        if (supported_ && !native_) {
             try {
                 if (wgsl_) {
                     const bool wave = std::string(def_->key) == "vertexwave";
                     effect_ = std::make_unique<ShaderEffect>(d, wave ? ShaderSources::kWgslVertexWave : ShaderSources::kWgslVertex,
                                                              std::string(ShaderSources::kWgslFragmentPrologue) + wgsl);
-                    effect_->DeclareUniformBlockEXT(ShaderSources::kUniformBlockSize, ShaderSources::kUniformNames, ShaderSources::kUniformOffsets, 4);
+                    effect_->DeclareUniformBlockEXT(ShaderSources::kUniformBlockSize, ShaderSources::kUniformNames, ShaderSources::kUniformOffsets, ShaderSources::kUniformCount);
                 } else if (vulkan_) {
                     effect_ = std::make_unique<ShaderEffect>(d, std::string(def_->key) == "vertexwave" ? ShaderSources::kVulkanGlslVertexWave : ShaderSources::kVulkanGlslVertex, std::string(ShaderSources::kVulkanGlslFragmentHeader) + def_->body);
                 } else {
@@ -279,7 +303,26 @@ protected:
     void DrawScreen(SpriteBatch& sb) override
     {
         if (!source_ || !source_->HasContent()) return;
-        const bool valid = effect_ && effect_->IsEffectValid();
+        const bool valid = (effect_ && effect_->IsEffectValid()) || (native_ && colorEffect_);
+        const bool colorMatrix = std::string(def_->key) == "colormatrix";
+        if (colorMatrix && valid) {
+            Vector4 offset;
+            const std::array<float, 16> m = BuildMatrix(offset);
+            if (native_) {
+                colorEffect_->SetColorMatrix(m);
+                colorEffect_->SetColorOffset(offset);
+            } else {
+                effect_->Apply();
+                const Matrix mx(m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11], m[12], m[13], m[14], m[15]);
+                effect_->SetUniformMat4("uMatrix", &mx.M11);
+                if (vulkan_) effect_->SetUniformVec4("color", offset.X, offset.Y, offset.Z, offset.W);   // SDL_GPU: the one vec4 slot holds the offset
+                else effect_->SetUniformVec4("uOffset", offset.X, offset.Y, offset.Z, offset.W);
+            }
+            sb.Begin(SpriteSortMode::Deferred, &BlendState::Opaque, &SamplerState::LinearClamp, nullptr, nullptr, native_ ? static_cast<Effect*>(colorEffect_.get()) : static_cast<Effect*>(effect_.get()));
+            sb.Draw(*source_->Texture(), Rectangle(0, 0, 960, 540), Color::White);
+            sb.End();
+            return;
+        }
         if (valid) {
             effect_->Apply();
             if (vulkan_) {   // one vec4 and one float, names ignored (see ShaderSources.cpp)
@@ -317,8 +360,56 @@ protected:
     }
 
 private:
+    // The colour-matrix room: the preset as a row-major 4 x 4 (output channel = row . (r, g, b, a)) and an offset, blended with the
+    // identity by the amount slider. The maths is plain matrix algebra on colours: a hue rotation is a rotation about the grey axis.
+    [[nodiscard]] std::array<float, 16> BuildMatrix(Vector4& offset) const
+    {
+        const float lr = 0.2126f, lg = 0.7152f, lb = 0.0722f;
+        std::array<float, 16> p = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+        Vector4 po(0, 0, 0, 0);
+        switch (preset_) {
+            case 0: p = {lr, lg, lb, 0, lr, lg, lb, 0, lr, lg, lb, 0, 0, 0, 0, 1}; break;
+            case 1: p = {0.393f, 0.769f, 0.189f, 0, 0.349f, 0.686f, 0.168f, 0, 0.272f, 0.534f, 0.131f, 0, 0, 0, 0, 1}; break;
+            case 2: p = {-1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1}; po = Vector4(1, 1, 1, 0); break;
+            case 3: p = {0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1}; break;
+            case 4: {   // the W3C feColorMatrix hueRotate: a rotation about the grey axis, here by param * 360 degrees
+                const float a = param_ * MathHelper::TwoPi, c = std::cos(a), s = std::sin(a);
+                p = {0.213f + c * 0.787f - s * 0.213f, 0.715f - c * 0.715f - s * 0.715f, 0.072f - c * 0.072f + s * 0.928f, 0,
+                     0.213f - c * 0.213f + s * 0.143f, 0.715f + c * 0.285f + s * 0.140f, 0.072f - c * 0.072f - s * 0.283f, 0,
+                     0.213f - c * 0.213f - s * 0.787f, 0.715f - c * 0.715f + s * 0.715f, 0.072f + c * 0.928f + s * 0.072f, 0,
+                     0, 0, 0, 1};
+                break;
+            }
+            case 5: {
+                const float t = param_ * 2.0f, k = 1.0f - t;
+                p = {lr * k + t, lg * k, lb * k, 0, lr * k, lg * k + t, lb * k, 0, lr * k, lg * k, lb * k + t, 0, 0, 0, 0, 1};
+                break;
+            }
+            default: {
+                const float c = 0.2f + param_ * 2.8f, b = 0.5f * (1.0f - c);
+                p = {c, 0, 0, 0, 0, c, 0, 0, 0, 0, c, 0, 0, 0, 0, 1};
+                po = Vector4(b, b, b, 0);
+                break;
+            }
+        }
+        std::array<float, 16> m{};
+        for (int i = 0; i < 16; ++i) m[static_cast<std::size_t>(i)] = ((i % 5) == 0 ? 1.0f : 0.0f) * (1.0f - amount_) + p[static_cast<std::size_t>(i)] * amount_;
+        offset = po * amount_;
+        return m;
+    }
+    [[nodiscard]] std::string MatrixRowText(int row) const
+    {
+        Vector4 o;
+        const std::array<float, 16> m = BuildMatrix(o);
+        char b[96];
+        std::snprintf(b, sizeof b, "% .2f % .2f % .2f % .2f", static_cast<double>(m[static_cast<std::size_t>(row * 4)]), static_cast<double>(m[static_cast<std::size_t>(row * 4 + 1)]),
+                      static_cast<double>(m[static_cast<std::size_t>(row * 4 + 2)]), static_cast<double>(m[static_cast<std::size_t>(row * 4 + 3)]));
+        return b;
+    }
+
     [[nodiscard]] std::string LanguageName() const
     {
+        if (native_) return "none needed: the CNA ColorMatrixEffect class";
         if (!supported_) return "none";
         if (wgsl_) return "WGSL";
         if (vulkan_) return "GLSL 450 for Vulkan (compiled to SPIR-V)";
@@ -329,6 +420,10 @@ private:
     std::unique_ptr<MiniView> source_;
     std::unique_ptr<ShaderEffect> effect_;
     std::string error_;
+    std::unique_ptr<ColorMatrixEffect> colorEffect_;
+    bool native_ = false;
+    int preset_ = 1;
+    float param_ = 0.25f;
     bool supported_ = false, wgsl_ = false, vulkan_ = false;
     float time_ = 0.0f, amount_ = 0.7f, mode_ = 1.0f, texelScale_ = 1.5f;
 };

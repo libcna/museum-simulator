@@ -34,9 +34,10 @@ constexpr int kMrtBlockSize = 16;
 /** The WGSL body for a lab shader key ("grade", "blur", ...), or null when there is none. */
 const char* WgslBody(const std::string& key);
 
-/** Names and byte offsets of the members the prologue's block declares; `kUniformBlockSize` is its size. */
-extern const char* const kUniformNames[4];
-extern const int kUniformOffsets[4];
-constexpr int kUniformBlockSize = 32;
+/** Names and byte offsets of the members the prologue's block declares (the colour-matrix room adds `uMatrix` and `uOffset`); `kUniformBlockSize` is its size. */
+extern const char* const kUniformNames[6];
+extern const int kUniformOffsets[6];
+constexpr int kUniformCount = 6;
+constexpr int kUniformBlockSize = 112;
 
 }  // namespace ShaderSources

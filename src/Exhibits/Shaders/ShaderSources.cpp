@@ -4,13 +4,13 @@
 
 namespace ShaderSources {
 
-const char* const kUniformNames[4] = {"uAmount", "uTime", "uMode", "uTexel"};
-const int kUniformOffsets[4] = {0, 4, 8, 16};
+const char* const kUniformNames[6] = {"uAmount", "uTime", "uMode", "uTexel", "uMatrix", "uOffset"};
+const int kUniformOffsets[6] = {0, 4, 8, 16, 32, 96};
 
-// The block is 32 bytes: three floats, a pad, then a vec2 on its own 8-byte boundary. textureSampleLevel is used throughout
+// The block is 112 bytes: three floats, a pad, a vec2 on its own 8-byte boundary, then a mat4 and a vec4 on 16. textureSampleLevel is used throughout
 // (level 0): the source texture has no mip chain, and unlike textureSample it may follow a non-uniform branch.
 const char* const kWgslFragmentPrologue = R"WGSL(
-struct U { uAmount: f32, uTime: f32, uMode: f32, pad0: f32, uTexel: vec2f, pad1: vec2f };
+struct U { uAmount: f32, uTime: f32, uMode: f32, pad0: f32, uTexel: vec2f, pad1: vec2f, uMatrix: mat4x4f, uOffset: vec4f };
 @group(0) @binding(0) var<uniform> u: U;
 @group(0) @binding(1) var texSampler: sampler;
 @group(0) @binding(2) var tex: texture_2d<f32>;
@@ -33,7 +33,7 @@ struct VOut {
 )WGSL";
 
 const char* const kWgslVertexWave = R"WGSL(
-struct U { uAmount: f32, uTime: f32, uMode: f32, pad0: f32, uTexel: vec2f, pad1: vec2f };
+struct U { uAmount: f32, uTime: f32, uMode: f32, pad0: f32, uTexel: vec2f, pad1: vec2f, uMatrix: mat4x4f, uOffset: vec4f };
 @group(0) @binding(0) var<uniform> u: U;
 struct VOut {
     @builtin(position) position: vec4f,
@@ -113,6 +113,8 @@ layout(set = 3, binding = 0) uniform PC {
 #define uTime pc.color.z
 #define uMode pc.color.w
 #define uAmount pc.slot0_pad.x
+#define uMatrix pc.matrix
+#define uOffset pc.color
 )GLSL";
 
 const char* const kMrtWgslFragment = R"WGSL(
@@ -265,6 +267,10 @@ const std::map<std::string, const char*>& Bodies()
     let dotMask = 1.0 - smoothstep(radius - 0.1, radius, length(f));
     let scene = sampleTex(uv).rgb;
     return vec4f(mix(scene, col * dotMask, u.uAmount), 1.0);
+})WGSL"},
+        {"colormatrix", R"WGSL(@fragment fn fs_main(@location(0) uv: vec2f, @location(1) color: vec4f) -> @location(0) vec4f {
+    let c = sampleTex(uv) * color;
+    return clamp(c * u.uMatrix + u.uOffset, vec4f(0.0), vec4f(1.0));   // the row-major Matrix arrives as its transpose, so c * M is row . (r, g, b, a)
 })WGSL"},
         {"vertexwave", R"WGSL(@fragment fn fs_main(@location(0) uv: vec2f, @location(1) color: vec4f) -> @location(0) vec4f {
     return sampleTex(uv) * color;      // a plain fragment shader; the vertex stage does the work

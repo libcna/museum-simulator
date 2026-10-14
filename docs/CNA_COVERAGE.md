@@ -49,7 +49,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-568 distinct API names are claimed by at least one room.
+571 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -149,6 +149,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Color.PackFromVector4 | `vt-color` |
 | Color.PackedValue | `vt-color` |
 | Color.ToVector3 | `vt-color` |
+| ColorMatrixEffect | `fx-colormatrix` |
+| ColorMatrixEffect.SetColorMatrix | `fx-colormatrix` |
+| ColorMatrixEffect.SetColorOffset | `fx-colormatrix` |
 | ColorWriteChannels | `rs-portal`, `rs-colorwrite`, `rv-blend` |
 | CompareFunction | `tex-alpha`, `rs-depthfunc`, `rv-depth` |
 | CompareFunction.NotEqual | `rs-outline` |
@@ -298,7 +301,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.GetGraphicsRendererName | `pl-renderer` |
 | GraphicsDevice.GetLogicalSizeEXT | `pl-renderer` |
 | GraphicsDevice.GetRendererCapabilityProfileEXT | `pl-renderer` |
-| GraphicsDevice.GetShaderDialectEXT | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave` |
+| GraphicsDevice.GetShaderDialectEXT | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix` |
 | GraphicsDevice.GetTrackedResourceCount | `pl-renderer` |
 | GraphicsDevice.GraphicsProfile | `pl-adapter` |
 | GraphicsDevice.ResourceCreated | `ct-lifetime` |
@@ -310,7 +313,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.SetStringMarkerEXT | `cx-points` |
 | GraphicsDevice.SupportsDisplayColorSpaceEXT | `pl-renderer` |
 | GraphicsDevice.SupportsImageBasedLightingEXT | `model-ibl`, `pl-renderer` |
-| GraphicsDevice.SupportsShaderLanguageEXT | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave` |
+| GraphicsDevice.SupportsShaderLanguageEXT | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix` |
 | GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT | `rt-formats` |
 | GraphicsDevice.Viewport | `cam-split`, `rv-geometry` |
 | GraphicsDeviceManager | `app-viewport` |
@@ -356,7 +359,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | MathHelper.ToDegrees | `sim-ik` |
 | MathHelper.ToRadians | `sim-ik` |
 | MathHelper.WrapAngle | `an-walker` |
-| Matrix | `models`, `animation` |
+| Matrix | `models`, `animation`, `fx-colormatrix` |
 | Matrix.CreateBillboard | `mat-billboard` |
 | Matrix.CreateConstrainedBillboard | `mat-billboard` |
 | Matrix.CreateFromQuaternion | `quat-euler` |
@@ -479,7 +482,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Rectangle.IsEmpty | `vt-rectangle` |
 | Rectangle.Location | `vt-rectangle` |
 | Rectangle.Union | `vt-rectangle` |
-| RenderTarget2D | `rendertarget`, `cam-orbit`, `cam-fov`, `cam-split`, `cam-mirror`, `sprite-basics`, `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `rs-scissor`, `rt-basic`, `rt-lowres`, `rt-control`, `rt-recursive`, `rt-mirror`, `rt-msaa`, `pf-targets`, `rv-targets`, `rf-telescope` |
+| RenderTarget2D | `rendertarget`, `cam-orbit`, `cam-fov`, `cam-split`, `cam-mirror`, `sprite-basics`, `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `rs-scissor`, `rt-basic`, `rt-lowres`, `rt-control`, `rt-recursive`, `rt-mirror`, `rt-msaa`, `pf-targets`, `rv-targets`, `rf-telescope` |
 | RenderTarget2D.Format | `rt-formats` |
 | RenderTarget2D.MultiSampleCount | `rt-msaa` |
 | RenderTargetBinding | `rt-mrt` |
@@ -512,10 +515,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SetMorphWeightsEXT | `model-morph` |
 | SetRuntimeMode | `cx-stats` |
 | ShaderCodeEXT | `cx-package` |
-| ShaderEffect | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `rt-mrt`, `cx-shadow` |
+| ShaderEffect | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `rt-mrt`, `cx-shadow` |
 | ShaderEffect(device, package) | `cx-package` |
-| ShaderEffect.DeclareUniformBlockEXT | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `cx-package` |
-| ShaderEffect.SetUniformFloat | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave` |
+| ShaderEffect.DeclareUniformBlockEXT | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `cx-package` |
+| ShaderEffect.SetUniformFloat | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix` |
 | ShaderLanguageEXT | `cx-package` |
 | ShaderPackageEXT.selectFor | `cx-package` |
 | ShadowCascadeStateEXT | `cx-shadow` |
@@ -547,7 +550,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SoundState | `au-layers` |
 | SpriteBatch | `sprite-stress`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `rf-weather` |
 | SpriteBatch.Begin | `sprite-basics`, `sprite-camera`, `sprite-tilemap`, `pf-sprites` |
-| SpriteBatch.Begin(effect) | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `cx-crt` |
+| SpriteBatch.Begin(effect) | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `cx-crt` |
 | SpriteBatch.Draw | `sprite-basics`, `sprite-origin`, `sprite-sheet`, `sprite-sort`, `sprite-parallax`, `sprite-ui`, `sprite-atlas`, `sprite-hit`, `sprite-anim`, `sprite-tilemap`, `sprite-stress`, `rt-recursive`, `pf-sprites`, `pf-overdraw`, `rv-sprites` |
 | SpriteBatch.DrawString | `text-align`, `text-transform`, `text-hud`, `text-labels` |
 | SpriteEffect | `be-model` |

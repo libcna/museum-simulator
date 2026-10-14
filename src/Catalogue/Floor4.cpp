@@ -40,6 +40,11 @@ WingSpec ShaderWing()
         sh("fx-halftone", "Halftone", "Dots whose size follows brightness, one scene sample per cell", "halftone"),
         sh("fx-vertexwave", "Vertex Shader", "The vertex stage moving a sprite's corners with a sine wave", "vertexwave"),
     };
+    {
+        RoomSpec cm = sh("fx-colormatrix", "Colour Matrix", "A 4 x 4 matrix and an offset turn each pixel's (r, g, b, a): grayscale, sepia, invert, hue and saturation are all one matrix", "colormatrix");
+        cm.apis.insert(cm.apis.end(), {"ColorMatrixEffect", "ColorMatrixEffect.SetColorMatrix", "ColorMatrixEffect.SetColorOffset", "Matrix"});
+        w.rooms.push_back(cm);
+    }
     return w;
 }
 

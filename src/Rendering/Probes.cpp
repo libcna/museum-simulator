@@ -8,6 +8,9 @@
 #include "Microsoft/Xna/Framework/MathHelper.hpp"
 #include "Microsoft/Xna/Framework/Graphics/BasicEffect.hpp"
 #include "Microsoft/Xna/Framework/Graphics/BlendState.hpp"
+#include "Microsoft/Xna/Framework/Graphics/ColorMatrixEffect.hpp"
+#include "Microsoft/Xna/Framework/Graphics/SamplerState.hpp"
+#include "Microsoft/Xna/Framework/Graphics/SpriteBatch.hpp"
 #include "Microsoft/Xna/Framework/Graphics/DepthFormat.hpp"
 #include "Microsoft/Xna/Framework/Graphics/DepthStencilState.hpp"
 #include "Microsoft/Xna/Framework/Graphics/PrimitiveType.hpp"
@@ -18,6 +21,8 @@
 #include "Microsoft/Xna/Framework/Graphics/Texture2D.hpp"
 #include "Microsoft/Xna/Framework/Graphics/VertexPositionNormalTexture.hpp"
 #include "Microsoft/Xna/Framework/Graphics/Viewport.hpp"
+#include "Microsoft/Xna/Framework/Graphics/SpriteSortMode.hpp"
+#include "Microsoft/Xna/Framework/Rectangle.hpp"
 #include "Rendering/RenderStates.hpp"
 
 using namespace Microsoft::Xna::Framework;
@@ -83,6 +88,40 @@ Answer PunctualLights(GraphicsDevice& d)
     } catch (const std::exception& e) {
         d.SetRenderTarget(nullptr);
         Museum::Log("probe", "PunctualLightEXT probe failed: %s", e.what());
+        cached = Answer::No;
+    }
+    return cached;
+}
+
+Answer ColorMatrix(GraphicsDevice& d)
+{
+    static Answer cached = Answer::Unknown;
+    if (cached != Answer::Unknown) return cached;
+    try {
+        constexpr int kSize = 8;
+        RenderTarget2D rt(d, kSize, kSize, false, SurfaceFormat::Color, DepthFormat::None);
+        const std::vector<std::uint8_t> whitePixel = {255, 255, 255, 255};
+        Texture2D white = Texture2D::CreateFromPixels(d, 1, 1, whitePixel);
+        RenderStates::UnbindTextures(d);
+        d.SetRenderTarget(&rt);
+        d.setViewportProperty(Viewport(0, 0, kSize, kSize));
+        d.Clear(Color(0, 0, 0, 255));
+        // A matrix that keeps only blue: a renderer that runs the effect turns white into (0,0,255); one that ignores it leaves white.
+        ColorMatrixEffect effect(d);
+        effect.SetColorMatrix({0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1});
+        SpriteBatch batch(d);
+        batch.Begin(SpriteSortMode::Immediate, &BlendState::Opaque, &SamplerState::PointClamp, nullptr, nullptr, &effect);
+        batch.Draw(white, Rectangle(0, 0, kSize, kSize), Color::White);
+        batch.End();
+        d.SetRenderTarget(nullptr);
+        std::vector<Color> pixels(static_cast<std::size_t>(kSize * kSize));
+        rt.GetData(pixels.data(), static_cast<int>(pixels.size()));
+        const Color c = pixels[static_cast<std::size_t>(kSize / 2 * kSize + kSize / 2)];
+        cached = (c.getRProperty() < 40 && c.getGProperty() < 40 && c.getBProperty() > 200) ? Answer::Yes : Answer::No;
+        Museum::Log("probe", "ColorMatrixEffect: centre pixel %d,%d,%d -> %s", c.getRProperty(), c.getGProperty(), c.getBProperty(), cached == Answer::Yes ? "applied" : "ignored by this renderer");
+    } catch (const std::exception& e) {
+        d.SetRenderTarget(nullptr);
+        Museum::Log("probe", "ColorMatrixEffect probe failed: %s", e.what());
         cached = Answer::No;
     }
     return cached;
