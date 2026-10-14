@@ -38,7 +38,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Feature | Status |
 |---|---|
 | haptic effects (devices are listed, none played) | planned: see HANDOFF.md |
-| `MediaLibrary`, albums, playlists, pictures (`Microsoft.Xna.Framework.Media`) | not implemented: they describe a device's media store, which a desktop does not have |
+| `MediaLibrary`, albums, playlists, pictures (`Microsoft.Xna.Framework.Media`) | deliberately not demonstrated: CNA builds them by scanning the visitor's own Music and Pictures folders, and the museum does not read personal files (the only way to point it elsewhere is a test-only hook inside CNA) |
 | GamerServices and Net beyond the basics: friends, invitations, parties, voice, online sessions | not demonstrated: the *Players and Networking* wing covers signed-in gamers, presence, privileges, profiles, achievements, the Guide, PacketWriter/Reader and a Local and a SystemLink session between the two local profiles, a search for SystemLink sessions and joining one (a second museum process is found and joined, its gamers appear as remote, packets cross the network); the *Leaderboards* room writes and reads ratings from the two local profiles; the *Avatars* room shows AvatarDescription, AvatarAnimation and AvatarRenderer; the rest needs a second machine or an account service |
 | `FileDialog`, `MessageBox`, `SystemTray`, `UrlLauncher`, `Camera` (CNA_DEVICES) | not implemented: they open real dialogs or hardware; the room reports whether each is supported |
 | Compiled XNA effects (`.fxb`), C API, Inspector | not implemented: disabled in CNA's default build for the renderers used here |
