@@ -49,6 +49,7 @@ const char* kNames[] = {"cube", "sphere", "torus", "cone", "star", "knot", "vase
 
 class ModelLab final : public Exhibit {
 public:
+    ~ModelLab() override { RestoreOriginalEffects(); }
     ModelLab(const RoomDef& room, Services& services) : Exhibit(room, services), mode_(ParseMode(room.params.Get("mode"))), gizmos_(services)
     {
         name_ = room.params.Get("model", mode_ == Mode::Rigid ? "robot" : (mode_ == Mode::Skinned ? "tentacle" : (mode_ == Mode::Morph ? "morph" : (mode_ == Mode::Variants ? "variants" : "knot"))));
@@ -257,8 +258,22 @@ private:
         }
     }
 
+    // The model's parts belong to the content manager's cached asset, so a stand-in effect handed to a part (ApplyEffects) must be
+    // taken back before this room's own BasicEffects are destroyed, or the next load of the same asset finds dangling effects.
+    void RestoreOriginalEffects()
+    {
+        if (model_ != nullptr && !originals_.empty()) {
+            std::size_t k = 0;
+            for (ModelMesh* mesh : model_->getMeshesProperty())
+                for (int i = 0; i < mesh->getMeshPartsProperty().getCountProperty(); ++i, ++k)
+                    if (k < originals_.size()) mesh->getMeshPartsProperty()[i]->setEffectProperty(originals_[k]);
+        }
+        overrides_.clear();
+    }
+
     void Reload()
     {
+        RestoreOriginalEffects();
         model_.reset();
         clip_ = nullptr;
         skin_ = nullptr;

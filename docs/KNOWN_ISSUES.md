@@ -43,6 +43,10 @@ Found by the museum's own exhibits; fixed in the CNA repository (commit ids are 
 
 ## Open observations (not explained, no CNA change made)
 
+- **UBSan in a dependency:** with the FNA3D renderer, `MojoShader/mojoshader_common.c:1077` (`mult *= 10` on an `int` while printing a float
+  with a long precision) reports a signed-integer overflow ("1000000000 * 10"). Upstream code CNA fetches; nothing in the museum
+  or CNA's own sources is involved.
+
 - **Multisampled render target re-bound every frame with `RenderTargetUsage.PreserveContents` shows no smoothing on OPENGLES3**
   (4 samples asked and reported). The same target drawn once and read back, or sampled through SpriteBatch, *is* smoothed
   (checks in `rv-targets`), and with `DiscardContents` re-bound every frame it is smoothed too (room `rt-msaa`). The
@@ -54,6 +58,7 @@ Found by the museum's own exhibits; fixed in the CNA repository (commit ids are 
 
 ## Museum bugs found and fixed (for the record)
 
+- **Stand-in effects outlived the model room that made them.** The glTF rooms hand BasicEffects to the parts of the *content manager's cached* model (the Effects mode, and the FNA3D fallback); reloading the same asset then found dangling effects (a crash, only seen under AddressSanitizer on FNA3D, where every model takes the fallback). `ModelLab` now puts the originals back before it drops its own effects.
 - **The Windows build did not compile.** The clock room used POSIX `localtime_r`; found by cross-compiling with MinGW. It now uses `localtime_s` on Windows.
 - **One room's exception ended the whole museum.** On FNA3D `DrawInstancedPrimitives` with a stock effect throws, the exception
   escaped `Game::Run` and the process died. `MuseumWorld` now guards every exhibit hook (`Guard`): the exception is logged as

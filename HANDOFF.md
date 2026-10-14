@@ -26,7 +26,7 @@ given; anything unverified says so. Counts are not repeated here: run `build/bin
   all 56 validation checks run on each; what differs is listed there (FNA3D: no custom shaders, no PBR, no stock-effect
   instancing, `PunctualLightEXT` ignored; WEBGPU/SDL_GPU: GLSL shader rooms show no effect). Cross-renderer finding fixed in CNA:
   EasyGL sampled a rendered `RenderTargetCube` upside down (`a6e8104d2`); SOFTWARE ignored point/spot lights (`53aba6ef1`).
-  A full AddressSanitizer + UBSan tour and `museum_tests` were clean after one CNA fix (a directory read as an image, `49b1d3a99`).
+  A full AddressSanitizer + UBSan tour and `museum_tests` were clean after one CNA fix (a directory read as an image, `49b1d3a99`); a second pass over FNA3D, WEBGPU and SDL_GPU found one museum bug (dangling stand-in effects in `ModelLab`, fixed) and one UB in MojoShader (recorded).
 - The world now survives an exception in one room (`MuseumWorld::Guard`); `tools/tour.sh` exits 3 if any were caught.
 - The audio floor was also run with a real audio device (PipeWire, volume 0.03): the mixer opens and every audio room's
   controls run without errors; whether it is audible cannot be judged by a test. All other runs use Xvfb and the dummy driver.
