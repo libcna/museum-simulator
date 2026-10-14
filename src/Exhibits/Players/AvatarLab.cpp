@@ -14,6 +14,7 @@
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ExhibitKit.hpp"
 #include "Exhibits/Math/MathKit.hpp"
+#include "Rendering/Gizmos.hpp"
 #include "Rendering/RenderStates.hpp"
 #include "World/RoomBuilder.hpp"
 
@@ -21,6 +22,7 @@
 #include "Microsoft/Xna/Framework/GamerServices/AvatarAnimation.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/AvatarAnimationPreset.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/AvatarBodyType.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/AvatarBone.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/AvatarDescription.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/AvatarExpression.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/AvatarRenderer.hpp"
@@ -52,12 +54,18 @@ constexpr Preset kPresets[] = {
     {AvatarAnimationPreset::FemaleIdleLookAround, "FemaleIdleLookAround"}, {AvatarAnimationPreset::FemaleLaugh, "FemaleLaugh"}, {AvatarAnimationPreset::FemaleYawn, "FemaleYawn"},
     {AvatarAnimationPreset::MaleIdleLookAround, "MaleIdleLookAround"}, {AvatarAnimationPreset::MaleLaugh, "MaleLaugh"}, {AvatarAnimationPreset::MaleYawn, "MaleYawn"},
 };
+struct Bone {
+    AvatarBone value;
+    const char* name;
+};
+constexpr Bone kBones[] = {{AvatarBone::PropRight, "PropRight"}, {AvatarBone::PropLeft, "PropLeft"}, {AvatarBone::Head, "Head"}, {AvatarBone::WristRight, "WristRight"},
+                           {AvatarBone::WristLeft, "WristLeft"}, {AvatarBone::Neck, "Neck"}, {AvatarBone::BackUpper, "BackUpper"}, {AvatarBone::ToeLeft, "ToeLeft"}, {AvatarBone::Root, "Root"}};
 constexpr int kPresetCount = static_cast<int>(sizeof(kPresets) / sizeof(kPresets[0]));
 #endif
 
 class AvatarLab final : public Exhibit {
 public:
-    AvatarLab(const RoomDef& room, Services& services) : Exhibit(room, services) {}
+    AvatarLab(const RoomDef& room, Services& services) : Exhibit(room, services), gizmos_(services) {}
 
     void BuildStatic(RoomBuilder& b) override
     {
@@ -72,6 +80,9 @@ public:
         p.AddButton("AvatarDescription.CreateRandom", [this] { NewAvatar(); });
         p.AddButton("The Visitor's own (BeginGetFromGamer)", [this] { FromGamer(); });
         p.AddChoice("Face override (AvatarExpression)", {"none (the animation's)", "Neutral", "Sad", "Angry", "Confused", "Laughing", "Shocked", "Happy", "Yawning"}, 0, [this](int v) { expression_ = v - 1; });
+        p.AddChoice("Mark a bone (AvatarBone)", {"none", kBones[0].name, kBones[1].name, kBones[2].name, kBones[3].name, kBones[4].name, kBones[5].name, kBones[6].name, kBones[7].name, kBones[8].name}, 1,
+                    [this](int v) { bone_ = v - 1; });
+        p.AddToggle("Draw the skeleton (ParentBones)", false, [this](bool v) { skeleton_ = v; });
         p.AddSlider("Turntable speed", 0.0f, 2.0f, spin_, [this](float v) { spin_ = v; });
         p.AddReadout("AvatarRenderer.State", [this] { return state_; });
         p.AddReadout("Body / height", [this] { return summary_; });
@@ -136,6 +147,37 @@ public:
             renderer_->Draw(std::vector<Matrix>(bones.begin(), bones.end()), face);
         }
         RenderStates::SetOpaque3D(ctx.device);   // the renderer set its own states
+        if ((bone_ >= 0 || skeleton_) && renderer_->getStateProperty() == AvatarRendererState::Ready) {
+            // The animation gives each bone relative to its parent (71 of them): a bone's place in the avatar is its own
+            // transform times its parent's, up to the root. The renderer names each bone's parent.
+            const auto local = animation_->getBoneTransformsProperty();
+            const auto parents = renderer_->getParentBonesProperty();
+            const auto bind = renderer_->getBindPoseProperty();
+            const int count = std::min({local.getCountProperty(), parents.getCountProperty(), bind.getCountProperty()});
+            std::vector<Matrix> model(static_cast<std::size_t>(count));
+            const Matrix place = Matrix::CreateRotationY(turn_ + R().frameYaw + MathHelper::Pi) * Matrix::CreateTranslation(plinth_);
+            for (int i = 0; i < count; ++i) {
+                const int parent = parents[i];
+                // The animation turns each bone; where the bone sits relative to its parent is the bind pose's.
+                Matrix m = local[i];
+                m.setTranslationProperty(static_cast<Matrix>(bind[i]).getTranslationProperty());
+                model[static_cast<std::size_t>(i)] = parent >= 0 && parent < i ? m * model[static_cast<std::size_t>(parent)] : m;
+            }
+            if (skeleton_) {
+                for (int i = 0; i < count; ++i) {
+                    const int parent = parents[i];
+                    if (parent >= 0 && parent < count)
+                        gizmos_.Line((model[static_cast<std::size_t>(parent)] * place).getTranslationProperty(), (model[static_cast<std::size_t>(i)] * place).getTranslationProperty(), Color(120, 255, 160, 255));
+                }
+            }
+            const std::size_t index = bone_ >= 0 ? static_cast<std::size_t>(kBones[bone_].value) : 0;
+            if (bone_ >= 0 && static_cast<int>(index) < count) {
+                const Matrix world = model[index] * place;
+                gizmos_.Axes(world, 0.22f);
+                gizmos_.SolidSphere(ctx, world.getTranslationProperty(), 0.035f, Vector3(1.0f, 0.8f, 0.2f));
+            }
+            gizmos_.Flush(ctx, true);
+        }
 #else
         (void)ctx;
 #endif
@@ -188,8 +230,11 @@ private:
     int expression_ = -1;
     bool loop_ = true;
     float spin_ = 0.3f, turn_ = 0.0f;
+    int bone_ = 0;
+    bool skeleton_ = false;
     std::string state_ = "-", summary_ = "-", animationText_ = "-";
 #endif
+    Gizmos gizmos_;
     Vector3 plinth_{0, 0, 0};
 };
 

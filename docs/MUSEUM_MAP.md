@@ -468,7 +468,7 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 | 8.4.02 | `gs-achievements` | Achievements | XNA 4.0 | SignedInGamer.AwardAchievement, SignedInGamer.GetAchievements, Achievement, AchievementCollection |
 | 8.4.03 | `gs-leaderboards` | Leaderboards | XNA 4.0 | LeaderboardWriter, LeaderboardEntry, LeaderboardReader, LeaderboardIdentity, LeaderboardKey, Gamer.LeaderboardWriter |
 | 8.4.04 | `gs-guide` | The Guide | XNA 4.0 | Guide.BeginShowMessageBox, Guide.EndShowMessageBox, Guide.BeginShowKeyboardInput, Guide.IsTrialMode, Guide.SimulateTrialMode, Guide.IsVisible, Guide.NotificationPosition, MessageBoxIcon |
-| 8.4.05 | `gs-avatar` | Avatars | XNA 4.0 | AvatarDescription, AvatarDescription.CreateRandom, AvatarDescription.BeginGetFromGamer, AvatarRenderer, AvatarAnimation, AvatarAnimationPreset, AvatarExpression, AvatarBodyType |
+| 8.4.05 | `gs-avatar` | Avatars | XNA 4.0 | AvatarDescription, AvatarDescription.CreateRandom, AvatarDescription.BeginGetFromGamer, AvatarRenderer, AvatarAnimation, AvatarAnimationPreset, AvatarExpression, AvatarBodyType, AvatarBone, AvatarEye, AvatarMouth, AvatarEyebrow, AvatarRendererState, IAvatarAnimation |
 | 8.4.06 | `net-packets` | Packets | XNA 4.0 | PacketWriter, PacketReader, PacketWriter.Write, PacketReader.ReadVector3, PacketReader.ReadQuaternion, PacketReader.ReadMatrix |
 | 8.4.07 | `net-session` | A Network Session | XNA 4.0 | NetworkSession.Create, NetworkSession.Update, NetworkSession.StartGame, NetworkSession.EndGame, NetworkSession.SimulatedLatency, NetworkSession.SimulatedPacketLoss, NetworkSession.SessionState, LocalNetworkGamer.SendData, LocalNetworkGamer.ReceiveData, SendDataOptions, NetworkGamer.IsReady, NetworkSession.GamerJoined, NetworkSession.GameStarted |
 

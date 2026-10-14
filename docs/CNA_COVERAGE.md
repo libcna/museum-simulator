@@ -47,7 +47,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-672 distinct API names are claimed by at least one room.
+678 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -71,11 +71,16 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | AvatarAnimation | `gs-avatar` |
 | AvatarAnimationPreset | `gs-avatar` |
 | AvatarBodyType | `gs-avatar` |
+| AvatarBone | `gs-avatar` |
 | AvatarDescription | `gs-avatar` |
 | AvatarDescription.BeginGetFromGamer | `gs-avatar` |
 | AvatarDescription.CreateRandom | `gs-avatar` |
 | AvatarExpression | `gs-avatar` |
+| AvatarEye | `gs-avatar` |
+| AvatarEyebrow | `gs-avatar` |
+| AvatarMouth | `gs-avatar` |
 | AvatarRenderer | `gs-avatar` |
+| AvatarRendererState | `gs-avatar` |
 | BasicEffect | `lighting`, `light-types`, `light-falloff`, `model-effects`, `rv-effects` |
 | BasicEffect.Alpha | `be-combos`, `be-alpha` |
 | BasicEffect.AmbientLightColor | `be-lights` |
@@ -353,6 +358,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Guide.SimulateTrialMode | `gs-guide` |
 | HalfVector2 | `vt-packed` |
 | HalfVector4 | `vt-packed` |
+| IAvatarAnimation | `gs-avatar` |
 | IDrawable | `app-components` |
 | IEffectFog | `be-model` |
 | IEffectLights | `be-model` |
