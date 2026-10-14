@@ -126,6 +126,9 @@ public:
                 p.AddChoice("Dead zone", {"IndependentAxes", "Circular", "None"}, 0, [this](int v) { zone_ = v; });
                 p.AddButton("Vibrate (SetVibration)", [this] { vibrated_ = GamePad::SetVibration(PlayerIndex::One, 1.0f, 1.0f); vibrateNote_ = vibrated_ ? "accepted" : "no motor: returned false"; GamePad::SetVibration(PlayerIndex::One, 0.0f, 0.0f); });
                 p.AddReadout("SetVibration", [this] { return vibrateNote_; });
+                p.AddButton("SetTriggerVibrationEXT / SetLightBarEXT", [this] { TriggerAndLight(); });
+                p.AddReadout("Trigger motors and light bar", [this] { return triggerNote_; });
+                p.AddReadout("Identity (GUID, gyro, touchpad, label of A)", [this] { return identityNote_; });
                 p.AddReadout("IsConnected", [this] { return std::string(pad_.getIsConnectedProperty() ? "yes" : "no"); });
                 p.AddReadout("Packet number", [this] { return std::to_string(pad_.getPacketNumberProperty()); });
                 p.AddReadout("IsButtonDown(Buttons.*)", [this] { return PressedButtons(); });
@@ -669,6 +672,18 @@ private:
         }
     }
 
+    void TriggerAndLight()
+    {
+        try {
+            const bool motors = GamePad::SetTriggerVibrationEXT(PlayerIndex::One, 1.0f, 1.0f);
+            GamePad::SetTriggerVibrationEXT(PlayerIndex::One, 0.0f, 0.0f);
+            GamePad::SetLightBarEXT(PlayerIndex::One, Color(80, 160, 255, 255));
+            triggerNote_ = motors ? "trigger motors accepted; the light bar was set to blue" : "no trigger motors (returned false); the light bar call is ignored without a pad";
+        } catch (const std::exception& e) {
+            triggerNote_ = std::string(e.what()).substr(0, 60);
+        }
+    }
+
     // --- text and clipboard ------------------------------------------------------------------------
     void StartTyping()
     {
@@ -870,6 +885,15 @@ private:
             padNote_ = std::string("GamePad extensions, player one: ") + link[std::clamp(static_cast<int>(GamePad::GetConnectionStateEXT(one)), 0, 2)] + ", power state " + std::to_string(static_cast<int>(power)) +
                        (battery >= 0 ? ", battery " + std::to_string(battery) + " %" : "") + ", touchpads " + std::to_string(GamePad::GetTouchpadCountEXT(one)) +
                        ", firmware " + std::to_string(GamePad::GetFirmwareVersionEXT(one)) + ", serial \"" + GamePad::GetSerialEXT(one) + "\"";
+            {
+                // What a pad would say about itself; with none connected each answer is empty or false rather than an error.
+                Vector3 gv;
+                int fingers = GamePad::GetTouchpadCountEXT(one) > 0 ? GamePad::GetTouchpadFingerCountEXT(one, 0) : 0;
+                static const char* labels[] = {"unknown", "A", "B", "X", "Y", "Cross", "Circle", "Square", "Triangle"};
+                const int label = std::clamp(static_cast<int>(GamePad::GetButtonLabelEXT(one, Buttons::A)), 0, 8);
+                identityNote_ = "GUID \"" + GamePad::GetGUIDEXT(one) + "\", gyro " + (GamePad::GetGyroEXT(one, gv) ? "yes" : "no") + ", player index " + std::to_string(GamePad::GetPlayerIndexEXT(one)) + ", touchpad fingers " + std::to_string(fingers) +
+                                ", the A button is printed as " + labels[label];
+            }
             int gx = 0, gy = 0;
             Mouse::GetGlobalPositionEXT(gx, gy);
             globalMouse_ = std::to_string(gx) + ", " + std::to_string(gy) + " (desktop pixels, whichever window has the pointer)";
@@ -895,7 +919,7 @@ private:
     std::unique_ptr<Texture2D> ringTexture_;
     std::unique_ptr<MouseCursor> customCursor_;
     std::string lastKey_ = "(none yet)";
-    std::string lookup_ = "-", lookupNames_ = "-", mimeTypes_ = "-";
+    std::string lookup_ = "-", lookupNames_ = "-", mimeTypes_ = "-", triggerNote_ = "-", identityNote_ = "-";
     int inputType_ = 0;
     // edges
     int watch_ = 0, presses_ = 0, releases_ = 0;

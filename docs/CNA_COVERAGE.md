@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-794 distinct API names are claimed by at least one room.
+801 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -289,15 +289,22 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GameComponent | `app-components` |
 | GameComponentCollection.ComponentAdded | `app-components` |
 | GameComponentCollectionEventArgs | `app-components` |
+| GamePad.GetButtonLabelEXT | `in-pad` |
 | GamePad.GetCapabilities | `in-players` |
 | GamePad.GetConnectionStateEXT | `in-devices` |
 | GamePad.GetFirmwareVersionEXT | `in-devices` |
+| GamePad.GetGUIDEXT | `in-pad` |
+| GamePad.GetGyroEXT | `in-pad` |
 | GamePad.GetNameEXT | `in-players` |
+| GamePad.GetPlayerIndexEXT | `in-pad` |
 | GamePad.GetPowerInfoEXT | `in-devices` |
 | GamePad.GetSerialEXT | `in-devices` |
 | GamePad.GetState | `in-pad` |
 | GamePad.GetTouchpadCountEXT | `in-devices` |
+| GamePad.GetTouchpadFingerCountEXT | `in-pad` |
 | GamePad.KeyboardEmulationEnabledEXT | `in-pad` |
+| GamePad.SetLightBarEXT | `in-pad` |
+| GamePad.SetTriggerVibrationEXT | `in-pad` |
 | GamePad.SetVibration | `in-pad` |
 | GamePadCapabilities | `in-players` |
 | GamePadDeadZone | `in-pad` |
