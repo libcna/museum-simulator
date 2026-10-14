@@ -55,8 +55,8 @@ The numbers above are generated from the museum's own catalogue (`tools/gen_docs
 | 4 | Effects and lighting: BasicEffect super-wing, a lighting lab, CNA ShaderEffect shaders |
 | 5 | Render state gallery and render-target complex (mirrors, MRT, float targets) |
 | 6 | Models (glTF, PBR, SkinnedEffect), animation, particles, simulations (flocking, collisions, integrators, inverse kinematics) |
-| 7 | Audio (3D audio, synthesis, music, microphone) and input (keyboard, mouse, game pad, text, joystick) |
-| 8 | Content pipeline, CNA extensions (DebugDraw, CRT, depth and ASCII effects, shader packages, shadow mapping, statistics, devices), platform queries, players and networking (GamerServices, the Guide, achievements, packets, sessions), a history of XNA and of this build of CNA |
+| 7 | Audio (3D audio, synthesis, music with a visualizer, video, microphone) and input (keyboard, mouse, game pad, text, joystick) |
+| 8 | Content pipeline, CNA extensions (DebugDraw, CRT, depth and ASCII effects, shader packages, shadow mapping, statistics, devices), platform queries, players and networking (GamerServices, avatars, leaderboards, the Guide, achievements, packets, sessions you can find and join from a second museum), a history of XNA and of this build of CNA |
 | 9 | Performance lab, renderer validation, reference scenes, the observation deck |
 
 Maps and indexes: [docs/MUSEUM_MAP.md](docs/MUSEUM_MAP.md) (every room), [docs/CNA_COVERAGE.md](docs/CNA_COVERAGE.md)
@@ -178,9 +178,10 @@ Details, the per-renderer check matrix and what was found are in [docs/RENDERER_
 
 See [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md). In short: no stairs or escalators (elevators and the directory move
 you between floors); real audio output was verified to start and
-stream on a PipeWire machine but audibility cannot be judged by a test; Video, avatars and
-networking between machines are not
-demonstrated (see [docs/CNA_COVERAGE.md](docs/CNA_COVERAGE.md)).
+stream on a PipeWire machine but audibility cannot be judged by a test; the Windows (MinGW) build leaves out
+networking, GamerServices and avatars and the video player (no libcurl or FFmpeg there); friends, invitations, parties,
+voice and online sessions need an account service and are not demonstrated (see
+[docs/CNA_COVERAGE.md](docs/CNA_COVERAGE.md)).
 
 ## Repository layout
 
