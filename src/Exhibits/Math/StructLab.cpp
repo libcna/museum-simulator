@@ -15,7 +15,11 @@
 #include "Microsoft/Xna/Framework/Graphics/PackedVector/Bgra4444.hpp"
 #include "Microsoft/Xna/Framework/Graphics/PackedVector/Bgra5551.hpp"
 #include "Microsoft/Xna/Framework/Graphics/PackedVector/Byte4.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PackedVector/HalfVector2.hpp"
 #include "Microsoft/Xna/Framework/Graphics/PackedVector/HalfVector4.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PackedVector/NormalizedByte2.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PackedVector/NormalizedShort2.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PackedVector/Short2.hpp"
 #include "Microsoft/Xna/Framework/Graphics/PackedVector/NormalizedByte4.hpp"
 #include "Microsoft/Xna/Framework/Graphics/PackedVector/NormalizedShort4.hpp"
 #include "Microsoft/Xna/Framework/Graphics/PackedVector/Rg32.hpp"
@@ -75,6 +79,10 @@ const Format kFormats[] = {
     {"Bgra5551", 0.0f, 1.0f, &Pack<Bgra5551>},
     {"Bgr565 (no alpha)", 0.0f, 1.0f, &Pack<Bgr565>},
     {"Rg32 (two channels)", 0.0f, 1.0f, &Pack<Rg32>},
+    {"Short2 (two channels)", -32768.0f, 32767.0f, &Pack<Short2>},
+    {"NormalizedShort2", -1.0f, 1.0f, &Pack<NormalizedShort2>},
+    {"NormalizedByte2", -1.0f, 1.0f, &Pack<NormalizedByte2>},
+    {"HalfVector2", -4.0f, 4.0f, &Pack<HalfVector2>},
 };
 
 class StructLab final : public ScreenExhibit {

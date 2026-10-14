@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-644 distinct API names are claimed by at least one room.
+648 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -351,6 +351,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Guide.IsVisible | `gs-guide` |
 | Guide.NotificationPosition | `gs-guide` |
 | Guide.SimulateTrialMode | `gs-guide` |
+| HalfVector2 | `vt-packed` |
 | HalfVector4 | `vt-packed` |
 | IDrawable | `app-components` |
 | IEffectFog | `be-model` |
@@ -468,7 +469,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | NetworkSession.SimulatedPacketLoss | `net-session` |
 | NetworkSession.StartGame | `net-session` |
 | NetworkSession.Update | `net-session` |
+| NormalizedByte2 | `vt-packed` |
 | NormalizedByte4 | `vt-packed` |
+| NormalizedShort2 | `vt-packed` |
 | NormalizedShort4 | `vt-packed` |
 | OcclusionQuery | `rs-occlusion` |
 | OcclusionQuery.IsComplete | `rs-occlusion` |
@@ -585,6 +588,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ShaderLanguageEXT | `cx-package` |
 | ShaderPackageEXT.selectFor | `cx-package` |
 | ShadowCascadeStateEXT | `cx-shadow` |
+| Short2 | `vt-packed` |
 | Short4 | `vt-packed` |
 | SignedInGamer.AwardAchievement | `gs-achievements` |
 | SignedInGamer.GameDefaults | `gs-players` |

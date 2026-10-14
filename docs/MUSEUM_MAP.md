@@ -152,7 +152,7 @@ The application model, the maths of games, geometry tests and cameras
 
 | Room | Key | Title | Origin | APIs |
 |---|---|---|---|---|
-| 1.7.01 | `vt-packed` | Packed Vector Formats | XNA 4.0 | IPackedVector, Byte4, NormalizedByte4, NormalizedShort4, Short4, HalfVector4, Rgba1010102, Rgba64, Bgra4444, Bgra5551, Bgr565, Rg32, PackedValue |
+| 1.7.01 | `vt-packed` | Packed Vector Formats | XNA 4.0 | IPackedVector, Byte4, NormalizedByte4, NormalizedShort4, Short4, HalfVector4, Rgba1010102, Rgba64, Bgra4444, Bgra5551, Bgr565, Rg32, Short2, NormalizedShort2, NormalizedByte2, HalfVector2, PackedValue |
 | 1.7.02 | `vt-rectangle` | Rectangle and Point | XNA 4.0 | Rectangle, Rectangle.Intersects, Rectangle.Intersect, Rectangle.Union, Rectangle.Contains, Rectangle.Inflate, Rectangle.Bottom, Rectangle.Location, Rectangle.IsEmpty, Point |
 | 1.7.03 | `vt-color` | Colour | XNA 4.0 | Color, Color.Lerp, Color.Multiply, Color.FromNonPremultiplied, Color.PackedValue, Color.ToVector3, Color.PackFromVector4 |
 | 1.7.04 | `vt-converters` | Type Converters | XNA 4.0 | Vector3Converter, Vector2Converter, Vector4Converter, QuaternionConverter, ColorConverter, RectangleConverter, PointConverter, MathTypeConverter, MathTypeConverter.ConvertToString, MathTypeConverter.ConvertFromString, MathTypeConverter.GetProperties |
