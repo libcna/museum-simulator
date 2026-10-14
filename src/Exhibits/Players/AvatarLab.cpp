@@ -49,20 +49,46 @@ struct Preset {
     AvatarAnimationPreset value;
     const char* name;
 };
-// Every avatar has the same 31 standard animations; the female and male idles and emotes only suit their own body type, as in XNA.
+// Every avatar has the same 31 standard animations (all of them are listed); the female and male idles and emotes only suit their own body type, as in XNA.
 constexpr Preset kPresets[] = {
     {AvatarAnimationPreset::Stand0, "Stand0"}, {AvatarAnimationPreset::Stand1, "Stand1"}, {AvatarAnimationPreset::Stand2, "Stand2"}, {AvatarAnimationPreset::Stand3, "Stand3"},
     {AvatarAnimationPreset::Stand4, "Stand4"}, {AvatarAnimationPreset::Stand5, "Stand5"}, {AvatarAnimationPreset::Stand6, "Stand6"}, {AvatarAnimationPreset::Stand7, "Stand7"},
     {AvatarAnimationPreset::Clap, "Clap"}, {AvatarAnimationPreset::Wave, "Wave"}, {AvatarAnimationPreset::Celebrate, "Celebrate"},
     {AvatarAnimationPreset::FemaleIdleLookAround, "FemaleIdleLookAround"}, {AvatarAnimationPreset::FemaleLaugh, "FemaleLaugh"}, {AvatarAnimationPreset::FemaleYawn, "FemaleYawn"},
     {AvatarAnimationPreset::MaleIdleLookAround, "MaleIdleLookAround"}, {AvatarAnimationPreset::MaleLaugh, "MaleLaugh"}, {AvatarAnimationPreset::MaleYawn, "MaleYawn"},
+    {AvatarAnimationPreset::FemaleIdleCheckNails, "FemaleIdleCheckNails"}, {AvatarAnimationPreset::FemaleIdleShiftWeight, "FemaleIdleShiftWeight"}, {AvatarAnimationPreset::FemaleIdleFixShoe, "FemaleIdleFixShoe"},
+    {AvatarAnimationPreset::FemaleAngry, "FemaleAngry"}, {AvatarAnimationPreset::FemaleConfused, "FemaleConfused"}, {AvatarAnimationPreset::FemaleCry, "FemaleCry"}, {AvatarAnimationPreset::FemaleShocked, "FemaleShocked"},
+    {AvatarAnimationPreset::MaleIdleStretch, "MaleIdleStretch"}, {AvatarAnimationPreset::MaleIdleShiftWeight, "MaleIdleShiftWeight"}, {AvatarAnimationPreset::MaleIdleCheckHand, "MaleIdleCheckHand"},
+    {AvatarAnimationPreset::MaleAngry, "MaleAngry"}, {AvatarAnimationPreset::MaleConfused, "MaleConfused"}, {AvatarAnimationPreset::MaleCry, "MaleCry"}, {AvatarAnimationPreset::MaleSurprised, "MaleSurprised"},
 };
 struct Bone {
     AvatarBone value;
     const char* name;
 };
-constexpr Bone kBones[] = {{AvatarBone::PropRight, "PropRight"}, {AvatarBone::PropLeft, "PropLeft"}, {AvatarBone::Head, "Head"}, {AvatarBone::WristRight, "WristRight"},
-                           {AvatarBone::WristLeft, "WristLeft"}, {AvatarBone::Neck, "Neck"}, {AvatarBone::BackUpper, "BackUpper"}, {AvatarBone::ToeLeft, "ToeLeft"}, {AvatarBone::Root, "Root"}};
+constexpr Bone kBones[] = {{AvatarBone::PropRight, "PropRight"}, {AvatarBone::PropLeft, "PropLeft"}, {AvatarBone::Head, "Head"},
+                           {AvatarBone::WristRight, "WristRight"}, {AvatarBone::WristLeft, "WristLeft"}, {AvatarBone::Neck, "Neck"},
+                           {AvatarBone::BackUpper, "BackUpper"}, {AvatarBone::ToeLeft, "ToeLeft"}, {AvatarBone::Root, "Root"},
+                           {AvatarBone::BackLower, "BackLower"}, {AvatarBone::HipLeft, "HipLeft"}, {AvatarBone::HipRight, "HipRight"},
+                           {AvatarBone::KneeLeft, "KneeLeft"}, {AvatarBone::KneeRight, "KneeRight"}, {AvatarBone::AnkleLeft, "AnkleLeft"},
+                           {AvatarBone::CollarLeft, "CollarLeft"}, {AvatarBone::AnkleRight, "AnkleRight"}, {AvatarBone::CollarRight, "CollarRight"},
+                           {AvatarBone::ShoulderLeft, "ShoulderLeft"}, {AvatarBone::ShoulderRight, "ShoulderRight"},
+                           {AvatarBone::ToeRight, "ToeRight"}, {AvatarBone::ElbowLeft, "ElbowLeft"}, {AvatarBone::ElbowRight, "ElbowRight"},
+                           {AvatarBone::FingerIndexLeft, "FingerIndexLeft"}, {AvatarBone::FingerMiddleLeft, "FingerMiddleLeft"},
+                           {AvatarBone::FingerRingLeft, "FingerRingLeft"}, {AvatarBone::FingerSmallLeft, "FingerSmallLeft"},
+                           {AvatarBone::SpecialLeft, "SpecialLeft"}, {AvatarBone::FingerThumbLeft, "FingerThumbLeft"},
+                           {AvatarBone::FingerIndexRight, "FingerIndexRight"}, {AvatarBone::FingerMiddleRight, "FingerMiddleRight"},
+                           {AvatarBone::FingerRingRight, "FingerRingRight"}, {AvatarBone::FingerSmallRight, "FingerSmallRight"},
+                           {AvatarBone::SpecialRight, "SpecialRight"}, {AvatarBone::FingerThumbRight, "FingerThumbRight"},
+                           {AvatarBone::FingerIndex2Left, "FingerIndex2Left"}, {AvatarBone::FingerMiddle2Left, "FingerMiddle2Left"},
+                           {AvatarBone::FingerRing2Left, "FingerRing2Left"}, {AvatarBone::FingerSmall2Left, "FingerSmall2Left"},
+                           {AvatarBone::FingerThumb2Left, "FingerThumb2Left"}, {AvatarBone::FingerIndex2Right, "FingerIndex2Right"},
+                           {AvatarBone::FingerMiddle2Right, "FingerMiddle2Right"}, {AvatarBone::FingerRing2Right, "FingerRing2Right"},
+                           {AvatarBone::FingerSmall2Right, "FingerSmall2Right"}, {AvatarBone::FingerThumb2Right, "FingerThumb2Right"},
+                           {AvatarBone::FingerIndex3Left, "FingerIndex3Left"}, {AvatarBone::FingerMiddle3Left, "FingerMiddle3Left"},
+                           {AvatarBone::FingerRing3Left, "FingerRing3Left"}, {AvatarBone::FingerSmall3Left, "FingerSmall3Left"},
+                           {AvatarBone::FingerThumb3Left, "FingerThumb3Left"}, {AvatarBone::FingerIndex3Right, "FingerIndex3Right"},
+                           {AvatarBone::FingerMiddle3Right, "FingerMiddle3Right"}, {AvatarBone::FingerRing3Right, "FingerRing3Right"},
+                           {AvatarBone::FingerSmall3Right, "FingerSmall3Right"}, {AvatarBone::FingerThumb3Right, "FingerThumb3Right"}};
 constexpr int kPresetCount = static_cast<int>(sizeof(kPresets) / sizeof(kPresets[0]));
 #endif
 
@@ -75,8 +101,9 @@ public:
         plinth_ = BuildStagePlinth(b, 0.0f, 0.0f, 0.4f);
         ControlPanel& p = AddPanel("Avatar", -4.8f, 1.5f, 1.8f, MathHelper::PiOver2, 2.1f);
 #ifdef MUSEUM_NETWORKING
-        p.AddChoice("AvatarAnimation preset", {kPresets[0].name, kPresets[1].name, kPresets[2].name, kPresets[3].name, kPresets[4].name, kPresets[5].name, kPresets[6].name, kPresets[7].name, kPresets[8].name,
-                                               kPresets[9].name, kPresets[10].name, kPresets[11].name, kPresets[12].name, kPresets[13].name, kPresets[14].name, kPresets[15].name, kPresets[16].name},
+        std::vector<std::string> presetNames;
+        for (const Preset& preset : kPresets) presetNames.emplace_back(preset.name);
+        p.AddChoice("AvatarAnimation preset (all 31)", presetNames,
                     9, [this](int v) { StartPreset(v); });
         p.AddToggle("Loop the animation", true, [this](bool v) { loop_ = v; });
         p.AddChoice("Body type", {"Female", "Male"}, 1, [this](int v) { bodyType_ = v == 0 ? AvatarBodyType::Female : AvatarBodyType::Male; NewAvatar(); });
@@ -86,7 +113,9 @@ public:
         p.AddChoice("AvatarEye", {"Neutral", "Sad", "Angry", "Confused", "Laughing", "Shocked", "Happy", "Yawning", "Sleeping", "LookUp", "LookDown", "LookLeft", "LookRight", "Blink"}, 6, [this](int v) { eye_ = v; });
         p.AddChoice("AvatarMouth", {"Neutral", "Sad", "Angry", "Confused", "Laughing", "Shocked", "Happy", "PhoneticO", "PhoneticAi", "PhoneticEe", "PhoneticFv", "PhoneticW", "PhoneticL", "PhoneticDth"}, 6, [this](int v) { mouth_ = v; });
         p.AddChoice("AvatarEyebrow", {"Neutral", "Sad", "Angry", "Confused", "Raised"}, 4, [this](int v) { eyebrow_ = v; });
-        p.AddChoice("Mark a bone (AvatarBone)", {"none", kBones[0].name, kBones[1].name, kBones[2].name, kBones[3].name, kBones[4].name, kBones[5].name, kBones[6].name, kBones[7].name, kBones[8].name}, 1,
+        std::vector<std::string> boneNames{"none"};
+        for (const Bone& bone : kBones) boneNames.emplace_back(bone.name);
+        p.AddChoice("Mark a bone (AvatarBone, all 55)", boneNames, 1,
                     [this](int v) { bone_ = v - 1; });
         p.AddToggle("Draw the skeleton (ParentBones)", false, [this](bool v) { skeleton_ = v; });
         p.AddSlider("Turntable speed", 0.0f, 2.0f, spin_, [this](float v) { spin_ = v; });
