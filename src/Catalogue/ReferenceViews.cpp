@@ -33,6 +33,8 @@ const std::vector<ReferenceView>& ReferenceViews()
         {"skinned-effect", "model-skinfx", 3.0f, "SkinnedEffect tube bent by four bones"},
         {"stencil-count", "rs-stencilcount", 3.0f, "stencil Increment counting overlapping discs"},
         {"cube-map", "rt-cube", 3.0f, "a sphere mirroring a RenderTargetCube drawn from its centre"},
+        {"skinned-model-ext", "model-skinext", 3.0f, "SkinnedModelEXT tentacle posed by a keyframed clip, skeleton drawn"},
+        {"gltf-cameras", "model-cameras", 3.0f, "three cameras of a glTF scene, each drawn through and as a frustum"},
     };
     return views;
 }
