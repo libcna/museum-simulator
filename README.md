@@ -167,6 +167,7 @@ in the room when something is unavailable (for example wireframe fill on OPENGLE
 | OPENGLES3 (default) | all rooms clean | all pass | the reference renderer; `tests/reference/OPENGLES3` |
 | OPENGL33 | all rooms clean | all pass | screenshots identical to OPENGLES3 |
 | SOFTWARE | all rooms clean (about 25 minutes under Xvfb) | all pass | CPU rasteriser; no window, so mouse look is off: use the keyboard |
+| SOFTWARE, Windows build under Wine | all rooms clean (MinGW cross build) | - | `docs/RENDERER_TESTING.md` has the recipe; found a Windows-only bug (`localtime_r`) |
 | FNA3D | all rooms clean | all but one pass, one skipped | no custom shaders, no PBR (models fall back to `BasicEffect`), `PunctualLightEXT` ignored, no instancing with stock effects |
 | WEBGPU (llvmpipe) | all rooms clean | all pass | takes WGSL: the shader rooms run on WGSL sources the museum carries; the MRT edge map and the shadow-map caster do not |
 | SDL_GPU (llvmpipe) | all rooms clean | all pass | takes SPIR-V: the shader rooms compile Vulkan GLSL at run time; the shadow-map caster does not |

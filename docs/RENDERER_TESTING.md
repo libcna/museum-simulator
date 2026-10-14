@@ -86,7 +86,7 @@ WINEPREFIX=$HOME/.cache/museum-wine SDL_VIDEODRIVER=windows CNA_GRAPHICS_RENDERE
   xvfb-run -a wine build-consumer/bin/cna-3d-museum.exe --script "goto:info;wait:5;quit" --no-audio
 ```
 
-Under Wine the SOFTWARE renderer draws the lobby identically to Linux. **DIRECTX9** (Wine's Direct3D on llvmpipe OpenGL) runs
+Under Wine the SOFTWARE renderer draws the lobby identically to Linux and tours all 257 rooms with every control operated (exit 0, 0 exhibit errors, 1,413 s). **DIRECTX9** (Wine's Direct3D on llvmpipe OpenGL) runs
 the whole tour without a crash (58 s) but 11 rooms or stages are switched off by the museum's guard, all with one CNA message:
 `DirectX9Renderer::DrawPrimitivesEx (BasicEffect): stride N with lighting=... vertexColor=... texture=... has no matching CNA
 vertex layout`. The DirectX 9 renderer keys its vertex declaration on the *stride alone* (16, 20, 24, 32 or 52 bytes) and supports
