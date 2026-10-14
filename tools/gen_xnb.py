@@ -36,6 +36,9 @@ def main():
     body += string("Chef's special") + struct.pack("<i", 1250) + struct.pack("<f", 0.6)
     items = ["miso soup", "grilled aubergine", "rice", "green tea"]
     body += struct.pack("<i", len(items)) + b"".join(string(i) for i in items)
+    body += bytes([255, 168, 60, 255])                               # ReadColor: the accent colour (R, G, B, A)
+    body += struct.pack("<2f", 26.0, 26.0)                           # ReadVector2: the plate's size in centimetres
+    body += struct.pack("<4f", 24.0, 11.0, 62.0, 8.0)                # ReadVector4: protein, fat, carbohydrate, fibre in grams
     header = b"XNBw" + bytes([5, 0]) + struct.pack("<i", 10 + len(body))   # platform w, version 5, uncompressed, file size
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "wb") as f:

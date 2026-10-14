@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-920 distinct API names are claimed by at least one room.
+924 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -233,6 +233,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ContentManager.RootDirectory | `ct-load` |
 | ContentManager.Unload | `app-content`, `ct-cache`, `ct-lifetime` |
 | ContentReader | `ct-reader` |
+| ContentReader.AssetName | `ct-reader` |
+| ContentReader.ReadColor | `ct-reader` |
+| ContentReader.ReadVector2 | `ct-reader` |
+| ContentReader.ReadVector4 | `ct-reader` |
 | ContentSerializerAttribute | `ct-intermediate` |
 | ContentSerializerCollectionItemNameAttribute | `ct-intermediate` |
 | ContentSerializerIgnoreAttribute | `ct-intermediate` |

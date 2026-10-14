@@ -77,7 +77,7 @@ std::string Kb(std::uintmax_t bytes)
 
 std::string Describe(const std::string& what)
 {
-    return what.size() > 74 ? what.substr(0, 71) + "..." : what;
+    return what.size() > 96 ? what.substr(0, 93) + "..." : what;
 }
 
 /** An application type loaded through ContentManager: the content system is extensible, nothing here is built in. */
@@ -142,6 +142,10 @@ struct Menu {
     int cents = 0;
     float spice = 0.0f;
     std::vector<std::string> items;
+    Color accent;          // ReadColor
+    Vector2 plate;         // ReadVector2: the plate's size in centimetres
+    Vector4 nutrition;     // ReadVector4: protein, fat, carbohydrate, fibre in grams
+    std::string assetName; // ContentReader.AssetName: the name the asset was loaded under
 };
 
 class MenuReader final : public ContentTypeReader<Menu> {
@@ -157,6 +161,10 @@ protected:
         m.spice = input.ReadSingle();
         const int count = input.ReadInt32();
         for (int i = 0; i < count && i < 64; ++i) m.items.push_back(input.ReadString());
+        m.accent = input.ReadColor();
+        m.plate = input.ReadVector2();
+        m.nutrition = input.ReadVector4();
+        m.assetName = input.getAssetNameProperty();
         return m;
     }
 };
@@ -884,6 +892,14 @@ private:
             for (const std::string& it : menu.items) items += it + ", ";
             return "\"" + menu.name + "\": " + std::to_string(menu.cents / 100) + "." + (menu.cents % 100 < 10 ? "0" : "") + std::to_string(menu.cents % 100) + ", spice " + Fmt(menu.spice) + ", " + items;
         }, !registerFirst && !ContentTypeReaderManager::IsRegistered("Museum.MenuReader"));
+        if (ContentTypeReaderManager::IsRegistered("Museum.MenuReader")) {
+            // The rest of what the reader pulled out of the same file, through the other ContentReader calls.
+            Attempt("ReadColor, ReadVector2, ReadVector4, AssetName", [&](Row&) {
+                const Menu menu = m->Load<Menu>("Custom/menu");
+                return "colour " + std::to_string(menu.accent.getRProperty()) + "," + std::to_string(menu.accent.getGProperty()) + "," + std::to_string(menu.accent.getBProperty()) + "  Vector2 " + Fmt(menu.plate.X, "%.0f") + "x" + Fmt(menu.plate.Y, "%.0f") + "  Vector4 " + Fmt(menu.nutrition.X, "%.0f") + "/" +
+                       Fmt(menu.nutrition.Y, "%.0f") + "/" + Fmt(menu.nutrition.Z, "%.0f") + "/" + Fmt(menu.nutrition.W, "%.0f") + "  name " + menu.assetName;
+            });
+        }
         if (rows_.size() > 6) rows_.erase(rows_.begin());
     }
     void ReaderRemove()
