@@ -148,6 +148,12 @@ public:
                 break;
             case Mode::GameTimeLab:
                 p.AddSlider("Extra delay per Update", 0.0f, 80.0f, delay_, [this, st](float v) { delay_ = v; if (st != nullptr) st->injectedDelayMs = v; }, "%.0f ms", 1.0f);
+                p.AddButton("One 400 ms stall, nothing done about it", [st] { if (st != nullptr) { st->oneShotStallMs = 400.0f; st->resetElapsedAfterStall = false; } });
+                p.AddButton("One 400 ms stall, then Game.ResetElapsedTime()", [st] { if (st != nullptr) { st->oneShotStallMs = 400.0f; st->resetElapsedAfterStall = true; } });
+                p.AddButton("Game.SuppressDraw(): skip the next Draw", [st] { if (st != nullptr) st->suppressDrawNext = true; });
+                p.AddSlider("Game.InactiveSleepTime (window in the background)", 0.0f, 100.0f, static_cast<float>(S().game->getInactiveSleepTimeProperty().getTotalMillisecondsProperty()), [this](float v) { S().game->setInactiveSleepTimeProperty(System::TimeSpan::FromMilliseconds(static_cast<double>(v))); }, "%.0f ms", 1.0f);
+                p.AddReadout("Longest frame, last 2 seconds", [this] { return Fmt(*std::max_element(S().stats->frameHistory, S().stats->frameHistory + 120), " ms"); });
+                p.AddReadout("Draws suppressed so far", [this] { return std::to_string(S().stats->drawsSuppressed); });
                 p.AddHeading("Two balls cross the track");
                 p.AddReadout("Time-based speed", [] { return std::string("2.0 m per second"); });
                 p.AddReadout("Frame-based speed", [] { return std::string("0.0333 m per Update"); });

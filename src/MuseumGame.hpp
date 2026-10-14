@@ -122,6 +122,7 @@ private:
     float bannerAge_ = 99.0f;
     float fpsAccumulator_ = 0.0f;
     int fpsFrames_ = 0;
+    bool probeElapsedAfterStall_ = false;
     int updatesThisSecond_ = 0;
     int drawsThisSecond_ = 0;
     std::string rendererName_;

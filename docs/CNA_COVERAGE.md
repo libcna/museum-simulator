@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-896 distinct API names are claimed by at least one room.
+899 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -325,10 +325,13 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Game.Exiting | `app-lifecycle` |
 | Game.GetPlatformCapabilitiesEXT | `pl-platform` |
 | Game.GetPlatformEXT | `pl-platform` |
+| Game.InactiveSleepTime | `app-gametime` |
 | Game.IsFixedTimeStep | `app-lifecycle`, `pf-dashboard` |
 | Game.IsRunningSlowly | `pf-dashboard` |
 | Game.LaunchParameters | `app-lifecycle` |
+| Game.ResetElapsedTime | `app-gametime` |
 | Game.Services | `app-services` |
+| Game.SuppressDraw | `app-gametime` |
 | Game.TargetElapsedTime | `app-lifecycle` |
 | GameComponent | `app-components` |
 | GameComponentCollection.ComponentAdded | `app-components` |

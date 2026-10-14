@@ -50,6 +50,10 @@ struct FrameStats {
     bool typingCapture = false;      // text-entry exhibit: the keyboard types instead of walking (Esc releases it)
     float injectedDelayMs = 0.0f;    // lab control: burn this long inside every Update
     int hitchFrames = 0;             // lab control: frames of extra delay left
+    float oneShotStallMs = 0.0f;     // lab control: one Update burns this long, once
+    bool resetElapsedAfterStall = false;   // ... and then calls Game.ResetElapsedTime()
+    bool suppressDrawNext = false;   // lab control: the next Update calls Game.SuppressDraw()
+    int drawsSuppressed = 0;         // how many times it did
     int cellsBuilt = 0, cellsLoaded = 0;   // lazily built world (see MuseumWorld)
     long long cellsBuiltTotal = 0, cellsDestroyedTotal = 0;
 };

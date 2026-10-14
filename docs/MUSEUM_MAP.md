@@ -74,7 +74,7 @@ The application model, the maths of games, geometry tests and cameras
 | Room | Key | Title | Origin | APIs |
 |---|---|---|---|---|
 | 1.1.01 | `app-lifecycle` | Game Lifecycle | XNA 4.0 | Game, GameTime, Game.IsFixedTimeStep, Game.TargetElapsedTime, Game.LaunchParameters, LaunchParameters, Game.Exiting |
-| 1.1.02 | `app-gametime` | GameTime and Frame Rate | XNA 4.0 | GameTime.ElapsedGameTime, GameTime.TotalGameTime |
+| 1.1.02 | `app-gametime` | GameTime and Frame Rate | XNA 4.0 | GameTime.ElapsedGameTime, GameTime.TotalGameTime, Game.ResetElapsedTime, Game.SuppressDraw, Game.InactiveSleepTime |
 | 1.1.03 | `app-device` | Device and Renderer Report | XNA 4.0 | GraphicsDevice, GraphicsAdapter, GraphicsCapability, RendererCapabilityProfile, PresentationParameters |
 | 1.1.04 | `app-viewport` | Back Buffer, Viewport and Fullscreen | XNA 4.0 | GraphicsDeviceManager, PresentationParameters, PresentInterval, GraphicsDeviceStatus, GraphicsDeviceManager.DeviceReset, GraphicsDeviceManager.DeviceResetting, GraphicsDeviceManager.PreparingDeviceSettings, Viewport, GameWindow.ClientBounds |
 | 1.1.05 | `app-content` | Content Lifetime | XNA 4.0 | ContentManager, ContentManager.Load, ContentManager.Unload, ContentLoadException, Texture2D |

@@ -241,7 +241,7 @@ WingSpec AppWing()
         Lab("app-lifecycle", "Game Lifecycle", "Initialize, LoadContent, Update, Draw and UnloadContent with live counters and a fixed/variable step switch", "applab", "lifecycle",
             {"Game", "GameTime", "Game.IsFixedTimeStep", "Game.TargetElapsedTime", "Game.LaunchParameters", "LaunchParameters", "Game.Exiting"}),
         Lab("app-gametime", "GameTime and Frame Rate", "Time-based versus frame-based movement, with an artificial slowdown and a frame-time graph", "applab", "gametime",
-            {"GameTime.ElapsedGameTime", "GameTime.TotalGameTime"}),
+            {"GameTime.ElapsedGameTime", "GameTime.TotalGameTime", "Game.ResetElapsedTime", "Game.SuppressDraw", "Game.InactiveSleepTime"}),
         Lab("app-device", "Device and Renderer Report", "The live GraphicsDevice, adapter, GraphicsCapability list and renderer capability profile", "applab", "device",
             {"GraphicsDevice", "GraphicsAdapter", "GraphicsCapability", "RendererCapabilityProfile", "PresentationParameters"}),
         Lab("app-viewport", "Back Buffer, Viewport and Fullscreen", "GraphicsDeviceManager.ApplyChanges: resolution, fullscreen and vertical sync at run time", "applab", "viewport",

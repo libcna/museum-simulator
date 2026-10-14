@@ -355,6 +355,10 @@ void MuseumGame::RecordLoopStats(const GameTime& gameTime)
     stats_.totalSeconds = gameTime.getTotalGameTimeProperty().getTotalSecondsProperty();
     stats_.elapsedMilliseconds = static_cast<float>(gameTime.getElapsedGameTimeProperty().getTotalMillisecondsProperty());
     stats_.runningSlowly = gameTime.getIsRunningSlowlyProperty();
+    if (probeElapsedAfterStall_) {   // the Update after a one-shot stall: what ElapsedGameTime was handed
+        Museum::Log("app", "Update after the stall: ElapsedGameTime %.1f ms", static_cast<double>(stats_.elapsedMilliseconds));
+        probeElapsedAfterStall_ = false;
+    }
     stats_.fixedStep = getIsFixedTimeStepProperty();
     stats_.targetMilliseconds = static_cast<float>(getTargetElapsedTimeProperty().getTotalMillisecondsProperty());
     std::memmove(stats_.frameHistory, stats_.frameHistory + 1, sizeof(stats_.frameHistory) - sizeof(float));
@@ -364,6 +368,18 @@ void MuseumGame::RecordLoopStats(const GameTime& gameTime)
     if (delay > 0.0f) {   // a deliberate slow Update, for the timing labs
         const auto until = std::chrono::steady_clock::now() + std::chrono::microseconds(static_cast<long long>(delay * 1000.0f));
         while (std::chrono::steady_clock::now() < until) {}
+    }
+    if (stats_.oneShotStallMs > 0.0f) {   // one long stall, with or without Game.ResetElapsedTime() afterwards (the game-time lab)
+        const auto until = std::chrono::steady_clock::now() + std::chrono::microseconds(static_cast<long long>(stats_.oneShotStallMs * 1000.0f));
+        while (std::chrono::steady_clock::now() < until) {}
+        if (stats_.resetElapsedAfterStall) ResetElapsedTime();
+        stats_.oneShotStallMs = 0.0f;
+        probeElapsedAfterStall_ = true;
+    }
+    if (stats_.suppressDrawNext) {
+        SuppressDraw();
+        ++stats_.drawsSuppressed;
+        stats_.suppressDrawNext = false;
     }
     if (world_) {
         stats_.cellsBuilt = world_->Stats().cellsBuilt;
