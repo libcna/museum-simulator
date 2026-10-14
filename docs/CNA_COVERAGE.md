@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-835 distinct API names are claimed by at least one room.
+845 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -161,6 +161,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CNA::Graphics::DepthEffect | `cx-depth` |
 | CNA::Graphics::ShaderPackageEXT | `cx-package` |
 | CNA::GraphicsRendererSelection.GetAvailable | `hist-cna` |
+| CNA::LogCategory | `pl-log` |
+| CNA::LogLevel | `pl-log` |
+| CNA::Logger | `pl-log` |
 | CNA::Platform::IPlatform | `pl-platform` |
 | CNA::ShaderCompilationExceptionEXT | `fx-errors` |
 | CNA::ShaderDiagnosticEXT | `fx-errors` |
@@ -470,6 +473,13 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | LeaderboardWriter | `gs-leaderboards` |
 | LocalNetworkGamer.ReceiveData | `net-session` |
 | LocalNetworkGamer.SendData | `net-session` |
+| Logger.GetMinimumLevel | `pl-log` |
+| Logger.InfoIf | `pl-log` |
+| Logger.Log | `pl-log` |
+| Logger.ResetSink | `pl-log` |
+| Logger.SetMinimumLevel | `pl-log` |
+| Logger.SetSink | `pl-log` |
+| Logger.WarnIf | `pl-log` |
 | LooseFileContentTypeReader | `ct-custom` |
 | MathHelper | `an-pendulum`, `sim-integrators`, `rf-deck` |
 | MathHelper.CatmullRom | `curve-easing` |

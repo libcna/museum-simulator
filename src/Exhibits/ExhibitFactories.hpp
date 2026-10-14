@@ -57,6 +57,7 @@ std::unique_ptr<Exhibit> MakeVideoLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeProcessorLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeCompiledFxLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeShaderErrorLab(const RoomDef& room, Services& services);
+std::unique_ptr<Exhibit> MakeLogLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeSkinExtLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeModelCamerasLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeOnlineLab(const RoomDef& room, Services& services);

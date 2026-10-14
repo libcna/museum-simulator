@@ -159,6 +159,12 @@ WingSpec PlatformWing()
             r.params = {};
             return r;
         }(),
+        [&] {
+            RoomSpec r = pl("pl-log", "CNA's Log", "CNA::Logger: seven levels, nine categories, a minimum level, conditional lines and a sink that receives what the engine itself writes", "", {"CNA::Logger", "Logger.Log", "Logger.InfoIf", "Logger.WarnIf", "Logger.SetMinimumLevel", "Logger.GetMinimumLevel", "Logger.SetSink", "Logger.ResetSink", "CNA::LogLevel", "CNA::LogCategory"}, ApiOrigin::CnaExtension);
+            r.exhibit = "log-lab";
+            r.params = {};
+            return r;
+        }(),
         pl("pl-window", "The Game Window", "GameWindow title, client bounds, resizing, activation and file drops", "window", {"GameWindow.Title", "GameWindow.ClientBounds", "GameWindow.AllowUserResizing", "GameWindow.ClientSizeChanged", "Game.Activated", "GameWindow.FileDropEXT"}, ApiOrigin::Xna),
         pl("pl-adapter", "Adapter and Back Buffer", "GraphicsAdapter, display modes, GraphicsProfile and PresentationParameters", "adapter", {"GraphicsAdapter", "DisplayMode", "GraphicsDevice.GraphicsProfile", "PresentationParameters", "GraphicsAdapter.IsProfileSupported", "GraphicsAdapter.QueryRenderTargetFormat", "GraphicsAdapter.QueryBackBufferFormat", "GraphicsAdapter.Adapters", "GraphicsAdapter.IsWideScreenAspectRatioEXT"}, ApiOrigin::Xna),
         pl("pl-renderer", "The Active Renderer", "Renderer identity, maturity, features, limits, surface formats and the device's own colour-space and support queries", "renderer", {"GraphicsDevice.GetRendererCapabilityProfileEXT", "RendererFeature", "RendererLimit", "RendererFormatUsage", "GraphicsDevice.GetGraphicsRendererName", "GraphicsDevice.GetDisplayColorSpaceEXT", "GraphicsDevice.SupportsDisplayColorSpaceEXT", "GraphicsDevice.SetDisplayColorSpaceEXT", "GraphicsDevice.SupportsImageBasedLightingEXT", "GraphicsDevice.GetTrackedResourceCount", "GraphicsDevice.GetLogicalSizeEXT"}, ApiOrigin::CnaExtension),
