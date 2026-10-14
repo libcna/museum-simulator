@@ -73,6 +73,11 @@ mapping, `RoomBuilder` (boxes, signs, wall points, facing quads) and `ControlPan
 - `museum_tests` (`TestRoomFrames`) checks that every room's door is on the local south wall and its arrival view faces
   the local north wall.
 
+## Overlay scaling
+
+The HUD and the directory are laid out for a 1280 x 720 window and drawn through a scale matrix (`UI/UiScale.hpp`), so they keep
+their proportions at 640 x 480 and at 2560 x 1080; the directory maps the mouse into the same units.
+
 ## Navigation
 
 `UI/FloorMap` (plan and minimap), `UI/DirectoryScreen` (search, tabs, quick travel; floors unlock when their hall or

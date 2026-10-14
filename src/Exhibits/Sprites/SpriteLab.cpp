@@ -684,7 +684,7 @@ private:
                     hitPixels_.emplace_back(x, y);
                 }
         }
-        testMs_ = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+        testMs_ = static_cast<float>(std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count());
         Begin(sb, SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::PointClamp);
         sb.Draw(*hitA_, posA, std::nullopt, Color::White, 0.0f, Vector2(48, 48), sa, SpriteEffects::None, 0.0f);
         sb.Draw(*hitB_, posB, std::nullopt, Color(255, 255, 255, 230), rb, Vector2(48, 48), sbScale, SpriteEffects::None, 0.0f);

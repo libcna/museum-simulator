@@ -33,6 +33,7 @@ Found by the museum's own exhibits; fixed in the CNA repository (commit ids are 
 |---|---|---|
 | Content Pipeline / Loose Image Formats | `ContentManager` advertised `.tif`/`.tiff` as loose `Texture2D` extensions, but the image decoder has no TIFF support (`docs/texture-stream-formats.md`): a `.tif` was found and then failed with "unknown image type". | fixed in CNA (`ContentTexture2DLoaders.cpp`) |
 | Platform and Renderer / The Active Renderer | The OPENGLES3/OPENGL33 (EasyGL) capability profile reported `MaxColorAttachments`, `MaxSampledTexturesPerShaderStage`, `MaxVertexInputBindings` and `MaxVertexInputAttributes` as the known value 0 (the interface default), next to a supported `MultipleRenderTargets`. | fixed in CNA (EasyGL now reports the live context's values: 8, 32, 16, 16 here) |
+| Content from Memory | `ResourceContentManager.Load<T>()` never read its resource family: `Load<T>()` climbed the file-system tier ladder and ignored the virtual `OpenStream()` seam (only the protected `ReadAsset<T>()` used it), so the public call fell through to loose-file decoding and failed; `OpenStream()`'s documentation claimed every `.xnb` load went through it. Fixed in CNA (`c1006b03e`): a manager can route `Load<T>()` through `OpenStream()` (`RouteLoadsThroughOpenStreamEXT`) and `ResourceContentManager` does; three tests added. | fixed |
 
 ## Open observations (not explained, no CNA change made)
 
@@ -44,6 +45,15 @@ Found by the museum's own exhibits; fixed in the CNA repository (commit ids are 
   This is the driver's capability, reported honestly by `RenderTarget2D.MultiSampleCount`.
 - `OcclusionQuery.PixelCount` on OPENGLES3/OPENGL33 is an any-samples boolean (0 or 1), documented by CNA; the room shows
   `isPixelCountPreciseEXT()` so this is visible.
+
+## Museum bugs found and fixed (for the record)
+
+- **Rooms entered through their north door were back to front.** Rooms alternate between the two sides of a gallery and every
+  exhibit was written for the south door, so half of them had their screens and subjects behind the visitor, left/right
+  captions swapped and some quads facing away. Fixed with a per-room local frame (`RoomDef::frameYaw`, see
+  `docs/ARCHITECTURE.md`); `museum_tests` checks the invariant for every room.
+- Teleports never ran `OnLeave` for the room being left (stale overlays such as the Game Components badges).
+- A `SkinnedEffect` cannot switch lighting off (like XNA's): the room dims its lights instead.
 
 ## Observations that are not bugs
 

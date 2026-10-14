@@ -261,8 +261,9 @@ private:
                     int ms = 0;
                     const bool reach = a.IsProfileSupported(GraphicsProfile::Reach), hidef = a.IsProfileSupported(GraphicsProfile::HiDef);
                     const bool rt = a.QueryRenderTargetFormat(GraphicsProfile::HiDef, SurfaceFormat::Color, DepthFormat::Depth24Stencil8, 4, sf, df, ms);
-                    lines_.push_back(std::string("IsProfileSupported: Reach ") + (reach ? "yes" : "no") + ", HiDef " + (hidef ? "yes" : "no") + "    QueryRenderTargetFormat(Color, Depth24Stencil8, 4x): " +
-                                     (rt ? "ok -> " + std::to_string(static_cast<int>(sf)) + " / depth " + std::to_string(static_cast<int>(df)) + " / " + std::to_string(ms) + " samples" : std::string("not available")));
+                    lines_.push_back(std::string("IsProfileSupported: Reach ") + (reach ? "yes" : "no") + ", HiDef " + (hidef ? "yes" : "no") +
+                                     "    QueryRenderTargetFormat(Color, Depth24Stencil8, 4x): " + (rt ? "as asked" : "adjusted") + " -> format " + std::to_string(static_cast<int>(sf)) +
+                                     ", depth " + std::to_string(static_cast<int>(df)) + ", " + std::to_string(ms) + " samples");
                     const bool bb = a.QueryBackBufferFormat(GraphicsProfile::HiDef, SurfaceFormat::Color, DepthFormat::Depth24, 0, sf, df, ms);
                     lines_.push_back(std::string("QueryBackBufferFormat(Color, Depth24): ") + (bb ? "ok" : "not available") + "    PresentationParameters.BackBufferFormat " + std::to_string(static_cast<int>(pp.getBackBufferFormatProperty())) +
                                      ", DisplayOrientation " + std::to_string(static_cast<int>(pp.getDisplayOrientationProperty())) + ", headless " + (pp.getHeadlessEXTProperty() ? "yes" : "no"));

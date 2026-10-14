@@ -132,14 +132,6 @@ Dish RecipeFromCnj(const std::string& json, ContentManager&)
     return r;
 }
 
-/** ReadAsset<T> is ContentManager's documented protected seam, the one a resource-backed manager reads through. */
-class MemoryContent final : public ResourceContentManager {
-public:
-    using ResourceContentManager::ReadAsset;
-    MemoryContent(System::IServiceProvider* services, System::Resources::ResourceManager* resources) : ResourceContentManager(services, resources) {}
-    explicit MemoryContent(System::IServiceProvider* services) : ResourceContentManager(services) {}
-};
-
 /** One line of a result table; textures are kept so the screen can show what was loaded. */
 struct Row {
     std::string name;
@@ -365,36 +357,36 @@ private:
     void ResourceLoad(int what)
     {
         if (what == 4) {
-            Attempt("ResourceContentManager(services).ReadAsset<Texture2D>(\"picture\")", [&](Row&) {
-                MemoryContent bare(&S().game->getServicesProperty());
-                auto t = std::make_unique<Texture2D>(bare.ReadAsset<Texture2D>("picture", {}));
+            Attempt("ResourceContentManager(services).Load<Texture2D>(\"picture\")", [&](Row&) {
+                ResourceContentManager bare(&S().game->getServicesProperty());
+                auto t = std::make_unique<Texture2D>(bare.Load<Texture2D>("picture"));
                 return std::string("loaded?!");
             }, true);
             return;
         }
         if (!resourceManager_) return;
         const std::string asset = what == 0 ? "picture" : (what == 1 ? "sound" : (what == 2 ? "shape" : "unlisted"));
-        auto m = std::make_unique<MemoryContent>(&S().game->getServicesProperty(), resourceManager_.get());
+        auto m = std::make_unique<ResourceContentManager>(&S().game->getServicesProperty(), resourceManager_.get());
         if (what == 0) {
-            Attempt("ResourceContentManager.ReadAsset<Texture2D>(\"picture\")", [&](Row& r) {
-                auto tex = std::make_unique<Texture2D>(m->ReadAsset<Texture2D>(asset, {}));
+            Attempt("ResourceContentManager.Load<Texture2D>(\"picture\")", [&](Row& r) {
+                auto tex = std::make_unique<Texture2D>(m->Load<Texture2D>(asset));
                 const std::string d = std::to_string(tex->getWidthProperty()) + " x " + std::to_string(tex->getHeightProperty()) + " pixels, from " + Kb(resources_[asset].size()) + " held in memory";
                 r.picture = std::move(tex);
                 return d;
             });
         } else if (what == 1) {
-            Attempt("ResourceContentManager.ReadAsset<SoundEffect>(\"sound\")", [&](Row&) {
-                const SoundEffect s = m->ReadAsset<SoundEffect>(asset, {});
+            Attempt("ResourceContentManager.Load<SoundEffect>(\"sound\")", [&](Row&) {
+                const SoundEffect s = m->Load<SoundEffect>(asset);
                 return "duration " + Fmt(s.getDurationProperty().getTotalSecondsProperty()) + " s, from " + Kb(resources_[asset].size());
             });
         } else if (what == 2) {
-            Attempt("ResourceContentManager.ReadAsset<Model>(\"shape\")", [&](Row&) {
-                const Model model = m->ReadAsset<Model>(asset, {});
+            Attempt("ResourceContentManager.Load<Model>(\"shape\")", [&](Row&) {
+                const Model model = m->Load<Model>(asset);
                 return std::to_string(model.getMeshesProperty().getCountProperty()) + " mesh(es), from " + Kb(resources_[asset].size());
             });
         } else {
-            Attempt("ResourceContentManager.ReadAsset<Texture2D>(\"unlisted\")", [&](Row&) {
-                auto t = std::make_unique<Texture2D>(m->ReadAsset<Texture2D>(asset, {}));
+            Attempt("ResourceContentManager.Load<Texture2D>(\"unlisted\")", [&](Row&) {
+                auto t = std::make_unique<Texture2D>(m->Load<Texture2D>(asset));
                 return std::string("loaded?!");
             }, true);
         }
