@@ -41,13 +41,14 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | `MediaLibrary`, albums, playlists, pictures (`Microsoft.Xna.Framework.Media`) | deliberately not demonstrated: CNA builds them by scanning the visitor's own Music and Pictures folders, and the museum does not read personal files (the only way to point it elsewhere is a test-only hook inside CNA) |
 | GamerServices and Net beyond the basics: friends, invitations, parties, voice, online sessions | not demonstrated: the *Players and Networking* wing covers signed-in gamers, presence, privileges, profiles, achievements, the Guide, PacketWriter/Reader and a Local and a SystemLink session between the two local profiles, a search for SystemLink sessions and joining one (a second museum process is found and joined, its gamers appear as remote, packets cross the network); the *Leaderboards* room writes and reads ratings from the two local profiles; the *Avatars* room shows AvatarDescription, AvatarAnimation and AvatarRenderer; the rest needs a second machine or an account service |
 | `FileDialog`, `MessageBox`, `SystemTray`, `UrlLauncher`, `Camera` (CNA_DEVICES) | not implemented: they open real dialogs or hardware; the room reports whether each is supported |
-| Compiled XNA effects (`.fxb`), C API, Inspector | not implemented: disabled in CNA's default build for the renderers used here |
+| C API, Inspector | not implemented: disabled in CNA's default build |
+| Compiled XNA effects (`.fxb`) | demonstrated in *Compiled XNA Effects*, which runs a real XNA-compiled effect on FNA3D (the only renderer with `CompiledEffects`) and says so elsewhere |
 | Retired renderers and removed CNA features (for example VULKAN, the post-process chain) | deliberately not demonstrated |
 
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-711 distinct API names are claimed by at least one room.
+716 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -240,16 +241,20 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | DynamicSoundEffectInstance.SubmitBuffer | `au-synth` |
 | DynamicVertexBuffer | `sky`, `particles`, `geo-dynamic`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `rf-garden`, `rf-weather` |
 | DynamicVertexBuffer.SetData | `pf-buffers` |
-| Effect | `be-model` |
+| Effect | `be-model`, `fx-compiled` |
+| Effect(GraphicsDevice, byte[]) | `fx-compiled` |
 | Effect.Clone | `be-model` |
+| Effect.Parameters | `fx-compiled` |
+| Effect.Techniques | `fx-compiled` |
 | EffectAnnotation | `be-model` |
-| EffectParameter | `be-model` |
-| EffectParameterClass | `be-model` |
+| EffectParameter | `be-model`, `fx-compiled` |
+| EffectParameter.SetValue | `fx-compiled` |
+| EffectParameterClass | `be-model`, `fx-compiled` |
 | EffectParameterCollection | `be-model` |
-| EffectParameterType | `be-model` |
-| EffectPass | `be-model` |
+| EffectParameterType | `be-model`, `fx-compiled` |
+| EffectPass | `be-model`, `fx-compiled` |
 | EffectPass.Apply | `pf-state` |
-| EffectTechnique | `be-model` |
+| EffectTechnique | `be-model`, `fx-compiled` |
 | EnableDefaultLighting | `lighting` |
 | EnvironmentMapEffect | `tex-cube`, `rt-cube` |
 | EnvironmentMapEffect.EnvironmentMap | `rt-cube` |
@@ -311,6 +316,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsAdapter.QueryBackBufferFormat | `pl-adapter` |
 | GraphicsAdapter.QueryRenderTargetFormat | `pl-adapter` |
 | GraphicsCapability | `app-device` |
+| GraphicsCapability.CompiledEffects | `fx-compiled` |
 | GraphicsCapability.Instancing | `geo-instancing`, `pf-objects` |
 | GraphicsCapability.MultiSampleAntiAliasing | `rt-msaa` |
 | GraphicsCapability.OcclusionQuery | `rs-occlusion` |
@@ -653,7 +659,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SoundEffectInstance.Volume | `au-layers` |
 | SoundState | `au-layers` |
 | SpriteBatch | `sprite-stress`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `rf-weather` |
-| SpriteBatch.Begin | `sprite-basics`, `sprite-camera`, `sprite-tilemap`, `rt-bloom`, `pf-sprites` |
+| SpriteBatch.Begin | `sprite-basics`, `sprite-camera`, `sprite-tilemap`, `fx-compiled`, `rt-bloom`, `pf-sprites` |
 | SpriteBatch.Begin(effect) | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `cx-crt` |
 | SpriteBatch.Draw | `sprite-basics`, `sprite-origin`, `sprite-sheet`, `sprite-sort`, `sprite-parallax`, `sprite-ui`, `sprite-atlas`, `sprite-hit`, `sprite-anim`, `sprite-tilemap`, `sprite-lights`, `sprite-stress`, `rt-recursive`, `pf-sprites`, `pf-overdraw`, `rv-sprites` |
 | SpriteBatch.DrawString | `text-align`, `text-transform`, `text-hud`, `text-labels` |
