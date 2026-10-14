@@ -27,6 +27,15 @@ given; anything unverified says so. Counts are not repeated here: run `build/bin
   instancing, `PunctualLightEXT` ignored; WEBGPU/SDL_GPU: GLSL shader rooms show no effect). Cross-renderer finding fixed in CNA:
   EasyGL sampled a rendered `RenderTargetCube` upside down (`a6e8104d2`); SOFTWARE ignored point/spot lights (`53aba6ef1`).
   A full AddressSanitizer + UBSan tour and `museum_tests` were clean after one CNA fix (a directory read as an image, `49b1d3a99`); a second pass over FNA3D, WEBGPU and SDL_GPU found one museum bug (dangling stand-in effects in `ModelLab`, fixed) and one UB in MojoShader (recorded).
+- **New wing "Players and Networking" (floor 8)**: `gs-players`, `gs-achievements`, `gs-guide`, `net-packets`, `net-session`, built on CNA's
+  GamerServices and Net (`MUSEUM_NETWORKING`, default ON; the rooms say so when it is off). Two local offline profiles ("Visitor", "Guest")
+  are signed in at start-up through `CNA_GAMER_SERVICES_AUTO_SIGN_IN` (set in `Main.cpp` unless the caller set it; test runs keep CNA's
+  profile store in `<build>/gamer-profiles`). The museum awards six achievements itself as the visitor explores
+  (`Content/GamerServices/Achievements.json`, awarded by `MuseumAchievements`). Findings: a **Local** session delivers no packets
+  (as in FNA); only one session can exist per process (so no host + client in one process, and no way to show `SimulatedLatency`/`Loss`,
+  which act on packets arriving from another machine); a gamer can be in one session at a time; the Guide makes the game inactive,
+  which the pause-on-focus-loss code now ignores; `IsReady` throws outside the lobby (the room guards it).
+- Exceptions thrown by a control or prompt callback no longer end the museum (`InteractionSystem::failureReporter`).
 - The world now survives an exception in one room (`MuseumWorld::Guard`); `tools/tour.sh` exits 3 if any were caught.
 - The audio floor was also run with a real audio device (PipeWire, volume 0.03): the mixer opens and every audio room's
   controls run without errors; whether it is audible cannot be judged by a test. All other runs use Xvfb and the dummy driver.
