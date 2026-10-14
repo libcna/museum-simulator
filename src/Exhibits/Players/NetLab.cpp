@@ -88,6 +88,8 @@ public:
             p.AddReadout("IsEveryoneReady", [this] { NetworkSession* n = Primary(); return n != nullptr ? std::string(n->getIsEveryoneReadyProperty() ? "true" : "false") : std::string("-"); });
             p.AddReadout("Gamers (local / all)", [this] { NetworkSession* n = Primary(); return n != nullptr ? std::to_string(n->getLocalGamersProperty().getCountProperty()) + " / " + std::to_string(n->getAllGamersProperty().getCountProperty()) : std::string("-"); });
             p.AddToggle("Deliver packets: a SystemLink session (visible on your network)", false, [this](bool v) { SetTransport(v); });
+            p.AddSlider("SimulatedLatency (ms, on arriving packets)", 0.0f, 500.0f, 0.0f, [this](float v) { latencyMs_ = v; ApplyImpairment(); }, "%.0f", 10.0f);
+            p.AddSlider("SimulatedPacketLoss", 0.0f, 0.5f, 0.0f, [this](float v) { loss_ = v; ApplyImpairment(); }, "%.2f", 0.05f);
             p.AddSlider("SessionProperties[0] (game mode)", 0.0f, 9.0f, static_cast<float>(gameMode_), [this](float v) { gameMode_ = static_cast<int>(v); ApplySessionSettings(); }, "%.0f", 1.0f);
             p.AddToggle("AllowJoinInProgress", false, [this](bool v) { joinInProgress_ = v; ApplySessionSettings(); });
             p.AddChoice("Search for game mode", {"any", "this session's", "one nobody hosts"}, 0, [this](int v) { searchMode_ = v; });
@@ -122,6 +124,12 @@ public:
         if (!ctx.nearby) return;
 #ifdef MUSEUM_NETWORKING
         time_ += ctx.dt;
+        windowClock_ += ctx.dt;
+        if (windowClock_ >= 1.0f) {   // arrivals per second from the other machine, to show what simulated loss does
+            remoteRate_ = static_cast<float>(remoteWindow_) / windowClock_;
+            remoteWindow_ = 0;
+            windowClock_ = 0.0f;
+        }
         if (mode_ == Mode::Packets) {
             if (dirty_) BuildPacket();
         } else {
@@ -160,7 +168,7 @@ private:
         if (mode_ == Mode::Packets)
             return {"Everything a game sends is bytes. PacketWriter writes XNA's types (Vector3, Quaternion, Matrix, strings...) in a fixed order; PacketReader must read them in", "the same order. The packet below is rebuilt whenever you change a field; its size is what every send costs on the wire, before headers."};
         return {"A Local session holds both signed-in profiles as gamers and runs the lobby (StartGame, EndGame, IsReady, GamerJoined...) but delivers no packets, as in XNA. A SystemLink session delivers them,",
-                "and announces itself on your network, so it stays off until you switch it on. Only one session can exist per process; SimulatedLatency and SimulatedPacketLoss act on packets that arrive from another machine."};
+                "and announces itself on your network, so it stays off until you switch it on. Only one session can exist per process; SimulatedLatency and SimulatedPacketLoss act on packets that arrive from another machine: join a second museum (BeginFind, BeginJoin) and raise them to see packets thin out and arrive late."};
     }
 
 #ifdef MUSEUM_NETWORKING
@@ -365,6 +373,19 @@ private:
         }
     }
 
+    // Both act on packets that arrive from another machine; the in-memory delivery between the two local profiles skips them.
+    void ApplyImpairment()
+    {
+        NetworkSession* n = Primary();
+        if (n == nullptr) return;
+        try {
+            n->setSimulatedLatencyProperty(System::TimeSpan::FromMilliseconds(static_cast<double>(latencyMs_)));
+            n->setSimulatedPacketLossProperty(loss_);
+        } catch (const std::exception& e) {
+            Log(std::string("impairment: ") + std::string(e.what()).substr(0, 50));
+        }
+    }
+
     // A search is asynchronous: BeginFind returns at once, and the result is read when it completes.
     void BeginFind()
     {
@@ -457,6 +478,7 @@ private:
             phase_ = Phase::Connected;
             transportStatus_ = "joined a session on another museum: packets travel over the network";
             found_ = "joined";
+            ApplyImpairment();
             Log("Joined: " + std::to_string(host_->getAllGamersProperty().getCountProperty()) + " gamer(s) in the session");
             if (wantReady_) SetReady(true);
         } catch (const std::exception& e) {
@@ -517,6 +539,7 @@ private:
                 const Vector2 p(r.ReadSingle(), r.ReadSingle());
                 if (from != nullptr && !from->getIsLocalProperty()) {
                     ++remoteReceived_;
+                    ++remoteWindow_;
                     remote_trail_.push_back(p);
                     if (remote_trail_.size() > 60) remote_trail_.pop_front();
                     continue;
@@ -561,7 +584,7 @@ private:
         std::snprintf(line, sizeof line, "sent %d   received %d   missing %.0f %%   last arrived #%d, %.0f ms old   %d B/s out   %d B/s in", sent_, received_, static_cast<double>(std::max(0.0f, lost)), lastSeq_,
                       static_cast<double>(ageMs_), host_ != nullptr ? host_->getBytesPerSecondSentProperty() : 0, host_ != nullptr ? host_->getBytesPerSecondReceivedProperty() : 0);
         text(line, 24, 420, Kit::kText, 0.5f);
-        if (remote) text("from remote gamers: " + std::to_string(remoteReceived_) + " packets", 24, 395 + 0.0f, Kit::Rgba(150, 190, 255), 0.5f);
+        if (remote) text("from remote gamers: " + std::to_string(remoteReceived_) + " packets, " + std::to_string(static_cast<int>(remoteRate_ + 0.5f)) + " per second (the other museum sends " + std::to_string(static_cast<int>(rate_)) + ")", 24, 395 + 0.0f, Kit::Rgba(150, 190, 255), 0.5f);
         if (host_ != nullptr) {
             text("gamers in the session", 670, 330, Kit::kDim, 0.55f);
             try {
@@ -613,6 +636,8 @@ private:
     std::deque<std::string> log_;
     std::string status_ = "-";
     int gameMode_ = 3, searchMode_ = 0, remoteReceived_ = 0;
+    float latencyMs_ = 0.0f, loss_ = 0.0f, remoteRate_ = 0.0f, windowClock_ = 0.0f;
+    int remoteWindow_ = 0;
     std::deque<Vector2> remote_trail_;
     std::vector<AvailableNetworkSession> available_;
     System::IAsyncResult* join_ = nullptr;
