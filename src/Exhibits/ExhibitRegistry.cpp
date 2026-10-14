@@ -57,6 +57,7 @@ constexpr Entry kEntries[] = {
     {"skinfx-lab", MakeSkinFxLab},
     {"reflect-lab", MakeReflectLab},
     {"terrain-lab", MakeTerrainLab},
+    {"sim-lab", MakeSimLab},
     {"particle-lab", MakeParticleLab},
     {"targets", MakeTargetLab},
     {"renderstate-lab", MakeRenderStateLab},

@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 33 wings, 249 exhibit rooms (5 open to the sky), 312 walkable cells in all.
+10 floors, 34 wings, 253 exhibit rooms (5 open to the sky), 317 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -368,6 +368,15 @@ glTF models and their effects, procedural and skeletal animation, particle syste
 | 6.3.09 | `pt-bubbles` | Bubbles | XNA 4.0 | DynamicVertexBuffer, SetDataOptions.Discard, IndexBuffer, BlendState.Additive, SpriteBatch |
 | 6.3.10 | `pt-leaves` | Falling Leaves | XNA 4.0 | DynamicVertexBuffer, SetDataOptions.Discard, IndexBuffer, BlendState.Additive, SpriteBatch |
 | 6.3.11 | `pt-magic` | Magic Spiral | XNA 4.0 | DynamicVertexBuffer, SetDataOptions.Discard, IndexBuffer, BlendState.Additive, SpriteBatch |
+
+**Simulation Lab** - Flocking, collisions, numerical integration and inverse kinematics
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 6.4.01 | `sim-flock` | Flocking | XNA 4.0 | Vector3, Vector3.Normalize, Vector3.LengthSquared, Matrix.CreateScale, Matrix.CreateTranslation |
+| 6.4.02 | `sim-balls` | Bouncing Balls | XNA 4.0 | BoundingSphere.Intersects, Vector3.Dot, BoundingBox |
+| 6.4.03 | `sim-integrators` | Numerical Integrators | XNA 4.0 | MathHelper, Vector3, GameTime |
+| 6.4.04 | `sim-ik` | Inverse Kinematics | XNA 4.0 | Vector3.Cross, Vector3.Dot, MathHelper.ToRadians, MathHelper.ToDegrees |
 
 ### Floor 7: Audio and Input
 

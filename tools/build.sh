@@ -10,6 +10,7 @@
 #   MUSEUM_CMAKE_ARGS    extra arguments for the configure step
 #   RECONFIGURE=1        run cmake again even if the tree is already configured
 #   VERBOSE=1            stream the full build output instead of only diagnostics
+#   JOBS=N               parallel jobs (default: every core; lower it for sanitizer builds when RAM is short)
 #
 # ccache is used when it is on PATH. Cache location and size follow the user's own ccache
 # configuration (CCACHE_DIR, ccache.conf); nothing is overridden here.
@@ -46,10 +47,10 @@ if [ ! -f "$build_dir/CMakeCache.txt" ] || [ "${RECONFIGURE:-0}" = 1 ]; then
 fi
 
 if [ "${VERBOSE:-0}" = 1 ]; then
-  cmake --build "$build_dir" --target "${targets[@]}" --parallel "$(nproc 2>/dev/null || echo 4)"
+  cmake --build "$build_dir" --target "${targets[@]}" --parallel "${JOBS:-$(nproc 2>/dev/null || echo 4)}"
   status=$?
 else
-  cmake --build "$build_dir" --target "${targets[@]}" --parallel "$(nproc 2>/dev/null || echo 4)" \
+  cmake --build "$build_dir" --target "${targets[@]}" --parallel "${JOBS:-$(nproc 2>/dev/null || echo 4)}" \
     > "$build_dir/build.log" 2>&1
   status=$?
   # Errors always; warnings only from this project's own sources (CNA's third_party code is noisy).

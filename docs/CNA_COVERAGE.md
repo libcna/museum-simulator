@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-538 distinct API names are claimed by at least one room.
+541 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -101,7 +101,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BlendState.BlendFactor | `rs-blendfactor` |
 | BlendState.ColorWriteChannels | `rs-colorwrite` |
 | BlendState.NonPremultiplied | `sprite-tint`, `tex-alpha`, `be-alpha`, `pf-overdraw`, `rf-garden` |
-| BoundingBox | `col-ray-box`, `col-pick`, `an-conveyor` |
+| BoundingBox | `col-ray-box`, `col-pick`, `an-conveyor`, `sim-balls` |
 | BoundingBox.Contains | `col-box-box` |
 | BoundingBox.CreateFromPoints | `col-merge` |
 | BoundingBox.CreateFromSphere | `col-merge` |
@@ -115,7 +115,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BoundingSphere.CreateFromFrustum | `col-frustum` |
 | BoundingSphere.CreateFromPoints | `col-merge` |
 | BoundingSphere.CreateMerged | `col-merge` |
-| BoundingSphere.Intersects | `col-sphere-box` |
+| BoundingSphere.Intersects | `col-sphere-box`, `sim-balls` |
 | BoundingSphere.Transform | `model-bounds` |
 | ButtonState | `in-mouse` |
 | Buttons | `in-pad` |
@@ -249,7 +249,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GameServiceContainer.AddService | `app-services` |
 | GameServiceContainer.GetService | `app-services` |
 | GameServiceContainer.RemoveService | `app-services` |
-| GameTime | `app-lifecycle`, `cam-chase`, `an-pendulum` |
+| GameTime | `app-lifecycle`, `cam-chase`, `an-pendulum`, `sim-integrators` |
 | GameTime.ElapsedGameTime | `app-gametime`, `pf-dashboard` |
 | GameTime.TotalGameTime | `app-gametime` |
 | GameWindow.AllowUserResizing | `pl-window` |
@@ -329,11 +329,13 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Keys | `in-edges` |
 | LaunchParameters | `app-lifecycle` |
 | LooseFileContentTypeReader | `ct-custom` |
-| MathHelper | `an-pendulum`, `rf-deck` |
+| MathHelper | `an-pendulum`, `sim-integrators`, `rf-deck` |
 | MathHelper.CatmullRom | `curve-easing` |
 | MathHelper.Hermite | `curve-easing` |
 | MathHelper.Lerp | `curve-easing`, `geo-terrain`, `an-doors` |
 | MathHelper.SmoothStep | `curve-easing`, `an-doors` |
+| MathHelper.ToDegrees | `sim-ik` |
+| MathHelper.ToRadians | `sim-ik` |
 | MathHelper.WrapAngle | `an-walker` |
 | Matrix | `models`, `animation` |
 | Matrix.CreateBillboard | `mat-billboard` |
@@ -349,9 +351,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Matrix.CreateRotationX | `quat-euler`, `an-gyroscope` |
 | Matrix.CreateRotationY | `mat-order`, `an-gears`, `an-gyroscope` |
 | Matrix.CreateRotationZ | `sprite-camera`, `an-clock`, `an-kinetic`, `an-gyroscope`, `an-walker` |
-| Matrix.CreateScale | `mat-order`, `sprite-camera` |
+| Matrix.CreateScale | `mat-order`, `sprite-camera`, `sim-flock` |
 | Matrix.CreateShadow | `rs-shadow` |
-| Matrix.CreateTranslation | `mat-order`, `sprite-camera` |
+| Matrix.CreateTranslation | `mat-order`, `sprite-camera`, `sim-flock` |
 | Matrix.CreateWorld | `cam-transition` |
 | Matrix.Decompose | `mat-hierarchy` |
 | Matrix.Determinant | `mat-reflection` |
@@ -564,17 +566,18 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | TouchPanel.MouseTouchEmulationEnabledEXT | `in-touch`, `in-devices` |
 | TouchPanel.ReadGesture | `in-touch` |
 | Vector2 | `sprite-origin` |
-| Vector3 | `an-pendulum`, `rf-deck` |
+| Vector3 | `an-pendulum`, `sim-flock`, `sim-integrators`, `rf-deck` |
 | Vector3.Add | `vec-add` |
 | Vector3.Barycentric | `curve-barycentric` |
 | Vector3.CatmullRom | `vec-lerp`, `curve-spline` |
-| Vector3.Cross | `vec-cross` |
+| Vector3.Cross | `vec-cross`, `sim-ik` |
 | Vector3.Distance | `vec-normalize`, `an-doors` |
-| Vector3.Dot | `vec-dot`, `vec-project` |
+| Vector3.Dot | `vec-dot`, `vec-project`, `sim-balls`, `sim-ik` |
 | Vector3.Length | `vec-cross`, `vec-normalize` |
+| Vector3.LengthSquared | `sim-flock` |
 | Vector3.Lerp | `vec-lerp`, `cam-chase` |
 | Vector3.Multiply | `vec-project` |
-| Vector3.Normalize | `vec-reflect`, `vec-normalize` |
+| Vector3.Normalize | `vec-reflect`, `vec-normalize`, `sim-flock` |
 | Vector3.Reflect | `vec-reflect` |
 | Vector3.SmoothStep | `vec-lerp`, `cam-transition` |
 | Vector3.Subtract | `vec-add` |

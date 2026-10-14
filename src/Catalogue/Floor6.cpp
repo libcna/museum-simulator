@@ -125,6 +125,41 @@ WingSpec AnimationWing()
     return w;
 }
 
+WingSpec SimulationWing()
+{
+    WingSpec w;
+    w.name = "Simulation Lab";
+    w.tagline = "Flocking, collisions, numerical integration and inverse kinematics";
+    w.theme = "machine";
+    w.accent = {0.75f, 0.60f, 0.95f};
+    w.spineSide = Wall::East;
+    const auto sim = [](const char* key, const char* title, const char* subtitle, const char* mode, std::vector<std::string> apis) {
+        RoomSpec r;
+        r.key = key;
+        r.title = title;
+        r.subtitle = subtitle;
+        r.exhibit = "sim-lab";
+        r.params = {{"mode", mode}};
+        r.width = 13;
+        r.depth = 13;
+        r.height = 5.5f;
+        r.theme = "machine";
+        r.apis = std::move(apis);
+        return r;
+    };
+    w.rooms = {
+        sim("sim-flock", "Flocking", "Separation, alignment and cohesion: seventy boids steering with Vector3 maths, scattering when you walk up", "flock",
+            {"Vector3", "Vector3.Normalize", "Vector3.LengthSquared", "Matrix.CreateScale", "Matrix.CreateTranslation"}),
+        sim("sim-balls", "Bouncing Balls", "Gravity, restitution and impulse collisions between spheres found with BoundingSphere.Intersects", "balls",
+            {"BoundingSphere.Intersects", "Vector3.Dot", "BoundingBox"}),
+        sim("sim-integrators", "Numerical Integrators", "Explicit Euler, semi-implicit Euler, Verlet and RK4 stepping the same spring: which keeps its energy?", "integrators",
+            {"MathHelper", "Vector3", "GameTime"}),
+        sim("sim-ik", "Inverse Kinematics", "A two-bone arm reaching for a target with the law of cosines, a pole direction and a reach limit", "ik",
+            {"Vector3.Cross", "Vector3.Dot", "MathHelper.ToRadians", "MathHelper.ToDegrees"}),
+    };
+    return w;
+}
+
 }  // namespace
 
 FloorSpec MakeFloor6()
@@ -138,5 +173,6 @@ FloorSpec MakeFloor6()
     f.wings.push_back(ModelWing());
     f.wings.push_back(AnimationWing());
     f.wings.push_back(ParticleWing());
+    f.wings.push_back(SimulationWing());
     return f;
 }
