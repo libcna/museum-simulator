@@ -892,7 +892,10 @@ private:
             while (TouchPanel::getIsGestureAvailableProperty() && guard++ < 16) {
                 const GestureSample g = TouchPanel::ReadGesture();
                 ++gestureCount_;
-                gestureLog_.insert(gestureLog_.begin(), std::string(GestureName(g.getGestureTypeProperty())) + "   at " + Fmt(g.getPositionProperty().X) + ", " + Fmt(g.getPositionProperty().Y) + "   delta " + Fmt(g.getDeltaProperty().X) + ", " + Fmt(g.getDeltaProperty().Y));
+                gestureLog_.insert(gestureLog_.begin(), std::string(GestureName(g.getGestureTypeProperty())) + "   at " + Fmt(g.getPositionProperty().X) + ", " + Fmt(g.getPositionProperty().Y) + "   delta " + Fmt(g.getDeltaProperty().X) + ", " + Fmt(g.getDeltaProperty().Y) +
+                                          (g.getGestureTypeProperty() == GestureType::Pinch || g.getGestureTypeProperty() == GestureType::PinchComplete
+                                               ? "   2nd finger at " + Fmt(g.getPosition2Property().X) + ", " + Fmt(g.getPosition2Property().Y) + " delta " + Fmt(g.getDelta2Property().X) + ", " + Fmt(g.getDelta2Property().Y)
+                                               : std::string()));
                 if (gestureLog_.size() > 8) gestureLog_.pop_back();
             }
         } catch (const std::exception&) {}
