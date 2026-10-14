@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-906 distinct API names are claimed by at least one room.
+909 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -148,6 +148,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BoundingSphereConverter | `vt-converters` |
 | ButtonState | `in-mouse` |
 | Buttons | `in-pad` |
+| Buttons.BigButton | `in-pad` |
+| Buttons.LeftThumbstickUp | `in-pad` |
+| Buttons.RightThumbstickLeft | `in-pad` |
 | Byte4 | `vt-packed` |
 | CNA::Devices::DisplayInfo | `cx-devices` |
 | CNA::Devices::Locale | `cx-devices` |

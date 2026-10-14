@@ -53,9 +53,31 @@ Mode ParseMode(const std::string& s)
 using namespace Microsoft::Xna::Framework::GamerServices;
 using namespace Microsoft::Xna::Framework::Net;
 
-constexpr GamerPresenceMode kPresences[] = {GamerPresenceMode::None, GamerPresenceMode::SinglePlayer, GamerPresenceMode::Multiplayer, GamerPresenceMode::LocalCoOp,
-                                            GamerPresenceMode::ExplorationMode, GamerPresenceMode::PuzzleMode, GamerPresenceMode::AtMenu, GamerPresenceMode::Paused};
-constexpr const char* kPresenceNames[] = {"None", "SinglePlayer", "Multiplayer", "LocalCoOp", "ExplorationMode", "PuzzleMode", "AtMenu", "Paused"};
+// Every GamerPresenceMode XNA defines (60); the first eight are the ones the room starts with.
+constexpr GamerPresenceMode kPresences[] = {
+    GamerPresenceMode::None, GamerPresenceMode::SinglePlayer, GamerPresenceMode::Multiplayer, GamerPresenceMode::LocalCoOp,
+    GamerPresenceMode::ExplorationMode, GamerPresenceMode::PuzzleMode, GamerPresenceMode::AtMenu, GamerPresenceMode::Paused,
+    GamerPresenceMode::LocalVersus, GamerPresenceMode::OnlineCoOp, GamerPresenceMode::OnlineVersus, GamerPresenceMode::VersusComputer,
+    GamerPresenceMode::Stage, GamerPresenceMode::Level, GamerPresenceMode::CoOpStage, GamerPresenceMode::CoOpLevel, GamerPresenceMode::ArcadeMode,
+    GamerPresenceMode::CampaignMode, GamerPresenceMode::ChallengeMode, GamerPresenceMode::PracticeMode, GamerPresenceMode::ScenarioMode,
+    GamerPresenceMode::StoryMode, GamerPresenceMode::SurvivalMode, GamerPresenceMode::TutorialMode, GamerPresenceMode::DifficultyEasy,
+    GamerPresenceMode::DifficultyMedium, GamerPresenceMode::DifficultyHard, GamerPresenceMode::DifficultyExtreme, GamerPresenceMode::Score,
+    GamerPresenceMode::VersusScore, GamerPresenceMode::Winning, GamerPresenceMode::Losing, GamerPresenceMode::ScoreIsTied,
+    GamerPresenceMode::Outnumbered, GamerPresenceMode::OnARoll, GamerPresenceMode::InCombat, GamerPresenceMode::BattlingBoss,
+    GamerPresenceMode::TimeAttack, GamerPresenceMode::TryingForRecord, GamerPresenceMode::FreePlay, GamerPresenceMode::WastingTime,
+    GamerPresenceMode::StuckOnAHardBit, GamerPresenceMode::NearlyFinished, GamerPresenceMode::LookingForGames, GamerPresenceMode::WaitingForPlayers,
+    GamerPresenceMode::WaitingInLobby, GamerPresenceMode::SettingUpMatch, GamerPresenceMode::PlayingWithFriends, GamerPresenceMode::StartingGame,
+    GamerPresenceMode::GameOver, GamerPresenceMode::WonTheGame, GamerPresenceMode::ConfiguringSettings, GamerPresenceMode::CustomizingPlayer,
+    GamerPresenceMode::EditingLevel, GamerPresenceMode::InGameStore, GamerPresenceMode::WatchingCutscene, GamerPresenceMode::WatchingCredits,
+    GamerPresenceMode::PlayingMinigame, GamerPresenceMode::FoundSecret, GamerPresenceMode::CornflowerBlue,};
+constexpr const char* kPresenceNames[] = {
+    "None", "SinglePlayer", "Multiplayer", "LocalCoOp", "ExplorationMode", "PuzzleMode", "AtMenu", "Paused", "LocalVersus", "OnlineCoOp",
+    "OnlineVersus", "VersusComputer", "Stage", "Level", "CoOpStage", "CoOpLevel", "ArcadeMode", "CampaignMode", "ChallengeMode", "PracticeMode",
+    "ScenarioMode", "StoryMode", "SurvivalMode", "TutorialMode", "DifficultyEasy", "DifficultyMedium", "DifficultyHard", "DifficultyExtreme",
+    "Score", "VersusScore", "Winning", "Losing", "ScoreIsTied", "Outnumbered", "OnARoll", "InCombat", "BattlingBoss", "TimeAttack",
+    "TryingForRecord", "FreePlay", "WastingTime", "StuckOnAHardBit", "NearlyFinished", "LookingForGames", "WaitingForPlayers", "WaitingInLobby",
+    "SettingUpMatch", "PlayingWithFriends", "StartingGame", "GameOver", "WonTheGame", "ConfiguringSettings", "CustomizingPlayer", "EditingLevel",
+    "InGameStore", "WatchingCutscene", "WatchingCredits", "PlayingMinigame", "FoundSecret", "CornflowerBlue",};
 
 const char* PrivilegeName(GamerPrivilegeSetting s)
 {
@@ -96,7 +118,7 @@ public:
         switch (mode_) {
             case Mode::Players:
                 p.AddReadout("Gamer.SignedInGamers.Count", [this] { return std::to_string(Count()); });
-                p.AddChoice("Presence of the first player", {kPresenceNames[0], kPresenceNames[1], kPresenceNames[2], kPresenceNames[3], kPresenceNames[4], kPresenceNames[5], kPresenceNames[6], kPresenceNames[7]}, 4,
+                p.AddChoice("Presence of the first player (all modes)", std::vector<std::string>(std::begin(kPresenceNames), std::end(kPresenceNames)), 4,
                             [this](int v) { SetPresence(v); });
                 p.AddChoice("Presence text for the service (SetPresenceModeStringEXT)", {"(not set)", "Browsing the museum", "Reading a plaque on floor 4", "In the shader lab"}, 0, [this](int v) { SetPresenceText(v); });
                 p.AddReadout("Presence text sent", [this] { return presenceText_; });
@@ -238,7 +260,7 @@ private:
 
     void SetPresence(int v)
     {
-        if (SignedInGamer* g = First()) g->getPresenceProperty().setPresenceModeProperty(kPresences[std::clamp(v, 0, 7)]);
+        if (SignedInGamer* g = First()) g->getPresenceProperty().setPresenceModeProperty(kPresences[std::clamp(v, 0, static_cast<int>(std::size(kPresences)) - 1)]);
     }
     // A free-form presence string for an online service (friends on the Online Service wing see it); offline it only changes the gamer.
     void SetPresenceText(int v)

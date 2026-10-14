@@ -600,7 +600,10 @@ private:
         static const std::pair<Buttons, const char*> all[] = {{Buttons::A, "A"}, {Buttons::B, "B"}, {Buttons::X, "X"}, {Buttons::Y, "Y"}, {Buttons::Start, "Start"}, {Buttons::Back, "Back"},
                                                               {Buttons::LeftShoulder, "LB"}, {Buttons::RightShoulder, "RB"}, {Buttons::LeftStick, "LS"}, {Buttons::RightStick, "RS"},
                                                               {Buttons::DPadUp, "Up"}, {Buttons::DPadDown, "Down"}, {Buttons::DPadLeft, "Left"}, {Buttons::DPadRight, "Right"},
-                                                              {Buttons::LeftTrigger, "LT"}, {Buttons::RightTrigger, "RT"}};
+                                                              {Buttons::LeftTrigger, "LT"}, {Buttons::RightTrigger, "RT"}, {Buttons::BigButton, "Big"},
+                                                              // The sticks as buttons: a direction counts as pressed once the stick is far enough over (a virtual d-pad).
+                                                              {Buttons::LeftThumbstickUp, "LS-up"}, {Buttons::LeftThumbstickDown, "LS-down"}, {Buttons::LeftThumbstickLeft, "LS-left"}, {Buttons::LeftThumbstickRight, "LS-right"},
+                                                              {Buttons::RightThumbstickUp, "RS-up"}, {Buttons::RightThumbstickDown, "RS-down"}, {Buttons::RightThumbstickLeft, "RS-left"}, {Buttons::RightThumbstickRight, "RS-right"}};
         std::string held;
         for (const auto& [flag, name] : all)
             if (pad_.IsButtonDown(flag)) held += (held.empty() ? "" : " ") + std::string(name);
