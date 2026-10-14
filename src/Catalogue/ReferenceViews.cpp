@@ -27,6 +27,12 @@ const std::vector<ReferenceView>& ReferenceViews()
         {"debugdraw", "cx-debugdraw", 3.0f, "CNA DebugDraw wire shapes"},
         {"validation", "rv-geometry", 3.0f, "renderer self-check results"},
         {"deck", "rf-deck", 3.0f, "open-air observation deck at the museum clock's hour"},
+        {"billboards", "mat-billboard", 3.0f, "CreateBillboard sprites tilting towards a high camera"},
+        {"sprite-hit", "sprite-hit", 3.0f, "per-pixel collision with shared pixels highlighted"},
+        {"terrain", "geo-terrain", 3.0f, "heightmap terrain with a ball following the ground"},
+        {"skinned-effect", "model-skinfx", 3.0f, "SkinnedEffect tube bent by four bones"},
+        {"stencil-count", "rs-stencilcount", 3.0f, "stencil Increment counting overlapping discs"},
+        {"cube-map", "rt-cube", 3.0f, "a sphere mirroring a RenderTargetCube drawn from its centre"},
     };
     return views;
 }
