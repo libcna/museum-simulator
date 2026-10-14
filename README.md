@@ -56,7 +56,7 @@ The numbers above are generated from the museum's own catalogue (`tools/gen_docs
 | 5 | Render state gallery and render-target complex (mirrors, MRT, float targets) |
 | 6 | Models (glTF, PBR, SkinnedEffect), animation, particles, simulations (flocking, collisions, integrators, inverse kinematics) |
 | 7 | Audio (3D audio, synthesis, music with a visualizer, video, microphone) and input (keyboard, mouse, game pad, text, joystick) |
-| 8 | Content pipeline, CNA extensions (DebugDraw, CRT, depth and ASCII effects, shader packages, shadow mapping, statistics, devices), platform queries, players and networking (GamerServices, avatars, leaderboards, the Guide, achievements, packets, sessions you can find and join from a second museum), a history of XNA and of this build of CNA |
+| 8 | Content pipeline, CNA extensions (DebugDraw, CRT, depth and ASCII effects, shader packages, shadow mapping, statistics, devices), platform queries, players and networking (GamerServices, avatars, leaderboards, the Guide, achievements, packets, sessions you can find and join from a second museum, and with a local account service: accounts, friends, messages, parties, online sessions and invitations), a history of XNA and of this build of CNA |
 | 9 | Performance lab, renderer validation, reference scenes, the observation deck |
 
 Maps and indexes: [docs/MUSEUM_MAP.md](docs/MUSEUM_MAP.md) (every room), [docs/CNA_COVERAGE.md](docs/CNA_COVERAGE.md)
@@ -145,6 +145,8 @@ hardware.
 |---|---|
 | `build/bin/museum_tests` (also `ctest --test-dir build`; build it with `tools/build.sh cna-3d-museum museum_tests`) | catalogue validity, unique keys and numbers, door symmetry, graph connectivity of every floor, spawn and cell lookup, exhibit registry, missing assets |
 | `cna-3d-museum --validate` | the same structure checks without a window; the museum also runs them at every start-up and logs any `INVALID:` problem |
+| `tools/online_stack.sh start\|stop\|env` | starts a private CNA gamer-services server (sibling repo, built once) with demo accounts for the *Online Service* rooms; `eval "$(tools/online_stack.sh env)"` points the museum at it |
+| `tools/online_check.sh` | end-to-end check of those rooms: signs in through the Guide with xdotool, plays a scored round and reads the service's database |
 | `tools/tour.sh [-f FRAMES] [-p] [-z N] [ROOM...]` | visits **every** room (or those named), prints engine statistics, exit status 0 only if nothing threw; `-p` also operates every control of every room through its whole range, `-z N` then makes N random control actions per room (a repeatable fuzz) |
 | `tools/leak_check.sh` | tours every room once and three times: peak memory and registered textures must not grow |
 | `tools/nav_test.sh` | rides the elevator to every floor, opens the directory, and checks the arrival floor |
