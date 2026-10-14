@@ -49,10 +49,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-574 distinct API names are claimed by at least one room.
+613 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
+| Achievement | `gs-achievements` |
+| AchievementCollection | `gs-achievements` |
 | AlphaModeEXT | `model-material` |
 | AlphaTestEffect | `tex-alpha`, `rv-effects` |
 | AnimationPlayer | `model-skinned` |
@@ -276,6 +278,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GameWindow.ClientSizeChanged | `pl-window` |
 | GameWindow.FileDropEXT | `pl-window` |
 | GameWindow.Title | `pl-window` |
+| Gamer.GetProfile | `gs-players` |
+| Gamer.SignedInGamers | `gs-players` |
+| GamerPresenceMode | `gs-players` |
+| GamerProfile | `gs-players` |
 | GestureType | `in-touch` |
 | GltfImportDiagnosticEXT | `model-report` |
 | GltfImportReportEXT | `model-report` |
@@ -327,6 +333,13 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsResource.Dispose | `ct-lifetime` |
 | GraphicsResource.Disposing | `ct-lifetime` |
 | GraphicsResource.IsDisposed | `ct-cache`, `ct-lifetime` |
+| Guide.BeginShowKeyboardInput | `gs-guide` |
+| Guide.BeginShowMessageBox | `gs-guide` |
+| Guide.EndShowMessageBox | `gs-guide` |
+| Guide.IsTrialMode | `gs-guide` |
+| Guide.IsVisible | `gs-guide` |
+| Guide.NotificationPosition | `gs-guide` |
+| Guide.SimulateTrialMode | `gs-guide` |
 | HalfVector4 | `vt-packed` |
 | IDrawable | `app-components` |
 | IEffectFog | `be-model` |
@@ -352,6 +365,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | KeyboardState.IsKeyDown | `in-keyboard` |
 | Keys | `in-edges` |
 | LaunchParameters | `app-lifecycle` |
+| LocalNetworkGamer.ReceiveData | `net-session` |
+| LocalNetworkGamer.SendData | `net-session` |
 | LooseFileContentTypeReader | `ct-custom` |
 | MathHelper | `an-pendulum`, `sim-integrators`, `rf-deck` |
 | MathHelper.CatmullRom | `curve-easing` |
@@ -389,6 +404,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | MediaPlayer.Volume | `au-music` |
 | MediaState | `au-music` |
 | MeshBuilder | `an-gears` |
+| MessageBoxIcon | `gs-guide` |
 | Microphone | `au-mic` |
 | Microphone.BufferDuration | `au-mic` |
 | Microphone.GetData | `au-mic` |
@@ -418,6 +434,16 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Mouse.SetCursor | `in-mouse` |
 | MouseCursor | `in-mouse` |
 | MouseState | `in-mouse` |
+| NetworkGamer.IsReady | `net-session` |
+| NetworkSession.Create | `net-session` |
+| NetworkSession.EndGame | `net-session` |
+| NetworkSession.GameStarted | `net-session` |
+| NetworkSession.GamerJoined | `net-session` |
+| NetworkSession.SessionState | `net-session` |
+| NetworkSession.SimulatedLatency | `net-session` |
+| NetworkSession.SimulatedPacketLoss | `net-session` |
+| NetworkSession.StartGame | `net-session` |
+| NetworkSession.Update | `net-session` |
 | NormalizedByte4 | `vt-packed` |
 | NormalizedShort4 | `vt-packed` |
 | OcclusionQuery | `rs-occlusion` |
@@ -429,6 +455,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | PackedVector.Bgra4444 | `tex-formats` |
 | PackedVector.HalfVector4 | `tex-formats`, `rv-formats` |
 | PackedVector.Rgba64 | `rv-formats` |
+| PacketReader | `net-packets` |
+| PacketReader.ReadMatrix | `net-packets` |
+| PacketReader.ReadQuaternion | `net-packets` |
+| PacketReader.ReadVector3 | `net-packets` |
+| PacketWriter | `net-packets` |
+| PacketWriter.Write | `net-packets` |
 | PbrEffect | `model-pbr`, `model-effects`, `model-variants` |
 | PbrEffect.AlphaCutoff | `model-material` |
 | PbrEffect.EmissiveFactor | `model-pbr` |
@@ -512,6 +544,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SamplerState.MipMapLevelOfDetailBias | `tex-mip` |
 | SamplerState.PointClamp | `sprite-sheet`, `tex-filter`, `rt-lowres`, `rv-sprites` |
 | SamplerStateCollection | `materials` |
+| SendDataOptions | `net-session` |
 | Sensors.GetSensorsEXT | `in-devices` |
 | SetDataOptions | `geo-dynamic` |
 | SetDataOptions.Discard | `geo-dynindex`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `pf-buffers`, `rf-weather` |
@@ -526,6 +559,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ShaderPackageEXT.selectFor | `cx-package` |
 | ShadowCascadeStateEXT | `cx-shadow` |
 | Short4 | `vt-packed` |
+| SignedInGamer.AwardAchievement | `gs-achievements` |
+| SignedInGamer.GameDefaults | `gs-players` |
+| SignedInGamer.GetAchievements | `gs-achievements` |
+| SignedInGamer.Presence | `gs-players` |
+| SignedInGamer.Privileges | `gs-players` |
+| SignedInGamer.SignedIn | `gs-players` |
 | SkinnedEffect | `be-model`, `model-skinfx` |
 | SkinnedEffect.SetBoneTransforms | `model-skinfx` |
 | SkinnedEffect.WeightsPerVertex | `model-skinfx` |

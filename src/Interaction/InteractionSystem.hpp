@@ -35,6 +35,11 @@ struct Interactable {
  */
 class InteractionSystem {
 public:
+    /**
+     * Where an exception from an interactable's callback goes (a control panel row, an elevator button, a "step up" prompt): the museum
+     * logs it as an exhibit error and says so on screen, and carries on. Unset, the exception propagates to the caller.
+     */
+    static std::function<void(const std::string& what)> failureReporter;
     int Add(Interactable interactable);
 
     /** Re-targets from the camera's view ray. Returns the index of the focused item or -1. */

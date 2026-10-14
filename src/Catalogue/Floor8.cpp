@@ -165,6 +165,45 @@ WingSpec HistoryWing()
 
 }  // namespace
 
+WingSpec PlayersWing()
+{
+    WingSpec w;
+    w.name = "Players and Networking";
+    w.tagline = "GamerServices and Net: signed-in players, achievements, the Guide, packets and a session between two local players";
+    w.theme = "control-room";
+    w.accent = {0.35f, 0.80f, 0.55f};
+    w.spineSide = Wall::East;
+    const auto room = [](const char* key, const char* title, const char* subtitle, const char* exhibit, const char* mode, std::vector<std::string> apis) {
+        RoomSpec r;
+        r.key = key;
+        r.title = title;
+        r.subtitle = subtitle;
+        r.exhibit = exhibit;
+        r.params = {{"mode", mode}};
+        r.width = 13;
+        r.depth = 13;
+        r.height = 5.0f;
+        r.theme = "control-room";
+        r.apis = std::move(apis);
+        r.origin = ApiOrigin::Xna;
+        return r;
+    };
+    w.rooms = {
+        room("gs-players", "Signed-in Players", "Gamer.SignedInGamers, presence, privileges, game defaults and the profile: two local offline players", "players-lab", "players",
+             {"Gamer.SignedInGamers", "SignedInGamer.Presence", "SignedInGamer.Privileges", "SignedInGamer.GameDefaults", "Gamer.GetProfile", "GamerProfile", "SignedInGamer.SignedIn", "GamerPresenceMode"}),
+        room("gs-achievements", "Achievements", "A catalog the title ships, awards kept by the framework: the museum awards them as you explore", "players-lab", "achievements",
+             {"SignedInGamer.AwardAchievement", "SignedInGamer.GetAchievements", "Achievement", "AchievementCollection"}),
+        room("gs-guide", "The Guide", "Message boxes and text input drawn by the platform overlay, trial mode and notification position", "players-lab", "guide",
+             {"Guide.BeginShowMessageBox", "Guide.EndShowMessageBox", "Guide.BeginShowKeyboardInput", "Guide.IsTrialMode", "Guide.SimulateTrialMode", "Guide.IsVisible", "Guide.NotificationPosition", "MessageBoxIcon"}),
+        room("net-packets", "Packets", "PacketWriter and PacketReader: XNA's types as bytes, in order, with their cost", "net-lab", "packets",
+             {"PacketWriter", "PacketReader", "PacketWriter.Write", "PacketReader.ReadVector3", "PacketReader.ReadQuaternion", "PacketReader.ReadMatrix"}),
+        room("net-session", "A Network Session", "A Local session between two players: send, receive, simulated latency and loss, start and end", "net-lab", "session",
+             {"NetworkSession.Create", "NetworkSession.Update", "NetworkSession.StartGame", "NetworkSession.EndGame", "NetworkSession.SimulatedLatency", "NetworkSession.SimulatedPacketLoss", "NetworkSession.SessionState",
+              "LocalNetworkGamer.SendData", "LocalNetworkGamer.ReceiveData", "SendDataOptions", "NetworkGamer.IsReady", "NetworkSession.GamerJoined", "NetworkSession.GameStarted"}),
+    };
+    return w;
+}
+
 FloorSpec MakeFloor8()
 {
     FloorSpec f;
@@ -176,6 +215,7 @@ FloorSpec MakeFloor8()
     f.wings.push_back(ContentWing());
     f.wings.push_back(CnaWing());
     f.wings.push_back(PlatformWing());
+    f.wings.push_back(PlayersWing());
     f.wings.push_back(HistoryWing());
     return f;
 }

@@ -1,4 +1,9 @@
 #include "MuseumGame.hpp"
+#include "Exhibits/Players/MuseumAchievements.hpp"
+#ifdef MUSEUM_NETWORKING
+#include "Microsoft/Xna/Framework/GamerServices/GamerServicesComponent.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/Guide.hpp"
+#endif
 #include "Catalogue/ReferenceViews.hpp"
 
 #include <algorithm>
@@ -50,10 +55,18 @@ MuseumGame::MuseumGame(const MuseumOptions& options) : options_(options), graphi
     getWindowProperty().setAllowUserResizingProperty(true);
     // Game.Exiting is raised once, as the loop ends; the log line is the evidence (and the lifecycle room says where to look).
     Exiting.Add([](System::Object*, const System::EventArgs&) { Museum::Log("app", "Game.Exiting raised: the museum is shutting down"); });
+#ifdef MUSEUM_NETWORKING
+    gamerServices_ = std::make_unique<Microsoft::Xna::Framework::GamerServices::GamerServicesComponent>(*this);
+    getComponentsProperty().Add(gamerServices_.get());
+#endif
 }
 
 MuseumGame::~MuseumGame()
 {
+    InteractionSystem::failureReporter = nullptr;
+#ifdef MUSEUM_NETWORKING
+    (void)getComponentsProperty().Remove(gamerServices_.get());
+#endif
     // CNA does not call Game::UnloadContent when the loop ends, so progress is written here.
     try {
         if (progress_ && progressDirty_) progress_->Save(discovered_, *museum_);
@@ -116,6 +129,7 @@ void MuseumGame::LoadContent()
     for (const std::string& problem : ValidateMuseum(*museum_)) Museum::Log("catalogue", "INVALID: %s", problem.c_str());
     world_ = std::make_unique<MuseumWorld>(services_, *museum_);
     hud_ = std::make_unique<Hud>(services_);
+    InteractionSystem::failureReporter = [this](const std::string& what) { ReportInteractionFailure(what); };
     services_.travelToFloor = [this](int floor) { StartRide(floor); };
     services_.openDirectory = [this] { OpenDirectory(); };
     directory_ = std::make_unique<DirectoryScreen>(services_);
@@ -248,7 +262,10 @@ void MuseumGame::UpdateRide(float dt)
         audio_->PlayUi("arpeggio", 0.35f, 0.3f);
         hud_->Toast("Floor " + std::to_string(ride_.floor) + ": " + museum_->floors[static_cast<std::size_t>(ride_.floor)].name, 3.5f);
     }
-    if (ride_.time >= kRideLength) ride_.active = false;
+    if (ride_.time >= kRideLength) {
+        ride_.active = false;
+        MuseumAchievements::RodeTheElevator();
+    }
 }
 
 void MuseumGame::SetPaused(bool paused)
@@ -394,7 +411,13 @@ void MuseumGame::Update(GameTime& gameTime)
     HandleSystemKeys();
 
     // Losing the window focus releases the mouse and pauses, so alt-tabbing never traps the pointer.
-    const bool active = getIsActiveProperty();
+    // (The Guide is not a focus loss: XNA reports the game inactive while a Guide dialog is up, and the dialog itself owns the input then.)
+#ifdef MUSEUM_NETWORKING
+    const bool guideUp = Microsoft::Xna::Framework::GamerServices::Guide::getIsVisibleProperty();
+#else
+    const bool guideUp = false;
+#endif
+    const bool active = getIsActiveProperty() || guideUp;
     if (wasActive_ && !active && !paused_ && options_.maxFrames == 0) SetPaused(true);
     wasActive_ = active;
 
@@ -445,7 +468,10 @@ void MuseumGame::Update(GameTime& gameTime)
             shownCell_ = cell;
             if (cell >= 0) {
                 bannerAge_ = 0.0f;
-                if (discovered_.insert(cell).second) progressDirty_ = true;
+                if (discovered_.insert(cell).second) {
+                    progressDirty_ = true;
+                    MuseumAchievements::RoomsDiscovered(*museum_, discovered_);
+                }
             }
         }
         bannerAge_ += dt;
@@ -564,6 +590,15 @@ void MuseumGame::Draw(const GameTime& gameTime)
     }
 }
 
+// A callback an exhibit gave to the interaction system threw (a button, a slider, a prompt): say so, count it, carry on.
+void MuseumGame::ReportInteractionFailure(const std::string& what)
+{
+    const std::string room = shownCell_ >= 0 ? museum_->Room(shownCell_).key : std::string("?");
+    Museum::Log("exhibit-error", "%s control threw: %s", room.c_str(), what.c_str());
+    if (world_) world_->NoteExhibitError();
+    if (hud_) hud_->Toast("Exhibit error (the museum carries on) - " + room + ": " + what, 6.0f);
+}
+
 void MuseumGame::SaveScreenshot(const std::string& path)
 {
     GraphicsDevice& device = getGraphicsDeviceProperty();
@@ -660,7 +695,11 @@ void MuseumGame::RunScript()
             const std::size_t index = static_cast<std::size_t>(std::atoi(arg.c_str()));
             if (InteractionSystem* interaction = world_->CurrentInteraction()) {
                 const auto& items = interaction->Items();
-                if (index < items.size() && items[index].activate) items[index].activate();
+                try {
+                    if (index < items.size() && items[index].activate) items[index].activate();
+                } catch (const std::exception& e) {
+                    ReportInteractionFailure(std::string("use ") + std::to_string(index) + ": " + e.what());
+                }
             }
         } else if (op == "press") {
             // press:<label>[=value]: operate a control-panel row of the room the visitor is in (tests)
@@ -673,9 +712,14 @@ void MuseumGame::RunScript()
                 value = &number;
             }
             bool done = false;
-            if (InteractionSystem* interaction = world_->CurrentInteraction())
-                for (const auto& item : interaction->Items())
-                    if (!done && item.command) done = item.command(label, value);
+            try {
+                if (InteractionSystem* interaction = world_->CurrentInteraction())
+                    for (const auto& item : interaction->Items())
+                        if (!done && item.command) done = item.command(label, value);
+            } catch (const std::exception& e) {
+                ReportInteractionFailure(std::string("press '") + label + "': " + e.what());
+                done = true;
+            }
             Museum::Log("script", "press '%s': %s", label.c_str(), done ? "done" : "no such control");
         } else if (op == "pressall") {
             // pressall: operate every control of the current room's panels through its whole range (smoke test)

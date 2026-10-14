@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 34 wings, 260 exhibit rooms (5 open to the sky), 324 walkable cells in all.
+10 floors, 35 wings, 265 exhibit rooms (5 open to the sky), 330 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -456,13 +456,23 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 | 8.3.03 | `pl-renderer` | The Active Renderer | CNA extension | GraphicsDevice.GetRendererCapabilityProfileEXT, RendererFeature, RendererLimit, RendererFormatUsage, GraphicsDevice.GetGraphicsRendererName, GraphicsDevice.GetDisplayColorSpaceEXT, GraphicsDevice.SupportsDisplayColorSpaceEXT, GraphicsDevice.SetDisplayColorSpaceEXT, GraphicsDevice.SupportsImageBasedLightingEXT, GraphicsDevice.GetTrackedResourceCount, GraphicsDevice.GetLogicalSizeEXT |
 | 8.3.04 | `pl-platform` | Platform Capabilities | CNA extension | Game.GetPlatformCapabilitiesEXT, PlatformCapabilities |
 
+**Players and Networking** - GamerServices and Net: signed-in players, achievements, the Guide, packets and a session between two local players
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 8.4.01 | `gs-players` | Signed-in Players | XNA 4.0 | Gamer.SignedInGamers, SignedInGamer.Presence, SignedInGamer.Privileges, SignedInGamer.GameDefaults, Gamer.GetProfile, GamerProfile, SignedInGamer.SignedIn, GamerPresenceMode |
+| 8.4.02 | `gs-achievements` | Achievements | XNA 4.0 | SignedInGamer.AwardAchievement, SignedInGamer.GetAchievements, Achievement, AchievementCollection |
+| 8.4.03 | `gs-guide` | The Guide | XNA 4.0 | Guide.BeginShowMessageBox, Guide.EndShowMessageBox, Guide.BeginShowKeyboardInput, Guide.IsTrialMode, Guide.SimulateTrialMode, Guide.IsVisible, Guide.NotificationPosition, MessageBoxIcon |
+| 8.4.04 | `net-packets` | Packets | XNA 4.0 | PacketWriter, PacketReader, PacketWriter.Write, PacketReader.ReadVector3, PacketReader.ReadQuaternion, PacketReader.ReadMatrix |
+| 8.4.05 | `net-session` | A Network Session | XNA 4.0 | NetworkSession.Create, NetworkSession.Update, NetworkSession.StartGame, NetworkSession.EndGame, NetworkSession.SimulatedLatency, NetworkSession.SimulatedPacketLoss, NetworkSession.SessionState, LocalNetworkGamer.SendData, LocalNetworkGamer.ReceiveData, SendDataOptions, NetworkGamer.IsReady, NetworkSession.GamerJoined, NetworkSession.GameStarted |
+
 **History and Versions** - Where XNA came from, and what this very build of CNA is made of
 
 | Room | Key | Title | Origin | APIs |
 |---|---|---|---|---|
-| 8.4.01 | `hist-xna` | XNA, 2004 to Today | XNA 4.0 | Game, GraphicsProfile, XNA 4.0 |
-| 8.4.02 | `hist-cna` | This Build of CNA | CNA extension | CNA::GraphicsRendererSelection.GetAvailable, CNA::getGraphicsBackendMaturity, CNA::getGraphicsRendererName |
-| 8.4.03 | `hist-compare` | XNA 4.0 and What CNA Adds | CNA extension | ApiOrigin, XNA 4.0, CNAEXT |
+| 8.5.01 | `hist-xna` | XNA, 2004 to Today | XNA 4.0 | Game, GraphicsProfile, XNA 4.0 |
+| 8.5.02 | `hist-cna` | This Build of CNA | CNA extension | CNA::GraphicsRendererSelection.GetAvailable, CNA::getGraphicsBackendMaturity, CNA::getGraphicsRendererName |
+| 8.5.03 | `hist-compare` | XNA 4.0 and What CNA Adds | CNA extension | ApiOrigin, XNA 4.0, CNAEXT |
 
 ### Floor 9: Performance and Validation
 

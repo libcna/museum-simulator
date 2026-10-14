@@ -1,5 +1,7 @@
 #include "Interaction/InteractionSystem.hpp"
 
+#include <exception>
+
 #include <limits>
 
 using namespace Microsoft::Xna::Framework;
@@ -50,16 +52,24 @@ std::string InteractionSystem::FocusedPrompt() const
     return item.prompt ? item.prompt() : std::string{};
 }
 
+std::function<void(const std::string& what)> InteractionSystem::failureReporter;
+
 bool InteractionSystem::Dispatch(const InteractEvent& event)
 {
     if (focused_ < 0) return false;
     const Interactable& item = items_[static_cast<std::size_t>(focused_)];
-    if (item.interact) {
-        item.interact(event);
-        return true;
-    }
-    if (event.pressed && item.activate) {
-        item.activate();
+    try {
+        if (item.interact) {
+            item.interact(event);
+            return true;
+        }
+        if (event.pressed && item.activate) {
+            item.activate();
+            return true;
+        }
+    } catch (const std::exception& e) {
+        if (!failureReporter) throw;
+        failureReporter(e.what());
         return true;
     }
     return false;

@@ -22,7 +22,9 @@ museum_headless() {
   mkdir -p "$(dirname "$log")"
   local audio=dummy
   [ "${MUSEUM_AUDIO:-dummy}" = real ] && audio=
+  # Test runs keep CNA's local gamer profiles and achievements in the build tree, never in the user's own store.
   env ${audio:+SDL_AUDIODRIVER=$audio} LIBGL_ALWAYS_SOFTWARE=1 \
+    CNA_GAMER_SERVICES_PROFILES_DIR="${CNA_GAMER_SERVICES_PROFILES_DIR:-$root/${BUILD_DIR:-build}/gamer-profiles}" \
     timeout "${MUSEUM_TIMEOUT:-300}" \
     xvfb-run -a -s "-screen 0 ${MUSEUM_SCREEN:-1920x1080x24}" "$bin" "$@" > "$log" 2>&1
   local status=$?

@@ -86,6 +86,8 @@ public:
     [[nodiscard]] bool IsBuilt(int cell) const { return instances_[static_cast<std::size_t>(cell)] != nullptr; }
     [[nodiscard]] const WorldStats& Stats() const { return stats_; }
     /** The newest uncollected message about an exhibit that threw (empty when none), for the HUD. */
+    /** Counts an exception that an exhibit's control callback threw (the interaction system reports those, not the hooks `Guard` wraps). */
+    void NoteExhibitError() { ++stats_.exhibitErrors; }
     [[nodiscard]] std::string TakeExhibitError() { return std::exchange(exhibitError_, std::string()); }
 
     /** Builds and loads the cell and its neighbours synchronously, e.g. before a teleport lands there. */

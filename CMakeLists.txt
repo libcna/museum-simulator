@@ -44,7 +44,11 @@ endif()
 set(CNA_BUILD_TESTS    OFF CACHE BOOL   "Build CNA's own tests")
 set(CNA_BUILD_EXAMPLES OFF CACHE BOOL   "Build CNA's example applications")
 set(CNA_BUILD_C_API    OFF CACHE BOOL   "Build the CNA C API")
-set(CNA_ENABLE_NET     OFF CACHE BOOL   "Build CNA networking")
+# Networking and GamerServices (Microsoft.Xna.Framework.Net / GamerServices) back the "Net and gamer services" wing. They pull in
+# ENet and CNA's offline profile service; turn them off for a smaller build (those rooms then say so).
+option(MUSEUM_NETWORKING "Demonstrate Microsoft.Xna.Framework.Net and GamerServices" ON)
+set(CNA_ENABLE_NET     ${MUSEUM_NETWORKING} CACHE BOOL "Build CNA networking" FORCE)
+set(CNA_ENABLE_GAMER_SERVICES ${MUSEUM_NETWORKING} CACHE BOOL "Build CNA GamerServices" FORCE)
 set(CNA_ENABLE_VIDEO   OFF CACHE STRING "Enable FFmpeg video playback")
 # CNA features the museum demonstrates: the CNAEXT graphics extensions (DebugDraw, CRT/ASCII/depth effects,
 # shader packages), device/sensor extensions, and CNA's engine statistics counters. All three are optional:
@@ -83,6 +87,10 @@ list(REMOVE_ITEM MUSEUM_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/Main.cpp")
 add_library(museum_core STATIC ${MUSEUM_SOURCES})
 target_include_directories(museum_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(museum_core PUBLIC CNA)
+if(MUSEUM_NETWORKING AND TARGET CNA_Net AND TARGET CNA_GamerServices)
+    target_link_libraries(museum_core PUBLIC CNA_Net CNA_GamerServices)
+    target_compile_definitions(museum_core PUBLIC MUSEUM_NETWORKING=1)
+endif()
 # The CNA revision this build was configured against, shown by the History rooms (read, never typed in).
 execute_process(COMMAND git -C "${CNA_ROOT_DIR}" describe --always --dirty
                 OUTPUT_VARIABLE MUSEUM_CNA_REVISION OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
@@ -123,6 +131,12 @@ add_custom_command(TARGET cna-3d-museum POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
         "${CMAKE_CURRENT_SOURCE_DIR}/Content" "$<TARGET_FILE_DIR:cna-3d-museum>/Content"
     COMMENT "Copying Content next to cna-3d-museum")
+
+# CNA's offline achievement catalog is read from the title directory (next to the executable), not from Content/.
+add_custom_command(TARGET cna-3d-museum POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/Content/GamerServices" "$<TARGET_FILE_DIR:cna-3d-museum>/GamerServices"
+    COMMENT "Copying GamerServices/Achievements.json next to cna-3d-museum")
 
 # Run the Content/Pipeline sources through CNA's own content compiler, once as .cnb (CNA's format) and once as
 # .xnb (XNA's), next to the executable. The Content Pipeline rooms load the results and compare them with the

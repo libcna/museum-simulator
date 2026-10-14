@@ -3,6 +3,7 @@
 #include "MuseumGame.hpp"
 
 #include <cstdio>
+#include <cstdlib>
 #include <exception>
 #include <string>
 #include <vector>
@@ -43,6 +44,17 @@ int main(int argc, char** argv)
             std::fprintf(stderr, "%s\n", errors.empty() ? "museum structure: ok" : "museum structure: INVALID");
             return errors.empty() ? 0 : 1;
         }
+#ifdef MUSEUM_NETWORKING
+        // Two local offline profiles are signed in at start-up (unless the caller chose others): the networking rooms need two local
+        // gamers to talk to each other. They live in CNA's own profile store, never in the museum's files.
+        if (std::getenv("CNA_GAMER_SERVICES_AUTO_SIGN_IN") == nullptr) {
+#ifdef _WIN32
+            _putenv_s("CNA_GAMER_SERVICES_AUTO_SIGN_IN", "Visitor,Guest");
+#else
+            setenv("CNA_GAMER_SERVICES_AUTO_SIGN_IN", "Visitor,Guest", 0);
+#endif
+        }
+#endif
         MuseumGame game(options);
         game.Run();
         return 0;

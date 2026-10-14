@@ -48,6 +48,8 @@ std::unique_ptr<Exhibit> MakeInputLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeContentLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeCnaExtLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakePlatformLab(const RoomDef& room, Services& services);
+std::unique_ptr<Exhibit> MakePlayersLab(const RoomDef& room, Services& services);
+std::unique_ptr<Exhibit> MakeNetLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakePerfLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeValidationLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeRoofLab(const RoomDef& room, Services& services);

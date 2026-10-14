@@ -1,0 +1,8 @@
+[
+  { "key": "first-steps", "name": "First Steps", "description": "Walk into your first exhibit room.", "howToEarn": "Enter any exhibit room.", "score": 10 },
+  { "key": "explorer", "name": "Explorer", "description": "Twenty-five rooms seen.", "howToEarn": "Visit 25 different rooms.", "score": 25 },
+  { "key": "cartographer", "name": "Cartographer", "description": "A hundred rooms seen.", "howToEarn": "Visit 100 different rooms.", "score": 50 },
+  { "key": "every-floor", "name": "Every Floor", "description": "One room on each of the ten floors.", "howToEarn": "Visit a room on every floor.", "score": 50 },
+  { "key": "elevator", "name": "Going Up", "description": "Took the elevator.", "howToEarn": "Ride the elevator to another floor.", "score": 10 },
+  { "key": "completionist", "name": "Completionist", "description": "Every room in the museum.", "howToEarn": "Visit every exhibit room.", "score": 200, "display": false }
+]

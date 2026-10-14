@@ -29,6 +29,10 @@
  * The application: a CNA Game that owns the camera, the world, audio and HUD. Update and
  * Draw only orchestrate; each exhibit does its own work.
  */
+#ifdef MUSEUM_NETWORKING
+namespace Microsoft::Xna::Framework::GamerServices { class GamerServicesComponent; }
+#endif
+
 class MuseumGame : public Microsoft::Xna::Framework::Game {
 public:
     explicit MuseumGame(const MuseumOptions& options);
@@ -56,9 +60,14 @@ private:
     void ApplyMouseMode();
     void UpdateRide(float dt);
     void SaveScreenshot(const std::string& path);
+    void ReportInteractionFailure(const std::string& what);
 
     MuseumOptions options_;
     Microsoft::Xna::Framework::GraphicsDeviceManager graphics_;
+#ifdef MUSEUM_NETWORKING
+    // Runs CNA's GamerServices dispatcher (sign-in, the Guide overlay, session updates) every frame; the Players and Networking rooms rely on it.
+    std::unique_ptr<Microsoft::Xna::Framework::GamerServices::GamerServicesComponent> gamerServices_;
+#endif
 
     // Everything below holds GPU resources or services and is released in LoadContent's reverse order.
     Services services_;
