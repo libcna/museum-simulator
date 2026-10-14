@@ -213,6 +213,10 @@ public:
                 p.AddButton("Write a save file", [this] { WriteSave(); });
                 p.AddButton("Read it back", [this] { ReadSave(); });
                 p.AddButton("Delete the save file", [this] { DeleteSave(); });
+                p.AddButton("CreateDirectory(\"slots/one\")", [this] { DirectoryOp(0); });
+                p.AddButton("Write a file inside it", [this] { DirectoryOp(1); });
+                p.AddButton("GetFileNames / GetDirectoryNames", [this] { DirectoryOp(2); });
+                p.AddButton("DeleteDirectory(\"slots\")", [this] { DirectoryOp(3); });
                 p.AddButton("Read a title file (OpenStream)", [this] { ReadTitleFile(); });
                 p.AddReadout("Container", [this] { return container_ ? container_->getDisplayNameProperty() : std::string("not open"); });
                 break;
@@ -721,6 +725,62 @@ private:
                 std::string s(bytes.begin(), bytes.begin() + n);
                 for (char& c : s) if (c == '\n') c = ' ';
                 row.detail = "read " + std::to_string(n) + " bytes: " + s;
+            }
+        } catch (const std::exception& e) {
+            row.detail = e.what();
+            row.status = 2;
+        }
+        rows_.push_back(std::move(row));
+    }
+    // The container is a small file system of its own: directories, listings with a search pattern, and deletion.
+    void DirectoryOp(int op)
+    {
+        Row row;
+        static const char* names[] = {"CreateDirectory(\"slots/one\")", "CreateFile(\"slots/one/a.sav\")", "GetFileNames / GetDirectoryNames", "DeleteDirectory(\"slots\")"};
+        row.name = names[op];
+        if (!container_) { row.detail = "open the container first"; row.status = 2; rows_.push_back(std::move(row)); return; }
+        try {
+            switch (op) {
+                case 0:
+                    container_->CreateDirectory("slots/one");
+                    row.detail = std::string("DirectoryExists: ") + (container_->DirectoryExists("slots/one") ? "true" : "false");
+                    break;
+                case 1: {
+                    if (!container_->DirectoryExists("slots/one")) { row.detail = "create the directory first"; row.status = 1; break; }
+                    auto stream = container_->CreateFile("slots/one/a.sav");
+                    const std::string body = "slot one";
+                    std::vector<SharpRuntime::bytecs> bytes(body.begin(), body.end());
+                    stream->Write(bytes.data(), 0, static_cast<int>(bytes.size()));
+                    stream->Close();
+                    row.detail = "wrote " + std::to_string(body.size()) + " bytes";
+                    break;
+                }
+                case 2: {
+                    std::string text;
+                    for (const std::string& n : container_->GetDirectoryNames()) text += "dir " + n + "  ";
+                    for (const std::string& n : container_->GetFileNames()) text += "file " + n + "  ";
+                    for (const std::string& n : container_->GetFileNames("*.sav")) text += "*.sav: " + n + "  ";
+                    text += std::string("FileExists(slots/one/a.sav): ") + (container_->FileExists("slots/one/a.sav") ? "true" : "false");
+                    row.detail = text.empty() ? "(empty)" : text;
+                    break;
+                }
+                default:
+                    if (container_->DirectoryExists("slots")) {
+                        // A directory must be empty before it can go (as System.IO.Directory.Delete without recursion): the first try says so, then it is emptied from the bottom up.
+                        std::string said;
+                        try {
+                            container_->DeleteDirectory("slots");
+                        } catch (const std::exception& e) {
+                            said = "refused while it has contents; ";
+                        }
+                        if (container_->FileExists("slots/one/a.sav")) container_->DeleteFile("slots/one/a.sav");
+                        if (container_->DirectoryExists("slots/one")) container_->DeleteDirectory("slots/one");
+                        if (container_->DirectoryExists("slots")) container_->DeleteDirectory("slots");
+                        row.detail = said + "emptied from the bottom up; DirectoryExists now " + (container_->DirectoryExists("slots") ? "true" : "false");
+                    } else {
+                        row.detail = "nothing to delete";
+                        row.status = 1;
+                    }
             }
         } catch (const std::exception& e) {
             row.detail = e.what();

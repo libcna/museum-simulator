@@ -61,7 +61,7 @@ WingSpec ContentWing()
             r.origin = ApiOrigin::Xna;
             return r;
         }(),
-        ct("ct-storage", "Title Files and Saved Data", "TitleContainer.OpenStream, StorageDevice and StorageContainer", "storage", {"TitleContainer.OpenStream", "StorageDevice", "StorageContainer", "StorageDevice.GetStorageRootEXT"}),
+        ct("ct-storage", "Title Files and Saved Data", "TitleContainer.OpenStream, StorageDevice and StorageContainer", "storage", {"TitleContainer.OpenStream", "StorageDevice", "StorageContainer", "StorageContainer.CreateDirectory", "StorageContainer.DeleteDirectory", "StorageContainer.DirectoryExists", "StorageContainer.GetFileNames", "StorageContainer.GetDirectoryNames", "StorageDevice.GetStorageRootEXT"}),
         ct("ct-custom", "Teaching ContentManager a New Type", "Your own types loaded through ContentManager: a loose-file reader and a named .cnj loader", "custom", {"ContentManager.RegisterTypeReader", "LooseFileContentTypeReader", "ContentManager.RegisterCnjLoader", "ContentLoadException"}, ApiOrigin::CnaExtension),
         ct("ct-reader", "Content Readers", "An .xnb file with your own type: a ContentTypeReader registered under the name the file records", "reader",
            {"ContentTypeReader", "ContentTypeReaderManager.AddTypeCreator", "ContentReader", "ContentManager.Load"}),

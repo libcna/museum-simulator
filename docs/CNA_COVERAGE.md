@@ -47,7 +47,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-692 distinct API names are claimed by at least one room.
+697 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -660,6 +660,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | StencilOperation | `rs-portal`, `rs-stencilcount` |
 | StencilOperation.Increment | `rs-shadow` |
 | StorageContainer | `ct-storage` |
+| StorageContainer.CreateDirectory | `ct-storage` |
+| StorageContainer.DeleteDirectory | `ct-storage` |
+| StorageContainer.DirectoryExists | `ct-storage` |
+| StorageContainer.GetDirectoryNames | `ct-storage` |
+| StorageContainer.GetFileNames | `ct-storage` |
 | StorageDevice | `ct-storage` |
 | StorageDevice.GetStorageRootEXT | `ct-storage` |
 | StringBuilder | `text-hud` |
