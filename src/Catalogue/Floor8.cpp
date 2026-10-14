@@ -42,7 +42,7 @@ WingSpec ContentWing()
             r.depth = 13;
             r.height = 5.0f;
             r.theme = "workshop";
-            r.apis = {"IntermediateSerializer", "IntermediateSerializer.Serialize", "IntermediateSerializer.Deserialize", "ContentItem", "ContentTypeDescriptor", "InvalidContentException"};
+            r.apis = {"IntermediateSerializer", "IntermediateSerializer.Serialize", "IntermediateSerializer.Deserialize", "ContentItem", "ContentTypeDescriptor", "InvalidContentException", "ContentSerializerAttribute", "ContentSerializerIgnoreAttribute", "ContentSerializerCollectionItemNameAttribute"};
             r.origin = ApiOrigin::Xna;
             return r;
         }(),

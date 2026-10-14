@@ -8,6 +8,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "Exhibits/ExhibitFactories.hpp"
@@ -60,20 +61,53 @@ public:
     }
 };
 
-std::string ToXml(const std::shared_ptr<Plaque>& value)
+// The same plaque described with the options XNA writes as [ContentSerializer...] attributes on members: a different element name,
+// a collection item name, Optional (left out while the collection is empty; reading a file without it keeps the default), Ignore (never written).
+class AnnotatedPlaque final : public Xna::ContentItem {
+public:
+    static constexpr std::string_view XnaTypeName = "Museum.AnnotatedPlaque";
+    Vector3 position{1.5f, 0.0f, -2.0f};
+    Color tint{255, 214, 120, 255};
+    std::string text = "CNA 3D Museum";
+    std::int32_t level = 3;
+    bool pinned = true;
+    std::vector<std::string> tags{"gallery", "gold"};
+    std::string secret = "visitor's notes never reach the file";
+
+    [[nodiscard]] const std::string& GetTypeName() const override
+    {
+        static const std::string name{XnaTypeName};
+        return name;
+    }
+    static void DescribeContent(Intermediate::ContentTypeDescriptor<AnnotatedPlaque>& d)
+    {
+        d.Field("Position", &AnnotatedPlaque::position).ElementName("Pos");                    // [ContentSerializer(ElementName = "Pos")]
+        d.Field("Tint", &AnnotatedPlaque::tint);
+        d.Field("Text", &AnnotatedPlaque::text).ElementName("Caption");
+        d.Field("Level", &AnnotatedPlaque::level);
+        d.Field("Pinned", &AnnotatedPlaque::pinned);
+        // Optional: left out of the file while the collection is empty, and a file without it keeps the constructor's two tags.
+        d.Field("Tags", &AnnotatedPlaque::tags).CollectionItemName("Tag").Optional();          // [ContentSerializer(CollectionItemName = "Tag", Optional = true)]
+        d.Field("Secret", &AnnotatedPlaque::secret).Ignore();                                  // [ContentSerializerIgnore]
+    }
+};
+
+template <typename T>
+std::string ToXml(const std::shared_ptr<T>& value)
 {
     System::Xml::XmlWriterSettings settings;
     settings.Indent = true;
     settings.NewLineChars = "\n";
     std::unique_ptr<System::Xml::XmlWriter> writer(System::Xml::XmlWriter::CreateToString(settings));
-    Intermediate::IntermediateSerializer::Serialize<Plaque>(*writer, value, std::string());
+    Intermediate::IntermediateSerializer::Serialize<T>(*writer, value, std::string());
     return writer->ToString();
 }
 
-std::shared_ptr<Plaque> FromXml(const std::string& xml)
+template <typename T>
+std::shared_ptr<T> FromXml(const std::string& xml)
 {
     std::unique_ptr<System::Xml::XmlReader> reader(System::Xml::XmlReader::CreateFromString(xml));
-    return Intermediate::IntermediateSerializer::Deserialize<Plaque>(*reader, std::string());
+    return Intermediate::IntermediateSerializer::Deserialize<T>(*reader, std::string());
 }
 
 std::vector<std::string> Lines(const std::string& text)
@@ -112,6 +146,8 @@ public:
             item_->tags.assign(all, all + static_cast<int>(v));
             Rebuild();
         }, "%.0f", 1.0f);
+        p.AddChoice("Members described with", {"plain fields", "options: ElementName, CollectionItemName, Optional, Ignore"}, 0, [this](int v) { annotated_ = v == 1; Rebuild(); });
+        p.AddReadout("Ignored member in the file", [this] { return secretInFile_; });
         p.AddChoice("Damage the document", {"none", "unknown element", "number that is not a number", "missing end tag", "wrong type name"}, 0, [this](int v) { damage_ = v; Rebuild(); });
         p.AddReadout("IntermediateSerializer.Serialize", [this] { return std::to_string(xml_.size()) + " bytes"; });
         p.AddReadout("Deserialize", [this] { return verdict_; });
@@ -121,7 +157,7 @@ public:
 #endif
         AddInfoSign(b, "The Pipeline in the Game",
                     {"XNA games author content as XML (or import files), and the content pipeline turns it into the .xnb that ContentManager loads. The IntermediateSerializer is the XML half:",
-                     "a type says which members it has (DescribeContent), and CNA writes and reads the very format XNA's did. Damage the document to see what it refuses."});
+                     "a type says which members it has (DescribeContent), and CNA writes and reads the very format XNA's did. Describe the members with options (the [ContentSerializer...] attributes of XNA) or damage the document to see what it refuses; set Tags to 0 with the options on: an Optional element is omitted, and reading it back restores the default."});
     }
 
     void OnScreenLoaded() override
@@ -175,25 +211,50 @@ private:
     // Writes the document, optionally damages it, reads it back; everything the screen shows comes from here.
     void Rebuild()
     {
+        if (annotated_) {
+            auto copy = std::make_shared<AnnotatedPlaque>();
+            copy->position = item_->position;
+            copy->tint = item_->tint;
+            copy->text = item_->text;
+            copy->level = item_->level;
+            copy->pinned = item_->pinned;
+            copy->tags = item_->tags;
+            Document<AnnotatedPlaque>(copy);
+        } else {
+            Document<Plaque>(item_);
+        }
+    }
+
+    template <typename T>
+    void Document(const std::shared_ptr<T>& item)
+    {
+        const bool annotated = std::is_same_v<T, AnnotatedPlaque>;
         try {
-            xml_ = ToXml(item_);
+            xml_ = ToXml(item);
             std::string doc = xml_;
             const auto replace = [&](const std::string& a, const std::string& b) {
                 const std::size_t at = doc.find(a);
                 if (at != std::string::npos) doc.replace(at, a.size(), b);
             };
             switch (damage_) {
-                case 1: replace("<Level>", "<Levl>"); replace("</Level>", "</Levl>"); break;
-                case 2: replace(std::to_string(item_->level) + "</Level>", "three</Level>"); break;
-                case 3: replace("</Pinned>", ""); break;
-                case 4: replace("Museum:Plaque\"", "Museum:Plaquette\""); break;
+                case 1:
+                    if (annotated) { replace("<Caption>", "<Captin>"); replace("</Caption>", "</Captin>"); }
+                    else { replace("<Level>", "<Levl>"); replace("</Level>", "</Levl>"); }
+                    break;
+                case 2:
+                    if (annotated) replace("<Pos>", "<Pos>x");
+                    else replace(std::to_string(item->level) + "</Level>", "three</Level>");
+                    break;
+                case 3: replace(annotated ? "</Caption>" : "</Pinned>", ""); break;
+                case 4: replace(annotated ? "Museum:AnnotatedPlaque\"" : "Museum:Plaque\"", "Museum:Plaquette\""); break;
                 default: break;
             }
             shownLines_ = Lines(doc);
+            secretInFile_ = doc.find("never reach") != std::string::npos ? "yes" : "no: [ContentSerializerIgnore]";
             try {
-                const std::shared_ptr<Plaque> back = FromXml(doc);
+                const std::shared_ptr<T> back = FromXml<T>(doc);
                 ok_ = true;
-                verdict_ = "Deserialize returned a Plaque: \"" + back->text + "\", level " + std::to_string(back->level) + ", " + std::to_string(back->tags.size()) + " tags";
+                verdict_ = std::string("Deserialize returned a ") + (annotated ? "AnnotatedPlaque" : "Plaque") + ": \"" + back->text + "\", level " + std::to_string(back->level) + ", " + std::to_string(back->tags.size()) + " tags";
                 roundTrip_ = ToXml(back) == xml_ ? "writing it again gives the same document, byte for byte" : "the second document differs";
             } catch (const std::exception& e) {
                 ok_ = false;
@@ -210,8 +271,9 @@ private:
     std::string xml_;
     std::vector<std::string> shownLines_;
     std::string verdict_ = "-", roundTrip_ = "-";
-    bool ok_ = true;
+    bool ok_ = true, annotated_ = false;
     int damage_ = 0;
+    std::string secretInFile_ = "-";
 #endif
 };
 
