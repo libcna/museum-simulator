@@ -223,7 +223,7 @@ WingSpec AppWing()
         Lab("app-content", "Content Lifetime", "ContentManager.Load, caching, Unload and ContentLoadException with your own manager", "applab", "content",
             {"ContentManager", "ContentManager.Load", "ContentManager.Unload", "ContentLoadException", "Texture2D"}),
         Lab("app-components", "Game Components", "GameComponent and DrawableGameComponent with UpdateOrder, DrawOrder, Enabled and Visible", "applab", "components",
-            {"GameComponent", "DrawableGameComponent", "Game.Components", "GameComponentCollection.ComponentAdded", "GameComponentCollectionEventArgs"}),
+            {"GameComponent", "DrawableGameComponent", "Game.Components", "GameComponentCollection.ComponentAdded", "GameComponentCollectionEventArgs", "IGameComponent", "IUpdateable", "IDrawable"}),
         ServicesRoom(),
     };
     return w;

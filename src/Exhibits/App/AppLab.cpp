@@ -10,6 +10,9 @@
 #include "CNA/GraphicsCapability.hpp"
 #include "CNA/RendererCapabilityProfile.hpp"
 #include "Exhibits/ExhibitFactories.hpp"
+#include "Microsoft/Xna/Framework/IUpdateable.hpp"
+#include "Microsoft/Xna/Framework/IGameComponent.hpp"
+#include "Microsoft/Xna/Framework/IDrawable.hpp"
 #include "Microsoft/Xna/Framework/GraphicsDeviceInformation.hpp"
 #include "Microsoft/Xna/Framework/PreparingDeviceSettingsEventArgs.hpp"
 #include "Exhibits/ExhibitKit.hpp"
@@ -202,6 +205,16 @@ public:
                 p.AddToggle("Green component: Enabled (Update)", true, [this](bool v) { if (components_.size() > 1) components_[1]->setEnabledProperty(v); });
                 p.AddHeading("Game.Components and Game.Services");
                 p.AddReadout("Components registered", [this] { return std::to_string(S().game != nullptr ? S().game->getComponentsProperty().getCountProperty() : 0); });
+                p.AddReadout("IGameComponent: also IUpdateable / IDrawable", [this] {
+                    if (S().game == nullptr) return std::string("-");
+                    int updateable = 0, drawable = 0, total = 0;
+                    for (IGameComponent* c : S().game->getComponentsProperty()) {
+                        ++total;
+                        updateable += dynamic_cast<IUpdateable*>(c) != nullptr;
+                        drawable += dynamic_cast<IDrawable*>(c) != nullptr;
+                    }
+                    return std::to_string(total) + " components: " + std::to_string(updateable) + " / " + std::to_string(drawable);
+                });
                 break;
             case Mode::Device: break;
         }

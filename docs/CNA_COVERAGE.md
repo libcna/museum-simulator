@@ -49,7 +49,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-560 distinct API names are claimed by at least one room.
+563 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -319,12 +319,15 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsResource.Disposing | `ct-lifetime` |
 | GraphicsResource.IsDisposed | `ct-cache`, `ct-lifetime` |
 | HalfVector4 | `vt-packed` |
+| IDrawable | `app-components` |
 | IEffectFog | `be-model` |
 | IEffectLights | `be-model` |
 | IEffectMatrices | `be-model` |
+| IGameComponent | `app-components` |
 | IGraphicsDeviceService | `app-services` |
 | IPackedVector | `vt-packed` |
 | IShadowReceiverEXT | `cx-shadow` |
+| IUpdateable | `app-components` |
 | ImageBasedLightEXT | `model-ibl` |
 | IndexBuffer | `particles`, `geo-indexed`, `geo-procedural`, `geo-index32`, `geo-dynindex`, `geo-terrain`, `model-skinfx`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic` |
 | IndexElementSize | `geo-index32` |

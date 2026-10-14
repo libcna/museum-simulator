@@ -78,7 +78,7 @@ The application model, the maths of games, geometry tests and cameras
 | 1.1.03 | `app-device` | Device and Renderer Report | XNA 4.0 | GraphicsDevice, GraphicsAdapter, GraphicsCapability, RendererCapabilityProfile, PresentationParameters |
 | 1.1.04 | `app-viewport` | Back Buffer, Viewport and Fullscreen | XNA 4.0 | GraphicsDeviceManager, PresentationParameters, PresentInterval, GraphicsDeviceStatus, GraphicsDeviceManager.DeviceReset, GraphicsDeviceManager.DeviceResetting, GraphicsDeviceManager.PreparingDeviceSettings, Viewport, GameWindow.ClientBounds |
 | 1.1.05 | `app-content` | Content Lifetime | XNA 4.0 | ContentManager, ContentManager.Load, ContentManager.Unload, ContentLoadException, Texture2D |
-| 1.1.06 | `app-components` | Game Components | XNA 4.0 | GameComponent, DrawableGameComponent, Game.Components, GameComponentCollection.ComponentAdded, GameComponentCollectionEventArgs |
+| 1.1.06 | `app-components` | Game Components | XNA 4.0 | GameComponent, DrawableGameComponent, Game.Components, GameComponentCollection.ComponentAdded, GameComponentCollectionEventArgs, IGameComponent, IUpdateable, IDrawable |
 | 1.1.07 | `app-services` | Game Services | XNA 4.0 | GameServiceContainer, GameServiceContainer.AddService, GameServiceContainer.GetService, GameServiceContainer.RemoveService, Game.Services, IGraphicsDeviceService |
 
 **Vector Mathematics** - Vector3: arithmetic, products, reflection and interpolation
