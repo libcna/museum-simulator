@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 35 wings, 273 exhibit rooms (5 open to the sky), 338 walkable cells in all.
+10 floors, 35 wings, 274 exhibit rooms (5 open to the sky), 339 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -346,6 +346,7 @@ glTF models and their effects, procedural and skeletal animation, particle syste
 | 6.1.12 | `model-ibl` | Image-Based Lighting | CNA extension | ImageBasedLightEXT, PbrEffect.ImageBasedLight, TextureCube, PbrEffect.MetallicFactor, PbrEffect.RoughnessFactor, GraphicsDevice.SupportsImageBasedLightingEXT |
 | 6.1.13 | `model-skinfx` | SkinnedEffect | XNA 4.0 | SkinnedEffect, SkinnedEffect.SetBoneTransforms, SkinnedEffect.WeightsPerVertex, VertexPositionNormalTextureSkinned, VertexBuffer, IndexBuffer |
 | 6.1.14 | `model-skinext` | Your Own Skinned Model | CNA extension | SkinnedModelEXT, SkinnedModelEXT.ComputeBoneTransformsEXT, SkinnedModelEXT.AttachPartEXT, SkinnedModelEXT.RemovePartEXT, SkinnedModelEXT.AddPartEXT, AnimationClipEXT, BoneTrackEXT, KeyframeEXT, SkinnedEffect.SetBoneTransforms, VertexPositionNormalTextureSkinned |
+| 6.1.15 | `model-cameras` | Cameras in a glTF File | CNA extension | Model.CamerasEXT, ModelCameraEXT, ModelCameraEXT.Projection, ModelCameraEXT.WorldTransform, ModelCameraEXT.IsPerspective, Model.CreateInfinitePerspectiveFieldOfViewEXT, BoundingFrustum, Matrix.Invert |
 
 **Animation Complex** - Procedural animation: motion built from maths and matrix hierarchies
 

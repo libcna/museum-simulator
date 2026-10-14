@@ -94,6 +94,13 @@ WingSpec ModelWing()
             r.origin = ApiOrigin::CnaExtension;
             return r;
         }(),
+        [&] {
+            RoomSpec r = mo("model-cameras", "Cameras in a glTF File", "Model.CamerasEXT: three cameras a scene file places, a perspective, an orthographic and an infinite one, drawn through and as frusta", "",
+                            {"Model.CamerasEXT", "ModelCameraEXT", "ModelCameraEXT.Projection", "ModelCameraEXT.WorldTransform", "ModelCameraEXT.IsPerspective", "Model.CreateInfinitePerspectiveFieldOfViewEXT", "BoundingFrustum", "Matrix.Invert"});
+            r.exhibit = "modelcameras-lab";
+            r.origin = ApiOrigin::CnaExtension;
+            return r;
+        }(),
     };
     return w;
 }

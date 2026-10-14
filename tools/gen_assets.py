@@ -736,8 +736,36 @@ def knot_mesh(nu=96, nv=12, tube=0.09, scale=0.22):
     return m
 
 
-def write_gltf(name, meshes):
-    """meshes: list of (Mesh, material dict). Each becomes one node/mesh primitive."""
+def look_at_quaternion(eye, target, up=(0.0, 1.0, 0.0)):
+    """Rotation (x, y, z, w) of a glTF camera at `eye`: it looks down its own -Z with +Y up, so -Z points at the target."""
+    f = [target[i] - eye[i] for i in range(3)]
+    n = math.sqrt(sum(c * c for c in f))
+    f = [c / n for c in f]
+    z = [-c for c in f]
+    x = [up[1] * z[2] - up[2] * z[1], up[2] * z[0] - up[0] * z[2], up[0] * z[1] - up[1] * z[0]]
+    n = math.sqrt(sum(c * c for c in x))
+    x = [c / n for c in x]
+    y = [z[1] * x[2] - z[2] * x[1], z[2] * x[0] - z[0] * x[2], z[0] * x[1] - z[1] * x[0]]
+    m = [[x[0], y[0], z[0]], [x[1], y[1], z[1]], [x[2], y[2], z[2]]]   # columns are the camera's axes
+    t = m[0][0] + m[1][1] + m[2][2]
+    if t > 0:
+        r = math.sqrt(1.0 + t) * 2
+        q = [(m[2][1] - m[1][2]) / r, (m[0][2] - m[2][0]) / r, (m[1][0] - m[0][1]) / r, 0.25 * r]
+    elif m[0][0] > m[1][1] and m[0][0] > m[2][2]:
+        r = math.sqrt(1.0 + m[0][0] - m[1][1] - m[2][2]) * 2
+        q = [0.25 * r, (m[0][1] + m[1][0]) / r, (m[0][2] + m[2][0]) / r, (m[2][1] - m[1][2]) / r]
+    elif m[1][1] > m[2][2]:
+        r = math.sqrt(1.0 + m[1][1] - m[0][0] - m[2][2]) * 2
+        q = [(m[0][1] + m[1][0]) / r, 0.25 * r, (m[1][2] + m[2][1]) / r, (m[0][2] - m[2][0]) / r]
+    else:
+        r = math.sqrt(1.0 + m[2][2] - m[0][0] - m[1][1]) * 2
+        q = [(m[0][2] + m[2][0]) / r, (m[1][2] + m[2][1]) / r, 0.25 * r, (m[1][0] - m[0][1]) / r]
+    return q
+
+
+def write_gltf(name, meshes, cameras=None):
+    """meshes: list of (Mesh, material dict). Each becomes one node/mesh primitive; a material dict may carry a node
+    "translation". cameras: list of dicts (name, kind, params, eye, target) that become camera nodes looking at the target."""
     blob = bytearray()
     views, accessors, materials, gmeshes, nodes = [], [], [], [], []
 
@@ -775,7 +803,15 @@ def write_gltf(name, meshes):
         gmeshes.append({"primitives": [{"attributes": {"POSITION": base, "NORMAL": base + 1,
                                                        "TEXCOORD_0": base + 2},
                                         "indices": base + 3, "material": len(materials) - 1}]})
-        nodes.append({"mesh": len(gmeshes) - 1, "name": mat.get("name", "mesh")})
+        node = {"mesh": len(gmeshes) - 1, "name": mat.get("name", "mesh")}
+        if "translation" in mat:
+            node["translation"] = list(mat["translation"])
+        nodes.append(node)
+    camera_defs = []
+    for cam in cameras or []:
+        camera_defs.append({"name": cam["name"], "type": cam["kind"], cam["kind"]: cam["params"]})
+        nodes.append({"camera": len(camera_defs) - 1, "name": cam["name"], "translation": list(cam["eye"]),
+                      "rotation": look_at_quaternion(cam["eye"], cam["target"])})
     doc = {
         "asset": {"version": "2.0", "generator": "cna-3d-museum tools/gen_assets.py"},
         "scene": 0, "scenes": [{"nodes": list(range(len(nodes)))}], "nodes": nodes,
@@ -784,6 +820,8 @@ def write_gltf(name, meshes):
         "buffers": [{"byteLength": len(blob),
                      "uri": "data:application/octet-stream;base64," + base64.b64encode(bytes(blob)).decode()}],
     }
+    if camera_defs:
+        doc["cameras"] = camera_defs
     path = os.path.join(ROOT, "Models", name + ".gltf")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:
@@ -802,6 +840,19 @@ def build_models():
     # The lathe profile starts and ends on the axis; those two rim edges are the bottom and
     # top cap (flat shaded by the profile normal), which is fine for a display vase.
     write_gltf("vase", [(lathe_mesh(vase, 40), {"name": "vase", "color": (0.80, 0.52, 0.34), "rough": 0.4})])
+    # A small stage with three cameras: what Model.CamerasEXT lists (a perspective one, an orthographic one and a perspective
+    # one with no far plane, which CNA turns into an infinite projection).
+    write_gltf("stage", [
+        (box_mesh(9, 0.1, 9), {"name": "floor", "color": (0.55, 0.58, 0.62), "translation": (0.0, -0.05, 0.0)}),
+        (box_mesh(1, 1, 1), {"name": "cube", "color": (0.85, 0.35, 0.30), "translation": (-2.0, 0.5, 0.5)}),
+        (sphere_mesh(0.6), {"name": "sphere", "color": (0.30, 0.55, 0.90), "translation": (0.5, 0.6, 1.8)}),
+        (cone_mesh(0.5, 1.2), {"name": "cone", "color": (0.35, 0.80, 0.50), "translation": (2.0, 0.6, -1.0)}),
+        (torus_mesh(0.5, 0.18), {"name": "torus", "color": (0.95, 0.75, 0.25), "translation": (-0.6, 0.7, -2.4)}),
+    ], cameras=[
+        {"name": "Front (perspective)", "kind": "perspective", "params": {"yfov": 0.8, "znear": 0.3, "zfar": 40.0, "aspectRatio": 1.7778}, "eye": (0.0, 2.6, 8.0), "target": (0.0, 0.6, 0.0)},
+        {"name": "Top (orthographic)", "kind": "orthographic", "params": {"xmag": 5.0, "ymag": 2.8125, "znear": 0.1, "zfar": 40.0}, "eye": (0.0, 12.0, 0.01), "target": (0.0, 0.0, 0.0)},
+        {"name": "Corner (infinite far plane)", "kind": "perspective", "params": {"yfov": 0.9, "znear": 0.3, "aspectRatio": 1.7778}, "eye": (6.5, 3.0, 5.5), "target": (0.0, 0.5, 0.0)},
+    ])
 
 
 # ----------------------------------------------------------------------------

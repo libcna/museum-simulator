@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-724 distinct API names are claimed by at least one room.
+730 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -132,7 +132,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BoundingBox.CreateFromPoints | `col-merge` |
 | BoundingBox.CreateFromSphere | `col-merge` |
 | BoundingBox.Intersects | `col-box-box` |
-| BoundingFrustum | `mat-view`, `col-frustum`, `cam-orbit`, `cam-security` |
+| BoundingFrustum | `mat-view`, `col-frustum`, `cam-orbit`, `cam-security`, `model-cameras` |
 | BoundingFrustum.Contains | `mat-perspective`, `col-frustum`, `model-instances` |
 | BoundingFrustum.GetCorners | `col-frustum` |
 | BoundingSphere | `col-ray-sphere`, `col-pick` |
@@ -438,7 +438,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Matrix.CreateWorld | `cam-transition` |
 | Matrix.Decompose | `mat-hierarchy` |
 | Matrix.Determinant | `mat-reflection` |
-| Matrix.Invert | `mat-view`, `mat-normals` |
+| Matrix.Invert | `mat-view`, `mat-normals`, `model-cameras` |
 | Matrix.Multiply | `mat-order`, `mat-hierarchy`, `mat-screen`, `an-clock`, `an-gears`, `an-kinetic`, `an-walker` |
 | Matrix.Translation | `mat-hierarchy` |
 | Matrix.Transpose | `mat-normals` |
@@ -463,8 +463,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | MipmapChain | `ct-processor` |
 | Model | `models`, `animation`, `model-load` |
 | Model.BoundingSphereEXT | `model-load`, `model-instances`, `model-bounds` |
+| Model.CamerasEXT | `model-cameras` |
 | Model.CopyAbsoluteBoneTransformsTo | `model-rigid` |
 | Model.CopyBoneTransformsTo | `model-load` |
+| Model.CreateInfinitePerspectiveFieldOfViewEXT | `model-cameras` |
 | Model.Draw | `model-instances` |
 | Model.MaterialVariantEXT | `model-variants` |
 | Model.MaterialVariantNamesEXT | `model-variants` |
@@ -472,6 +474,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ModelAnimationsEXT | `model-rigid` |
 | ModelBone | `model-rigid` |
 | ModelBone.Children | `model-load` |
+| ModelCameraEXT | `model-cameras` |
+| ModelCameraEXT.IsPerspective | `model-cameras` |
+| ModelCameraEXT.Projection | `model-cameras` |
+| ModelCameraEXT.WorldTransform | `model-cameras` |
 | ModelMesh | `models`, `model-load` |
 | ModelMesh.BoundingSphere | `model-bounds` |
 | ModelMeshPart | `model-load` |
