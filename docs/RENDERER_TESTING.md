@@ -102,17 +102,15 @@ WINEPREFIX=$HOME/.cache/museum-wine SDL_VIDEODRIVER=windows CNA_GRAPHICS_RENDERE
 
 The Windows tree is configured with `-DMUSEUM_NETWORKING=OFF`: CNA's GamerServices needs libcurl, which the MinGW sysroot does not have, so the Players and Networking rooms there say they are not built in (the Avatars, Leaderboards and Net rooms are Linux-only for now). The content pipeline room (`MUSEUM_PIPELINE`) does build and run under Wine.
 
-Under Wine the SOFTWARE renderer draws the lobby identically to Linux and tours all rooms with every control operated (272 rooms on 2026-10-14: exit 0, 0 exhibit errors, 1,313 s; the networking, avatar and video rooms say they are not built in on this tree; 257 rooms earlier took 1,413 s). **DIRECTX9** (Wine's Direct3D on llvmpipe OpenGL) runs
-the whole tour without a crash (58 s) but 11 rooms or stages are switched off by the museum's guard, all with one CNA message:
-`DirectX9Renderer::DrawPrimitivesEx (BasicEffect): stride N with lighting=... vertexColor=... texture=... has no matching CNA
-vertex layout`. The DirectX 9 renderer keys its vertex declaration on the *stride alone* (16, 20, 24, 32 or 52 bytes) and supports
-only the one BasicEffect flag combination each stride "naturally" carries, so an unlit textured `VertexPositionNormalTexture`
-(32), a vertex-coloured untextured `VertexPositionColorTexture` (24, the sky dome and debug geometry), a 48-byte lit mesh or a
-position-only 12-byte vertex are all refused although XNA's own Direct3D 9 accepts them. The renderer also leaves
-`SetStringMarkerEXT` unimplemented, ignores `PunctualLightEXT`, and the cube-map orientation check reads black. Validation:
-48 pass, 3 fail (point lights, the BasicEffect check run aborted by the layout message, the cube target), 1 skip (half-float
-targets) of the 52 checks that ran. Noted in `docs/KNOWN_ISSUES.md`; the museum was **not** bent to fit (no white-texture
-workarounds): the place to fix it is the renderer, which would need the vertex declaration (not the stride) at draw time.
+Under Wine the SOFTWARE renderer draws the lobby identically to Linux and tours all rooms with every control operated (272 rooms on 2026-10-14: exit 0, 0 exhibit errors, 1,313 s; the networking, avatar and video rooms say they are not built in on this tree; 257 rooms earlier took 1,413 s). **DIRECTX9** (Wine's Direct3D on llvmpipe OpenGL): the first tour (2026-10-14) ran without a crash but 11 rooms or stages were switched
+off by the museum's guard, all with one CNA message, `DirectX9Renderer::DrawPrimitivesEx (BasicEffect): stride N with lighting=...
+vertexColor=... texture=... has no matching CNA vertex layout`: CNA's DirectX 9 renderer accepted exactly one BasicEffect flag
+combination per vertex stride. **Fixed in CNA on 2026-10-15** (`d3f1a9e51`): BasicEffect and AlphaTestEffect now accept any layout that
+supplies the elements the chosen shader reads (all 32 BasicEffect shader buckets are reachable; the register tables were always
+there), and `SetStringMarkerEXT` calls `D3DPERF_SetMarker` instead of throwing. The same tour now has **0 exhibit errors** over 286 rooms
+(72 s) and the `rv-effects` BasicEffect check passes. What is left on DIRECTX9: `PunctualLightEXT` is ignored (1 validation failure)
+and the effects other than BasicEffect/AlphaTestEffect still need their one natural stride (DualTextureEffect 28, EnvironmentMapEffect 32,
+SkinnedEffect 52).
 
 ## Every room against OPENGLES3 (`tools/room_diff.sh`, 2026-10-14)
 

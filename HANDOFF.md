@@ -147,8 +147,8 @@ texture is bound (`RenderStates::UnbindTextures`).
    covered; the productive way to find more is the cross-renderer tooling below, not the header audit.
 2. **Cross-renderer work** (this is where the real CNA defects came from): run `tools/room_diff.sh R`, `tools/renderer_check.sh`
    and the sanitizer builds after every batch of rooms; turn each divergence into a validation check first, then fix CNA. Open on
-   CNA's side: FNA3D ignores `PunctualLightEXT`, has no PBR path and no custom shaders; the DIRECTX9 renderer keys vertex layouts on
-   stride (11 rooms switched off under Wine); `RenderTargetCube` upload/readback orientation (REMED-GFX-137, sampling half fixed).
+   CNA's side: FNA3D ignores `PunctualLightEXT`, has no PBR path and no custom shaders; DIRECTX9 ignores `PunctualLightEXT` (its vertex-layout
+   gate was fixed 2026-10-15, `d3f1a9e51`: 0 exhibit errors under Wine); `RenderTargetCube` upload/readback orientation (REMED-GFX-137, sampling half fixed).
 3. **Navigation**: stairs/escalators are not implemented (elevators and the directory move you between floors); a
    "you are here" marker exists on the map and minimap.
 4. **Progress** is saved by `src/World/Progress.cpp` (CNA `StorageDevice`/`StorageContainer`, file `progress.txt` under the
