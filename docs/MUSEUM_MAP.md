@@ -464,7 +464,7 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 | 8.3.02 | `pl-window` | The Game Window | XNA 4.0 | GameWindow.Title, GameWindow.ClientBounds, GameWindow.AllowUserResizing, GameWindow.ClientSizeChanged, Game.Activated, GameWindow.FileDropEXT |
 | 8.3.03 | `pl-adapter` | Adapter and Back Buffer | XNA 4.0 | GraphicsAdapter, DisplayMode, GraphicsDevice.GraphicsProfile, PresentationParameters, GraphicsAdapter.IsProfileSupported, GraphicsAdapter.QueryRenderTargetFormat, GraphicsAdapter.QueryBackBufferFormat, GraphicsAdapter.Adapters, GraphicsAdapter.IsWideScreenAspectRatioEXT |
 | 8.3.04 | `pl-renderer` | The Active Renderer | CNA extension | GraphicsDevice.GetRendererCapabilityProfileEXT, RendererFeature, RendererLimit, RendererFormatUsage, GraphicsDevice.GetGraphicsRendererName, GraphicsDevice.GetDisplayColorSpaceEXT, GraphicsDevice.SupportsDisplayColorSpaceEXT, GraphicsDevice.SetDisplayColorSpaceEXT, GraphicsDevice.SupportsImageBasedLightingEXT, GraphicsDevice.GetTrackedResourceCount, GraphicsDevice.GetLogicalSizeEXT |
-| 8.3.05 | `pl-platform` | Platform Capabilities | CNA extension | Game.GetPlatformCapabilitiesEXT, PlatformCapabilities |
+| 8.3.05 | `pl-platform` | Platform Capabilities | CNA extension | Game.GetPlatformCapabilitiesEXT, PlatformCapabilities, Game.GetPlatformEXT, CNA::Platform::IPlatform, IPlatform.GetName, IPlatform.IsSubsystemInitialized, IPlatform.GetPerformanceFrequency, IPlatform.GetTicksMilliseconds, IPlatform.GetKeyboard |
 
 **Players and Networking** - GamerServices and Net: signed-in players, achievements, the Guide, packets and a session between two local players
 

@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-823 distinct API names are claimed by at least one room.
+830 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -159,6 +159,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CNA::Graphics::DepthEffect | `cx-depth` |
 | CNA::Graphics::ShaderPackageEXT | `cx-package` |
 | CNA::GraphicsRendererSelection.GetAvailable | `hist-cna` |
+| CNA::Platform::IPlatform | `pl-platform` |
 | CNA::ShaderCompilationExceptionEXT | `fx-errors` |
 | CNA::ShaderDiagnosticEXT | `fx-errors` |
 | CNA::getGraphicsBackendMaturity | `hist-cna` |
@@ -291,6 +292,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Game.Components | `app-components` |
 | Game.Exiting | `app-lifecycle` |
 | Game.GetPlatformCapabilitiesEXT | `pl-platform` |
+| Game.GetPlatformEXT | `pl-platform` |
 | Game.IsFixedTimeStep | `app-lifecycle`, `pf-dashboard` |
 | Game.IsRunningSlowly | `pf-dashboard` |
 | Game.LaunchParameters | `app-lifecycle` |
@@ -429,6 +431,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | IGameComponent | `app-components` |
 | IGraphicsDeviceService | `app-services` |
 | IPackedVector | `vt-packed` |
+| IPlatform.GetKeyboard | `pl-platform` |
+| IPlatform.GetName | `pl-platform` |
+| IPlatform.GetPerformanceFrequency | `pl-platform` |
+| IPlatform.GetTicksMilliseconds | `pl-platform` |
+| IPlatform.IsSubsystemInitialized | `pl-platform` |
 | IShadowReceiverEXT | `cx-shadow` |
 | IUpdateable | `app-components` |
 | ImageBasedLightEXT | `model-ibl` |

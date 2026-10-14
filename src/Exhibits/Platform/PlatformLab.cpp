@@ -9,6 +9,7 @@
 
 #include "CNA/GraphicsBackendMaturity.hpp"
 #include "CNA/GraphicsRendererType.hpp"
+#include "CNA/Platform/IPlatform.hpp"
 #include "CNA/Platform/PlatformCapabilities.hpp"
 #include "CNA/RendererCapabilityProfile.hpp"
 #include "Diagnostics/Log.hpp"
@@ -120,6 +121,9 @@ public:
             case Mode::Platform:
                 p.AddReadout("Platform", [this] { return platformName_; });
                 p.AddReadout("Capabilities", [this] { return std::to_string(supported_) + " of " + std::to_string(total_) + " supported"; });
+                p.AddReadout("Clock (GetPlatformEXT)", [this] { return clock_; });
+                p.AddReadout("Subsystems up", [this] { return subsystems_; });
+                p.AddReadout("Device interfaces", [this] { return devices_; });
                 break;
         }
         AddInfoSign(b, Title(), Explanation());
@@ -283,7 +287,29 @@ private:
                 maturity_ = maturityNames[std::min(static_cast<int>(m), 3)];
             } else if (mode_ == Mode::Platform) {
                 const CNA::Platform::PlatformCapabilities& c = S().game->GetPlatformCapabilitiesEXT();
-                platformName_ = std::string(S().device->GetGraphicsRendererName()) + " renderer, SDL platform";
+                CNA::Platform::IPlatform& host = S().game->GetPlatformEXT();
+                platformName_ = host.GetName() + " platform, " + std::string(S().device->GetGraphicsRendererName()) + " renderer";
+                char clock[96];
+                std::snprintf(clock, sizeof clock, "%llu Hz, up %llu ms", static_cast<unsigned long long>(host.GetPerformanceFrequency()), static_cast<unsigned long long>(host.GetTicksMilliseconds()));
+                clock_ = clock;
+                using CNA::Platform::PlatformSubsystem;
+                const std::pair<const char*, PlatformSubsystem> subs[] = {{"Video", PlatformSubsystem::Video}, {"Audio", PlatformSubsystem::Audio}, {"Gamepad", PlatformSubsystem::Gamepad}, {"Haptic", PlatformSubsystem::Haptic}, {"Sensor", PlatformSubsystem::Sensor}};
+                subsystems_.clear();
+                for (const auto& [n, id] : subs)
+                    if (host.IsSubsystemInitialized(id)) subsystems_ += (subsystems_.empty() ? "" : ", ") + std::string(n);
+                if (subsystems_.empty()) subsystems_ = "none";
+                // Each device interface is a pointer that is null where the platform has none.
+                const std::pair<const char*, bool> ifaces[] = {{"keyboard", host.GetKeyboard() != nullptr}, {"mouse", host.GetMouse() != nullptr}, {"gamepad", host.GetGamepad() != nullptr}, {"joystick", host.GetJoystick() != nullptr},
+                                                                {"text", host.GetTextInput() != nullptr}, {"sensors", host.GetSensors() != nullptr}, {"haptics", host.GetHaptics() != nullptr}, {"clipboard", host.GetClipboard() != nullptr},
+                                                                {"displays", host.GetDisplays() != nullptr}, {"dialogs", host.GetDialogs() != nullptr}};
+                int up = 0;
+                std::string missing;
+                for (const auto& [n, on] : ifaces) {
+                    up += on ? 1 : 0;
+                    if (!on) missing += (missing.empty() ? " (without " : ", ") + std::string(n);
+                }
+                devices_ = std::to_string(up) + " of 10" + (missing.empty() ? "" : missing + ")");
+                Museum::Log("platform", "%s; clock %s; subsystems %s; interfaces %s", platformName_.c_str(), clock_.c_str(), subsystems_.c_str(), devices_.c_str());
                 caps_.clear();
                 const std::pair<const char*, bool> all[] = {
                     {"multiple windows", c.multipleWindows}, {"high DPI", c.highDpi}, {"multiple displays", c.multipleDisplays}, {"borderless fullscreen", c.borderlessFullscreen},
@@ -408,7 +434,7 @@ private:
     float refresh_ = 0.0f;
     std::vector<std::string> lines_;
     int aspectIndex_ = 3;
-    std::string adapterName_ = "-", profileName_ = "-", maturity_ = "-", platformName_ = "-", originalTitle_;
+    std::string adapterName_ = "-", profileName_ = "-", maturity_ = "-", platformName_ = "-", clock_ = "-", subsystems_ = "-", devices_ = "-", originalTitle_;
     std::vector<DisplayMode> modes_;
     std::vector<std::pair<std::string, bool>> caps_;
     int supported_ = 0, total_ = 0, page_ = 0;
