@@ -100,3 +100,13 @@ surface, since fixed). The same sequence did not reproduce afterwards: not in an
 exceptions were thrown again, no report), not in a fixed ASan build, and not in a fixed normal build (exit 0, 0 exhibit errors).
 It may be a fault in a system library that ASan does not instrument (llvmpipe), or CNA state left behind when an exception left a
 `SpriteBatch` open. Watch for it in long fuzz runs.
+
+**Second occurrence (2026-10-14, seed 8 over 285 rooms):** `tools/tour.sh -f 3 -z 30 -s 8` aborted after 994 s with "malloc(): largebin double
+linked list corrupted (nextsize)" (SIGABRT). The core (systemd-coredump) shows the main thread inside `malloc`, called by Mesa's
+libgallium (llvmpipe) from `glDrawElements` under `EasyGLSpriteBatchRenderer::FlushBatch`, from `ControlPanel::Redraw` -> `LiveScreen::Render`
+-> `SpriteBatch::End`; the other threads were idle (the avatar loader and the gamer-services queue waiting, the dummy audio thread
+sleeping). The same seed and rooms did not fail again: not under AddressSanitizer + UBSan (exit 0, 1166 s, no report), and not in the
+normal build with `GLIBC_TUNABLES=glibc.malloc.check=3` and `MALLOC_PERTURB_=165` (exit 0, 1101 s). Both incidents are late in a long
+OPENGLES3 run on Mesa's software rasteriser and both show the allocator's own check firing inside libgallium, so a fault in that
+library (or a write by one of its rasteriser threads) is the leading suspect, but nothing proves it. `goto <room>` is now logged
+(`[museum][script]`) so that the next occurrence names the room it happened in.

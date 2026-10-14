@@ -664,8 +664,12 @@ void MuseumGame::RunScript()
             scriptWait_ = std::atoi(arg.c_str());
             return;
         } else if (op == "goto") {
-            if (const RoomDef* r = museum_->FindByKey(arg)) TeleportToCell(r->index);
-            else Museum::Log("script", "goto: unknown room '%s'", arg.c_str());
+            if (const RoomDef* r = museum_->FindByKey(arg)) {
+                Museum::Log("script", "goto %s", arg.c_str());   // so a crash in a long tour can be placed in a room
+                TeleportToCell(r->index);
+            } else {
+                Museum::Log("script", "goto: unknown room '%s'", arg.c_str());
+            }
         } else if (op == "floor") {
             const int f = std::atoi(arg.c_str());
             if (f >= 0 && f < static_cast<int>(museum_->floors.size())) TeleportToCell(museum_->floors[static_cast<std::size_t>(f)].hub);
