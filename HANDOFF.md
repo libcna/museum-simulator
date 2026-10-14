@@ -69,7 +69,7 @@ given; anything unverified says so. Counts are not repeated here: run `build/bin
 tools/build.sh                                   # build/ ; MUSEUM_RENDERERS="OPENGLES3;OPENGL33;SOFTWARE" for a multi-renderer tree
 build/bin/museum_tests                           # needs: tools/build.sh cna-3d-museum museum_tests
 tools/tour.sh -f 3 -p                            # every room, 3 frames each, every control operated (SOFTWARE needs MUSEUM_TIMEOUT=1500)
-tools/tour.sh -f 3 -z 30                         # every room, then 30 random control actions per room (fuzz; repeatable; found two museum bugs, 9 min on OPENGLES3)
+tools/tour.sh -f 3 -z 30 -s SEED                # every room, then 30 random control actions per room (fuzz; repeatable per seed; 9-25 min). Seeds 0-6 on OPENGLES3 and seed 0 on FNA3D/WEBGPU/SDL_GPU end clean; it found three museum bugs (clip planes, two scissor rectangles) and one crash that did not recur (KNOWN_ISSUES)
 tools/nav_test.sh                                # elevator to every floor
 tools/renderer_check.sh OPENGLES3 OPENGL33 SOFTWARE
 tools/reference.sh compare                       # visual regression, default renderer OPENGLES3
