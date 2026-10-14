@@ -70,15 +70,22 @@ public:
     {
         GraphicsDevice& d = *S().device;
         supported_ = d.SupportsShadowSamplingEXT();
-        try {
-            caster_ = std::make_unique<ShaderEffect>(d, kCasterVertex, kCasterFragment);
-            if (!caster_->IsEffectValid()) {
-                error_ = caster_->GetCompileErrorEXT();
-                Museum::Log("shadow", "caster shader: %s", error_.c_str());
+        // The caster is written in GLSL; a renderer that takes another dialect (WGSL, SPIR-V) or none (FNA3D) cannot run it.
+        const bool glsl = d.SupportsShaderLanguageEXT(CNA::ShaderLanguageEXT::GlslEs, CNA::ShaderStageEXT::Fragment) ||
+                          d.SupportsShaderLanguageEXT(CNA::ShaderLanguageEXT::GlslDesktop, CNA::ShaderStageEXT::Fragment);
+        if (!glsl) {
+            error_ = "ShaderEffect source here is not GLSL (this renderer's dialect id " + std::to_string(static_cast<int>(d.GetShaderDialectEXT())) + ")";
+        } else {
+            try {
+                caster_ = std::make_unique<ShaderEffect>(d, kCasterVertex, kCasterFragment);
+                if (!caster_->IsEffectValid()) {
+                    error_ = caster_->GetCompileErrorEXT();
+                    Museum::Log("shadow", "caster shader: %s", error_.c_str());
+                }
+            } catch (const std::exception& e) {
+                error_ = e.what();
+                Museum::Log("shadow", "caster shader: %s", e.what());
             }
-        } catch (const std::exception& e) {
-            error_ = e.what();
-            Museum::Log("shadow", "caster shader: %s", e.what());
         }
         lit_ = std::make_unique<BasicEffect>(d);
         lit_->EnableDefaultLighting();

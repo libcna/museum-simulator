@@ -504,6 +504,7 @@ void MuseumGame::Draw(const GameTime& gameTime)
     sky_->Draw(ctx);
     world_->Draw(ctx);
     world_->DrawOverlay();
+    if (const std::string failure = world_->TakeExhibitError(); !failure.empty()) hud_->Toast("Exhibit error (the museum carries on) - " + failure, 6.0f);
 
     HudState hud;
     hud.prompt = paused_ ? std::string() : focusPrompt_;
@@ -600,9 +601,9 @@ void MuseumGame::RunScript()
             if (f >= 0 && f < static_cast<int>(museum_->floors.size())) TeleportToCell(museum_->floors[static_cast<std::size_t>(f)].hub);
         } else if (op == "stats") {
             const WorldStats& w = world_->Stats();
-            Museum::Log("stats", "built %d loaded %d (lifetime built %d destroyed %d) triangles %d  textures %zu  frame %lld  fps %.0f  interactables %d + %d panel controls in %d loaded cells  visited %zu  floor %d",
+            Museum::Log("stats", "built %d loaded %d (lifetime built %d destroyed %d) triangles %d  textures %zu  frame %lld  fps %.0f  interactables %d + %d panel controls in %d loaded cells  visited %zu  floor %d  exhibit errors %d",
                         w.cellsBuilt, w.cellsLoaded, w.cellsBuiltTotal, w.cellsDestroyedTotal, w.triangles, textures_->Count(), frame_,
-                        static_cast<double>(stats_.fps), w.interactablesSeen, w.controlsSeen, w.roomsLoadedEver, discovered_.size(), museum_->FloorAt(camera_.Position().Y));
+                        static_cast<double>(stats_.fps), w.interactablesSeen, w.controlsSeen, w.roomsLoadedEver, discovered_.size(), museum_->FloorAt(camera_.Position().Y), w.exhibitErrors);
         } else if (op == "directory") {
             if (arg == "close") directory_->Close();
             else OpenDirectory();

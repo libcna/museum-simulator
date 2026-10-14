@@ -7,6 +7,7 @@
 
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ExhibitKit.hpp"
+#include "Rendering/Probes.hpp"
 #include "Exhibits/Math/MathKit.hpp"
 #include "Microsoft/Xna/Framework/Graphics/BasicEffect.hpp"
 #include "Microsoft/Xna/Framework/Graphics/DualTextureEffect.hpp"
@@ -101,6 +102,7 @@ public:
                 p.AddSlider("Spot outer angle", 10.0f, 80.0f, outer_, [this](float v) { outer_ = v; }, "%.0f deg", 1.0f);
                 p.AddSlider("Light height", 0.5f, 4.0f, height_, [this](float v) { height_ = v; });
                 p.AddToggle("Move the light", true, [this](bool v) { move_ = v; });
+                p.AddReadout("PunctualLightEXT here", [this] { return std::string(Probes::Describe(Probes::PunctualLights(*S().device))); });
                 p.AddHeading("PunctualLightEXT: CNA extension");
                 break;
             case Mode::Dual:
@@ -118,6 +120,7 @@ public:
     {
         GraphicsDevice& d = *S().device;
         fx_ = std::make_unique<BasicEffect>(d);
+        if (mode_ == Mode::Punctual) (void)Probes::PunctualLights(d);   // a one-off render test, so the panel can say whether point and spot lights work here
         if (mode_ == Mode::Fog) view_ = std::make_unique<MiniView>(S(), 640, 360);
         if (mode_ == Mode::Combos) BuildColouredCube();
         if (mode_ == Mode::Dual) {

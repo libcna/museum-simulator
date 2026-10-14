@@ -21,6 +21,13 @@ given; anything unverified says so. Counts are not repeated here: run `build/bin
   more fragment shaders (swirl, chromatic, kernel, halftone), plus extra readouts in existing rooms (Viewport.Unproject round trip,
   Buttons/IsButtonDown, adapter profile and format queries, display colour space, bone tree, pad extension queries).
 - Every room entered through its north wall used to have its content behind the visitor; see "Museum bugs found" below.
+- **Three more renderers run here since 2026-10-14: FNA3D, WEBGPU and SDL_GPU** (the last two on llvmpipe's software Vulkan),
+  built in `build-probe/` (recipe in `docs/RENDERER_TESTING.md`). Full tours (`tools/tour.sh -f 3 -p`, exit 0, 0 exhibit errors) and
+  all 56 validation checks run on each; what differs is listed there (FNA3D: no custom shaders, no PBR, no stock-effect
+  instancing, `PunctualLightEXT` ignored; WEBGPU/SDL_GPU: GLSL shader rooms show no effect). Cross-renderer finding fixed in CNA:
+  EasyGL sampled a rendered `RenderTargetCube` upside down (`a6e8104d2`); SOFTWARE ignored point/spot lights (`53aba6ef1`).
+  A full AddressSanitizer + UBSan tour and `museum_tests` were clean after one CNA fix (a directory read as an image, `49b1d3a99`).
+- The world now survives an exception in one room (`MuseumWorld::Guard`); `tools/tour.sh` exits 3 if any were caught.
 - The audio floor was also run with a real audio device (PipeWire, volume 0.03): the mixer opens and every audio room's
   controls run without errors; whether it is audible cannot be judged by a test. All other runs use Xvfb and the dummy driver.
 - Nothing has been run on a physical gamepad, joystick, touch screen, microphone or a machine without audio: those rooms
@@ -66,7 +73,7 @@ OPENGLES3, OPENGL33 and SOFTWARE here.
 
 ## CNA findings (details in `docs/KNOWN_ISSUES.md`)
 
-Fixed in CNA while building the museum: a directory read as an image file (found with AddressSanitizer, 2026-10-14); `.tif`/`.tiff` advertised for `Texture2D` but not decodable; EasyGL capability
+Fixed in CNA while building the museum: a directory read as an image file (found with AddressSanitizer, 2026-10-14); a rendered cube map sampled upside down on EasyGL; point/spot lights ignored by SOFTWARE; `.tif`/`.tiff` advertised for `Texture2D` but not decodable; EasyGL capability
 limits (colour attachments, sampled textures, vertex inputs) reported as 0.
 
 Not defects, but easy to trip over: lit `BasicEffect` with `TextureEnabled=false` renders black on EasyGL (bind a 1x1 white

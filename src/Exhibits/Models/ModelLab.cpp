@@ -150,6 +150,7 @@ public:
                 p.AddReadout("Anything lost on import?", [this] { return ReportLine(3); });
                 break;
         }
+        p.AddReadout("PbrEffect on this renderer", [this] { return refusal_.empty() ? std::string("drawn") : std::string("refused: BasicEffect used"); });
         SignSpec what = Kit::Plate(Title(), Explanation());
         what.leftAlign = true;
         what.pixelWidth = 900;
@@ -306,7 +307,7 @@ private:
         for (ModelMesh* mesh : model_->getMeshesProperty())
             for (int i = 0; i < mesh->getMeshPartsProperty().getCountProperty(); ++i) originals_.push_back(mesh->getMeshPartsProperty()[i]->getEffectProperty());
         overrides_.clear();
-        if (mode_ == Mode::Effects) ApplyEffects();
+        if (mode_ == Mode::Effects || !refusal_.empty()) ApplyEffects();
     }
 
     [[nodiscard]] float FitScale() const
@@ -319,7 +320,21 @@ private:
     void DrawModel(const DrawContext& ctx, const Matrix& world)
     {
         ctx.device.setRasterizerStateProperty(RasterizerState::CullClockwise);
-        model_->Draw(world, ctx.view.view, ctx.view.projection);
+        DrawGuarded(world, ctx);
+    }
+
+    // FNA3D has no metallic-roughness shading path and throws when asked to draw a PbrEffect part. The room then
+    // swaps every part to a lit BasicEffect (what Effects mode does by hand) and carries on, saying so on the panel.
+    void DrawGuarded(const Matrix& world, const DrawContext& ctx)
+    {
+        try {
+            model_->Draw(world, ctx.view.view, ctx.view.projection);
+        } catch (const std::exception& e) {
+            if (refusal_.empty()) Museum::Log("models", "%s: drawing refused (%s); using BasicEffect", name_.c_str(), std::string(e.what()).substr(0, 90).c_str());
+            refusal_ = e.what();
+            ApplyEffects();
+            model_->Draw(world, ctx.view.view, ctx.view.projection);
+        }
     }
 
     void ConfigurePbr()
@@ -433,7 +448,7 @@ private:
             const Vector3 p = o + Off(x, 0.5f, z);
             const float scale = 0.5f / radius;
             if (cull_ && frustum.Contains(BoundingSphere(p, radius * scale)) == ContainmentType::Disjoint) continue;
-            model_->Draw(Matrix::CreateScale(scale) * Matrix::CreateRotationY(spin_t_ * 0.5f + static_cast<float>(i)) * Matrix::CreateTranslation(p), ctx.view.view, ctx.view.projection);
+            DrawGuarded(Matrix::CreateScale(scale) * Matrix::CreateRotationY(spin_t_ * 0.5f + static_cast<float>(i)) * Matrix::CreateTranslation(p), ctx);
             ++drawn_;
         }
     }
@@ -458,11 +473,13 @@ private:
     {
         if (!model_) return;
         std::size_t k = 0;
+        // Once the renderer has refused PbrEffect parts, "original" means the lit BasicEffect stand-in.
+        const int choice = effectChoice_ == 0 && !refusal_.empty() ? 1 : effectChoice_;
         overrides_.clear();
         for (ModelMesh* mesh : model_->getMeshesProperty())
             for (int i = 0; i < mesh->getMeshPartsProperty().getCountProperty(); ++i, ++k) {
                 ModelMeshPart* part = mesh->getMeshPartsProperty()[i];
-                if (effectChoice_ == 0) {
+                if (choice == 0) {
                     part->setEffectProperty(originals_[k]);
                 } else {
                     auto basic = std::make_unique<BasicEffect>(*S().device);
@@ -470,7 +487,7 @@ private:
                     if (auto* pbr = dynamic_cast<PbrEffect*>(originals_[k])) colour = pbr->getDiffuseColorProperty();
                     basic->setDiffuseColorProperty(colour);
                     basic->setTextureEnabledProperty(false);
-                    if (effectChoice_ == 1) basic->EnableDefaultLighting();
+                    if (choice == 1) basic->EnableDefaultLighting();
                     else {
                         basic->setLightingEnabledProperty(false);
                         basic->setEmissiveColorProperty(colour);
@@ -561,6 +578,7 @@ private:
     float iblIntensity_ = 1.0f;
     Gizmos gizmos_;
     std::string name_;
+    std::string refusal_;   // why the renderer refused to draw the model's PbrEffect parts; empty while they draw
     std::unique_ptr<Content::ContentManager> content_;
     std::unique_ptr<Model> model_;
     const AnimationClip* clip_ = nullptr;

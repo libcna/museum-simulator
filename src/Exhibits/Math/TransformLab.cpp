@@ -144,7 +144,7 @@ public:
                 p.AddSlider("Mirror plane position", -2.0f, 2.0f, mirrorX_, [this](float v) { mirrorX_ = v; });
                 p.AddSlider("Plane tilt about Y", -60.0f, 60.0f, mirrorTilt_, [this](float v) { mirrorTilt_ = v; }, "%.0f deg", 1.0f);
                 p.AddSlider("Object turn", -180.0f, 180.0f, rotY_, [this](float v) { rotY_ = v; }, "%.0f deg", 1.0f);
-                p.AddReadout("Plane after Plane.Transform", [this] { char b[96]; const Plane q = MirrorPlane(); std::snprintf(b, sizeof b, "n(%.2f %.2f %.2f) d %.2f", static_cast<double>(q.Normal.X), static_cast<double>(q.Normal.Y), static_cast<double>(q.Normal.Z), static_cast<double>(q.D)); return std::string(b); });
+                p.AddReadout("Plane after Plane.Transform", [this] { char text[96]; const Plane q = MirrorPlane(); std::snprintf(text, sizeof text, "n(%.2f %.2f %.2f) d %.2f", static_cast<double>(q.Normal.X), static_cast<double>(q.Normal.Y), static_cast<double>(q.Normal.Z), static_cast<double>(q.D)); return std::string(text); });
                 p.AddReadout("Determinant of the reflection", [this] { return Fmt(Matrix::CreateReflection(MirrorPlane()).Determinant()); });
                 p.AddHeading("Determinant -1: triangles wind the other way");
                 break;

@@ -35,6 +35,9 @@ Found by the museum's own exhibits; fixed in the CNA repository (commit ids are 
 | Platform and Renderer / The Active Renderer | The OPENGLES3/OPENGL33 (EasyGL) capability profile reported `MaxColorAttachments`, `MaxSampledTexturesPerShaderStage`, `MaxVertexInputBindings` and `MaxVertexInputAttributes` as the known value 0 (the interface default), next to a supported `MultipleRenderTargets`. | fixed in CNA (EasyGL now reports the live context's values: 8, 32, 16, 16 here) |
 | Content from Memory | `ResourceContentManager.Load<T>()` never read its resource family: `Load<T>()` climbed the file-system tier ladder and ignored the virtual `OpenStream()` seam (only the protected `ReadAsset<T>()` used it), so the public call fell through to loose-file decoding and failed; `OpenStream()`'s documentation claimed every `.xnb` load went through it. Fixed in CNA (`c1006b03e`): a manager can route `Load<T>()` through `OpenStream()` (`RouteLoadsThroughOpenStreamEXT`) and `ResourceContentManager` does; three tests added. | fixed |
 | Content / Failure Gallery (found by AddressSanitizer) | `Load<Texture2D>("")` resolves to the content root, a directory. On POSIX an `ifstream` opens a directory and `tellg()` reports `LONG_MAX`, so `ImageLoader::Load` asked the allocator for 8 exabytes (it only "worked" because `bad_alloc` was caught as a failed load). The font, glTF and platform file readers had the same pattern. | fixed in CNA (`49b1d3a99`: `is_regular_file` first; test added) |
+| Render Targets / A Live Cube Map (found on the second renderer family) | `EnvironmentMapEffect` sampled a rendered `RenderTargetCube` upside down on EasyGL (OPENGLES3, OPENGL33): GL fills a rendered face bottom-up, a cube is sampled with the first stored row on top. The six faces read back with `GetData` were identical on every renderer, so only sampling was wrong. A known open CNA ticket (REMED-GFX-137). | fixed for `EnvironmentMapEffect` in CNA (`a6e8104d2`; shared test); open: IBL cubes, custom `ShaderEffect` samplers, a one-texel seam on GLES3's seamless cube filtering |
+| Light rooms (found by the new `PunctualLightEXT` probe) | The SOFTWARE renderer accepted `BasicEffect.PunctualLightEXT` and ignored it. | fixed in CNA (`53aba6ef1`; shared test) |
+| Light rooms (same probe) | **FNA3D ignores `BasicEffect.PunctualLightEXT`** and exposes no capability to ask: point and spot lights simply light nothing. Its stock effects are the real compiled XNA binaries. | open; the validation matrix shows it as the FNA3D row's one FAIL, the light rooms print "IGNORED by this renderer" |
 
 ## Open observations (not explained, no CNA change made)
 
@@ -48,6 +51,14 @@ Found by the museum's own exhibits; fixed in the CNA repository (commit ids are 
   `isPixelCountPreciseEXT()` so this is visible.
 
 ## Museum bugs found and fixed (for the record)
+
+- **One room's exception ended the whole museum.** On FNA3D `DrawInstancedPrimitives` with a stock effect throws, the exception
+  escaped `Game::Run` and the process died. `MuseumWorld` now guards every exhibit hook (`Guard`): the exception is logged as
+  `[museum][exhibit-error]`, shown as a toast, counted in the stats line, and the room's hooks are switched off after three.
+  `tools/tour.sh` exits 3 if any were caught. Two rooms also fall back deliberately and say so on their panel: the instancing
+  rooms (one draw per cube) and the glTF model rooms (a lit `BasicEffect`) when the renderer refuses the stock-effect route.
+- `cx-shadow` tried to compile its GLSL caster on renderers that take WGSL or SPIR-V and logged a shader error; it now checks the
+  shader language first like the shader rooms do.
 
 - **Rooms entered through their north door were back to front.** Rooms alternate between the two sides of a gallery and every
   exhibit was written for the south door, so half of them had their screens and subjects behind the visitor, left/right

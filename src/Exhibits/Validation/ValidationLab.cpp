@@ -23,12 +23,17 @@
 #include "Microsoft/Xna/Framework/Graphics/BasicEffect.hpp"
 #include "Microsoft/Xna/Framework/Graphics/ColorWriteChannels.hpp"
 #include "Microsoft/Xna/Framework/Graphics/CompareFunction.hpp"
+#include "Microsoft/Xna/Framework/Graphics/CubeMapFace.hpp"
 #include "Microsoft/Xna/Framework/Graphics/DualTextureEffect.hpp"
+#include "Microsoft/Xna/Framework/Graphics/EnvironmentMapEffect.hpp"
 #include "Microsoft/Xna/Framework/Graphics/PrimitiveType.hpp"
 #include "Microsoft/Xna/Framework/Graphics/RenderTarget2D.hpp"
+#include "Microsoft/Xna/Framework/Graphics/RenderTargetCube.hpp"
 #include "Microsoft/Xna/Framework/Graphics/VertexPositionColor.hpp"
 #include "Microsoft/Xna/Framework/Graphics/VertexPositionColorTexture.hpp"
 #include "Microsoft/Xna/Framework/Graphics/VertexPositionNormalTexture.hpp"
+#include "Rendering/LitMesh.hpp"
+#include "Rendering/Probes.hpp"
 #include "Rendering/RenderStates.hpp"
 
 using namespace Microsoft::Xna::Framework;
@@ -771,6 +776,53 @@ private:
             second.GetData(img.px.data(), static_cast<int>(img.px.size()));
             Add("Render target used as a texture", "red marker still at top-left (0,0)", Rgb(img.At(2, 2)) + " / " + Rgb(img.At(2, 61)), Dist(img.At(2, 2), 255, 0, 0) < 3 && Dist(img.At(2, 61), 0, 0, 0) < 3, img);
         }
+        {   // a RenderTargetCube drawn into, then sampled by direction (EnvironmentMapEffect), keeps its orientation
+            try {
+                RenderTargetCube cube(d, 16, false, SurfaceFormat::Color, DepthFormat::None);
+                SpriteBatch& batch = *S().sprites;
+                for (int face = 0; face < 6; ++face) {
+                    d.SetRenderTarget(&cube, static_cast<CubeMapFace>(face));
+                    d.Clear(Color(0, 0, 0, 255));
+                    batch.Begin(SpriteSortMode::Deferred, &BlendState::Opaque, &SamplerState::PointClamp, nullptr, nullptr);
+                    if (face == 2) batch.Draw(*S().whiteTexture, Rectangle(0, 0, 16, 16), Color(255, 0, 0, 255));        // +Y: all red
+                    else if (face == 3) batch.Draw(*S().whiteTexture, Rectangle(0, 0, 16, 16), Color(0, 0, 255, 255));   // -Y: all blue
+                    else {   // the sides: red above, blue below
+                        batch.Draw(*S().whiteTexture, Rectangle(0, 0, 16, 8), Color(255, 0, 0, 255));
+                        batch.Draw(*S().whiteTexture, Rectangle(0, 8, 16, 8), Color(0, 0, 255, 255));
+                    }
+                    batch.End();
+                }
+                d.SetRenderTarget(static_cast<RenderTarget2D*>(nullptr));
+                RenderStates::UnbindTextures(d);
+                EnvironmentMapEffect env(d);
+                env.setEnvironmentMapProperty(&cube);
+                env.setEnvironmentMapAmountProperty(1.0f);
+                env.setFresnelFactorProperty(0.0f);
+                env.setTextureProperty(S().whiteTexture);
+                env.setDiffuseColorProperty(Vector3(0, 0, 0));
+                env.setEmissiveColorProperty(Vector3(0, 0, 0));
+                env.setAmbientLightColorProperty(Vector3(0, 0, 0));
+                env.setViewProperty(Matrix::CreateLookAt(Vector3(0, 0, 3), Vector3::Zero, Vector3::Up));
+                env.setProjectionProperty(Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(60.0f), 1.0f, 0.1f, 20.0f));
+                env.setWorldProperty(Matrix::CreateScale(2.0f));   // a unit sphere filling about 40 of the 64 pixels
+                Begin(d, rt, clearC);
+                d.setDepthStencilStateProperty(DepthStencilState::None);
+                d.setRasterizerStateProperty(RasterizerState::CullClockwise);
+                for (auto& pass : env.getCurrentTechniqueProperty()->getPassesProperty()) pass.Apply();
+                S().shapes->Sphere().Draw(d);
+                const auto img = End(d, rt);
+                if (img) {
+                    // Just above the middle the reflection points up and back at the camera (a side face, upper half: red);
+                    // just below it points down (lower half: blue).
+                    const Color above = img->At(32, 26), below = img->At(32, 38);
+                    Add("Cube target sampled as an environment map keeps up as up", "red just above the sphere's middle, blue just below", Rgb(above) + " / " + Rgb(below),
+                        Dist(above, 255, 0, 0) < 60 && Dist(below, 0, 0, 255) < 60, img);
+                }
+            } catch (const std::exception& e) {
+                d.SetRenderTarget(nullptr);
+                Add("Cube target sampled as an environment map keeps up as up", "no exception", e.what(), false, std::nullopt);
+            }
+        }
         {   // a multisampled target gives edges intermediate shades; a plain one does not
             Image sampled;   // the same target, drawn through SpriteBatch into a plain one
             const auto edgeShades = [&](int samples, int& got, RenderTargetUsage usage = RenderTargetUsage::DiscardContents) {
@@ -954,6 +1006,10 @@ private:
     // --- stock effects ----------------------------------------------------------------------------
     void Effects(GraphicsDevice& d)
     {
+        {   // a CNA extension with no capability flag: ask the renderer by drawing (Rendering/Probes.cpp)
+            const Probes::Answer lit = Probes::PunctualLights(d);
+            Add("BasicEffect.PunctualLightEXT lights a surface (CNA extension)", "a point light in front of a white wall lights its centre", Probes::Describe(lit), lit == Probes::Answer::Yes, std::nullopt);
+        }
         RenderTarget2D& rt = Target(d, true);
         const Color clearC(0, 0, 0, 255);
         const auto textured = [&](Effect& fx) {

@@ -3,6 +3,8 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "Exhibits/Exhibit.hpp"
@@ -39,6 +41,8 @@ struct RoomInstance {
     std::vector<std::string> textures;   // run-time textures registered while building this cell
     bool loaded = false;                 // Exhibit::Load has run
     int triangles = 0;
+    int failures = 0;                    // exceptions the exhibit has thrown from a hook
+    bool disabled = false;               // too many: its hooks are skipped until the cell is rebuilt
 };
 
 /** Counters for the statistics overlay and the stress rooms. */
@@ -53,6 +57,7 @@ struct WorldStats {
     int interactablesSeen = 0;     // distinct interactables of every room loaded so far (a panel counts as one)
     int controlsSeen = 0;          // sliders, toggles, choices and buttons on control panels, plus plain interactables
     int roomsLoadedEver = 0;       // distinct cells that have been loaded at least once
+    int exhibitErrors = 0;         // exceptions caught from exhibit hooks (a room that throws does not take the museum down)
 };
 
 /**
@@ -80,6 +85,8 @@ public:
     [[nodiscard]] Exhibit* FindExhibit(int cell) const;
     [[nodiscard]] bool IsBuilt(int cell) const { return instances_[static_cast<std::size_t>(cell)] != nullptr; }
     [[nodiscard]] const WorldStats& Stats() const { return stats_; }
+    /** The newest uncollected message about an exhibit that threw (empty when none), for the HUD. */
+    [[nodiscard]] std::string TakeExhibitError() { return std::exchange(exhibitError_, std::string()); }
 
     /** Builds and loads the cell and its neighbours synchronously, e.g. before a teleport lands there. */
     void Arrive(int cell);
@@ -102,6 +109,9 @@ private:
     void BuildCell(int cell);
     void LoadCell(int cell);
     void DestroyCell(int cell);
+    /** Runs one exhibit hook; an exception is logged and counted, and the third one from a room switches that room's hooks off. */
+    template <typename Fn>
+    void Guard(RoomInstance& inst, const char* hook, Fn&& fn);
     void RebuildCollision();
     void BuildExterior();
     void CollectVisible(const DrawContext& ctx, std::vector<int>& out) const;
@@ -119,5 +129,6 @@ private:
     int current_ = -1;
     bool collisionDirty_ = false;
     WorldStats stats_;
+    std::string exhibitError_;
     std::vector<int> interactableCounts_, controlCounts_;  // per cell, -1 until the cell has been loaded once
 };

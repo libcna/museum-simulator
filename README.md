@@ -159,13 +159,16 @@ screenshot is a non-zero exit status.
 ## Renderers
 
 The museum uses only portable CNA calls, so any 3D-capable renderer should work; it checks capabilities and says so
-in the room when something is unavailable (for example wireframe fill on OPENGLES3). Tested here:
+in the room when something is unavailable (for example wireframe fill on OPENGLES3). Tested here (the last three need CNA's optional dependencies; see [docs/RENDERER_TESTING.md](docs/RENDERER_TESTING.md)):
 
 | Renderer | Whole museum tour | Self-checks (floor 9) | Notes |
 |---|---|---|---|
 | OPENGLES3 (default) | all rooms clean | all pass | the reference renderer; `tests/reference/OPENGLES3` |
 | OPENGL33 | all rooms clean | all pass | screenshots identical to OPENGLES3 |
 | SOFTWARE | all rooms clean (about 25 minutes under Xvfb) | all pass | CPU rasteriser; no window, so mouse look is off: use the keyboard |
+| FNA3D | all rooms clean | all but one pass, one skipped | no custom shaders, no PBR (models fall back to `BasicEffect`), `PunctualLightEXT` ignored, no instancing with stock effects |
+| WEBGPU (llvmpipe) | all rooms clean | all pass | takes WGSL: the GLSL shader rooms show the scene without the effect |
+| SDL_GPU (llvmpipe) | all rooms clean | all pass | takes SPIR-V: the GLSL shader rooms show the scene without the effect |
 
 Details, the per-renderer check matrix and what was found are in [docs/RENDERER_TESTING.md](docs/RENDERER_TESTING.md).
 

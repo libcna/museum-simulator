@@ -6,6 +6,7 @@
 
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ExhibitKit.hpp"
+#include "Rendering/Probes.hpp"
 #include "Exhibits/Math/MathKit.hpp"
 #include "Microsoft/Xna/Framework/Graphics/BasicEffect.hpp"
 #include "Rendering/EffectBank.hpp"
@@ -83,13 +84,18 @@ public:
                 p.AddHeading("Emissive surfaces glow without any light");
                 break;
         }
+        if (mode_ != Mode::Emissive) p.AddReadout("PunctualLightEXT here", [this] { return std::string(Probes::Describe(Probes::PunctualLights(*S().device))); });
         SignSpec what = Kit::Plate(Title(), Explanation());
         what.leftAlign = true;
         what.pixelWidth = 900;
         b.AddWallSign(Wall::East, 0.0f, 2.4f, 4.4f, 2.0f, what);
     }
 
-    void Load(InteractionSystem&, MuseumWorld&) override { fx_ = std::make_unique<BasicEffect>(*S().device); }
+    void Load(InteractionSystem&, MuseumWorld&) override
+    {
+        fx_ = std::make_unique<BasicEffect>(*S().device);
+        if (mode_ != Mode::Emissive) (void)Probes::PunctualLights(*S().device);   // a one-off render test, so the panel can say whether point and spot lights work here
+    }
 
     void Update(const UpdateContext& ctx) override
     {

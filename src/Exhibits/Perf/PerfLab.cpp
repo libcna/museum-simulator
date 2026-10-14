@@ -86,7 +86,7 @@ public:
                 break;
             case Mode::Objects:
                 p.AddChoice("Method", {"One draw call per cube", "DrawInstancedPrimitives"}, 0, [this](int v) { instanced_ = v == 1; });
-                p.AddReadout("Instancing", [this] { return std::string(S().device->SupportsCapability(CNA::GraphicsCapability::Instancing) ? "supported" : "NOT supported: falls back to one call each"); });
+                p.AddReadout("Instancing", [this] { if (!instanceRefusal_.empty()) return std::string("reported yes, draw refused (see log)"); return std::string(S().device->SupportsCapability(CNA::GraphicsCapability::Instancing) ? "supported" : "NOT supported: falls back to one call each"); });
                 p.AddReadout("CPU time to submit", [this] { return Fmt(cpuMs_) + " ms"; });
                 break;
             case Mode::Sprites:
@@ -337,7 +337,8 @@ private:
             const Vector3 p((static_cast<float>(x) - static_cast<float>(side) * 0.5f) * spacing, (static_cast<float>(y) - static_cast<float>(side) * 0.5f) * spacing, (static_cast<float>(z) - static_cast<float>(side) * 0.5f) * spacing);
             return Matrix::CreateScale(size) * Matrix::CreateTranslation(p);
         };
-        if (instanced_ && device.SupportsCapability(CNA::GraphicsCapability::Instancing)) {
+        bool drawnInstanced = false;
+        if (instanced_ && instanceRefusal_.empty() && device.SupportsCapability(CNA::GraphicsCapability::Instancing)) {
             if (instCount_ != count || !instV_) {
                 std::vector<Matrix> m(static_cast<std::size_t>(count));
                 for (int k = 0; k < count; ++k) m[static_cast<std::size_t>(k)] = place(k);
@@ -352,9 +353,17 @@ private:
             const std::vector<VertexBufferBinding> bindings = {VertexBufferBinding(cube.Vertices(), 0, 0), VertexBufferBinding(instV_.get(), 0, 1)};
             device.setIndicesProperty(cube.Indices());
             device.SetVertexBuffers(bindings);
-            device.DrawInstancedPrimitives(PrimitiveType::TriangleList, 0, 0, cube.VertexCount(), 0, cube.TriangleCount(), count);
+            try {
+                device.DrawInstancedPrimitives(PrimitiveType::TriangleList, 0, 0, cube.VertexCount(), 0, cube.TriangleCount(), count);
+                drawnInstanced = true;
+            } catch (const std::exception& e) {
+                // FNA3D reports Instancing, but its stock effects declare no per-instance stream and refuse the draw.
+                instanceRefusal_ = e.what();
+                Museum::Log("perf", "DrawInstancedPrimitives refused: %s", e.what());
+            }
             device.SetVertexBuffer(cube.Vertices());
-        } else {
+        }
+        if (!drawnInstanced) {
             for (int k = 0; k < count; ++k) {
                 fx_->setWorldProperty(place(k) * spin * Matrix::CreateTranslation(origin));
                 EffectBank::Apply(*fx_);
@@ -577,6 +586,7 @@ private:
     // objects
     bool instanced_ = false;
     int instCount_ = 0;
+    std::string instanceRefusal_;   // why DrawInstancedPrimitives was refused on this renderer; empty while it works
     std::unique_ptr<VertexBuffer> instV_;
     // sprites / state / buffers
     int sort_ = 0, textureChoice_ = 0, upload_ = 0;

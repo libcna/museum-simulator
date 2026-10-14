@@ -76,6 +76,22 @@ InteractionSystem* MuseumWorld::CurrentInteraction()
     return &instances_[static_cast<std::size_t>(current_)]->interaction;
 }
 
+template <typename Fn>
+void MuseumWorld::Guard(RoomInstance& inst, const char* hook, Fn&& fn)
+{
+    if (inst.disabled) return;
+    try {
+        fn();
+    } catch (const std::exception& e) {
+        ++inst.failures;
+        ++stats_.exhibitErrors;
+        const std::string& key = museum_.Room(inst.index).key;
+        Museum::Log("exhibit-error", "%s %s threw: %s%s", key.c_str(), hook, e.what(), inst.failures >= 3 ? " (room switched off)" : "");
+        exhibitError_ = key + ": " + e.what();
+        if (inst.failures >= 3) inst.disabled = true;
+    }
+}
+
 Exhibit* MuseumWorld::FindExhibit(int cell) const
 {
     if (cell < 0 || cell >= static_cast<int>(instances_.size()) || !instances_[static_cast<std::size_t>(cell)]) return nullptr;
@@ -138,7 +154,7 @@ void MuseumWorld::LoadCell(int cell)
     ++stats_.cellsLoaded;
     if (!inst.exhibit) return;
     services_.signs->SetScope(&inst.textures);
-    inst.exhibit->DoLoad(inst.interaction, *this);
+    Guard(inst, "Load", [&] { inst.exhibit->DoLoad(inst.interaction, *this); });
     services_.signs->SetScope(nullptr);
     // Record how many interactables this cell has (once per cell, whichever visit): the museum's total is the sum.
     if (interactableCounts_.size() < museum_.rooms.size()) interactableCounts_.assign(museum_.rooms.size(), -1);
@@ -253,7 +269,7 @@ void MuseumWorld::Update(float dt, double time, const Vector3& playerPosition, c
         if (!inst || !inst->loaded || !inst->exhibit) continue;
         const float dist = DistanceTo(inst->index, playerPosition);
         UpdateContext ctx{dt, time, playerPosition, playerForward, inst->index == current_, dist < kSimulationDistance};
-        inst->exhibit->Update(ctx);
+        Guard(*inst, "Update", [&] { inst->exhibit->Update(ctx); });
     }
 }
 
@@ -297,7 +313,11 @@ void MuseumWorld::RenderOffscreen(const DrawContext& ctx)
     const Vector3 eye = ctx.view.eye;
     for (auto& inst : instances_) {
         if (!inst || !inst->loaded || !inst->exhibit) continue;
-        if (DistanceTo(inst->index, eye) < kSimulationDistance) inst->exhibit->DoRenderOffscreen(ctx);
+        if (DistanceTo(inst->index, eye) < kSimulationDistance) {
+            Guard(*inst, "RenderOffscreen", [&] { inst->exhibit->DoRenderOffscreen(ctx); });
+            // A hook that threw may have left one of its own render targets bound: the main scene goes to the back buffer.
+            if (inst->failures > 0) ctx.device.SetRenderTarget(nullptr);
+        }
     }
 }
 
@@ -335,8 +355,8 @@ void MuseumWorld::Draw(const DrawContext& ctx)
         if (inst) drawBatches(inst->zone, inst->zone.opaque);
     }
     for (const int c : visible) {
-        const RoomInstance* inst = instances_[static_cast<std::size_t>(c)].get();
-        if (inst && inst->loaded && inst->exhibit) inst->exhibit->DoDrawOpaque(ctx);
+        RoomInstance* inst = instances_[static_cast<std::size_t>(c)].get();
+        if (inst && inst->loaded && inst->exhibit) Guard(*inst, "DrawOpaque", [&] { inst->exhibit->DoDrawOpaque(ctx); });
     }
 
     // Transparent surfaces last, no depth writes, so glass and particles blend over everything solid.
@@ -347,8 +367,8 @@ void MuseumWorld::Draw(const DrawContext& ctx)
         if (inst && !inst->zone.transparent.empty()) drawBatches(inst->zone, inst->zone.transparent);
     }
     for (const int c : visible) {
-        const RoomInstance* inst = instances_[static_cast<std::size_t>(c)].get();
-        if (inst && inst->loaded && inst->exhibit) inst->exhibit->DrawTransparent(ctx);
+        RoomInstance* inst = instances_[static_cast<std::size_t>(c)].get();
+        if (inst && inst->loaded && inst->exhibit) Guard(*inst, "DrawTransparent", [&] { inst->exhibit->DrawTransparent(ctx); });
     }
 }
 
@@ -357,6 +377,6 @@ void MuseumWorld::DrawOverlay()
     // Overlays are screen-space (labels, markers) and know nothing about walls, so only the room the
     // visitor stands in draws them: otherwise a neighbour's labels would float over this room.
     if (current_ < 0) return;
-    const RoomInstance* inst = instances_[static_cast<std::size_t>(current_)].get();
-    if (inst && inst->loaded && inst->exhibit) inst->exhibit->DrawOverlay();
+    RoomInstance* inst = instances_[static_cast<std::size_t>(current_)].get();
+    if (inst && inst->loaded && inst->exhibit) Guard(*inst, "DrawOverlay", [&] { inst->exhibit->DrawOverlay(); });
 }

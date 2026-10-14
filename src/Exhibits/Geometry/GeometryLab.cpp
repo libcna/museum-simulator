@@ -6,6 +6,7 @@
 #include <cstring>
 #include <string>
 
+#include "Diagnostics/Log.hpp"
 #include "CNA/GraphicsCapability.hpp"
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ExhibitKit.hpp"
@@ -137,8 +138,8 @@ public:
             case Mode::Instancing:
                 p.AddSlider("Cubes", 100.0f, 20000.0f, static_cast<float>(count_ = 2000), [this](float v) { count_ = static_cast<int>(v); dirty_ = true; }, "%.0f", 100.0f);
                 p.AddChoice("Method", {"DrawInstancedPrimitives", "A draw call per cube"}, 0, [this](int v) { naive_ = v == 1; });
-                p.AddReadout("Draw calls per frame", [this] { return naive_ ? std::to_string(count_) : std::string("1"); });
-                p.AddReadout("Instancing supported", [this] { return std::string(S().device->SupportsCapability(CNA::GraphicsCapability::Instancing) ? "yes" : "NO on this renderer"); });
+                p.AddReadout("Draw calls per frame", [this] { return naive_ || !instanceRefusal_.empty() ? std::to_string(count_) : std::string("1"); });
+                p.AddReadout("Instancing supported", [this] { if (!instanceRefusal_.empty()) return std::string("reported yes, draw refused (see log)"); return std::string(S().device->SupportsCapability(CNA::GraphicsCapability::Instancing) ? "yes" : "NO on this renderer"); });
                 p.AddReadout("Frame rate", [this] { return Fmt(S().stats->fps) + " fps"; });
                 break;
         }
@@ -628,14 +629,23 @@ private:
         const Matrix place = Matrix::CreateRotationY(spin_ * 0.5f) * Matrix::CreateTranslation(o + Vector3(0, 0, 0));
         BasicEffect& fx = Lit(ctx, naive_ ? place : place, Vector3(0.45f, 0.8f, 1.0f));
         device.setRasterizerStateProperty(RasterizerState::CullClockwise);
-        if (!naive_ && device.SupportsCapability(CNA::GraphicsCapability::Instancing)) {
+        bool instanced = false;
+        if (!naive_ && instanceRefusal_.empty() && device.SupportsCapability(CNA::GraphicsCapability::Instancing)) {
             EffectBank::Apply(fx);
             const std::vector<VertexBufferBinding> bindings = {VertexBufferBinding(cubeV_.get(), 0, 0), VertexBufferBinding(instV_.get(), 0, 1)};
             device.setIndicesProperty(cubeI_.get());
             device.SetVertexBuffers(bindings);
-            device.DrawInstancedPrimitives(PrimitiveType::TriangleList, 0, 0, 24, 0, 12, count_);
+            try {
+                device.DrawInstancedPrimitives(PrimitiveType::TriangleList, 0, 0, 24, 0, 12, count_);
+                instanced = true;
+            } catch (const std::exception& e) {
+                // FNA3D reports Instancing but its stock effects declare no instance stream, so the stock-effect route throws.
+                instanceRefusal_ = e.what();
+                Museum::Log("geometry", "DrawInstancedPrimitives refused: %s", e.what());
+            }
             device.SetVertexBuffer(cubeV_.get());
-        } else {
+        }
+        if (!instanced) {
             device.SetVertexBuffer(cubeV_.get());
             device.setIndicesProperty(cubeI_.get());
             for (int k = 0; k < count_; ++k) {
@@ -658,6 +668,7 @@ private:
     float time_ = 0.0f, spin_ = 0.0f, speed_ = 1.0f, turn_ = 25.0f, apex_ = 0.9f;
     int cull_ = 1, prim_ = 0, count_ = 8, grid_ = 32, shape_ = 0, dataOptions_ = 0;
     bool dirty_ = true, wire_ = false, merged_ = false, naive_ = false;
+    std::string instanceRefusal_;   // why DrawInstancedPrimitives was refused on this renderer; empty while it works
     int vertexCount_ = 0, triangleCount_ = 0, bigTris_ = 0, bigCount_ = 0;
     std::unique_ptr<VertexBuffer> cubeV_, flatCube_, sharedCube_, procV_, bigV_, mergedV_, instV_;
     std::unique_ptr<IndexBuffer> cubeI_, sharedI_, procI_, bigI_, mergedI_, gridIb_;

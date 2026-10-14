@@ -9,8 +9,19 @@ MUSEUM_RENDERERS="OPENGLES3;OPENGL33;SOFTWARE" tools/build.sh     # first entry 
 CNA_GRAPHICS_RENDERER=OPENGL33 build/bin/cna-3d-museum
 ```
 
-Renderers that exist in CNA but cannot run here (Direct3D, Metal, WebGL2/WebGPU, SDL_GPU...) are untested.
+Six renderers have run the museum here: OPENGLES3, OPENGL33, SOFTWARE, and (since 2026-10-14) FNA3D, WEBGPU and SDL_GPU
+(the last two on Mesa's llvmpipe software Vulkan driver, `VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json`).
+Direct3D 9, Metal, WebGL2, HEADLESS and STUB are untested (no suitable device or no point in a visual museum).
 VULKAN was retired from CNA on 2026-10-13 and has been removed from the museum's documentation and build lines.
+
+The second group needs CNA's optional dependencies from the shared checkouts (nothing is downloaded):
+
+```bash
+BUILD_DIR=build-probe MUSEUM_RENDERERS="OPENGLES3;FNA3D;WEBGPU;SDL_GPU" \
+  MUSEUM_CMAKE_ARGS="-DFETCHCONTENT_SOURCE_DIR_FNA3D=$HOME/deps/FNA3D -DFETCHCONTENT_UPDATES_DISCONNECTED=ON \
+                     -DCNA_WEBGPU_ROOT=$HOME/deps/wgpu-native-v29.0.1.1 -DCNA_WEBGPU_AUTO_DOWNLOAD=OFF" tools/build.sh
+CNA_GRAPHICS_RENDERER=WEBGPU VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json BUILD_DIR=build-probe tools/tour.sh -f 3 -p
+```
 
 ## The tools
 
@@ -29,14 +40,17 @@ where filtering makes an exact value meaningless. Rooms: geometry and coverage, 
 interpolation/lighting/fog, sampling, render targets, camera matrices, stock effects. The *Depth* room also reports (as
 information, not pass/fail) the smallest depth gap the renderer resolves at 100 m.
 
-Result on 2026-10-13 (CNA at the commit shown by `git -C ../cna log -1`; the SOFTWARE renderer is flagged Experimental
+Result on 2026-10-14 (CNA at the commit shown by `git -C ../cna log -1`; the SOFTWARE renderer is flagged Experimental
 by CNA):
 
-| Renderer | Checks | Pass | Fail | Info |
-|---|---|---|---|---|
-| OPENGLES3 | 54 | 53 | 0 | 1 |
-| OPENGL33 | 54 | 53 | 0 | 1 |
-| SOFTWARE | 54 | 53 | 0 | 1 |
+| Renderer | Checks | Pass | Fail | Info | Skip |
+|---|---|---|---|---|---|
+| OPENGLES3 | 56 | 55 | 0 | 1 | 0 |
+| OPENGL33 | 56 | 55 | 0 | 1 | 0 |
+| SOFTWARE | 56 | 55 | 0 | 1 | 0 |
+| FNA3D | 56 | 53 | 1 (`PunctualLightEXT` ignored) | 1 | 1 (no half-float render targets) |
+| WEBGPU | 56 | 55 | 0 | 1 | 0 |
+| SDL_GPU | 56 | 55 | 0 | 1 | 0 |
 
 Run `tools/renderer_check.sh` for the current figures; they are not copied anywhere else.
 
@@ -47,6 +61,9 @@ Run `tools/renderer_check.sh` for the current figures; they are not copied anywh
 | OPENGLES3 | clean | - |
 | OPENGL33 | clean | 0.00 % of pixels differ by more than 15/255 |
 | SOFTWARE | clean (about 25 minutes for the whole museum under Xvfb) | 4.6 % |
+| FNA3D | clean, 0 exhibit errors (44 s) after two room fallbacks, below | 30 reference views: 22 within 1 %; `lights` 7.8 % (point and spot lights ignored), `pbr` 9.9 % (BasicEffect stand-in), `shader` 5.6 % (no custom shaders), `debugdraw` 4.6 %, `skinned-effect` 2.1 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
+| WEBGPU | clean (81 s) | 30 reference views: 25 within 1 %; `shader` 5.6 % (GLSL not accepted), `debugdraw` 4.7 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
+| SDL_GPU | clean (156 s) | 30 reference views: all within 1 % but `shader` 5.6 % (GLSL not accepted) |
 
 Re-checked on 2026-10-14 with 250 rooms after the room-frame change and the new rooms: `tools/tour.sh -f 3 -p` exits 0 on all three
 renderers (OPENGLES3 65 s, OPENGL33 62 s, SOFTWARE 1,501 s); the stencil, cube-map, SkinnedEffect, terrain and off-centre rooms
@@ -67,7 +84,29 @@ look the same on all three.
 4. OPENGLES3 and OPENGL33 do not support `FillMode.WireFrame` (CNA throws); the museum asks `SupportsCapability(WireFrame)`
    and shows solid geometry with a note.
 5. `GetBackBufferData` and render-target readback need `GraphicsProfile.HiDef`.
-6. Depth precision (information): all three renderers resolved a 5 mm gap at 100 m with near 0.1 / far 1000.
+6. Depth precision (information): all six renderers resolved a 5 mm gap at 100 m with near 0.1 / far 1000.
+7. **CNA: EasyGL (OPENGLES3, OPENGL33) sampled a rendered `RenderTargetCube` upside down** (the live cube-map room showed
+   the floor in both hemispheres of the mirror ball; FNA3D, WEBGPU, SDL_GPU and SOFTWARE agreed with each other, and the six
+   face images read back with `GetData` were identical on all of them). A known open ticket on CNA's side (REMED-GFX-137);
+   the museum's new check "Cube target sampled as an environment map keeps up as up" failed on exactly the two EasyGL
+   renderers. Fixed in CNA (`a6e8104d2`: the stock env-map program mirrors the lookup for a rendered cube; shared example
+   test added). Not fixed there: IBL cubes and custom `ShaderEffect` samplers, and a one-texel seam where GLES3's seamless
+   cube filtering reads across a face edge.
+8. **FNA3D** reports `Instancing` but its stock effects declare no per-instance stream, so `DrawInstancedPrimitives` with a
+   stock effect throws; and it has no PBR shading path, so every glTF model (PbrEffect) throws when drawn. The instancing
+   rooms fall back to one draw per cube and the model rooms to a lit `BasicEffect`, each saying so on its panel. The
+   shader rooms already used `CustomEffects`. (CNA documents both limits in `docs/fna3d-renderer.md`.)
+9. **WEBGPU and SDL_GPU take other shader dialects** (WGSL; SPIR-V / Vulkan GLSL): the museum's GLSL ES 3.00 `ShaderEffect`
+   sources are refused, so the shader rooms (floor 4) show the scene without the effect and say so. The museum has not been
+   given sources in those dialects.
+10. **CNA: the SOFTWARE renderer ignored `BasicEffect.PunctualLightEXT`** (point and spot lights): a lit sphere stayed black, and
+    there is no capability flag to ask first, so the museum added `Rendering/Probes.cpp`, a one-off render test whose answer
+    the light rooms print on their panels and the validation matrix counts. Fixed in CNA (`53aba6ef1`: EasyGL's falloff and
+    cone, no shadow map; shared example test). **FNA3D still ignores it** (its stock effects are compiled XNA binaries with no
+    point light; open, listed in `docs/KNOWN_ISSUES.md`), which is the one FAIL in the FNA3D row.
+11. **An exception inside one room no longer takes the museum down** (a museum fix found by FNA3D's instancing exception, which
+    escaped `Game::Run`): the world catches exceptions from each room's hooks, logs `[museum][exhibit-error]`, toasts the
+    message and switches the room's hooks off after three. `tools/tour.sh` reports them and exits 3.
 
 ## Adding a check
 
