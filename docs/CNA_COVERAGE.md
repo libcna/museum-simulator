@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-853 distinct API names are claimed by at least one room.
+858 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -170,6 +170,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CNA::LogLevel | `pl-log` |
 | CNA::Logger | `pl-log` |
 | CNA::Platform::IPlatform | `pl-platform` |
+| CNA::Platform::NativeWindowHandle | `pl-window` |
 | CNA::ShaderCompilationExceptionEXT | `fx-errors` |
 | CNA::ShaderDiagnosticEXT | `fx-errors` |
 | CNA::getGraphicsBackendMaturity | `hist-cna` |
@@ -177,8 +178,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CNAEXT | `hist-compare` |
 | CRTMaskType | `cx-crt` |
 | Clipboard.GetMimeTypesEXT | `in-text` |
+| Clipboard.GetPrimarySelectionTextEXT | `in-text` |
 | Clipboard.GetTextEXT | `in-text` |
+| Clipboard.HasPrimarySelectionTextEXT | `in-text` |
 | Clipboard.SetDataEXT | `in-text` |
+| Clipboard.SetPrimarySelectionTextEXT | `in-text` |
 | Clipboard.SetTextEXT | `in-text` |
 | Color | `vt-color`, `sprite-tint` |
 | Color.FromNonPremultiplied | `vt-color` |
@@ -348,6 +352,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GameWindow.ClientBounds | `app-viewport`, `pl-window` |
 | GameWindow.ClientSizeChanged | `pl-window` |
 | GameWindow.FileDropEXT | `pl-window` |
+| GameWindow.GetNativeWindowHandleEXT | `pl-window` |
 | GameWindow.Title | `pl-window` |
 | Gamer.GetProfile | `gs-players` |
 | Gamer.LeaderboardWriter | `gs-leaderboards` |

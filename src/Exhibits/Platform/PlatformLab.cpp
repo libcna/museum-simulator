@@ -10,6 +10,8 @@
 #include "CNA/GraphicsBackendMaturity.hpp"
 #include "CNA/GraphicsRendererType.hpp"
 #include "CNA/Platform/IPlatform.hpp"
+#include "CNA/Platform/NativeWindowHandle.hpp"
+#include "CNA/Platform/NativeWindowSystem.hpp"
 #include "CNA/Platform/PlatformCapabilities.hpp"
 #include "CNA/RendererCapabilityProfile.hpp"
 #include "Diagnostics/Log.hpp"
@@ -231,6 +233,34 @@ private:
         try { S().game->getWindowProperty().setAllowUserResizingProperty(v); } catch (const std::exception&) {}
     }
 
+    // The operating system's own handle for the window (CNAEXT), the thing a program passes to a native API. Which fields are filled
+    // depends on the windowing system: an X11 window is an integer id, a Win32 window a pointer.
+    [[nodiscard]] static std::string NativeWindowLine(const GameWindow& w)
+    {
+        try {
+            const CNA::Platform::NativeWindowHandle h = w.GetNativeWindowHandleEXT();
+            char buf[96];
+            std::snprintf(buf, sizeof buf, "GetNativeWindowHandleEXT: %s", CNA::Platform::ToString(h.system).c_str());
+            std::string line = buf;
+            CNA::Platform::X11NativeWindow x;
+            CNA::Platform::WaylandNativeWindow wl;
+            CNA::Platform::Win32NativeWindow win;
+            if (CNA::Platform::TryGetX11(h, x)) {
+                std::snprintf(buf, sizeof buf, ", Display* %s, Window id 0x%llx", x.display != nullptr ? "set" : "null", static_cast<unsigned long long>(x.window));
+                line += buf;
+            } else if (CNA::Platform::TryGetWayland(h, wl)) {
+                line += std::string(", wl_display ") + (wl.display != nullptr ? "set" : "null") + ", wl_surface " + (wl.surface != nullptr ? "set" : "null");
+            } else if (CNA::Platform::TryGetWin32(h, win)) {
+                line += std::string(", HWND ") + (win.hwnd != nullptr ? "set" : "null");
+            } else {
+                line += ", no window to hand to a native API";
+            }
+            return line;
+        } catch (const std::exception& e) {
+            return std::string("GetNativeWindowHandleEXT: ") + std::string(e.what()).substr(0, 60);
+        }
+    }
+
     void Refresh()
     {
         lines_.clear();
@@ -244,6 +274,7 @@ private:
                 lines_.push_back(std::string("AllowUserResizing: ") + (w.getAllowUserResizingProperty() ? "true" : "false"));
                 lines_.push_back(std::string("IsBorderless (CNAEXT): ") + (w.getIsBorderlessEXTProperty() ? "true" : "false"));
                 lines_.push_back("ScreenDeviceName: " + w.getScreenDeviceNameProperty());
+                lines_.push_back(NativeWindowLine(w));
                 lines_.push_back(std::string("Game.IsActive: ") + (S().game->getIsActiveProperty() ? "true" : "false") + "    IsMouseVisible: " + (S().game->getIsMouseVisibleProperty() ? "true" : "false"));
                 lines_.push_back(std::string("Game.IsFixedTimeStep: ") + (S().game->getIsFixedTimeStepProperty() ? "true" : "false") + "    TargetElapsedTime: " + Num(S().game->getTargetElapsedTimeProperty().getTotalMillisecondsProperty(), "%.2f") + " ms");
             } else if (mode_ == Mode::Adapter) {

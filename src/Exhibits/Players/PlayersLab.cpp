@@ -98,6 +98,8 @@ public:
                 p.AddReadout("Gamer.SignedInGamers.Count", [this] { return std::to_string(Count()); });
                 p.AddChoice("Presence of the first player", {kPresenceNames[0], kPresenceNames[1], kPresenceNames[2], kPresenceNames[3], kPresenceNames[4], kPresenceNames[5], kPresenceNames[6], kPresenceNames[7]}, 4,
                             [this](int v) { SetPresence(v); });
+                p.AddChoice("Presence text for the service (SetPresenceModeStringEXT)", {"(not set)", "Browsing the museum", "Reading a plaque on floor 4", "In the shader lab"}, 0, [this](int v) { SetPresenceText(v); });
+                p.AddReadout("Presence text sent", [this] { return presenceText_; });
                 p.AddSlider("Presence value", 0.0f, 9.0f, 0.0f, [this](float v) { SetPresenceValue(static_cast<int>(v)); }, "%.0f", 1.0f);
                 p.AddReadout("SignedIn / SignedOut events", [this] { return std::to_string(signedIn_) + " / " + std::to_string(signedOut_) + " since this room loaded"; });
                 p.AddReadout("Profiles", [] { return std::string("local and offline (no CNA account service)"); });
@@ -237,6 +239,17 @@ private:
     void SetPresence(int v)
     {
         if (SignedInGamer* g = First()) g->getPresenceProperty().setPresenceModeProperty(kPresences[std::clamp(v, 0, 7)]);
+    }
+    // A free-form presence string for an online service (friends on the Online Service wing see it); offline it only changes the gamer.
+    void SetPresenceText(int v)
+    {
+        static const char* const texts[] = {"", "Browsing the museum", "Reading a plaque on floor 4", "In the shader lab"};
+        SignedInGamer* g = First();
+        if (g == nullptr) { presenceText_ = "no signed-in gamer"; return; }
+        v = std::clamp(v, 0, 3);
+        if (v == 0) { presenceText_ = "(not set)"; return; }
+        g->getPresenceProperty().SetPresenceModeStringEXT(texts[v]);
+        presenceText_ = std::string("\"") + texts[v] + "\"";
     }
     void SetPresenceValue(int v)
     {
@@ -540,7 +553,7 @@ private:
     std::vector<Card> cards_;
     std::vector<Tile> shown_;
     int earned_ = 0, score_ = 0, selected_ = 0, signedIn_ = 0, signedOut_ = 0;
-    std::string lastAward_ = "-", answer_ = "-", lastError_;
+    std::string lastAward_ = "-", answer_ = "-", lastError_, presenceText_ = "(not set)";
     float refresh_ = 0.0f;
     bool subscribed_ = false;
     std::size_t inToken_ = 0, outToken_ = 0;

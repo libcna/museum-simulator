@@ -149,6 +149,9 @@ public:
                 p.AddButton("Paste clipboard", [this] { Paste(); });
                 p.AddChoice("Text input type (on-screen keyboard)", {"Text", "TextName", "TextEmail", "TextUsername", "TextPasswordHidden", "TextPasswordVisible", "Number", "NumberPasswordHidden", "NumberPasswordVisible"}, 0, [this](int v) { inputType_ = v; if (typing_) StartTyping(); });
                 p.AddButton("Copy as HTML too (SetDataEXT, text/html)", [this] { CopyHtml(); });
+                p.AddButton("Set the primary selection (X11/Wayland middle-click)", [this] { SetPrimary(); });
+                p.AddButton("Paste the primary selection", [this] { PastePrimary(); });
+                p.AddReadout("Primary selection (HasPrimarySelectionTextEXT)", [this] { return primaryNote_; });
                 p.AddReadout("Clipboard formats (GetMimeTypesEXT)", [this] { return mimeTypes_; });
                 p.AddReadout("Text input", [this] { return std::string(typing_ ? "ACTIVE: keys type, Esc stops" : "off"); });
                 p.AddReadout("Clipboard", [this] { return clipboardNote_; });
@@ -738,6 +741,33 @@ private:
             clipboardNote_ = std::string("unavailable: ") + e.what();
         }
     }
+    // The primary selection is a second, separate clipboard on X11 and Wayland: whatever was selected last, pasted with the middle button.
+    void SetPrimary()
+    {
+        try {
+            CNA::Input::Clipboard::SetPrimarySelectionTextEXT(text_.empty() ? std::string("selected in the museum") : text_);
+            primaryNote_ = std::string("set; Has says ") + (CNA::Input::Clipboard::HasPrimarySelectionTextEXT() ? "yes" : "no");
+            Museum::Log("input", "primary selection: %s", primaryNote_.c_str());
+        } catch (const std::exception& e) {
+            primaryNote_ = std::string("unavailable: ") + std::string(e.what()).substr(0, 50);
+        }
+    }
+    void PastePrimary()
+    {
+        try {
+            if (!CNA::Input::Clipboard::HasPrimarySelectionTextEXT()) {
+                primaryNote_ = "no primary selection here";
+                return;
+            }
+            std::string t = CNA::Input::Clipboard::GetPrimarySelectionTextEXT();
+            for (char& c : t) if (c != '\n' && (c < 32 || c > 126)) c = '?';
+            text_ += t.substr(0, 200);
+            primaryNote_ = "pasted " + std::to_string(std::min<std::size_t>(t.size(), 200)) + " characters";
+            Museum::Log("input", "primary selection: %s", primaryNote_.c_str());
+        } catch (const std::exception& e) {
+            primaryNote_ = std::string("unavailable: ") + std::string(e.what()).substr(0, 50);
+        }
+    }
     void Copy()
     {
         try {
@@ -949,7 +979,7 @@ private:
     std::string text_;
     bool typing_ = false, subscribed_ = false, prevBack_ = false;
     std::uint64_t token_ = 0;
-    std::string clipboardNote_ = "nothing copied yet";
+    std::string clipboardNote_ = "nothing copied yet", primaryNote_ = "-";
     // joystick / devices
     std::vector<CNA::Input::JoystickInfoEXT> joysticks_;
     int selected_ = 0;
