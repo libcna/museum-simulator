@@ -47,7 +47,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-660 distinct API names are claimed by at least one room.
+672 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -104,6 +104,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Bgr565 | `vt-packed` |
 | Bgra4444 | `vt-packed` |
 | Bgra5551 | `vt-packed` |
+| BitmapContent | `ct-processor` |
 | Blend | `sprite-blend`, `rs-blend` |
 | Blend.BlendFactor | `rs-blendfactor`, `rv-blend` |
 | Blend.DestinationColor | `sprite-lights` |
@@ -435,6 +436,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Microphone.GetSampleSizeInBytes | `au-mic` |
 | Microphone.IsHeadset | `au-mic` |
 | Microphone.SampleRate | `au-mic` |
+| MipmapChain | `ct-processor` |
 | Model | `models`, `animation`, `model-load` |
 | Model.BoundingSphereEXT | `model-load`, `model-instances`, `model-bounds` |
 | Model.CopyAbsoluteBoneTransformsTo | `model-rigid` |
@@ -495,6 +497,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | PbrEffect.MetallicFactor | `model-pbr`, `model-ibl` |
 | PbrEffect.NormalMap | `model-material` |
 | PbrEffect.RoughnessFactor | `model-pbr`, `model-ibl` |
+| PixelBitmapContent | `ct-processor` |
 | Plane | `vec-reflect`, `col-ray-plane` |
 | Plane.DotCoordinate | `col-plane-box` |
 | Plane.DotNormal | `col-plane-box` |
@@ -651,6 +654,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Texture2D.SaveAsJpeg | `tex-io` |
 | Texture2D.SaveAsPng | `tex-io` |
 | Texture2D.SetData | `sprite-ui`, `sprite-atlas`, `sprite-anim`, `tex-dynamic`, `rv-formats` |
+| Texture2DContent | `ct-processor` |
 | Texture3D | `tex-volume` |
 | Texture3D.GetData | `tex-volume` |
 | Texture3D.SetData | `tex-volume` |
@@ -659,6 +663,14 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | TextureCube.GetData | `tex-cube` |
 | TextureCube.SetData | `tex-cube` |
 | TextureFilter | `sprite-sampler`, `rv-sampling` |
+| TextureImporter | `ct-processor` |
+| TextureProcessor | `ct-processor` |
+| TextureProcessor.ColorKeyEnabled | `ct-processor` |
+| TextureProcessor.GenerateMipmaps | `ct-processor` |
+| TextureProcessor.PremultiplyAlpha | `ct-processor` |
+| TextureProcessor.ResizeToPowerOfTwo | `ct-processor` |
+| TextureProcessor.TextureFormat | `ct-processor` |
+| TextureProcessorOutputFormat | `ct-processor` |
 | TextureTransformEXT | `model-material` |
 | TitleContainer.OpenStream | `ct-storage` |
 | TouchPanel.EnabledGestures | `in-touch` |

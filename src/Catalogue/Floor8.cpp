@@ -46,6 +46,21 @@ WingSpec ContentWing()
             r.origin = ApiOrigin::Xna;
             return r;
         }(),
+        []{
+            RoomSpec r;
+            r.key = "ct-processor";
+            r.title = "Processing a Texture";
+            r.subtitle = "TextureImporter and TextureProcessor: colour key, premultiplied alpha, mipmaps, power-of-two resize and DXT compression, measured";
+            r.exhibit = "processor-lab";
+            r.width = 13;
+            r.depth = 13;
+            r.height = 5.0f;
+            r.theme = "workshop";
+            r.apis = {"TextureImporter", "TextureProcessor", "TextureProcessor.ColorKeyEnabled", "TextureProcessor.PremultiplyAlpha", "TextureProcessor.GenerateMipmaps", "TextureProcessor.ResizeToPowerOfTwo",
+                      "TextureProcessor.TextureFormat", "TextureProcessorOutputFormat", "Texture2DContent", "MipmapChain", "BitmapContent", "PixelBitmapContent"};
+            r.origin = ApiOrigin::Xna;
+            return r;
+        }(),
         ct("ct-storage", "Title Files and Saved Data", "TitleContainer.OpenStream, StorageDevice and StorageContainer", "storage", {"TitleContainer.OpenStream", "StorageDevice", "StorageContainer", "StorageDevice.GetStorageRootEXT"}),
         ct("ct-custom", "Teaching ContentManager a New Type", "Your own types loaded through ContentManager: a loose-file reader and a named .cnj loader", "custom", {"ContentManager.RegisterTypeReader", "LooseFileContentTypeReader", "ContentManager.RegisterCnjLoader", "ContentLoadException"}, ApiOrigin::CnaExtension),
         ct("ct-reader", "Content Readers", "An .xnb file with your own type: a ContentTypeReader registered under the name the file records", "reader",

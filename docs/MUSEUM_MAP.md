@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 35 wings, 270 exhibit rooms (5 open to the sky), 335 walkable cells in all.
+10 floors, 35 wings, 271 exhibit rooms (5 open to the sky), 336 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -430,11 +430,12 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 | 8.1.04 | `ct-failure` | When Loading Fails | XNA 4.0 | ContentLoadException, ContentManager.Load |
 | 8.1.05 | `ct-pipeline` | The Content Compiler | CNA extension | cna-content, ContentManager.Load, ContentManager.GetContentManifest |
 | 8.1.06 | `ct-intermediate` | The Pipeline in the Game | XNA 4.0 | IntermediateSerializer, IntermediateSerializer.Serialize, IntermediateSerializer.Deserialize, ContentItem, ContentTypeDescriptor, InvalidContentException |
-| 8.1.07 | `ct-storage` | Title Files and Saved Data | XNA 4.0 | TitleContainer.OpenStream, StorageDevice, StorageContainer, StorageDevice.GetStorageRootEXT |
-| 8.1.08 | `ct-custom` | Teaching ContentManager a New Type | CNA extension | ContentManager.RegisterTypeReader, LooseFileContentTypeReader, ContentManager.RegisterCnjLoader, ContentLoadException |
-| 8.1.09 | `ct-reader` | Content Readers | XNA 4.0 | ContentTypeReader, ContentTypeReaderManager.AddTypeCreator, ContentReader, ContentManager.Load |
-| 8.1.10 | `ct-lifetime` | Resource Lifetime | XNA 4.0 | GraphicsResource.Dispose, GraphicsResource.IsDisposed, GraphicsResource.Disposing, GraphicsDevice.ResourceCreated, GraphicsDevice.ResourceDestroyed, ResourceCreatedEventArgs, ResourceDestroyedEventArgs, ContentManager.Unload |
-| 8.1.11 | `ct-resource` | Content from Memory | XNA 4.0 | ResourceContentManager, System.Resources.ResourceManager, ContentManager.Load, ContentLoadException |
+| 8.1.07 | `ct-processor` | Processing a Texture | XNA 4.0 | TextureImporter, TextureProcessor, TextureProcessor.ColorKeyEnabled, TextureProcessor.PremultiplyAlpha, TextureProcessor.GenerateMipmaps, TextureProcessor.ResizeToPowerOfTwo, TextureProcessor.TextureFormat, TextureProcessorOutputFormat, Texture2DContent, MipmapChain, BitmapContent, PixelBitmapContent |
+| 8.1.08 | `ct-storage` | Title Files and Saved Data | XNA 4.0 | TitleContainer.OpenStream, StorageDevice, StorageContainer, StorageDevice.GetStorageRootEXT |
+| 8.1.09 | `ct-custom` | Teaching ContentManager a New Type | CNA extension | ContentManager.RegisterTypeReader, LooseFileContentTypeReader, ContentManager.RegisterCnjLoader, ContentLoadException |
+| 8.1.10 | `ct-reader` | Content Readers | XNA 4.0 | ContentTypeReader, ContentTypeReaderManager.AddTypeCreator, ContentReader, ContentManager.Load |
+| 8.1.11 | `ct-lifetime` | Resource Lifetime | XNA 4.0 | GraphicsResource.Dispose, GraphicsResource.IsDisposed, GraphicsResource.Disposing, GraphicsDevice.ResourceCreated, GraphicsDevice.ResourceDestroyed, ResourceCreatedEventArgs, ResourceDestroyedEventArgs, ContentManager.Unload |
+| 8.1.12 | `ct-resource` | Content from Memory | XNA 4.0 | ResourceContentManager, System.Resources.ResourceManager, ContentManager.Load, ContentLoadException |
 
 **CNA Extensions** - What CNA adds to XNA 4.0: DebugDraw, post-process effects, engine statistics, point lists and device queries
 
