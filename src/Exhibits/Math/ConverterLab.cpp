@@ -208,7 +208,7 @@ private:
 
     [[nodiscard]] static std::string Format(const std::any& v)
     {
-        char buf[48];
+        char buf[96];
         if (const float* f = std::any_cast<float>(&v)) std::snprintf(buf, sizeof buf, "%g", static_cast<double>(*f));
         else if (const std::int32_t* n = std::any_cast<std::int32_t>(&v)) std::snprintf(buf, sizeof buf, "%d", *n);
         else if (const std::uint8_t* u = std::any_cast<std::uint8_t>(&v)) std::snprintf(buf, sizeof buf, "%d", *u);
