@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-716 distinct API names are claimed by at least one room.
+724 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -56,6 +56,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | AchievementCollection | `gs-achievements` |
 | AlphaModeEXT | `model-material` |
 | AlphaTestEffect | `tex-alpha`, `rv-effects` |
+| AnimationClipEXT | `model-skinext` |
 | AnimationPlayer | `model-skinned` |
 | ApiOrigin | `hist-compare` |
 | ApplyClipToBonesEXT | `model-rigid` |
@@ -125,6 +126,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BlendState.BlendFactor | `rs-blendfactor` |
 | BlendState.ColorWriteChannels | `rs-colorwrite` |
 | BlendState.NonPremultiplied | `sprite-tint`, `tex-alpha`, `be-alpha`, `pf-overdraw`, `rf-garden` |
+| BoneTrackEXT | `model-skinext` |
 | BoundingBox | `col-ray-box`, `col-pick`, `an-conveyor`, `sim-balls` |
 | BoundingBox.Contains | `col-box-box` |
 | BoundingBox.CreateFromPoints | `col-merge` |
@@ -393,6 +395,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | KeyboardState | `in-edges` |
 | KeyboardState.GetPressedKeys | `in-keyboard` |
 | KeyboardState.IsKeyDown | `in-keyboard` |
+| KeyframeEXT | `model-skinext` |
 | Keys | `in-edges` |
 | LaunchParameters | `app-lifecycle` |
 | LeaderboardEntry | `gs-leaderboards` |
@@ -633,8 +636,13 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SignedInGamer.Privileges | `gs-players` |
 | SignedInGamer.SignedIn | `gs-players` |
 | SkinnedEffect | `be-model`, `model-skinfx` |
-| SkinnedEffect.SetBoneTransforms | `model-skinfx` |
+| SkinnedEffect.SetBoneTransforms | `model-skinfx`, `model-skinext` |
 | SkinnedEffect.WeightsPerVertex | `model-skinfx` |
+| SkinnedModelEXT | `model-skinext` |
+| SkinnedModelEXT.AddPartEXT | `model-skinext` |
+| SkinnedModelEXT.AttachPartEXT | `model-skinext` |
+| SkinnedModelEXT.ComputeBoneTransformsEXT | `model-skinext` |
+| SkinnedModelEXT.RemovePartEXT | `model-skinext` |
 | SkinnedPbrEffect.SetBoneTransforms | `model-skinned` |
 | SkinningData | `model-skinned` |
 | Snapshot.metrics | `cx-stats` |
@@ -747,7 +755,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | VertexPositionColor | `geo-triangle` |
 | VertexPositionColorTexture | `tex-uv`, `an-conveyor` |
 | VertexPositionNormalTexture | `geo-dynamic`, `geo-terrain` |
-| VertexPositionNormalTextureSkinned | `model-skinfx` |
+| VertexPositionNormalTextureSkinned | `model-skinfx`, `model-skinext` |
 | Video | `au-video` |
 | VideoPlayer | `au-video` |
 | VideoPlayer.GetTexture | `au-video` |

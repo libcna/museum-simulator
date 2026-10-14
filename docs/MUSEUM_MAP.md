@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 35 wings, 272 exhibit rooms (5 open to the sky), 337 walkable cells in all.
+10 floors, 35 wings, 273 exhibit rooms (5 open to the sky), 338 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -345,6 +345,7 @@ glTF models and their effects, procedural and skeletal animation, particle syste
 | 6.1.11 | `model-variants` | Material Variants | CNA extension | Model.MaterialVariantEXT, Model.MaterialVariantNamesEXT, PbrEffect |
 | 6.1.12 | `model-ibl` | Image-Based Lighting | CNA extension | ImageBasedLightEXT, PbrEffect.ImageBasedLight, TextureCube, PbrEffect.MetallicFactor, PbrEffect.RoughnessFactor, GraphicsDevice.SupportsImageBasedLightingEXT |
 | 6.1.13 | `model-skinfx` | SkinnedEffect | XNA 4.0 | SkinnedEffect, SkinnedEffect.SetBoneTransforms, SkinnedEffect.WeightsPerVertex, VertexPositionNormalTextureSkinned, VertexBuffer, IndexBuffer |
+| 6.1.14 | `model-skinext` | Your Own Skinned Model | CNA extension | SkinnedModelEXT, SkinnedModelEXT.ComputeBoneTransformsEXT, SkinnedModelEXT.AttachPartEXT, SkinnedModelEXT.RemovePartEXT, SkinnedModelEXT.AddPartEXT, AnimationClipEXT, BoneTrackEXT, KeyframeEXT, SkinnedEffect.SetBoneTransforms, VertexPositionNormalTextureSkinned |
 
 **Animation Complex** - Procedural animation: motion built from maths and matrix hierarchies
 

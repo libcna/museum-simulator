@@ -86,6 +86,14 @@ WingSpec ModelWing()
             r.origin = ApiOrigin::Xna;
             return r;
         }(),
+        [&] {
+            RoomSpec r = mo("model-skinext", "Your Own Skinned Model", "SkinnedModelEXT: a skeleton, parts and keyframed clips built in code; ComputeBoneTransformsEXT, AttachPartEXT and RemovePartEXT", "",
+                            {"SkinnedModelEXT", "SkinnedModelEXT.ComputeBoneTransformsEXT", "SkinnedModelEXT.AttachPartEXT", "SkinnedModelEXT.RemovePartEXT", "SkinnedModelEXT.AddPartEXT", "AnimationClipEXT", "BoneTrackEXT", "KeyframeEXT",
+                             "SkinnedEffect.SetBoneTransforms", "VertexPositionNormalTextureSkinned"});
+            r.exhibit = "skinext-lab";
+            r.origin = ApiOrigin::CnaExtension;
+            return r;
+        }(),
     };
     return w;
 }
