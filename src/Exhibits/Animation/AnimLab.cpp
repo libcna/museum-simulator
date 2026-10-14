@@ -258,7 +258,11 @@ private:
     {
         const std::time_t t = std::time(nullptr);
         std::tm tmv{};
+#if defined(_WIN32)
+        localtime_s(&tmv, &t);   // the C runtime's argument order differs from POSIX localtime_r
+#else
         localtime_r(&t, &tmv);
+#endif
         return static_cast<float>(tmv.tm_hour * 3600 + tmv.tm_min * 60 + tmv.tm_sec) + clockSeconds_;
     }
     [[nodiscard]] std::string TimeText() const

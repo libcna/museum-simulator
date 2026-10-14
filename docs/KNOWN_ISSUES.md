@@ -38,6 +38,7 @@ Found by the museum's own exhibits; fixed in the CNA repository (commit ids are 
 | Render Targets / A Live Cube Map (found on the second renderer family) | `EnvironmentMapEffect` sampled a rendered `RenderTargetCube` upside down on EasyGL (OPENGLES3, OPENGL33): GL fills a rendered face bottom-up, a cube is sampled with the first stored row on top. The six faces read back with `GetData` were identical on every renderer, so only sampling was wrong. A known open CNA ticket (REMED-GFX-137). | fixed for `EnvironmentMapEffect` in CNA (`a6e8104d2`; shared test); open: IBL cubes, custom `ShaderEffect` samplers, a one-texel seam on GLES3's seamless cube filtering |
 | Light rooms (found by the new `PunctualLightEXT` probe) | The SOFTWARE renderer accepted `BasicEffect.PunctualLightEXT` and ignored it. | fixed in CNA (`53aba6ef1`; shared test) |
 | Light rooms (same probe) | **FNA3D ignores `BasicEffect.PunctualLightEXT`** and exposes no capability to ask: point and spot lights simply light nothing. Its stock effects are the real compiled XNA binaries. | open; the validation matrix shows it as the FNA3D row's one FAIL, the light rooms print "IGNORED by this renderer" |
+| Windows build under Wine, DIRECTX9 | CNA's DirectX 9 renderer keys its vertex declaration on the stride alone and supports one BasicEffect flag combination per stride; unlit textured meshes, vertex-coloured untextured geometry, 48-byte lit meshes, position-only vertices all throw "no matching CNA vertex layout". 11 rooms/stages affected (sky, shadows, outline, render targets, lighting, models, point lists, ...). Also: `SetStringMarkerEXT` not implemented, `PunctualLightEXT` ignored, an environment-mapped `RenderTargetCube` reads black. | open in CNA (needs the vertex declaration at draw time); the museum survives it |
 
 ## Open observations (not explained, no CNA change made)
 
@@ -52,6 +53,7 @@ Found by the museum's own exhibits; fixed in the CNA repository (commit ids are 
 
 ## Museum bugs found and fixed (for the record)
 
+- **The Windows build did not compile.** The clock room used POSIX `localtime_r`; found by cross-compiling with MinGW. It now uses `localtime_s` on Windows.
 - **One room's exception ended the whole museum.** On FNA3D `DrawInstancedPrimitives` with a stock effect throws, the exception
   escaped `Game::Run` and the process died. `MuseumWorld` now guards every exhibit hook (`Guard`): the exception is logged as
   `[museum][exhibit-error]`, shown as a toast, counted in the stats line, and the room's hooks are switched off after three.

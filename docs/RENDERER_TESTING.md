@@ -11,7 +11,7 @@ CNA_GRAPHICS_RENDERER=OPENGL33 build/bin/cna-3d-museum
 
 Six renderers have run the museum here: OPENGLES3, OPENGL33, SOFTWARE, and (since 2026-10-14) FNA3D, WEBGPU and SDL_GPU
 (the last two on Mesa's llvmpipe software Vulkan driver, `VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json`).
-Direct3D 9, Metal and WebGL2 are untested (no suitable device). Two non-visual renderers were tried for robustness: **STUB**
+Direct3D 9 runs only through Wine (below); Metal and WebGL2 are untested (no suitable device). Two non-visual renderers were tried for robustness: **STUB**
 (no 3D pipeline: the museum says so and exits 0) and **HEADLESS** (all 257 rooms run; four exceptions are caught and reported
 because it stores no cube-map data: `tex-cube` and the image-based-lighting model rooms switch themselves off).
 VULKAN was retired from CNA on 2026-10-13 and has been removed from the museum's documentation and build lines.
@@ -70,6 +70,32 @@ Run `tools/renderer_check.sh` for the current figures; they are not copied anywh
 Re-checked on 2026-10-14 with 250 rooms after the room-frame change and the new rooms: `tools/tour.sh -f 3 -p` exits 0 on all three
 renderers (OPENGLES3 65 s, OPENGL33 62 s, SOFTWARE 1,501 s); the stencil, cube-map, SkinnedEffect, terrain and off-centre rooms
 look the same on all three.
+
+## Windows: the MinGW build under Wine (DIRECTX9 and SOFTWARE)
+
+The museum cross-compiles with CNA's MinGW toolchain and runs under Wine on the same Xvfb. This found a real portability bug
+(`localtime_r` in the clock room does not exist on Windows) and is the only way to run CNA's DIRECTX9 renderer here:
+
+```bash
+BUILD_DIR=build-consumer MUSEUM_RENDERERS="DIRECTX9;SOFTWARE" \
+  MUSEUM_CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$PWD/../cna/cmake/toolchains/mingw-w64.cmake -DCMAKE_BUILD_TYPE=Release" tools/build.sh
+cp -r build/bin/Content/Compiled build-consumer/bin/Content/        # the content tool is a foreign executable: reuse the native output
+cp /usr/lib/gcc/x86_64-w64-mingw32/*-win32/{libgcc_s_seh-1,libstdc++-6}.dll /usr/x86_64-w64-mingw32/lib/libwinpthread-1.dll build-consumer/bin/
+WINEPREFIX=$HOME/.cache/museum-wine SDL_VIDEODRIVER=windows CNA_GRAPHICS_RENDERER=DIRECTX9 \
+  xvfb-run -a wine build-consumer/bin/cna-3d-museum.exe --script "goto:info;wait:5;quit" --no-audio
+```
+
+Under Wine the SOFTWARE renderer draws the lobby identically to Linux. **DIRECTX9** (Wine's Direct3D on llvmpipe OpenGL) runs
+the whole tour without a crash (58 s) but 11 rooms or stages are switched off by the museum's guard, all with one CNA message:
+`DirectX9Renderer::DrawPrimitivesEx (BasicEffect): stride N with lighting=... vertexColor=... texture=... has no matching CNA
+vertex layout`. The DirectX 9 renderer keys its vertex declaration on the *stride alone* (16, 20, 24, 32 or 52 bytes) and supports
+only the one BasicEffect flag combination each stride "naturally" carries, so an unlit textured `VertexPositionNormalTexture`
+(32), a vertex-coloured untextured `VertexPositionColorTexture` (24, the sky dome and debug geometry), a 48-byte lit mesh or a
+position-only 12-byte vertex are all refused although XNA's own Direct3D 9 accepts them. The renderer also leaves
+`SetStringMarkerEXT` unimplemented, ignores `PunctualLightEXT`, and the cube-map orientation check reads black. Validation:
+48 pass, 3 fail (point lights, the BasicEffect check run aborted by the layout message, the cube target), 1 skip (half-float
+targets) of the 52 checks that ran. Noted in `docs/KNOWN_ISSUES.md`; the museum was **not** bent to fit (no white-texture
+workarounds): the place to fix it is the renderer, which would need the vertex declaration (not the stride) at draw time.
 
 ## Findings
 

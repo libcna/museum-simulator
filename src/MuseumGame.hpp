@@ -116,6 +116,10 @@ private:
     int updatesThisSecond_ = 0;
     int drawsThisSecond_ = 0;
     std::string rendererName_;
+    /** Runs one stage of the frame; an exception is logged (once per distinct message) and the frame carries on. */
+    template <typename Fn>
+    void Stage(const char* name, Fn&& fn);
+    std::set<std::string> drawErrorsSeen_;
     std::string focusPrompt_;
     bool screenshotDone_ = false;
     int scriptWait_ = 0;

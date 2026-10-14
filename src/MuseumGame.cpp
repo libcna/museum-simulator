@@ -477,6 +477,19 @@ void MuseumGame::Update(GameTime& gameTime)
     if (options_.maxFrames > 0 && frame_ >= options_.maxFrames) Exit();
 }
 
+template <typename Fn>
+void MuseumGame::Stage(const char* name, Fn&& fn)
+{
+    try {
+        fn();
+    } catch (const std::exception& e) {
+        // A renderer may refuse a draw the museum makes (an unsupported vertex layout, say). Say so once and keep the museum up.
+        if (drawErrorsSeen_.insert(std::string(name) + ": " + e.what()).second)
+            Museum::Log("draw-error", "%s: %s", name, e.what());
+        getGraphicsDeviceProperty().SetRenderTarget(nullptr);
+    }
+}
+
 void MuseumGame::Draw(const GameTime& gameTime)
 {
     ++stats_.draws;
@@ -496,14 +509,14 @@ void MuseumGame::Draw(const GameTime& gameTime)
     effects_->SetCamera(view.view, view.projection);
 
     // Render-to-texture passes first: they change the render target and must finish before the back buffer is cleared.
-    world_->RenderOffscreen(ctx);
+    Stage("offscreen passes", [&] { world_->RenderOffscreen(ctx); });
     device.SetRenderTarget(nullptr);
 
     device.Clear(Color::Black, 1.0f);
     RenderStates::SetOpaque3D(device);
-    sky_->Draw(ctx);
-    world_->Draw(ctx);
-    world_->DrawOverlay();
+    Stage("sky", [&] { sky_->Draw(ctx); });
+    Stage("world", [&] { world_->Draw(ctx); });
+    Stage("overlays", [&] { world_->DrawOverlay(); });
     if (const std::string failure = world_->TakeExhibitError(); !failure.empty()) hud_->Toast("Exhibit error (the museum carries on) - " + failure, 6.0f);
 
     HudState hud;
@@ -534,7 +547,7 @@ void MuseumGame::Draw(const GameTime& gameTime)
         hud.bannerAlpha = bannerAge_ < 4.0f ? std::clamp(std::min(bannerAge_ * 3.0f, (4.0f - bannerAge_) * 1.5f), 0.0f, 1.0f) : 0.0f;
     }
     Game::Draw(gameTime);     // DrawableGameComponents draw over the scene
-    if (options_.hud) hud_->Draw(hud);
+    if (options_.hud) Stage("HUD", [&] { hud_->Draw(hud); });
     services_.mainView = nullptr;
     if (directory_->IsOpen()) {
         directory_->Draw(discovered_, hud.floor, shownCell_, camera_.Position(), camera_.Yaw(), vp.getWidthProperty(), vp.getHeightProperty());

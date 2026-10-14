@@ -126,8 +126,10 @@ add_custom_command(TARGET cna-3d-museum POST_BUILD
 
 # Run the Content/Pipeline sources through CNA's own content compiler, once as .cnb (CNA's format) and once as
 # .xnb (XNA's), next to the executable. The Content Pipeline rooms load the results and compare them with the
-# loose source files. If the tool is not available the rooms say so instead of failing.
-if(TARGET cna_content_tool)
+# loose source files. If the tool is not available the rooms say so instead of failing. When cross-compiling the tool is a
+# foreign executable: it only runs here if CMAKE_CROSSCOMPILING_EMULATOR is set (for example to wine); otherwise the step is
+# skipped and Content/Compiled can be copied from a native build tree (the files are the same on every platform).
+if(TARGET cna_content_tool AND (NOT CMAKE_CROSSCOMPILING OR CMAKE_CROSSCOMPILING_EMULATOR))
     add_dependencies(cna-3d-museum cna_content_tool)
     foreach(_fmt cnb xnb)
         add_custom_command(TARGET cna-3d-museum POST_BUILD

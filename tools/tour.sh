@@ -30,5 +30,11 @@ if [ "$caught" -gt 0 ]; then
   grep "\[museum\]\[exhibit-error\]" "${BUILD_DIR:-build}/tour.log" | cut -c1-240 | sort -u | head -10
   [ $status -eq 0 ] && status=3
 fi
+drawn=$(grep -c "\[museum\]\[draw-error\]" "${BUILD_DIR:-build}/tour.log")
+if [ "$drawn" -gt 0 ]; then
+  echo "$drawn draw error(s) (distinct messages; the museum kept running but something was not drawn):"
+  grep "\[museum\]\[draw-error\]" "${BUILD_DIR:-build}/tour.log" | cut -c1-260 | sort -u | head -10
+  [ $status -eq 0 ] && status=3
+fi
 echo "exit status $status, $((end - start)) s"
 exit $status
