@@ -74,6 +74,8 @@ Run `tools/renderer_check.sh` for the current figures; they are not copied anywh
 | WEBGPU | clean (78 s) | 30 reference views: 26 within 1 %; `debugdraw` 4.7 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
 | SDL_GPU | clean (173 s) | 30 reference views: all within 1 % |
 
+Latest (2026-10-14, 280 rooms, after the Online Service wing, Exceptions, Vertex Types, Compiled Effects and the other new rooms): `tools/tour.sh -f 3 -p` exits 0 with 0 exhibit errors on FNA3D (76 s), WEBGPU (133 s) and SDL_GPU (274 s) in the multi-renderer tree (renderer chosen with `CNA_GRAPHICS_RENDERER`); the OPENGLES3 battery (`tools/check_all.sh`) is green.
+
 Re-checked on 2026-10-14 with 272 rooms (after the Avatars, Leaderboards, Pipeline, Processor, Converters, Video and network-search rooms and the dressed screen rooms): `tools/tour.sh -f 3 -p` exits 0 with 0 exhibit errors on OPENGLES3, OPENGL33 and SOFTWARE (`SLOW=1 tools/check_all.sh`, all steps ok) and, in the multi-renderer tree, on FNA3D (75 s), WEBGPU (94 s) and SDL_GPU (175 s). HEADLESS exits 3 with the known exceptions (no cube data). The Avatars, Video and Processing rooms were also looked at on those three: same picture; FNA3D has no DXT surface formats, and the Processing room says so on the level it cannot upload.
 
 Re-checked on 2026-10-14 with 250 rooms after the room-frame change and the new rooms: `tools/tour.sh -f 3 -p` exits 0 on all three
