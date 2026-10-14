@@ -351,7 +351,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Matrix.CreateRotationX | `quat-euler`, `an-gyroscope` |
 | Matrix.CreateRotationY | `mat-order`, `an-gears`, `an-gyroscope` |
 | Matrix.CreateRotationZ | `sprite-camera`, `an-clock`, `an-kinetic`, `an-gyroscope`, `an-walker` |
-| Matrix.CreateScale | `mat-order`, `sprite-camera`, `sim-flock` |
+| Matrix.CreateScale | `mat-order`, `sprite-camera`, `sprite-tilemap`, `sim-flock` |
 | Matrix.CreateShadow | `rs-shadow` |
 | Matrix.CreateTranslation | `mat-order`, `sprite-camera`, `sim-flock` |
 | Matrix.CreateWorld | `cam-transition` |
@@ -456,7 +456,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Rectangle.Contains | `vt-rectangle` |
 | Rectangle.Inflate | `vt-rectangle` |
 | Rectangle.Intersect | `vt-rectangle`, `sprite-hit` |
-| Rectangle.Intersects | `vt-rectangle`, `sprite-hit` |
+| Rectangle.Intersects | `vt-rectangle`, `sprite-hit`, `sprite-tilemap` |
 | Rectangle.IsEmpty | `vt-rectangle` |
 | Rectangle.Location | `vt-rectangle` |
 | Rectangle.Union | `vt-rectangle` |
@@ -523,9 +523,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SoundEffectInstance.Volume | `au-layers` |
 | SoundState | `au-layers` |
 | SpriteBatch | `sprite-stress`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `rf-weather` |
-| SpriteBatch.Begin | `sprite-basics`, `sprite-camera`, `pf-sprites` |
+| SpriteBatch.Begin | `sprite-basics`, `sprite-camera`, `sprite-tilemap`, `pf-sprites` |
 | SpriteBatch.Begin(effect) | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `cx-crt` |
-| SpriteBatch.Draw | `sprite-basics`, `sprite-origin`, `sprite-sheet`, `sprite-sort`, `sprite-parallax`, `sprite-ui`, `sprite-atlas`, `sprite-hit`, `sprite-anim`, `sprite-stress`, `rt-recursive`, `pf-sprites`, `pf-overdraw`, `rv-sprites` |
+| SpriteBatch.Draw | `sprite-basics`, `sprite-origin`, `sprite-sheet`, `sprite-sort`, `sprite-parallax`, `sprite-ui`, `sprite-atlas`, `sprite-hit`, `sprite-anim`, `sprite-tilemap`, `sprite-stress`, `rt-recursive`, `pf-sprites`, `pf-overdraw`, `rv-sprites` |
 | SpriteBatch.DrawString | `text-align`, `text-transform`, `text-hud`, `text-labels` |
 | SpriteEffect | `be-model` |
 | SpriteEffects | `sprite-basics`, `text-transform`, `rv-sprites` |
@@ -549,7 +549,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | TextInputEXT.TextInput | `in-text` |
 | Texture2D | `materials`, `app-content`, `tex-mip`, `rf-garden` |
 | Texture2D.FromStream | `tex-io` |
-| Texture2D.GetData | `sprite-atlas`, `sprite-hit`, `geo-terrain`, `tex-dynamic`, `ct-formats`, `rv-targets` |
+| Texture2D.GetData | `sprite-atlas`, `sprite-hit`, `sprite-tilemap`, `geo-terrain`, `tex-dynamic`, `ct-formats`, `rv-targets` |
 | Texture2D.SaveAsJpeg | `tex-io` |
 | Texture2D.SaveAsPng | `tex-io` |
 | Texture2D.SetData | `sprite-ui`, `sprite-atlas`, `sprite-anim`, `tex-dynamic` |

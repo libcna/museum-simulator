@@ -30,13 +30,13 @@ namespace {
 
 constexpr int kW = 960, kH = 540;
 
-enum class Mode { Basics, Origin, Sheet, Tint, Blend, Sort, Sampler, Parallax, Ui, Atlas, Stress, Scissor, Camera, Hit, Anim };
+enum class Mode { Basics, Origin, Sheet, Tint, Blend, Sort, Sampler, Parallax, Ui, Atlas, Stress, Scissor, Camera, Hit, Anim, Tilemap };
 
 Mode ParseMode(const std::string& s)
 {
     static const std::pair<const char*, Mode> table[] = {{"origin", Mode::Origin}, {"sheet", Mode::Sheet}, {"tint", Mode::Tint}, {"blend", Mode::Blend}, {"sort", Mode::Sort},
                                                          {"sampler", Mode::Sampler}, {"parallax", Mode::Parallax}, {"ui", Mode::Ui}, {"atlas", Mode::Atlas},
-                                                         {"stress", Mode::Stress}, {"scissor", Mode::Scissor}, {"camera", Mode::Camera}, {"hit", Mode::Hit}, {"anim", Mode::Anim}};
+                                                         {"stress", Mode::Stress}, {"scissor", Mode::Scissor}, {"camera", Mode::Camera}, {"hit", Mode::Hit}, {"anim", Mode::Anim}, {"tilemap", Mode::Tilemap}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
     return Mode::Basics;
@@ -135,6 +135,16 @@ public:
                 p.AddReadout("Per-pixel test", [this] { return std::string(pixelHits_ > 0 ? "HIT: " + std::to_string(pixelHits_) + " shared pixels" : "no shared pixel"); });
                 p.AddReadout("Pixels examined", [this] { return std::to_string(pixelsTested_) + " in " + Fmt1(static_cast<float>(testMs_ * 1000.0)) + " us"; });
                 break;
+            case Mode::Tilemap:
+                p.AddSlider("Camera X", 0.0f, 1.0f, tileCamX_, [this](float v) { tileCamX_ = v; tileAuto_ = false; });
+                p.AddSlider("Camera Y", 0.0f, 1.0f, tileCamY_, [this](float v) { tileCamY_ = v; tileAuto_ = false; });
+                p.AddSlider("Zoom", 1.0f, 4.0f, tileZoom_, [this](float v) { tileZoom_ = v; });
+                p.AddToggle("Pan on its own", true, [this](bool v) { tileAuto_ = v; });
+                p.AddToggle("Cull tiles outside the screen", true, [this](bool v) { tileCull_ = v; });
+                p.AddReadout("Tiles in the map", [] { return std::to_string(kMapW * kMapH); });
+                p.AddReadout("Tiles drawn this frame", [this] { return std::to_string(tilesDrawn_); });
+                p.AddReadout("Level data", [] { return std::string("a 96 x 60 Texture2D read with GetData"); });
+                break;
             case Mode::Anim:
                 p.AddChoice("Clip", {"Idle (frames 0-1)", "Walk (frames 2-5)", "Jump (frames 6-7)", "All eight"}, 1, [this](int v) { clip_ = v; animTime_ = 0.0f; });
                 p.AddChoice("Loop mode", {"Loop", "Ping-pong", "Play once"}, 0, [this](int v) { loop_ = v; animTime_ = 0.0f; });
@@ -154,6 +164,7 @@ public:
         if (mode_ == Mode::Stress) EnsureSprites();
         if (mode_ == Mode::Hit) BuildHitTextures();
         if (mode_ == Mode::Anim) BuildAnimSheet();
+        if (mode_ == Mode::Tilemap) BuildTilemap();
     }
 
     void Update(const UpdateContext& ctx) override
@@ -174,6 +185,10 @@ public:
             hitY_ = 270.0f + std::sin(time_ * 0.8f) * 110.0f;
             rot_ = std::fmod(rot_ + 25.0f * ctx.dt + 180.0f, 360.0f) - 180.0f;
         }
+        if (mode_ == Mode::Tilemap && tileAuto_) {
+            tileCamX_ = 0.5f + 0.42f * std::sin(time_ * 0.21f);
+            tileCamY_ = 0.5f + 0.40f * std::sin(time_ * 0.17f + 1.0f);
+        }
         if (mode_ == Mode::Anim && playing_) {
             animTime_ += ctx.dt;
             if (travel_ && clip_ != 0) walkX_ += walkDir_ * (clip_ == 1 ? 160.0f : 220.0f) * ctx.dt;
@@ -185,7 +200,7 @@ public:
 private:
     [[nodiscard]] std::string Title() const
     {
-        static const char* names[] = {"Sprites: position, rotation, scale and flip", "Sprite origin and rotation", "Sprite sheets and source rectangles", "Colour tint and alpha", "BlendState presets side by side", "SpriteSortMode and layer depth", "SamplerState filtering and addressing", "Scrolling and parallax", "UI panels and nine-slice", "Texture atlases", "Thousands of sprites", "Scissor rectangle clipping", "A 2D camera with a transform matrix", "Per-pixel collision", "Sprite animation: clips and loop modes"};
+        static const char* names[] = {"Sprites: position, rotation, scale and flip", "Sprite origin and rotation", "Sprite sheets and source rectangles", "Colour tint and alpha", "BlendState presets side by side", "SpriteSortMode and layer depth", "SamplerState filtering and addressing", "Scrolling and parallax", "UI panels and nine-slice", "Texture atlases", "Thousands of sprites", "Scissor rectangle clipping", "A 2D camera with a transform matrix", "Per-pixel collision", "Sprite animation: clips and loop modes", "Tile maps and culling"};
         return names[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
@@ -203,6 +218,7 @@ private:
             case Mode::Atlas: return {"An atlas packs several images into one texture so a whole scene needs one texture bind. The four", "tiles are copied into a 128 x 128 texture at run time with GetData and SetData, then drawn by source rectangle."};
             case Mode::Stress: return {"SpriteBatch batches sprites into a few big draw calls. Raise the count to see how many sprites per", "second this renderer can push; the frame rate on your screen is the museum's own, so go gently."};
             case Mode::Scissor: return {"With RasterizerState.ScissorTestEnable and GraphicsDevice.ScissorRectangle, drawing is clipped to a", "rectangle: how scrolling lists and UI panels hide what overflows. Slide the rectangle over a long list."};
+            case Mode::Tilemap: return {"A level is often just an image: each pixel's red value is a tile number, read once with Texture2D.GetData. Each frame the", "tile atlas is drawn with source rectangles, and only the tiles the camera can see: Rectangle.Intersects against the screen."};
             case Mode::Hit: return {"Two sprites collide when their opaque pixels touch, not when their rectangles do. The cheap test is Rectangle.Intersects", "on the bounding boxes; only if that passes does the exact test read both textures' pixels (GetData). Magenta shows the shared ones."};
             case Mode::Anim: return {"Animation is a SourceRectangle that changes over time: elapsed seconds times frames-per-second picks the frame. A clip", "is a range of frames; loop mode decides what happens at the end (wrap, bounce back or stop on the last frame)."};
             default: return {"The transformMatrix passed to SpriteBatch.Begin turns a 2D world into a screen: translation pans, scale zooms,", "rotation turns the view. The same sprites are drawn; only the matrix changes."};
@@ -255,6 +271,7 @@ private:
             case Mode::Camera: DrawCamera(sb); break;
             case Mode::Hit: DrawHit(sb); break;
             case Mode::Anim: DrawAnim(sb); break;
+            case Mode::Tilemap: DrawTilemap(sb); break;
         }
     }
 
@@ -704,6 +721,88 @@ private:
         sb.End();
     }
 
+    // --- tile map ------------------------------------------------------------------------------
+    static constexpr int kMapW = 96, kMapH = 60, kTile = 16;
+    void BuildTilemap()
+    {
+        GraphicsDevice& d = *S().device;
+        // The level image: a height field thresholded into water, sand, grass, forest, rock and snow, plus a few ruins.
+        std::vector<Color> level(static_cast<std::size_t>(kMapW * kMapH));
+        for (int y = 0; y < kMapH; ++y)
+            for (int x = 0; x < kMapW; ++x) {
+                const float u = static_cast<float>(x) / kMapW, v = static_cast<float>(y) / kMapH;
+                float h = 0.5f + 0.28f * std::sin(u * 9.0f) * std::cos(v * 7.0f) + 0.16f * std::sin(u * 23.0f + v * 11.0f) + 0.1f * std::cos(v * 31.0f - u * 5.0f);
+                int id = h < 0.28f ? 0 : (h < 0.36f ? 1 : (h < 0.62f ? 2 : (h < 0.76f ? 3 : (h < 0.9f ? 4 : 5))));
+                if (id == 2 && ((x * 7 + y * 13) % 41 == 0)) id = 6;   // a standing stone
+                if (id == 2 && ((x / 4 + y / 3) % 17 == 0) && (x % 4 < 2)) id = 7;   // paving
+                level[static_cast<std::size_t>(y * kMapW + x)] = Color(static_cast<std::uint8_t>(id), static_cast<std::uint8_t>(0), static_cast<std::uint8_t>(0), static_cast<std::uint8_t>(255));
+            }
+        levelTexture_ = std::make_unique<Texture2D>(d, kMapW, kMapH);
+        levelTexture_->SetData(level.data(), kMapW * kMapH);
+        std::vector<Color> back(level.size());
+        levelTexture_->GetData(back.data(), kMapW * kMapH);
+        tiles_.resize(back.size());
+        for (std::size_t i = 0; i < back.size(); ++i) tiles_[i] = back[i].getRProperty();
+        // The tile atlas: eight 16 x 16 tiles in a row, drawn with a little texture so they read as ground.
+        const Color base[8] = {Color(40, 90, 170, 255), Color(220, 200, 140, 255), Color(70, 150, 70, 255), Color(30, 100, 50, 255), Color(120, 120, 130, 255), Color(240, 244, 250, 255), Color(90, 85, 80, 255), Color(170, 150, 120, 255)};
+        std::vector<Color> atlas(static_cast<std::size_t>(kTile * 8 * kTile));
+        for (int t = 0; t < 8; ++t)
+            for (int y = 0; y < kTile; ++y)
+                for (int x = 0; x < kTile; ++x) {
+                    const int n = ((x * 5 + y * 3 + t * 7) % 7) - 3;
+                    Color c = base[t];
+                    int r = c.getRProperty() + n * 5, g = c.getGProperty() + n * 5, b = c.getBProperty() + n * 5;
+                    if (t == 0 && ((x + y * 2 + 3) % 8 == 0)) { r += 40; g += 40; b += 40; }              // water glints
+                    if (t == 3 && (x % 5 == 2 && y % 5 == 2)) { r = 20; g = 70; b = 30; }                   // tree trunks
+                    if (t == 6 && x > 4 && x < 11 && y > 3 && y < 13) { r = 60; g = 55; b = 55; }          // a stone
+                    atlas[static_cast<std::size_t>(y * kTile * 8 + t * kTile + x)] = Color(static_cast<std::uint8_t>(std::clamp(r, 0, 255)), static_cast<std::uint8_t>(std::clamp(g, 0, 255)), static_cast<std::uint8_t>(std::clamp(b, 0, 255)), static_cast<std::uint8_t>(255));
+                }
+        tileAtlas_ = std::make_unique<Texture2D>(d, kTile * 8, kTile);
+        tileAtlas_->SetData(atlas.data(), kTile * kTile * 8);
+    }
+    void DrawTilemap(SpriteBatch& sb)
+    {
+        Backdrop(sb);
+        if (!tileAtlas_ || tiles_.empty()) return;
+        const float zoom = tileZoom_;
+        const float worldW = static_cast<float>(kMapW * kTile), worldH = static_cast<float>(kMapH * kTile);
+        const float viewW = static_cast<float>(kW) / zoom, viewH = static_cast<float>(kH) / zoom;
+        const float camX = std::clamp(tileCamX_ * worldW - viewW * 0.5f, 0.0f, std::max(0.0f, worldW - viewW)), camY = std::clamp(tileCamY_ * worldH - viewH * 0.5f, 0.0f, std::max(0.0f, worldH - viewH));
+        const Rectangle screen(static_cast<int>(camX), static_cast<int>(camY), static_cast<int>(viewW) + 1, static_cast<int>(viewH) + 1);
+        const Matrix m = Matrix::CreateTranslation(-camX, -camY, 0.0f) * Matrix::CreateScale(zoom, zoom, 1.0f);
+        Begin(sb, SpriteSortMode::Deferred, &BlendState::Opaque, &SamplerState::PointClamp, nullptr, m);
+        tilesDrawn_ = 0;
+        for (int ty = 0; ty < kMapH; ++ty)
+            for (int tx = 0; tx < kMapW; ++tx) {
+                const Rectangle dest(tx * kTile, ty * kTile, kTile, kTile);
+                if (tileCull_ && !dest.Intersects(screen)) continue;
+                const int id = std::min<int>(tiles_[static_cast<std::size_t>(ty * kMapW + tx)], 7);
+                sb.Draw(*tileAtlas_, dest, Rectangle(id * kTile, 0, kTile, kTile), Color::White);
+                ++tilesDrawn_;
+            }
+        sb.End();
+        // The whole level as a minimap (the level texture itself), with the camera's rectangle.
+        Begin(sb, SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::PointClamp);
+        sb.Draw(*S().whiteTexture, Rectangle(kW - 212, 8, 204, 132), Color(0, 0, 0, 200));
+        const float sx = 192.0f / static_cast<float>(kMapW), sy = 120.0f / static_cast<float>(kMapH);
+        for (int ty = 0; ty < kMapH; ty += 2)
+            for (int tx = 0; tx < kMapW; tx += 2) {
+                static const Color mini[8] = {Color(40, 90, 170, 255), Color(220, 200, 140, 255), Color(70, 150, 70, 255), Color(30, 100, 50, 255), Color(120, 120, 130, 255), Color(240, 244, 250, 255), Color(90, 85, 80, 255), Color(170, 150, 120, 255)};
+                sb.Draw(*S().whiteTexture, Rectangle(kW - 206 + static_cast<int>(static_cast<float>(tx) * sx), 14 + static_cast<int>(static_cast<float>(ty) * sy), 4, 3), mini[std::min<int>(tiles_[static_cast<std::size_t>(ty * kMapW + tx)], 7)]);
+            }
+        const Color frame(255, 230, 120, 255);
+        const int fx = kW - 206 + static_cast<int>(camX / static_cast<float>(kTile) * sx), fy = 14 + static_cast<int>(camY / static_cast<float>(kTile) * sy);
+        const int fw = static_cast<int>(viewW / static_cast<float>(kTile) * sx), fh = static_cast<int>(viewH / static_cast<float>(kTile) * sy);
+        sb.Draw(*S().whiteTexture, Rectangle(fx, fy, fw, 2), frame);
+        sb.Draw(*S().whiteTexture, Rectangle(fx, fy + fh, fw, 2), frame);
+        sb.Draw(*S().whiteTexture, Rectangle(fx, fy, 2, fh), frame);
+        sb.Draw(*S().whiteTexture, Rectangle(fx + fw, fy, 2, fh), frame);
+        sb.End();
+        Begin(sb);
+        Text(sb, std::to_string(tilesDrawn_) + " of " + std::to_string(kMapW * kMapH) + " tiles drawn" + (tileCull_ ? " (culled)" : " (no culling)"), 14, 8, Color::White, 0.7f);
+        sb.End();
+    }
+
     // --- sprite animation ----------------------------------------------------------------------
     static constexpr int kFrame = 48, kFrames = 8;
     void BuildAnimSheet()
@@ -789,6 +888,11 @@ private:
     }
 
     Mode mode_;
+    std::unique_ptr<Texture2D> levelTexture_, tileAtlas_;
+    std::vector<std::uint8_t> tiles_;
+    float tileCamX_ = 0.5f, tileCamY_ = 0.5f, tileZoom_ = 2.0f;
+    bool tileAuto_ = true, tileCull_ = true;
+    int tilesDrawn_ = 0;
     std::unique_ptr<Texture2D> hitA_, hitB_, sheet_;
     std::vector<unsigned char> maskA_, maskB_;
     std::vector<std::pair<int, int>> hitPixels_;

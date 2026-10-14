@@ -74,6 +74,8 @@ WingSpec TechniqueWing()
                {"Rectangle.Intersects", "Rectangle.Intersect", "Texture2D.GetData", "SpriteBatch.Draw"}),
         Sprite("sprite-anim", "Sprite Animation", "Clips, loop modes and elapsed-time frame selection with SourceRectangle and SpriteEffects.FlipHorizontally", "anim",
                {"SpriteBatch.Draw", "Rectangle", "SpriteEffects.FlipHorizontally", "Texture2D.SetData"}),
+        Sprite("sprite-tilemap", "Tile Maps and Culling", "A level read from a Texture2D with GetData, a tile atlas drawn by source rectangle and only the visible tiles submitted", "tilemap",
+               {"Texture2D.GetData", "SpriteBatch.Draw", "Rectangle.Intersects", "SpriteBatch.Begin", "Matrix.CreateScale"}),
         Sprite("sprite-stress", "Thousands of Sprites", "One Begin/End with up to twenty thousand animated sprites and live throughput", "stress", {"SpriteBatch", "SpriteBatch.Draw"}),
     };
     return w;
