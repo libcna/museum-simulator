@@ -102,6 +102,7 @@ public:
                 p.AddSlider("FresnelFactor", 0.0f, 4.0f, fresnel_, [this](float v) { fresnel_ = v; });
                 p.AddSlider("Spin", 0.0f, 2.0f, speed_, [this](float v) { speed_ = v; });
                 p.AddReadout("TextureCube", [] { return std::string("64 px per face, 6 faces"); });
+                p.AddReadout("GetData round trip", [this] { return cubeCheck_; });
                 break;
             case Mode::Volume:
                 p.AddSlider("Slice", 0.0f, 1.0f, slice_, [this](float v) { slice_ = v; });
@@ -476,6 +477,7 @@ private:
     {
         GraphicsDevice& d = *S().device;
         const int n = 64;
+        int faceMatches = 0;
         cube_ = std::make_unique<TextureCube>(d, n, false, SurfaceFormat::Color);
         const CubeMapFace faces[6] = {CubeMapFace::PositiveX, CubeMapFace::NegativeX, CubeMapFace::PositiveY, CubeMapFace::NegativeY, CubeMapFace::PositiveZ, CubeMapFace::NegativeZ};
         const Color tints[6] = {Color(230, 90, 90, 255), Color(90, 230, 140, 255), Color(130, 190, 255, 255), Color(70, 60, 50, 255), Color(240, 220, 100, 255), Color(200, 120, 230, 255)};
@@ -490,7 +492,16 @@ private:
                                                                       static_cast<std::uint8_t>(tints[f].getBProperty() * k * g), static_cast<std::uint8_t>(255));
                 }
             cube_->SetData(faces[f], px.data(), n * n);
+            // Read the face back: what was written is what comes out.
+            std::vector<Color> back(px.size());
+            try {
+                cube_->GetData(faces[f], back.data(), n * n);
+                if (back == px) ++faceMatches;
+            } catch (const std::exception& e) {
+                cubeCheck_ = std::string("GetData failed: ") + std::string(e.what()).substr(0, 30);
+            }
         }
+        if (cubeCheck_ == "-") cubeCheck_ = std::to_string(faceMatches) + " of 6 faces read back identical";
         envFx_ = std::make_unique<EnvironmentMapEffect>(d);
         envFx_->EnableDefaultLighting();
         envFx_->setEnvironmentMapProperty(cube_.get());
@@ -665,7 +676,7 @@ private:
     std::unique_ptr<AlphaTestEffect> alphaFx_;
     std::unique_ptr<Texture3D> volume_;
     std::vector<Color> pixels_, volumeData_;
-    std::string readback_ = "-", checksum_ = "-", ioBytes_ = "-", ioSize_ = "-", ioError_ = "-";
+    std::string readback_ = "-", checksum_ = "-", cubeCheck_ = "-", ioBytes_ = "-", ioSize_ = "-", ioError_ = "-";
     double setMs_ = 0.0;
     float time_ = 0.0f, scrollX_ = 0.0f, scrollY_ = 0.0f;
     int filter_ = 0, size_ = 128, fn_ = 0, shownSlice_ = -1;

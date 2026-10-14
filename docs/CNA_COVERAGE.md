@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-541 distinct API names are claimed by at least one room.
+543 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -558,6 +558,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Texture3D.SetData | `tex-volume` |
 | TextureAddressMode | `sprite-sampler`, `tex-address`, `rv-sampling` |
 | TextureCube | `tex-cube`, `model-ibl` |
+| TextureCube.GetData | `tex-cube` |
+| TextureCube.SetData | `tex-cube` |
 | TextureFilter | `sprite-sampler`, `rv-sampling` |
 | TextureTransformEXT | `model-material` |
 | TitleContainer.OpenStream | `ct-storage` |

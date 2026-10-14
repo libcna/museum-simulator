@@ -77,7 +77,7 @@ WingSpec TextureWing()
         tex("tex-dynamic", "Dynamic Textures and Readback", "Texture2D.SetData every frame and GetData on one texel", "dynamic", {"Texture2D.SetData", "Texture2D.GetData"}),
         tex("tex-formats", "Surface Formats", "The same gradient in Color, Bgr565, Bgra4444, Alpha8 and HalfVector4", "formats", {"SurfaceFormat", "PackedVector.Bgr565", "PackedVector.Bgra4444", "PackedVector.Alpha8", "PackedVector.HalfVector4"}),
         tex("tex-alpha", "Alpha: Test, Blend, Opaque", "AlphaTestEffect with a reference alpha against blending and opaque drawing", "alpha", {"AlphaTestEffect", "BlendState.NonPremultiplied", "CompareFunction"}),
-        tex("tex-cube", "Cube Maps and Environment Maps", "A procedural TextureCube reflected by EnvironmentMapEffect", "cube", {"TextureCube", "EnvironmentMapEffect", "CubeMapFace"}),
+        tex("tex-cube", "Cube Maps and Environment Maps", "A procedural TextureCube reflected by EnvironmentMapEffect", "cube", {"TextureCube", "EnvironmentMapEffect", "CubeMapFace", "TextureCube.SetData", "TextureCube.GetData"}),
         tex("tex-volume", "Volume Textures", "Texture3D storage and readback, shown slice by slice", "volume", {"Texture3D", "Texture3D.SetData", "Texture3D.GetData"}),
         tex("tex-io", "Encoding and Decoding Images", "Texture2D.SaveAsPng and SaveAsJpeg into a stream, then Texture2D.FromStream back with fit and zoom", "io",
             {"Texture2D.SaveAsPng", "Texture2D.SaveAsJpeg", "Texture2D.FromStream", "System.IO.MemoryStream"}),
