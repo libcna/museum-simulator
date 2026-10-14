@@ -21,7 +21,11 @@
 #include "Microsoft/Xna/Framework/Net/GameEndedEventArgs.hpp"
 #include "Microsoft/Xna/Framework/Net/GameStartedEventArgs.hpp"
 #include "Microsoft/Xna/Framework/Net/GamerJoinedEventArgs.hpp"
+#include "Microsoft/Xna/Framework/Net/AvailableNetworkSession.hpp"
+#include "Microsoft/Xna/Framework/Net/AvailableNetworkSessionCollection.hpp"
 #include "Microsoft/Xna/Framework/Net/GamerLeftEventArgs.hpp"
+#include "Microsoft/Xna/Framework/Net/NetworkSessionProperties.hpp"
+#include "Microsoft/Xna/Framework/Net/QualityOfService.hpp"
 #include "Microsoft/Xna/Framework/Net/LocalNetworkGamer.hpp"
 #include "Microsoft/Xna/Framework/Net/NetworkSession.hpp"
 #include "Microsoft/Xna/Framework/Net/NetworkSessionEndedEventArgs.hpp"
@@ -84,6 +88,11 @@ public:
             p.AddReadout("IsEveryoneReady", [this] { NetworkSession* n = Primary(); return n != nullptr ? std::string(n->getIsEveryoneReadyProperty() ? "true" : "false") : std::string("-"); });
             p.AddReadout("Gamers (local / all)", [this] { NetworkSession* n = Primary(); return n != nullptr ? std::to_string(n->getLocalGamersProperty().getCountProperty()) + " / " + std::to_string(n->getAllGamersProperty().getCountProperty()) : std::string("-"); });
             p.AddToggle("Deliver packets: a SystemLink session (visible on your network)", false, [this](bool v) { SetTransport(v); });
+            p.AddSlider("SessionProperties[0] (game mode)", 0.0f, 9.0f, static_cast<float>(gameMode_), [this](float v) { gameMode_ = static_cast<int>(v); ApplySessionSettings(); }, "%.0f", 1.0f);
+            p.AddToggle("AllowJoinInProgress", false, [this](bool v) { joinInProgress_ = v; ApplySessionSettings(); });
+            p.AddChoice("Search for game mode", {"any", "this session's", "one nobody hosts"}, 0, [this](int v) { searchMode_ = v; });
+            p.AddButton("NetworkSession.BeginFind (SystemLink)", [this] { BeginFind(); });
+            p.AddReadout("Find", [this] { return found_; });
             p.AddSlider("Packets per second", 2.0f, 60.0f, rate_, [this](float v) { rate_ = v; }, "%.0f", 1.0f);
             p.AddReadout("Transport", [this] { return transportStatus_; });
         }
@@ -118,6 +127,7 @@ public:
             if (lobby_ == nullptr && host_ == nullptr && !tried_ && ctx.playerInRoom) OpenLobby();
             if (lobby_ != nullptr) lobby_->Update();
             Pump(ctx.dt);
+            PollFind();
         }
 #endif
     }
@@ -287,6 +297,13 @@ private:
 
     void CloseSession()
     {
+        if (find_ != nullptr && find_->getIsCompletedProperty()) {   // a search still running is picked up on the next visit
+            try {
+                (void)NetworkSession::EndFind(find_);
+            } catch (const std::exception&) {}
+            delete find_;
+            find_ = nullptr;
+        }
         CloseTransport();
         DisposeLobby();
         tried_ = false;
@@ -328,6 +345,70 @@ private:
             OpenLobby();
             transportStatus_ = std::string("unavailable here: ") + std::string(e.what()).substr(0, 56);
             Museum::Log("net", "%s", transportStatus_.c_str());
+        }
+    }
+
+    // The settings a host edits on a live session: its properties (what a search can filter on) and whether players may join once it has started.
+    void ApplySessionSettings()
+    {
+        NetworkSession* n = Primary();
+        if (n == nullptr) return;
+        try {
+            n->getSessionPropertiesProperty()[0] = gameMode_;
+            n->setAllowJoinInProgressProperty(joinInProgress_);
+            Log("SessionProperties[0] = " + std::to_string(gameMode_) + ", AllowJoinInProgress " + (joinInProgress_ ? "true" : "false"));
+        } catch (const std::exception& e) {
+            Log(std::string("session settings: ") + std::string(e.what()).substr(0, 50));
+        }
+    }
+
+    // A search is asynchronous: BeginFind returns at once, and the result is read when it completes.
+    void BeginFind()
+    {
+        if (find_ != nullptr) return;
+        try {
+            // As in XNA, a process that is in a session cannot search: the room's own session is closed for the search and reopened after it.
+            if (Primary() != nullptr) {
+                CloseSession();
+                phase_ = Phase::Off;
+                tried_ = true;   // the room's own session reopens when the search has finished, not before
+                transportStatus_ = "closed for the search: a process in a session cannot search (it reopens afterwards)";
+                Log("session closed so that Find can run");
+            }
+            NetworkSessionProperties props;
+            if (searchMode_ == 1) props[0] = gameMode_;
+            if (searchMode_ == 2) props[0] = (gameMode_ + 5) % 10;
+            find_ = NetworkSession::BeginFind(NetworkSessionType::SystemLink, 2, props, {}, std::any{});
+            found_ = "searching the local network...";
+        } catch (const std::exception& e) {
+            found_ = std::string("BeginFind: ") + std::string(e.what()).substr(0, 56);
+        }
+    }
+    void PollFind()
+    {
+        if (find_ == nullptr || !find_->getIsCompletedProperty()) return;
+        try {
+            AvailableNetworkSessionCollection owned = NetworkSession::EndFind(find_);
+            const AvailableNetworkSessionCollection& list = owned;
+            delete find_;
+            find_ = nullptr;
+            found_ = std::to_string(list.getCountProperty()) + " session(s) found" + (list.getCountProperty() == 0 ? (searchMode_ == 0 ? " (nobody on this network hosts a SystemLink session: start a second museum and switch packet delivery on there)" : " (no session matches those search properties)") : "");
+            tried_ = false;   // the room's Local session reopens
+            foundLines_.clear();
+            for (int i = 0; i < list.getCountProperty() && i < 3; ++i) {
+                const AvailableNetworkSession& a = list[i];
+                char buf[220];
+                const std::optional<int> mode = a.getSessionPropertiesProperty()[0];
+                std::snprintf(buf, sizeof buf, "host %s: %d gamer(s), %d public / %d private slots open, mode %s, round trip %.0f ms%s", a.getHostGamertagProperty().c_str(), a.getCurrentGamerCountProperty(),
+                              a.getOpenPublicGamerSlotsProperty(), a.getOpenPrivateGamerSlotsProperty(), mode ? std::to_string(*mode).c_str() : "-",
+                              a.getQualityOfServiceProperty().getIsAvailableProperty() ? a.getQualityOfServiceProperty().getAverageRoundtripTimeProperty().getTotalMillisecondsProperty() : -1.0,
+                              a.getQualityOfServiceProperty().getIsAvailableProperty() ? "" : " (QualityOfService not available)");
+                foundLines_.push_back(buf);
+            }
+        } catch (const std::exception& e) {
+            delete find_;
+            find_ = nullptr;
+            found_ = std::string("EndFind: ") + std::string(e.what()).substr(0, 56);
         }
     }
 
@@ -424,6 +505,14 @@ private:
             text(l, 670, y, Kit::Rgba(190, 235, 200), 0.45f);
             y += 24.0f;
         }
+        {
+            float fy = 480.0f;
+            text("find: " + found_, 24, fy, Kit::kText, 0.5f);
+            for (const std::string& l : foundLines_) {
+                fy += 20.0f;
+                text(l, 40, fy, Kit::Rgba(190, 235, 200), 0.45f);
+            }
+        }
         text("transport: " + transportStatus_, 24, 450, phase_ == Phase::Failed ? Kit::Rgba(255, 190, 150) : Kit::kDim, 0.5f);
     }
 
@@ -446,6 +535,11 @@ private:
     std::deque<Vector2> trail_, received_trail_;
     std::deque<std::string> log_;
     std::string status_ = "-";
+    int gameMode_ = 3, searchMode_ = 0;
+    bool joinInProgress_ = false;
+    System::IAsyncResult* find_ = nullptr;
+    std::string found_ = "not searched yet";
+    std::vector<std::string> foundLines_;
 #else
     void CloseSession() {}
 #endif
