@@ -12,6 +12,7 @@
 #include "Catalogue/Inventory.hpp"
 #include "Catalogue/ReferenceViews.hpp"
 #include "Exhibits/ExhibitRegistry.hpp"
+#include "Exhibits/Shaders/ShaderSources.hpp"
 #include "World/Catalogue.hpp"
 
 using Microsoft::Xna::Framework::BoundingBox;
@@ -129,6 +130,20 @@ void TestExhibitsResolve(const MuseumPlan& m)
     for (const RoomDef& r : m.rooms) Check(IsKnownExhibit(r.exhibit), "exhibit '" + r.exhibit + "' of " + r.key + " is registered");
 }
 
+// Every fragment shader of the shader lab has a WGSL body (WEBGPU runs those), and every body names the entry point the renderer looks for.
+void TestShaderLabHasEveryDialect(const MuseumPlan& m)
+{
+    int shaders = 0;
+    for (const RoomDef& r : m.rooms) {
+        if (r.exhibit != "shaders") continue;
+        ++shaders;
+        const char* body = ShaderSources::WgslBody(r.params.Get("shader"));
+        Check(body != nullptr, "the shader room " + r.key + " has a WGSL body");
+        if (body != nullptr) Check(std::string(body).find("fn fs_main") != std::string::npos, "the WGSL body of " + r.key + " defines fs_main");
+    }
+    Check(shaders >= 12, "the shader lab has its twelve rooms");
+}
+
 void TestAssetsExist(const MuseumPlan& m)
 {
 #ifdef MUSEUM_SOURCE_CONTENT_DIR
@@ -228,6 +243,7 @@ int main()
     TestRoomFrames(m);
     TestDoorsAreSymmetric(m);
     TestExhibitsResolve(m);
+    TestShaderLabHasEveryDialect(m);
     TestAssetsExist(m);
     TestInventory(m);
     TestEveryFloorIsConnected(m);
