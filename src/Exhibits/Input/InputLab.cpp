@@ -123,6 +123,8 @@ public:
                 p.AddReadout("IsConnected", [this] { return std::string(pad_.getIsConnectedProperty() ? "yes" : "no"); });
                 p.AddReadout("Packet number", [this] { return std::to_string(pad_.getPacketNumberProperty()); });
                 p.AddReadout("IsButtonDown(Buttons.*)", [this] { return PressedButtons(); });
+                p.AddReadout("IsButtonUp(A|B|X|Y)", [this] { return std::string(pad_.IsButtonUp(Buttons::A | Buttons::B | Buttons::X | Buttons::Y) ? "all four up" : "at least one held"); });
+                p.AddReadout("Equals(previous state)", [this] { return std::string(pad_.Equals(previousPad_) ? "unchanged" : "changed"); });
                 break;
             case Mode::Players:
                 p.AddToggle("Keyboard emulation (CNAEXT)", false, [](bool v) { GamePad::setKeyboardEmulationEnabledEXT(v); });
@@ -189,7 +191,8 @@ public:
             case Mode::Keyboard: UpdateKeyboard(ks); break;
             case Mode::Edges: UpdateEdges(ks, ctx.dt); break;
             case Mode::Mouse: UpdateMouse(); break;
-            case Mode::Pad: pad_ = zone_ == 0 ? GamePad::GetState(PlayerIndex::One, GamePadDeadZone::IndependentAxes)
+            case Mode::Pad: previousPad_ = pad_;
+                pad_ = zone_ == 0 ? GamePad::GetState(PlayerIndex::One, GamePadDeadZone::IndependentAxes)
                                                : (zone_ == 1 ? GamePad::GetState(PlayerIndex::One, GamePadDeadZone::Circular) : GamePad::GetState(PlayerIndex::One, GamePadDeadZone::None));
                 break;
             case Mode::Players: UpdatePlayers(); break;
@@ -842,6 +845,7 @@ private:
     Vector2 trailPos_{0.5f, 0.5f};
     // pad
     GamePadState pad_;
+    GamePadState previousPad_;
     int zone_ = 0;
     bool vibrated_ = false;
     std::string vibrateNote_ = "not tried";
