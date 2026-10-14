@@ -49,7 +49,8 @@ Hundreds of rooms are never instantiated together. `MuseumWorld` works on the do
 - `Exhibit` (base): `BuildStatic` (architecture through `RoomBuilder`), `Load` (GPU objects, interactables), `Update`,
   `RenderOffscreen` (render-target passes, before the back buffer), `DrawOpaque`, `DrawTransparent`, `DrawOverlay`.
 - `ScreenExhibit`: a room whose centrepiece is a live SpriteBatch screen on the far wall (`DrawScreen`), a control
-  panel and an information sign. Most labs derive from it.
+  panel and an information sign. Most labs derive from it. `Exhibit::Dress` (after `BuildStatic`) is where a base class
+  adds furniture: `ScreenExhibit` stands two columns beside the screen and a bench on the east wall.
 - `ControlPanel` (`Interaction/`): sliders, toggles, choices, buttons and read-outs drawn on a render target in the
   world; hover, click, drag, wheel. Scripts operate it with `press:LABEL=V`.
 - `Gizmos`, `MiniView`, `LitMesh`/`Shapes`, `ParticleSystem`/`ParticleRenderer`: small helpers over CNA primitives.
@@ -110,6 +111,15 @@ the narrowest:
 `CMakeLists.txt` builds everything except `main()` as the static library `museum_core`, which the executable and
 `museum_tests` both link. CNA is added with `add_subdirectory(../cna)`; the museum sets three CNA options
 (`CNA_CNAEXT`, `CNA_DEVICES`, `CNA_DIAGNOSTICS=STATS`) and compiles `Content/Pipeline` with `cna-content`.
+
+Optional CNA libraries, each behind a switch, and what a room does without them (it says so; nothing else changes):
+
+| Switch | CNA library | Rooms |
+|---|---|---|
+| `MUSEUM_NETWORKING` (default ON; needs libcurl and ENet) | `CNA_Net`, `CNA_GamerServices` | Players and Networking wing, avatars, leaderboards |
+| `MUSEUM_PIPELINE` (default ON) | `cna_content_pipeline` (IntermediateSerializer, TextureProcessor) | The Pipeline in the Game, Processing a Texture |
+| `MUSEUM_VIDEO` (AUTO: on when FFmpeg is installed) | `CNA_ENABLE_VIDEO` | Video |
+| none (linked when the target exists) | `cna_design` | Type Converters |
 
 ## Conventions
 
