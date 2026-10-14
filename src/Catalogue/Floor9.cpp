@@ -72,6 +72,7 @@ WingSpec ValidationWing()
         rv("rv-sampling", "Texture Sampling", "Wrap, Clamp, Mirror, point and linear filtering", "sampling", {"SamplerState.AddressU", "TextureAddressMode", "TextureFilter"}),
         rv("rv-targets", "Render Targets", "Orientation, reuse as a texture and half-float targets", "targets", {"RenderTarget2D", "GraphicsDevice.SetRenderTarget", "Texture2D.GetData"}),
         rv("rv-camera", "Camera Matrices", "LookAt, perspective and orthographic projection, world translation", "camera", {"Matrix.CreateLookAt", "Matrix.CreatePerspectiveFieldOfView", "Matrix.CreateOrthographic", "BasicEffect.World"}),
+        rv("rv-formats", "Surface Formats", "Every uncompressed texture format returns exactly the bits it was given", "formats", {"SurfaceFormat", "Texture2D.SetData", "Texture2D.GetData", "PackedVector.Bgr565", "PackedVector.Rgba64", "PackedVector.HalfVector4"}),
         rv("rv-effects", "Stock Effects", "BasicEffect, AlphaTestEffect and DualTextureEffect produce the expected pixels", "effects", {"BasicEffect", "AlphaTestEffect", "DualTextureEffect"}),
     };
     return w;

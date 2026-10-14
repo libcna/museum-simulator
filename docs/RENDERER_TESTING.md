@@ -48,12 +48,18 @@ by CNA):
 
 | Renderer | Checks | Pass | Fail | Info | Skip |
 |---|---|---|---|---|---|
-| OPENGLES3 | 56 | 55 | 0 | 1 | 0 |
-| OPENGL33 | 56 | 55 | 0 | 1 | 0 |
-| SOFTWARE | 56 | 55 | 0 | 1 | 0 |
-| FNA3D | 56 | 53 | 1 (`PunctualLightEXT` ignored) | 1 | 1 (no half-float render targets) |
-| WEBGPU | 56 | 55 | 0 | 1 | 0 |
-| SDL_GPU | 56 | 55 | 0 | 1 | 0 |
+| OPENGLES3 | 85 | 84 | 0 | 1 | 0 |
+| OPENGL33 | 85 | 84 | 0 | 1 | 0 |
+| SOFTWARE | 85 | 84 | 0 | 1 | 0 |
+| FNA3D | 85 | 59 | 1 (`PunctualLightEXT` ignored) | 1 | 24 (half-float targets; 12 surface formats; their sampled twins) |
+| WEBGPU | 85 | 63 | 0 | 1 | 21 (the same, fewer: it has Color, HalfVector4 and the float formats' targets) |
+| SDL_GPU | 85 | 84 | 0 | 1 | 0 |
+
+The "Surface Formats" room (`rv-formats`) writes 16 values through every uncompressed `SurfaceFormat`, reads them back bit for bit,
+and draws ten of the unsigned formats through SpriteBatch to check what the GPU samples. All of it passes on the three OpenGL-family
+and SDL_GPU renderers; FNA3D can create only `Color` (plus DXT), WEBGPU only `Color`, `HalfVector4` and the 32-bit float formats.
+One expectation worth knowing: for the channels a format does not store, Direct3D 9, XNA and every CNA renderer sample **1**
+(`R16F` gives (r, 1, 1), `G16R16F` gives (r, g, 1)), while `PackedVector`'s own `ToVector4()` says 0.
 
 Run `tools/renderer_check.sh` for the current figures; they are not copied anywhere else.
 

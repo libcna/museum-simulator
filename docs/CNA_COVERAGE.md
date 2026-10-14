@@ -49,7 +49,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-571 distinct API names are claimed by at least one room.
+572 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -423,9 +423,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | OcclusionQuery.PixelCount | `rs-occlusion` |
 | PackedValue | `vt-packed` |
 | PackedVector.Alpha8 | `tex-formats` |
-| PackedVector.Bgr565 | `tex-formats` |
+| PackedVector.Bgr565 | `tex-formats`, `rv-formats` |
 | PackedVector.Bgra4444 | `tex-formats` |
-| PackedVector.HalfVector4 | `tex-formats` |
+| PackedVector.HalfVector4 | `tex-formats`, `rv-formats` |
+| PackedVector.Rgba64 | `rv-formats` |
 | PbrEffect | `model-pbr`, `model-effects`, `model-variants` |
 | PbrEffect.AlphaCutoff | `model-material` |
 | PbrEffect.EmissiveFactor | `model-pbr` |
@@ -568,17 +569,17 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | StorageDevice | `ct-storage` |
 | StorageDevice.GetStorageRootEXT | `ct-storage` |
 | StringBuilder | `text-hud` |
-| SurfaceFormat | `tex-formats`, `rt-formats` |
+| SurfaceFormat | `tex-formats`, `rt-formats`, `rv-formats` |
 | System.IO.MemoryStream | `tex-io` |
 | System.Resources.ResourceManager | `ct-resource` |
 | TextInputEXT.StartTextInput | `in-text` |
 | TextInputEXT.TextInput | `in-text` |
 | Texture2D | `materials`, `app-content`, `tex-mip`, `rf-garden` |
 | Texture2D.FromStream | `tex-io` |
-| Texture2D.GetData | `sprite-atlas`, `sprite-hit`, `sprite-tilemap`, `geo-terrain`, `tex-dynamic`, `ct-formats`, `rv-targets` |
+| Texture2D.GetData | `sprite-atlas`, `sprite-hit`, `sprite-tilemap`, `geo-terrain`, `tex-dynamic`, `ct-formats`, `rv-targets`, `rv-formats` |
 | Texture2D.SaveAsJpeg | `tex-io` |
 | Texture2D.SaveAsPng | `tex-io` |
-| Texture2D.SetData | `sprite-ui`, `sprite-atlas`, `sprite-anim`, `tex-dynamic` |
+| Texture2D.SetData | `sprite-ui`, `sprite-atlas`, `sprite-anim`, `tex-dynamic`, `rv-formats` |
 | Texture3D | `tex-volume` |
 | Texture3D.GetData | `tex-volume` |
 | Texture3D.SetData | `tex-volume` |

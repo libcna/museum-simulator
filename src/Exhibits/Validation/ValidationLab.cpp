@@ -20,6 +20,21 @@
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
 #include "Microsoft/Xna/Framework/Graphics/AlphaTestEffect.hpp"
+#include "Microsoft/Xna/Framework/Vector4.hpp"
+#include "Microsoft/Xna/Framework/Vector2.hpp"
+#include "Microsoft/Xna/Framework/Graphics/Texture2D.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PackedVector/Rgba64.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PackedVector/Rgba1010102.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PackedVector/Rg32.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PackedVector/NormalizedByte4.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PackedVector/NormalizedByte2.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PackedVector/HalfVector4.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PackedVector/HalfVector2.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PackedVector/HalfSingle.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PackedVector/Bgra5551.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PackedVector/Bgra4444.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PackedVector/Bgr565.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PackedVector/Alpha8.hpp"
 #include "Microsoft/Xna/Framework/Graphics/BasicEffect.hpp"
 #include "Microsoft/Xna/Framework/Graphics/ColorWriteChannels.hpp"
 #include "Microsoft/Xna/Framework/Graphics/CompareFunction.hpp"
@@ -41,12 +56,12 @@ using namespace Microsoft::Xna::Framework::Graphics;
 
 namespace {
 
-enum class Mode { Geometry, Sprites, Blend, Depth, Shading, Sampling, Targets, Effects, Camera };
+enum class Mode { Geometry, Sprites, Blend, Depth, Shading, Sampling, Targets, Effects, Camera, Formats };
 
 Mode ParseMode(const std::string& s)
 {
     static const std::pair<const char*, Mode> table[] = {{"sprites", Mode::Sprites}, {"blend", Mode::Blend},       {"depth", Mode::Depth},     {"shading", Mode::Shading},
-                                                         {"sampling", Mode::Sampling}, {"targets", Mode::Targets}, {"effects", Mode::Effects}, {"camera", Mode::Camera}};
+                                                         {"sampling", Mode::Sampling}, {"targets", Mode::Targets}, {"effects", Mode::Effects}, {"camera", Mode::Camera}, {"formats", Mode::Formats}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
     return Mode::Geometry;
@@ -149,7 +164,7 @@ protected:
 private:
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"Geometry, culling and coverage", "SpriteBatch pixels", "Blending", "Depth buffer", "Interpolation, lighting and fog", "Texture sampling", "Render targets", "Stock effects", "Camera matrices"};
+        static const char* t[] = {"Geometry, culling and coverage", "SpriteBatch pixels", "Blending", "Depth buffer", "Interpolation, lighting and fog", "Texture sampling", "Render targets", "Stock effects", "Camera matrices", "Surface formats"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
@@ -163,6 +178,7 @@ private:
             case Mode::Sampling: return {"A 2 x 2 texture is sampled outside 0..1 with Wrap, Clamp and Mirror, and with point and linear filtering. Each", "result is the texel the address mode must select, or the average the filter must produce."};
             case Mode::Targets: return {"A render target keeps what was drawn into it: top-left stays top-left when read back and when drawn again, and a", "render target used as a texture reproduces the picture. Half-float targets must hold values above 1."};
             case Mode::Camera: return {"A quad in front of, above and beside a camera built with Matrix.CreateLookAt and CreatePerspectiveFieldOfView must", "land where the maths says: ahead in the centre, above in the top half, nearer objects larger, orthographic constant."};
+            case Mode::Formats: return {"For every uncompressed SurfaceFormat a 4 x 4 texture is filled with known values through the matching packed type,", "read back, and compared bit for bit: what SetData stores, GetData must return. A format the renderer cannot make is skipped."};
             default: return {"Every stock effect (BasicEffect, AlphaTestEffect, DualTextureEffect) draws a quad that must show up with", "roughly the colour its settings imply. A black or missing result is a renderer bug, not a museum choice."};
         }
     }
@@ -290,6 +306,7 @@ private:
                 case Mode::Targets: Targets(d); break;
                 case Mode::Effects: Effects(d); break;
                 case Mode::Camera: CameraChecks(d); break;
+                case Mode::Formats: Formats(d); break;
             }
         } catch (const std::exception& e) {
             d.SetRenderTarget(nullptr);
@@ -944,6 +961,92 @@ private:
         }
     }
 
+
+    // --- surface formats --------------------------------------------------------------------------
+    /** Writes 16 values of type T into a 4 x 4 texture of `format` and reads them back; every value must return bit for bit. */
+    template <typename T, typename Make, typename Same>
+    void RoundTrip(GraphicsDevice& d, SurfaceFormat format, const char* name, Make make, Same same)
+    {
+        try {
+            Texture2D texture(d, 4, 4, false, format);
+            std::vector<T> in(16), out(16);
+            for (int i = 0; i < 16; ++i) in[static_cast<std::size_t>(i)] = make(i);
+            texture.SetData(in.data(), 16);
+            texture.GetData(out.data(), 16);
+            int differ = 0;
+            for (std::size_t i = 0; i < 16; ++i) differ += same(in[i], out[i]) ? 0 : 1;
+            const bool kept = texture.getFormatProperty() == format;
+            Add(std::string(name) + " round trip", "16 of 16 texels read back as written", differ == 0 ? std::string("exact") + (kept ? "" : " (stored as another format)") : std::to_string(differ) + " of 16 differ", differ == 0, std::nullopt);
+        } catch (const std::exception& e) {
+            Skip(std::string(name) + " round trip", std::string("not available here: ") + std::string(e.what()).substr(0, 60));
+        }
+    }
+
+    /** A texture filled with one value, drawn with SpriteBatch: what the GPU samples must be what ToVector4() says the format means. */
+    template <typename T>
+    void Sampled(GraphicsDevice& d, SurfaceFormat format, const char* name, const T& value, int missingChannels = 0)
+    {
+        try {
+            Texture2D texture(d, 4, 4, false, format);
+            std::vector<T> in(16, value);
+            texture.SetData(in.data(), 16);
+            RenderTarget2D& rt = Target(d, false);
+            Begin(d, rt, Color(0, 0, 0, 255));
+            S().sprites->Begin(SpriteSortMode::Deferred, &BlendState::Opaque, &SamplerState::PointClamp, nullptr, nullptr);
+            S().sprites->Draw(texture, Rectangle(0, 0, kSize, kSize), Color::White);
+            S().sprites->End();
+            const auto img = End(d, rt);
+            if (!img) return;
+            Vector4 e = value.ToVector4();
+            // Direct3D 9 (and so XNA, and CNA's renderers) read 1.0 for the colour channels a format does not store, while
+            // PackedVector's own ToVector4() says 0: R16F gives (r, 1, 1), G16R16F (r, g, 1).
+            if (missingChannels >= 2) e.Y = 1.0f;
+            if (missingChannels >= 1) e.Z = 1.0f;
+            const auto to8 = [](float f) { return static_cast<int>(std::lround(std::clamp(f, 0.0f, 1.0f) * 255.0f)); };
+            const int wr = to8(e.X), wg = to8(e.Y), wb = to8(e.Z);
+            const Color got = img->At(32, 32);
+            Add(std::string(name) + " sampled", "(" + std::to_string(wr) + "," + std::to_string(wg) + "," + std::to_string(wb) + ") +-6" + (missingChannels > 0 ? ", missing channels read as 1 (Direct3D 9)" : ", what ToVector4 says"), Rgb(got), Dist(got, wr, wg, wb) <= 6, img);
+        } catch (const std::exception& e) {
+            d.SetRenderTarget(nullptr);
+            Skip(std::string(name) + " sampled", std::string("not available here: ") + std::string(e.what()).substr(0, 60));
+        }
+    }
+
+    void Formats(GraphicsDevice& d)
+    {
+        using namespace Microsoft::Xna::Framework::Graphics::PackedVector;
+        const auto packed = [](const auto& a, const auto& b) { return a.getPackedValueProperty() == b.getPackedValueProperty(); };
+        const auto f01 = [](int i, int k) { return static_cast<float>((i * 7 + k * 5) % 16) / 15.0f; };
+        const auto fs = [](int i, int k) { return static_cast<float>((i * 3 + k * 5) % 16) / 7.5f - 1.0f; };   // -1 .. 1
+        RoundTrip<Color>(d, SurfaceFormat::Color, "Color", [&](int i) { return Color(static_cast<std::uint8_t>(i * 16 + 3), static_cast<std::uint8_t>(255 - i * 13), static_cast<std::uint8_t>(i * 7 + 20), static_cast<std::uint8_t>(200 + i)); },
+                         [](const Color& a, const Color& b) { return a.getPackedValueProperty() == b.getPackedValueProperty(); });
+        RoundTrip<Bgr565>(d, SurfaceFormat::Bgr565, "Bgr565", [&](int i) { return Bgr565(f01(i, 0), f01(i, 1), f01(i, 2)); }, packed);
+        RoundTrip<Bgra5551>(d, SurfaceFormat::Bgra5551, "Bgra5551", [&](int i) { return Bgra5551(f01(i, 0), f01(i, 1), f01(i, 2), (i % 2) ? 1.0f : 0.0f); }, packed);
+        RoundTrip<Bgra4444>(d, SurfaceFormat::Bgra4444, "Bgra4444", [&](int i) { return Bgra4444(f01(i, 0), f01(i, 1), f01(i, 2), f01(i, 3)); }, packed);
+        RoundTrip<NormalizedByte2>(d, SurfaceFormat::NormalizedByte2, "NormalizedByte2", [&](int i) { return NormalizedByte2(fs(i, 0), fs(i, 1)); }, packed);
+        RoundTrip<NormalizedByte4>(d, SurfaceFormat::NormalizedByte4, "NormalizedByte4", [&](int i) { return NormalizedByte4(fs(i, 0), fs(i, 1), fs(i, 2), fs(i, 3)); }, packed);
+        RoundTrip<Rgba1010102>(d, SurfaceFormat::Rgba1010102, "Rgba1010102", [&](int i) { return Rgba1010102(f01(i, 0), f01(i, 1), f01(i, 2), static_cast<float>(i % 4) / 3.0f); }, packed);
+        RoundTrip<Rg32>(d, SurfaceFormat::Rg32, "Rg32", [&](int i) { return Rg32(f01(i, 0), f01(i, 1)); }, packed);
+        RoundTrip<Rgba64>(d, SurfaceFormat::Rgba64, "Rgba64", [&](int i) { return Rgba64(f01(i, 0), f01(i, 1), f01(i, 2), f01(i, 3)); }, packed);
+        RoundTrip<Alpha8>(d, SurfaceFormat::Alpha8, "Alpha8", [&](int i) { return Alpha8(f01(i, 0)); }, packed);
+        RoundTrip<float>(d, SurfaceFormat::Single, "Single", [&](int i) { return fs(i, 0) * 3.5f; }, [](float a, float b) { return a == b; });
+        RoundTrip<Vector2>(d, SurfaceFormat::Vector2, "Vector2", [&](int i) { return Vector2(fs(i, 0) * 2.0f, fs(i, 1) * 5.0f); }, [](const Vector2& a, const Vector2& b) { return a.X == b.X && a.Y == b.Y; });
+        RoundTrip<Vector4>(d, SurfaceFormat::Vector4, "Vector4", [&](int i) { return Vector4(fs(i, 0) * 2.0f, fs(i, 1) * 5.0f, fs(i, 2), fs(i, 3) * 100.0f); }, [](const Vector4& a, const Vector4& b) { return a.X == b.X && a.Y == b.Y && a.Z == b.Z && a.W == b.W; });
+        RoundTrip<HalfSingle>(d, SurfaceFormat::HalfSingle, "HalfSingle", [&](int i) { return HalfSingle(fs(i, 0) * 3.5f); }, packed);
+        RoundTrip<HalfVector2>(d, SurfaceFormat::HalfVector2, "HalfVector2", [&](int i) { return HalfVector2(fs(i, 0) * 2.0f, fs(i, 1) * 5.0f); }, packed);
+        RoundTrip<HalfVector4>(d, SurfaceFormat::HalfVector4, "HalfVector4", [&](int i) { return HalfVector4(fs(i, 0) * 2.0f, fs(i, 1) * 5.0f, fs(i, 2), fs(i, 3) * 100.0f); }, packed);
+        // The same formats through the GPU: only the unsigned ones, whose meaning no renderer disputes.
+        Sampled(d, SurfaceFormat::Bgr565, "Bgr565", Bgr565(0.8f, 0.4f, 0.2f));
+        Sampled(d, SurfaceFormat::Bgra5551, "Bgra5551", Bgra5551(0.8f, 0.4f, 0.2f, 1.0f));
+        Sampled(d, SurfaceFormat::Bgra4444, "Bgra4444", Bgra4444(0.8f, 0.4f, 0.2f, 1.0f));
+        Sampled(d, SurfaceFormat::Alpha8, "Alpha8", Alpha8(0.6f));
+        Sampled(d, SurfaceFormat::Rgba1010102, "Rgba1010102", Rgba1010102(0.8f, 0.4f, 0.2f, 1.0f));
+        Sampled(d, SurfaceFormat::Rg32, "Rg32", Rg32(0.8f, 0.4f), 1);
+        Sampled(d, SurfaceFormat::Rgba64, "Rgba64", Rgba64(0.8f, 0.4f, 0.2f, 1.0f));
+        Sampled(d, SurfaceFormat::HalfSingle, "HalfSingle", HalfSingle(0.8f), 2);
+        Sampled(d, SurfaceFormat::HalfVector2, "HalfVector2", HalfVector2(0.8f, 0.4f), 1);
+        Sampled(d, SurfaceFormat::HalfVector4, "HalfVector4", HalfVector4(0.8f, 0.4f, 0.2f, 1.0f));
+    }
 
     // --- camera matrices --------------------------------------------------------------------------
     /** A square of half-size `h` facing +Z (towards a camera on the +Z side) centred at `c`. */

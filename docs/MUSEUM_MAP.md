@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 34 wings, 257 exhibit rooms (5 open to the sky), 321 walkable cells in all.
+10 floors, 34 wings, 258 exhibit rooms (5 open to the sky), 322 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -491,7 +491,8 @@ Stress tests, renderer self-checks, reference scenes and the observation deck
 | 9.2.06 | `rv-sampling` | Texture Sampling | XNA 4.0 | SamplerState.AddressU, TextureAddressMode, TextureFilter |
 | 9.2.07 | `rv-targets` | Render Targets | XNA 4.0 | RenderTarget2D, GraphicsDevice.SetRenderTarget, Texture2D.GetData |
 | 9.2.08 | `rv-camera` | Camera Matrices | XNA 4.0 | Matrix.CreateLookAt, Matrix.CreatePerspectiveFieldOfView, Matrix.CreateOrthographic, BasicEffect.World |
-| 9.2.09 | `rv-effects` | Stock Effects | XNA 4.0 | BasicEffect, AlphaTestEffect, DualTextureEffect |
+| 9.2.09 | `rv-formats` | Surface Formats | XNA 4.0 | SurfaceFormat, Texture2D.SetData, Texture2D.GetData, PackedVector.Bgr565, PackedVector.Rgba64, PackedVector.HalfVector4 |
+| 9.2.10 | `rv-effects` | Stock Effects | XNA 4.0 | BasicEffect, AlphaTestEffect, DualTextureEffect |
 
 **Observation Deck** - Open-air rooms under the museum sky: the clock, a garden, a telescope and a weather station
 
