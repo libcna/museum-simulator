@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-845 distinct API names are claimed by at least one room.
+850 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -160,7 +160,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CNA::Graphics::DebugDraw | `cx-debugdraw` |
 | CNA::Graphics::DepthEffect | `cx-depth` |
 | CNA::Graphics::ShaderPackageEXT | `cx-package` |
+| CNA::GraphicsRendererFallbackReason | `hist-cna` |
+| CNA::GraphicsRendererSelection.GetActive | `hist-cna` |
 | CNA::GraphicsRendererSelection.GetAvailable | `hist-cna` |
+| CNA::GraphicsRendererSelection.GetFallbackHistory | `hist-cna` |
+| CNA::GraphicsRendererSelection.GetSelected | `hist-cna` |
+| CNA::GraphicsRendererSelection.IsFallbackEnabled | `hist-cna` |
 | CNA::LogCategory | `pl-log` |
 | CNA::LogLevel | `pl-log` |
 | CNA::Logger | `pl-log` |

@@ -114,6 +114,18 @@ private:
         for (const CNA::GraphicsRendererType t : CNA::GraphicsRendererSelection::GetAvailable())
             compiled += std::string(CNA::getGraphicsRendererName(t)) + " (" + maturity[std::min(static_cast<int>(CNA::getGraphicsBackendMaturity(t)), 3)] + ")   ";
         lines.push_back("Renderers compiled into this build: " + compiled);
+        {
+            using CNA::GraphicsRendererSelection;
+            std::string sel = std::string("Requested ") + std::string(CNA::getGraphicsRendererName(GraphicsRendererSelection::GetSelected())) +
+                              ", active " + std::string(CNA::getGraphicsRendererName(GraphicsRendererSelection::GetActive())) + ", fallback " +
+                              (GraphicsRendererSelection::IsFallbackEnabled() ? "on" : "off (a renderer that fails is an error, never a silent substitute)");
+            const auto history = GraphicsRendererSelection::GetFallbackHistory();
+            if (!history.empty()) {
+                sel += "; passed over:";
+                for (const auto& r : history) sel += " " + std::string(CNA::getGraphicsRendererName(r.type)) + " (" + std::string(CNA::getGraphicsRendererFallbackReasonName(r.reason)) + ")";
+            }
+            lines.push_back(sel);
+        }
         lines.push_back(std::string("Built with: CNA_CNAEXT ") +
 #ifdef CNA_CNAEXT
                         "on"

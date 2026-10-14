@@ -199,7 +199,7 @@ WingSpec HistoryWing()
     };
     w.rooms = {
         hi("hist-xna", "XNA, 2004 to Today", "The releases of XNA Game Studio and what happened to it", "xna", {"Game", "GraphicsProfile", "XNA 4.0"}, ApiOrigin::Xna),
-        hi("hist-cna", "This Build of CNA", "The revision, options, renderers and maturity of the CNA running right now", "cna", {"CNA::GraphicsRendererSelection.GetAvailable", "CNA::getGraphicsBackendMaturity", "CNA::getGraphicsRendererName"}, ApiOrigin::CnaExtension),
+        hi("hist-cna", "This Build of CNA", "The revision, options, renderers and maturity of the CNA running right now", "cna", {"CNA::GraphicsRendererSelection.GetAvailable", "CNA::GraphicsRendererSelection.GetSelected", "CNA::GraphicsRendererSelection.GetActive", "CNA::GraphicsRendererSelection.IsFallbackEnabled", "CNA::GraphicsRendererSelection.GetFallbackHistory", "CNA::GraphicsRendererFallbackReason", "CNA::getGraphicsBackendMaturity", "CNA::getGraphicsRendererName"}, ApiOrigin::CnaExtension),
         hi("hist-compare", "XNA 4.0 and What CNA Adds", "How many rooms use XNA features and which extensions the others demonstrate, counted live", "compare", {"ApiOrigin", "XNA 4.0", "CNAEXT"}, ApiOrigin::CnaExtension),
     };
     return w;

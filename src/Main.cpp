@@ -1,5 +1,6 @@
 #include "Catalogue/Inventory.hpp"
 #include "Catalogue/ReferenceViews.hpp"
+#include "CNA/GraphicsRendererSelection.hpp"
 #include "MuseumGame.hpp"
 
 #include <cstdio>
@@ -56,6 +57,10 @@ int main(int argc, char** argv)
 #endif
         }
 #endif
+        // Nobody named a renderer: let CNA fall back across the ones compiled in (mature GPU renderers first, CPU renderers next) when the
+        // default cannot start on this machine, so a visitor still gets a museum. A named renderer (CNA_GRAPHICS_RENDERER) stays an
+        // error when it fails, and every fallback is logged.
+        if (std::getenv("CNA_GRAPHICS_RENDERER") == nullptr) CNA::GraphicsRendererSelection::EnableAutomaticFallback(true);
         MuseumGame game(options);
         game.Run();
         return 0;

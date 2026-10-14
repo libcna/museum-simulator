@@ -30,7 +30,7 @@ exhibit rooms:   282  (5 outdoors)
 walkable cells:  348  (rooms, galleries, concourses, halls, elevators)
 exhibit kinds:   62
 origin:          224 XNA 4.0, 58 CNA extension, 0 application
-API names:       845
+API names:       850
   floor 0  10 rooms  Lobby and Introductory Tour
   floor 1  53 rooms  Fundamentals
   floor 2  23 rooms  Two-Dimensional Rendering
@@ -79,6 +79,9 @@ build/bin/cna-3d-museum                # run it
 # A build that can run on several renderers; the first is the default, CNA_GRAPHICS_RENDERER picks one at run time.
 MUSEUM_RENDERERS="OPENGLES3;OPENGL33;SOFTWARE" tools/build.sh
 CNA_GRAPHICS_RENDERER=SOFTWARE build/bin/cna-3d-museum
+# With CNA_GRAPHICS_RENDERER unset the museum lets CNA fall back across the compiled-in renderers when the default cannot start
+# (for example no X server: OPENGLES3 and OPENGL33 are passed over, SOFTWARE runs); each fallback is logged and shown in the
+# "This Build of CNA" room. A renderer you name is never replaced: if it fails, the museum fails.
 
 RECONFIGURE=1 tools/build.sh           # force a CMake configure
 VERBOSE=1 tools/build.sh               # stream the whole build log

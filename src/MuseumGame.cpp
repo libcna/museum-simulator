@@ -15,6 +15,7 @@
 #include <sstream>
 
 #include "CNA/GraphicsCapability.hpp"
+#include "CNA/GraphicsRendererSelection.hpp"
 #include "Diagnostics/Log.hpp"
 #include "Microsoft/Xna/Framework/Color.hpp"
 #include "Microsoft/Xna/Framework/Graphics/ClearOptions.hpp"
@@ -78,6 +79,10 @@ void MuseumGame::LoadContent()
 {
     GraphicsDevice& device = getGraphicsDeviceProperty();
     rendererName_ = std::string(device.GetGraphicsRendererName());
+    // A fallback is always reported: say which renderers were passed over before this one.
+    for (const auto& passedOver : CNA::GraphicsRendererSelection::GetFallbackHistory())
+        Museum::Log("main", "renderer %s was passed over (%s): %s, using %s instead", std::string(CNA::getGraphicsRendererName(passedOver.type)).c_str(),
+                    std::string(CNA::getGraphicsRendererFallbackReasonName(passedOver.reason)).c_str(), passedOver.message.c_str(), rendererName_.c_str());
     getWindowProperty().setTitleProperty("CNA 3D Museum  -  " + rendererName_);
 
     services_.game = this;

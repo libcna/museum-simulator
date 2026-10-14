@@ -493,7 +493,7 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 | Room | Key | Title | Origin | APIs |
 |---|---|---|---|---|
 | 8.6.01 | `hist-xna` | XNA, 2004 to Today | XNA 4.0 | Game, GraphicsProfile, XNA 4.0 |
-| 8.6.02 | `hist-cna` | This Build of CNA | CNA extension | CNA::GraphicsRendererSelection.GetAvailable, CNA::getGraphicsBackendMaturity, CNA::getGraphicsRendererName |
+| 8.6.02 | `hist-cna` | This Build of CNA | CNA extension | CNA::GraphicsRendererSelection.GetAvailable, CNA::GraphicsRendererSelection.GetSelected, CNA::GraphicsRendererSelection.GetActive, CNA::GraphicsRendererSelection.IsFallbackEnabled, CNA::GraphicsRendererSelection.GetFallbackHistory, CNA::GraphicsRendererFallbackReason, CNA::getGraphicsBackendMaturity, CNA::getGraphicsRendererName |
 | 8.6.03 | `hist-compare` | XNA 4.0 and What CNA Adds | CNA extension | ApiOrigin, XNA 4.0, CNAEXT |
 
 ### Floor 9: Performance and Validation
