@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-830 distinct API names are claimed by at least one room.
+835 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -133,6 +133,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BoundingBox.CreateFromPoints | `col-merge` |
 | BoundingBox.CreateFromSphere | `col-merge` |
 | BoundingBox.Intersects | `col-box-box` |
+| BoundingBoxConverter | `vt-converters` |
 | BoundingFrustum | `mat-view`, `col-frustum`, `cam-orbit`, `cam-security`, `model-cameras` |
 | BoundingFrustum.Contains | `mat-perspective`, `col-frustum`, `model-instances` |
 | BoundingFrustum.GetCorners | `col-frustum` |
@@ -144,6 +145,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BoundingSphere.CreateMerged | `col-merge` |
 | BoundingSphere.Intersects | `col-sphere-box`, `sim-balls` |
 | BoundingSphere.Transform | `model-bounds` |
+| BoundingSphereConverter | `vt-converters` |
 | ButtonState | `in-mouse` |
 | Buttons | `in-pad` |
 | Byte4 | `vt-packed` |
@@ -505,6 +507,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Matrix.Multiply | `mat-order`, `mat-hierarchy`, `mat-screen`, `an-clock`, `an-gears`, `an-kinetic`, `an-walker` |
 | Matrix.Translation | `mat-hierarchy` |
 | Matrix.Transpose | `mat-normals` |
+| MatrixConverter | `vt-converters` |
 | MediaPlayer.GetVisualizationData | `au-music` |
 | MediaPlayer.IsShuffled | `au-music` |
 | MediaPlayer.IsVisualizationEnabled | `au-music` |
@@ -618,6 +621,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Plane.DotNormal | `col-plane-box` |
 | Plane.Intersects | `col-plane-box` |
 | Plane.Transform | `mat-reflection` |
+| PlaneConverter | `vt-converters` |
 | PlaneIntersectionType | `col-plane-box` |
 | PlatformCapabilities | `pl-platform` |
 | PlayerIndex | `in-players` |
@@ -655,6 +659,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | RasterizerState.ScissorTestEnable | `sprite-scissor`, `rs-scissor` |
 | RasterizerState.SlopeScaleDepthBias | `rs-depthbias` |
 | Ray.Intersects | `col-ray-box`, `col-ray-sphere`, `col-ray-plane`, `col-pick` |
+| RayConverter | `vt-converters` |
 | Rectangle | `vt-rectangle`, `sprite-sheet`, `sprite-ui`, `sprite-anim` |
 | Rectangle.Bottom | `vt-rectangle` |
 | Rectangle.Contains | `vt-rectangle` |

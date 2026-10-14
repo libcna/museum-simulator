@@ -69,13 +69,13 @@ WingSpec ValueTypeWing()
             RoomSpec r;
             r.key = "vt-converters";
             r.title = "Type Converters";
-            r.subtitle = "Vector3, Color and Rectangle as text in four cultures: what ConvertToString writes and ConvertFromString refuses";
+            r.subtitle = "Vector3, Color, BoundingBox, Ray, Matrix and more as text in four cultures: what ConvertToString writes and ConvertFromString refuses";
             r.exhibit = "converter-lab";
             r.width = 13;
             r.depth = 13;
             r.height = 5.0f;
             r.theme = "white-cube";
-            r.apis = {"Vector3Converter", "Vector2Converter", "Vector4Converter", "QuaternionConverter", "ColorConverter", "RectangleConverter", "PointConverter", "MathTypeConverter", "MathTypeConverter.ConvertToString", "MathTypeConverter.ConvertFromString", "MathTypeConverter.GetProperties"};
+            r.apis = {"Vector3Converter", "Vector2Converter", "Vector4Converter", "QuaternionConverter", "ColorConverter", "RectangleConverter", "PointConverter", "BoundingBoxConverter", "BoundingSphereConverter", "PlaneConverter", "RayConverter", "MatrixConverter", "MathTypeConverter", "MathTypeConverter.ConvertToString", "MathTypeConverter.ConvertFromString", "MathTypeConverter.GetProperties"};
             return r;
         }(),
     };
