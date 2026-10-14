@@ -18,7 +18,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BasicEffect (all features), AlphaTestEffect, DualTextureEffect, EnvironmentMapEffect, SkinnedEffect, Effect object model (parameters, techniques, IEffect interfaces, Clone) | floors 4 and 6 | covered |
 | Punctual point/spot lights (CNAEXT) | floor 4 | covered |
 | Shadow mapping with `IShadowReceiverEXT`, PCF filtering and cascaded shadow maps (`ShadowCascadeStateEXT`) | floor 8 | covered |
-| ShaderEffect (GLSL source at run time; twelve fragment/vertex shaders) | floor 4 *Shader Lab* | covered; run-time shader source only (no compiled effects) |
+| ShaderEffect (GLSL source at run time; twelve fragment/vertex shaders), compile errors as `ShaderDiagnosticEXT` records, `parseCompilerLog` | floor 4 *Shader Lab*, *Shader Compile Errors* | covered; compiled `.fxb` effects have their own room (FNA3D only) |
 | RasterizerState, DepthStencilState (incl. stencil), BlendState, SamplerState | floor 5 | covered |
 | RenderTarget2D, RenderTargetCube, MRT, float formats, mirrors, multisampling, OcclusionQuery, stencil counting and two-sided stencil | floor 5 | covered |
 | glTF models, PbrEffect, image-based lighting, morph targets, material variants, rigid and skinned animation, instancing, import report | floor 6 | covered |
@@ -29,7 +29,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | DebugDraw, CRTEffect, DepthEffect, AsciiPostProcessEffect, ShaderPackageEXT (CNA_CNAEXT) | floor 8 | covered |
 | Diagnostics counters and resource list (CNA_DIAGNOSTICS=STATS) | floors 8-9 | covered |
 | CNA_DEVICES: SystemInfo, Locale, PowerInfo, DisplayInfo | floor 8 | covered |
-| Renderer capability profile, platform capabilities, GraphicsAdapter | floor 8 | covered |
+| Renderer capability profile and report text, platform capabilities and `IPlatform`, GraphicsAdapter and device-type flags, `CNA::Logger` (levels, categories, sink), renderer selection and fallback | floor 8 | covered |
+| XACT variables and RPC curves (`Cue.SetVariable`, `AudioEngine.SetGlobalVariable`), cue flags | floor 7 | covered (`tools/gen_xact.py` writes the curves) |
+| Type converters of the Design library (Vector2/3/4, Quaternion, Color, Rectangle, Point, BoundingBox, BoundingSphere, Plane, Ray, Matrix), all 141 named colours | floor 1 | covered |
+| Per-part glTF sampler state and topology (`ModelMeshPart`), applied by the application | floor 6 | covered |
 | Renderer self-checks (50 pixel checks) | floor 9 | covered |
 | Time of day, sky dome | floors 0 and 9 | application code |
 
