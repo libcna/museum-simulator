@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-791 distinct API names are claimed by at least one room.
+793 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -750,6 +750,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | StorageDevice.GetStorageRootEXT | `ct-storage` |
 | StringBuilder | `text-hud` |
 | SurfaceFormat | `tex-formats`, `rt-formats`, `rv-formats` |
+| SurfaceFormat.Dxt1 | `ct-formats` |
 | System.ArgumentOutOfRangeException | `pl-exceptions` |
 | System.IO.FileNotFoundException | `pl-exceptions` |
 | System.IO.MemoryStream | `tex-io` |
@@ -761,6 +762,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | TextInputEXT.TextInput | `in-text` |
 | TextInputTypeEXT | `in-text` |
 | Texture2D | `materials`, `app-content`, `tex-mip`, `rf-garden` |
+| Texture2D.DDSFromStreamEXT | `ct-formats` |
 | Texture2D.FromStream | `tex-io` |
 | Texture2D.GetData | `sprite-atlas`, `sprite-hit`, `sprite-tilemap`, `geo-terrain`, `tex-dynamic`, `ct-formats`, `rv-targets`, `rv-formats` |
 | Texture2D.SaveAsJpeg | `tex-io` |

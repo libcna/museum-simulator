@@ -33,6 +33,7 @@
 #include "Microsoft/Xna/Framework/Storage/StorageContainer.hpp"
 #include "Microsoft/Xna/Framework/Storage/StorageDevice.hpp"
 #include "Microsoft/Xna/Framework/TitleContainer.hpp"
+#include "System/IO/FileStream.hpp"
 #include "System/IO/Stream.hpp"
 #include "System/Resources/ResourceManager.hpp"
 
@@ -313,13 +314,13 @@ protected:
             if (rows_.empty()) text(EmptyHint(), 24, 100, Kit::kDim, 0.8f);
             for (const Row& r : rows_) {
                 const bool hasPic = r.picture != nullptr;
-                const float rowH = hasPic ? 68.0f : 44.0f;
-                if (y + rowH > 520.0f) break;
+                const float rowH = rows_.size() > 7 ? (hasPic ? 60.0f : 40.0f) : (hasPic ? 68.0f : 44.0f);   // eight rows still fit
+                if (y + rowH > 530.0f) break;
                 rect(20, y, 920, rowH - 6, Kit::Rgba(24, 30, 46));
                 rect(20, y, 6, rowH - 6, r.status == 0 ? ok : (r.status == 1 ? warn : bad));
                 float x = 36.0f;
                 if (hasPic) {
-                    sb.Draw(*r.picture, Rectangle(34, static_cast<int>(y) + 2, 88, 58), Color::White);
+                    sb.Draw(*r.picture, Rectangle(34, static_cast<int>(y) + 2, rows_.size() > 7 ? 80 : 88, rows_.size() > 7 ? 50 : 58), Color::White);
                     x = 134.0f;
                 }
                 text(r.name, x, y + 4, Kit::kText, 0.75f);
@@ -588,6 +589,16 @@ private:
                 return note;
             }, unsupported);
         }
+        // A DDS file keeps a compressed texture and its whole mip chain: ContentManager does not load it, the CNAEXT stream reader does.
+        Attempt("Formats/sample.dds via Texture2D.DDSFromStreamEXT (DXT1, a mip chain)", [&](Row& r) {
+            System::IO::FileStream stream((fs::path(S().contentRoot) / "Formats/sample.dds").string(), System::IO::FileMode::Open, System::IO::FileAccess::Read);
+            auto tex = std::make_unique<Texture2D>(Texture2D::DDSFromStreamEXT(*S().device, stream));
+            const SurfaceFormat f = tex->getFormatProperty();
+            std::string note = std::to_string(tex->getWidthProperty()) + " x " + std::to_string(tex->getHeightProperty()) + ", " + (f == SurfaceFormat::Dxt1 ? "Dxt1" : f == SurfaceFormat::Color ? "Color (decompressed)" : "format " + std::to_string(static_cast<int>(f))) +
+                               ", " + std::to_string(tex->getLevelCountProperty()) + " mip levels, file " + Kb(fs::file_size(fs::path(S().contentRoot) / "Formats/sample.dds"));
+            r.picture = std::move(tex);
+            return note;
+        });
     }
 
     // --- failures ----------------------------------------------------------------------------------

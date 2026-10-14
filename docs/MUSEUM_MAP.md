@@ -430,7 +430,7 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 |---|---|---|---|---|
 | 8.1.01 | `ct-load` | Loading Assets | XNA 4.0 | ContentManager.Load<Texture2D>, ContentManager.Load<SoundEffect>, ContentManager.Load<Model>, ContentManager.RootDirectory |
 | 8.1.02 | `ct-cache` | The ContentManager Cache | XNA 4.0 | ContentManager.Load, ContentManager.Unload, GraphicsResource.IsDisposed |
-| 8.1.03 | `ct-formats` | Loose Image Formats | CNA extension | ContentManager.Load<Texture2D>, Texture2D.GetData |
+| 8.1.03 | `ct-formats` | Loose Image Formats | CNA extension | ContentManager.Load<Texture2D>, Texture2D.GetData, Texture2D.DDSFromStreamEXT, SurfaceFormat.Dxt1 |
 | 8.1.04 | `ct-failure` | When Loading Fails | XNA 4.0 | ContentLoadException, ContentManager.Load |
 | 8.1.05 | `ct-pipeline` | The Content Compiler | CNA extension | cna-content, ContentManager.Load, ContentManager.GetContentManifest |
 | 8.1.06 | `ct-intermediate` | The Pipeline in the Game | XNA 4.0 | IntermediateSerializer, IntermediateSerializer.Serialize, IntermediateSerializer.Deserialize, ContentItem, ContentTypeDescriptor, InvalidContentException |
