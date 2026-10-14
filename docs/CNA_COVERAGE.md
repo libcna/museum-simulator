@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-759 distinct API names are claimed by at least one room.
+766 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -180,7 +180,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CompareFunction.NotEqual | `rs-outline` |
 | ContainmentType | `col-box-box` |
 | ContentItem | `ct-intermediate` |
-| ContentLoadException | `app-content`, `ct-failure`, `ct-custom`, `ct-resource` |
+| ContentLoadException | `app-content`, `ct-failure`, `ct-custom`, `ct-resource`, `pl-exceptions` |
 | ContentManager | `models`, `app-content` |
 | ContentManager.GetContentManifest | `ct-pipeline` |
 | ContentManager.Load | `app-content`, `ct-cache`, `ct-failure`, `ct-pipeline`, `ct-reader`, `ct-resource` |
@@ -321,6 +321,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GamerProfile.GamerScore | `on-account` |
 | GamerProfile.Reputation | `on-account` |
 | GamerProfile.TotalAchievements | `on-account` |
+| GamerServicesNotAvailableException | `pl-exceptions` |
 | GestureType | `in-touch` |
 | GltfImportDiagnosticEXT | `model-report` |
 | GltfImportReportEXT | `model-report` |
@@ -392,6 +393,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Guide.ShowPlayers | `on-friends` |
 | Guide.ShowSignIn | `on-account` |
 | Guide.SimulateTrialMode | `gs-guide` |
+| GuideAlreadyVisibleException | `pl-exceptions` |
 | HalfVector2 | `vt-packed` |
 | HalfVector4 | `vt-packed` |
 | IAvatarAnimation | `gs-avatar` |
@@ -702,10 +704,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SoundEffectInstance.Volume | `au-layers` |
 | SoundState | `au-layers` |
 | SpriteBatch | `sprite-stress`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `rf-weather` |
-| SpriteBatch.Begin | `sprite-basics`, `sprite-camera`, `sprite-tilemap`, `fx-compiled`, `rt-bloom`, `pf-sprites` |
+| SpriteBatch.Begin | `sprite-basics`, `sprite-camera`, `sprite-tilemap`, `fx-compiled`, `rt-bloom`, `pl-exceptions`, `pf-sprites` |
 | SpriteBatch.Begin(effect) | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `cx-crt` |
 | SpriteBatch.Draw | `sprite-basics`, `sprite-origin`, `sprite-sheet`, `sprite-sort`, `sprite-parallax`, `sprite-ui`, `sprite-atlas`, `sprite-hit`, `sprite-anim`, `sprite-tilemap`, `sprite-lights`, `sprite-stress`, `rt-recursive`, `pf-sprites`, `pf-overdraw`, `rv-sprites` |
 | SpriteBatch.DrawString | `text-align`, `text-transform`, `text-hud`, `text-labels` |
+| SpriteBatch.End | `pl-exceptions` |
 | SpriteEffect | `be-model` |
 | SpriteEffects | `sprite-basics`, `text-transform`, `rv-sprites` |
 | SpriteEffects.FlipHorizontally | `sprite-anim` |
@@ -721,7 +724,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SpriteSortMode | `sprite-sort`, `pf-sprites` |
 | StencilOperation | `rs-portal`, `rs-stencilcount` |
 | StencilOperation.Increment | `rs-shadow` |
-| StorageContainer | `ct-storage` |
+| StorageContainer | `ct-storage`, `pl-exceptions` |
 | StorageContainer.CreateDirectory | `ct-storage` |
 | StorageContainer.DeleteDirectory | `ct-storage` |
 | StorageContainer.DirectoryExists | `ct-storage` |
@@ -731,7 +734,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | StorageDevice.GetStorageRootEXT | `ct-storage` |
 | StringBuilder | `text-hud` |
 | SurfaceFormat | `tex-formats`, `rt-formats`, `rv-formats` |
+| System.ArgumentOutOfRangeException | `pl-exceptions` |
+| System.IO.FileNotFoundException | `pl-exceptions` |
 | System.IO.MemoryStream | `tex-io` |
+| System.InvalidOperationException | `pl-exceptions` |
+| System.ObjectDisposedException | `pl-exceptions` |
 | System.Resources.ResourceManager | `ct-resource` |
 | TextInputEXT.StartTextInput | `in-text` |
 | TextInputEXT.TextInput | `in-text` |
@@ -759,7 +766,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | TextureProcessor.TextureFormat | `ct-processor` |
 | TextureProcessorOutputFormat | `ct-processor` |
 | TextureTransformEXT | `model-material` |
-| TitleContainer.OpenStream | `ct-storage` |
+| TitleContainer.OpenStream | `ct-storage`, `pl-exceptions` |
 | TouchPanel.EnabledGestures | `in-touch` |
 | TouchPanel.GetState | `in-touch`, `in-devices` |
 | TouchPanel.MouseTouchEmulationEnabledEXT | `in-touch`, `in-devices` |
