@@ -88,6 +88,9 @@ Found by the museum's own exhibits; fixed in the CNA repository (commit ids are 
   ignores the pad while emulation is on so the visitor is not moved twice.
 
 
+- `Texture3D` formats other than Color: on OPENGLES3, OPENGL33 and SOFTWARE `Single` and `Vector4` volumes round-trip exactly (also as a boxed `GetData`); FNA3D and WEBGPU refuse them ("SurfaceFormat 13/15 is not implemented"), SDL_GPU says the format is not supported. The *Volume Textures* room shows the refusal. Checked 2026-10-14.
+- A rejected `ShaderEffect` on WEBGPU returns one diagnostic per log line, so a validation error with a source excerpt becomes several records (8 for a missing semicolon), while GLSL drivers give one or two with line and column; WEBGPU records carry no line. `ShaderDiagnosticEXT::parseCompilerLog` documents that rule. The *Shader Compile Errors* room lists the first three.
+
 ## Unexplained: one heap corruption during a fuzz run
 
 `tools/tour.sh -f 3 -z 30 -s 3` on OPENGLES3 aborted once with glibc's "corrupted double-linked list (not small)" late in the tour
