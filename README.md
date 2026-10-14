@@ -54,7 +54,7 @@ The numbers above are generated from the museum's own catalogue (`tools/gen_docs
 | 3 | Three-dimensional fundamentals: buffers, primitives, dynamic geometry, instancing, textures |
 | 4 | Effects and lighting: BasicEffect super-wing, a lighting lab, CNA ShaderEffect shaders |
 | 5 | Render state gallery and render-target complex (mirrors, MRT, float targets) |
-| 6 | Models (glTF, PBR), animation, particles |
+| 6 | Models (glTF, PBR, SkinnedEffect), animation, particles, simulations (flocking, collisions, integrators, inverse kinematics) |
 | 7 | Audio (3D audio, synthesis, music, microphone) and input (keyboard, mouse, game pad, text, joystick) |
 | 8 | Content pipeline, CNA extensions (DebugDraw, CRT, depth and ASCII effects, shader packages, shadow mapping, statistics, devices), platform queries, a history of XNA and of this build of CNA |
 | 9 | Performance lab, renderer validation, reference scenes, the observation deck |
