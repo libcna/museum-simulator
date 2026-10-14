@@ -74,6 +74,8 @@ Run `tools/renderer_check.sh` for the current figures; they are not copied anywh
 | WEBGPU | clean (78 s) | 30 reference views: 26 within 1 %; `debugdraw` 4.7 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
 | SDL_GPU | clean (173 s) | 30 reference views: all within 1 % |
 
+Windows build under Wine (MinGW cross build, 2026-10-15, 286 rooms): SOFTWARE `pressall` tour exits 0 with 0 exhibit errors in 1730 s (networking, avatars and video are not built into that tree, so 915 panel controls instead of 998).
+
 Latest (2026-10-14 evening, 285 rooms, after the shader-error, sampler, colour, log and XACT-variable rooms): `tools/tour.sh -f 3 -p` exits 0 with 0 exhibit errors on FNA3D (67 s), WEBGPU (111 s) and SDL_GPU (269 s); ASan+UBSan on OPENGLES3 over all 283 rooms exit 0, no reports.
 
 Earlier (2026-10-14, 280 rooms, after the Online Service wing, Exceptions, Vertex Types, Compiled Effects and the other new rooms): `tools/tour.sh -f 3 -p` exits 0 with 0 exhibit errors on FNA3D (76 s), WEBGPU (133 s) and SDL_GPU (274 s) in the multi-renderer tree (renderer chosen with `CNA_GRAPHICS_RENDERER`); the OPENGLES3 battery (`tools/check_all.sh`) is green.
