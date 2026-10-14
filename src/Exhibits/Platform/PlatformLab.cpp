@@ -108,6 +108,9 @@ public:
                 p.AddReadout("Adapter", [this] { return adapterName_; });
                 p.AddReadout("Display modes", [this] { return std::to_string(modes_.size()); });
                 p.AddReadout("Profile", [this] { return profileName_; });
+                p.AddChoice("UseNullDevice / UseReferenceDevice (asked, never kept)", {"neither", "UseReferenceDevice", "UseNullDevice", "both"}, 0, [this](int v) { deviceFlags_ = v; Museum::Log("platform", "device flags %d: type %s, required renderer %s", v, DeviceTypeText(false).c_str(), DeviceTypeText(true).c_str()); });
+                p.AddReadout("GetCurrentDeviceTypeEXT", [this] { return DeviceTypeText(false); });
+                p.AddReadout("GetRequiredRendererEXT", [this] { return DeviceTypeText(true); });
                 p.AddChoice("Is this shape widescreen? (IsWideScreenAspectRatioEXT)", {"4:3", "5:4", "16:10", "16:9", "21:9"}, 3, [this](int v) { aspectIndex_ = v; });
                 p.AddReadout("IsWideScreenAspectRatioEXT", [this] {
                     static const float ratios[] = {4.0f / 3.0f, 5.0f / 4.0f, 16.0f / 10.0f, 16.0f / 9.0f, 21.0f / 9.0f};
@@ -118,7 +121,8 @@ public:
             case Mode::Renderer:
                 p.AddReadout("Active renderer", [this] { return std::string(S().device->GetGraphicsRendererName()); });
                 p.AddReadout("Maturity", [this] { return maturity_; });
-                p.AddChoice("Table", {"Features", "Limits and formats", "Device queries"}, 0, [this](int v) { page_ = v; });
+                p.AddChoice("Table", {"Features", "Limits and formats", "Device queries", "Report text"}, 0, [this](int v) { page_ = v; });
+                p.AddSlider("Report text: scroll (GetRendererCapabilityReportEXT)", 0.0f, 1.0f, 0.0f, [this](float v) { reportScroll_ = v; }, "%.2f");
                 break;
             case Mode::Platform:
                 p.AddReadout("Platform", [this] { return platformName_; });
@@ -261,6 +265,33 @@ private:
         }
     }
 
+    // What the two static device flags would select. They apply to devices created later, so they are set only for the question and
+    // put back at once: the museum's own device keeps what it was created with.
+    [[nodiscard]] std::string DeviceTypeText(bool renderer) const
+    {
+        const bool oldNull = GraphicsAdapter::getUseNullDeviceProperty(), oldReference = GraphicsAdapter::getUseReferenceDeviceProperty();
+        std::string text;
+        try {
+            GraphicsAdapter::setUseReferenceDeviceProperty(deviceFlags_ == 1 || deviceFlags_ == 3);
+            GraphicsAdapter::setUseNullDeviceProperty(deviceFlags_ == 2 || deviceFlags_ == 3);
+            if (renderer) {
+                const auto required = GraphicsAdapter::GetRequiredRendererEXT();
+                text = required.has_value() ? std::string(CNA::getGraphicsRendererName(*required)) + " renderer" : "none: the build's own renderer";
+            } else {
+                switch (GraphicsAdapter::GetCurrentDeviceTypeEXT()) {
+                    case GraphicsDeviceTypeEXT::Hardware: text = "Hardware"; break;
+                    case GraphicsDeviceTypeEXT::Reference: text = "Reference"; break;
+                    default: text = "Null (it wins over Reference)"; break;
+                }
+            }
+        } catch (const std::exception& e) {
+            text = std::string("failed: ") + std::string(e.what()).substr(0, 40);
+        }
+        GraphicsAdapter::setUseNullDeviceProperty(oldNull);
+        GraphicsAdapter::setUseReferenceDeviceProperty(oldReference);
+        return text;
+    }
+
     void Refresh()
     {
         lines_.clear();
@@ -393,6 +424,23 @@ private:
                     text(std::string(FeatureName(f)) + ": " + word, x + 20, y - 2, Kit::kText, 0.58f);
                     ++i;
                 }
+            } else if (page_ == 3) {
+                // CNA's own English report of the renderer, as one string a bug report can carry.
+                const std::string_view report = d.GetRendererCapabilityReportEXT();
+                std::vector<std::string> rows;
+                std::string row;
+                for (const char c : report) {
+                    if (c == '\n') { rows.push_back(row); row.clear(); } else row.push_back(c);
+                }
+                if (!row.empty()) rows.push_back(row);
+                const int visible = 16, total = static_cast<int>(rows.size());
+                const int first = std::clamp(static_cast<int>(reportScroll_ * static_cast<float>(std::max(0, total - visible)) + 0.5f), 0, std::max(0, total - visible));
+                float y = 80.0f;
+                for (int i = first; i < std::min(total, first + visible); ++i) {
+                    text(rows[static_cast<std::size_t>(i)].substr(0, 120), 24, y, Kit::kText, 0.5f);
+                    y += 26.0f;
+                }
+                text(std::to_string(report.size()) + " bytes, " + std::to_string(total) + " lines, showing " + std::to_string(first + 1) + " to " + std::to_string(std::min(total, first + visible)), 24, 500, Kit::kDim, 0.55f);
             } else if (page_ == 2) {
                 // Questions a game asks the device itself, as opposed to the capability profile.
                 const auto yes = [](bool v) { return v ? "yes" : "no"; };
@@ -468,7 +516,8 @@ private:
     std::string adapterName_ = "-", profileName_ = "-", maturity_ = "-", platformName_ = "-", clock_ = "-", subsystems_ = "-", devices_ = "-", originalTitle_;
     std::vector<DisplayMode> modes_;
     std::vector<std::pair<std::string, bool>> caps_;
-    int supported_ = 0, total_ = 0, page_ = 0;
+    int supported_ = 0, total_ = 0, page_ = 0, deviceFlags_ = 0;
+    float reportScroll_ = 0.0f;
     int resizeEvents_ = 0, activated_ = 0, deactivated_ = 0, drops_ = 0;
     bool subscribed_ = false;
     bool originalResizable_ = false;

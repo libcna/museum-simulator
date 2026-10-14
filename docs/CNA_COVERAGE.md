@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-858 distinct API names are claimed by at least one room.
+863 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -370,10 +370,14 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Graphics/TextureBindingChanges | `pf-state` |
 | GraphicsAdapter | `info`, `app-device`, `pl-adapter` |
 | GraphicsAdapter.Adapters | `pl-adapter` |
+| GraphicsAdapter.GetCurrentDeviceTypeEXT | `pl-adapter` |
+| GraphicsAdapter.GetRequiredRendererEXT | `pl-adapter` |
 | GraphicsAdapter.IsProfileSupported | `pl-adapter` |
 | GraphicsAdapter.IsWideScreenAspectRatioEXT | `pl-adapter` |
 | GraphicsAdapter.QueryBackBufferFormat | `pl-adapter` |
 | GraphicsAdapter.QueryRenderTargetFormat | `pl-adapter` |
+| GraphicsAdapter.UseNullDevice | `pl-adapter` |
+| GraphicsAdapter.UseReferenceDevice | `pl-adapter` |
 | GraphicsCapability | `app-device` |
 | GraphicsCapability.CompiledEffects | `fx-compiled` |
 | GraphicsCapability.Instancing | `geo-instancing`, `pf-objects` |
@@ -394,6 +398,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.GetGraphicsRendererName | `pl-renderer` |
 | GraphicsDevice.GetLogicalSizeEXT | `pl-renderer` |
 | GraphicsDevice.GetRendererCapabilityProfileEXT | `pl-renderer` |
+| GraphicsDevice.GetRendererCapabilityReportEXT | `pl-renderer` |
 | GraphicsDevice.GetShaderDialectEXT | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `fx-errors` |
 | GraphicsDevice.GetTrackedResourceCount | `pl-renderer` |
 | GraphicsDevice.GraphicsProfile | `pl-adapter` |
