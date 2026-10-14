@@ -35,7 +35,7 @@ WingSpec BuffersWing()
         Geo("geo-primitives", "Primitive Types", "TriangleList, TriangleStrip, LineList, LineStrip and the CNA point list from the same vertices", "primitives",
             {"PrimitiveType", "GraphicsDevice.DrawUserPrimitives"}),
         Geo("geo-dynamic", "Dynamic Vertex Buffers", "A DynamicVertexBuffer rewritten every frame with Discard, NoOverwrite or None", "dynamic",
-            {"DynamicVertexBuffer", "SetDataOptions", "VertexPositionNormalTexture"}),
+            {"DynamicVertexBuffer", "SetDataOptions", "VertexPositionNormalTexture", "GraphicsDevice.DrawUserIndexedPrimitives"}),
         Geo("geo-procedural", "Procedural Geometry", "Sphere, torus, cone and height field generated in code, with wireframe", "procedural",
             {"VertexBuffer", "IndexBuffer", "RasterizerState.FillMode"}),
         Geo("geo-index32", "32-Bit Indices", "A grid of up to 160 000 vertices drawn with IndexElementSize.ThirtyTwoBits", "index32", {"IndexBuffer", "IndexElementSize"}),

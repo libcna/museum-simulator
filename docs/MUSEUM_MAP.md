@@ -212,7 +212,7 @@ Vertex data, buffers, primitives and textures
 | 3.1.01 | `geo-triangle` | A Triangle and Its Winding | XNA 4.0 | VertexPositionColor, GraphicsDevice.DrawUserPrimitives, RasterizerState.CullMode |
 | 3.1.02 | `geo-indexed` | Vertex and Index Buffers | XNA 4.0 | VertexBuffer, IndexBuffer, GraphicsDevice.DrawIndexedPrimitives, GraphicsDevice.DrawPrimitives |
 | 3.1.03 | `geo-primitives` | Primitive Types | XNA 4.0 | PrimitiveType, GraphicsDevice.DrawUserPrimitives |
-| 3.1.04 | `geo-dynamic` | Dynamic Vertex Buffers | XNA 4.0 | DynamicVertexBuffer, SetDataOptions, VertexPositionNormalTexture |
+| 3.1.04 | `geo-dynamic` | Dynamic Vertex Buffers | XNA 4.0 | DynamicVertexBuffer, SetDataOptions, VertexPositionNormalTexture, GraphicsDevice.DrawUserIndexedPrimitives |
 | 3.1.05 | `geo-procedural` | Procedural Geometry | XNA 4.0 | VertexBuffer, IndexBuffer, RasterizerState.FillMode |
 | 3.1.06 | `geo-index32` | 32-Bit Indices | XNA 4.0 | IndexBuffer, IndexElementSize |
 | 3.1.07 | `geo-manybuffers` | Many Small Buffers | XNA 4.0 | VertexBuffer, GraphicsDevice.DrawIndexedPrimitives |
@@ -316,7 +316,7 @@ RasterizerState, DepthStencilState, BlendState and off-screen rendering
 | 5.2.06 | `rt-mrt` | Multiple Render Targets | CNA extension | GraphicsDevice.SetRenderTargets, RenderTargetBinding, ShaderEffect |
 | 5.2.07 | `rt-formats` | Render Target Formats | CNA extension | SurfaceFormat, RenderTarget2D.Format, GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT |
 | 5.2.08 | `rt-cube` | A Live Cube Map | XNA 4.0 | RenderTargetCube, GraphicsDevice.SetRenderTarget, CubeMapFace, EnvironmentMapEffect, EnvironmentMapEffect.EnvironmentMap |
-| 5.2.09 | `rt-msaa` | Multisampled Targets | XNA 4.0 | RenderTarget2D.MultiSampleCount, GraphicsCapability.MultiSampleAntiAliasing, RenderTarget2D |
+| 5.2.09 | `rt-msaa` | Multisampled Targets | XNA 4.0 | RenderTarget2D.MultiSampleCount, GraphicsCapability.MultiSampleAntiAliasing, RenderTarget2D, RasterizerState.MultiSampleAntiAlias |
 
 ### Floor 6: Models, Animation and Particles
 

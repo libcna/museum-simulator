@@ -50,7 +50,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-536 distinct API names are claimed by at least one room.
+538 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -277,6 +277,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.DrawIndexedPrimitives | `geo-indexed`, `geo-manybuffers`, `geo-dynindex`, `geo-terrain`, `pf-objects` |
 | GraphicsDevice.DrawInstancedPrimitives | `geo-instancing`, `pf-objects` |
 | GraphicsDevice.DrawPrimitives | `geo-indexed` |
+| GraphicsDevice.DrawUserIndexedPrimitives | `geo-dynamic` |
 | GraphicsDevice.DrawUserPrimitives | `geo-triangle`, `geo-primitives`, `cx-points`, `pf-buffers`, `pf-particles`, `rv-geometry` |
 | GraphicsDevice.GetBackBufferData | `vr-index` |
 | GraphicsDevice.GetDisplayColorSpaceEXT | `pl-renderer` |
@@ -444,6 +445,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | RasterizerState.CullMode | `geo-triangle`, `rs-cull`, `rt-mirror`, `rv-geometry` |
 | RasterizerState.DepthBias | `rs-depthbias` |
 | RasterizerState.FillMode | `geo-procedural`, `geo-terrain`, `rs-fill` |
+| RasterizerState.MultiSampleAntiAlias | `rt-msaa` |
 | RasterizerState.ScissorTestEnable | `sprite-scissor`, `rs-scissor` |
 | RasterizerState.SlopeScaleDepthBias | `rs-depthbias` |
 | Ray.Intersects | `col-ray-box`, `col-ray-sphere`, `col-ray-plane`, `col-pick` |

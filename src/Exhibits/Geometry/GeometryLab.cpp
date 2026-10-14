@@ -105,6 +105,7 @@ public:
                 p.AddSlider("Grid size", 8.0f, 128.0f, static_cast<float>(grid_), [this](float v) { grid_ = static_cast<int>(v); dirty_ = true; }, "%.0f", 1.0f);
                 p.AddSlider("Wave speed", 0.0f, 4.0f, speed_, [this](float v) { speed_ = v; });
                 p.AddChoice("SetDataOptions", {"Discard", "NoOverwrite", "None"}, 0, [this](int v) { dataOptions_ = v; });
+                p.AddChoice("Vertices reach the GPU by", {"DynamicVertexBuffer.SetData", "DrawUserIndexedPrimitives (no buffer)"}, 0, [this](int v) { userDraw_ = v == 1; });
                 p.AddReadout("Vertices rewritten per frame", [this] { return std::to_string(grid_ * grid_); });
                 p.AddReadout("Upload", [this] { return Fmt(static_cast<float>(grid_ * grid_) * static_cast<float>(sizeof(Vnt)) / 1024.0f) + " KB per frame"; });
                 break;
@@ -381,6 +382,7 @@ private:
             gridI16_.assign(gridI32_.begin(), gridI32_.end());
             std::vector<std::uint16_t> idx16;
             for (std::uint32_t q : gridI32_) idx16.push_back(static_cast<std::uint16_t>(q));
+            userIdx_ = idx16;
             dyn_ = std::make_unique<DynamicVertexBuffer>(device, Vnt::getVertexDeclarationStatic(), grid_ * grid_, BufferUsage::WriteOnly);
             gridIb_ = std::make_unique<IndexBuffer>(device, IndexElementSize::SixteenBits, static_cast<int>(idx16.size()), BufferUsage::WriteOnly);
             gridIb_->SetData(idx16.data(), static_cast<int>(idx16.size()));
@@ -388,10 +390,16 @@ private:
         }
         Displace(gridV_, time_ * speed_);
         static const SetDataOptions opts[] = {SetDataOptions::Discard, SetDataOptions::NoOverwrite, SetDataOptions::None};
-        dyn_->SetData(gridV_.data(), 0, grid_ * grid_, opts[dataOptions_]);
+        if (!userDraw_) dyn_->SetData(gridV_.data(), 0, grid_ * grid_, opts[dataOptions_]);
         BasicEffect& fx = Lit(ctx, Matrix::CreateTranslation(o + Vector3(0, -0.2f, 0)), Vector3(0.3f, 0.6f, 0.95f));
         EffectBank::Apply(fx);
         device.setRasterizerStateProperty(RasterizerState::CullNone);
+        if (userDraw_) {
+            // The vertex and index arrays go straight into the draw call; CNA copies them every time, so this suits
+            // small or one-off geometry, not a grid redrawn each frame.
+            device.DrawUserIndexedPrimitives(PrimitiveType::TriangleList, gridV_.data(), 0, grid_ * grid_, userIdx_.data(), 0, static_cast<int>(userIdx_.size()) / 3);
+            return;
+        }
         device.SetVertexBuffer(dyn_.get());
         device.setIndicesProperty(gridIb_.get());
         device.DrawIndexedPrimitives(PrimitiveType::TriangleList, 0, 0, grid_ * grid_, 0, static_cast<int>(gridI32_.size()) / 3);
@@ -657,6 +665,8 @@ private:
     std::vector<Vnt> gridV_;
     std::vector<std::uint32_t> gridI32_;
     std::vector<std::uint32_t> gridI16_;
+    std::vector<std::uint16_t> userIdx_;
+    bool userDraw_ = false;
     std::vector<std::unique_ptr<VertexBuffer>> small_;
     std::vector<Matrix> instances_;
 };
