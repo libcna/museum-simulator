@@ -554,6 +554,9 @@ private:
             dirty_ = false;
         }
         BasicEffect& fx = Lit(ctx, Matrix::CreateRotationY(spin_ * 0.4f) * Matrix::CreateTranslation(o + Vector3(0, -0.5f, 0)), Vector3(0.9f, 0.5f, 0.4f));
+        // Every vertex here has texture coordinate (0, 0), so the screen-space derivatives are zero; anisotropic filtering of a zero
+        // footprint is undefined and came out black on the software Vulkan/GL drivers. A plain linear sampler has no such case.
+        device.getSamplerStatesProperty()[0] = SamplerState::LinearClamp;
         EffectBank::Apply(fx);
         device.setRasterizerStateProperty(RasterizerState::CullNone);
         device.setIndicesProperty(mergedI_.get());

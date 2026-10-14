@@ -49,7 +49,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-573 distinct API names are claimed by at least one room.
+574 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -98,11 +98,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Bgra5551 | `vt-packed` |
 | Blend | `sprite-blend`, `rs-blend` |
 | Blend.BlendFactor | `rs-blendfactor`, `rv-blend` |
+| Blend.DestinationColor | `sprite-lights` |
 | Blend.InverseBlendFactor | `rs-blendfactor` |
 | BlendFunction | `sprite-blend`, `rs-blend`, `rv-blend` |
 | BlendFunction.ReverseSubtract | `rt-bloom` |
 | BlendState | `sky`, `renderstates`, `particles`, `sprite-blend`, `rs-blend`, `rv-blend` |
-| BlendState.Additive | `sprite-blend`, `light-coloured`, `light-many`, `light-emissive`, `rt-bloom`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic` |
+| BlendState.Additive | `sprite-blend`, `sprite-lights`, `light-coloured`, `light-many`, `light-emissive`, `rt-bloom`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic` |
 | BlendState.AlphaBlend | `sprite-blend` |
 | BlendState.BlendFactor | `rs-blendfactor` |
 | BlendState.ColorWriteChannels | `rs-colorwrite` |
@@ -484,7 +485,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Rectangle.IsEmpty | `vt-rectangle` |
 | Rectangle.Location | `vt-rectangle` |
 | Rectangle.Union | `vt-rectangle` |
-| RenderTarget2D | `rendertarget`, `cam-orbit`, `cam-fov`, `cam-split`, `cam-mirror`, `sprite-basics`, `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `rs-scissor`, `rt-basic`, `rt-lowres`, `rt-control`, `rt-recursive`, `rt-mirror`, `rt-bloom`, `rt-msaa`, `pf-targets`, `rv-targets`, `rf-telescope` |
+| RenderTarget2D | `rendertarget`, `cam-orbit`, `cam-fov`, `cam-split`, `cam-mirror`, `sprite-basics`, `sprite-lights`, `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `rs-scissor`, `rt-basic`, `rt-lowres`, `rt-control`, `rt-recursive`, `rt-mirror`, `rt-bloom`, `rt-msaa`, `pf-targets`, `rv-targets`, `rf-telescope` |
 | RenderTarget2D.Format | `rt-formats` |
 | RenderTarget2D.MultiSampleCount | `rt-msaa` |
 | RenderTargetBinding | `rt-mrt` |
@@ -504,7 +505,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SamplerState.AddressU | `tex-address`, `rv-sampling` |
 | SamplerState.AnisotropicClamp | `tex-filter` |
 | SamplerState.Filter | `tex-mip` |
-| SamplerState.LinearClamp | `tex-filter`, `rt-bloom`, `rv-sprites` |
+| SamplerState.LinearClamp | `sprite-lights`, `tex-filter`, `rt-bloom`, `rv-sprites` |
 | SamplerState.LinearWrap | `sprite-parallax`, `tex-uv`, `an-conveyor` |
 | SamplerState.MaxAnisotropy | `tex-mip` |
 | SamplerState.MaxMipLevel | `tex-mip` |
@@ -553,7 +554,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SpriteBatch | `sprite-stress`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `rf-weather` |
 | SpriteBatch.Begin | `sprite-basics`, `sprite-camera`, `sprite-tilemap`, `rt-bloom`, `pf-sprites` |
 | SpriteBatch.Begin(effect) | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `cx-crt` |
-| SpriteBatch.Draw | `sprite-basics`, `sprite-origin`, `sprite-sheet`, `sprite-sort`, `sprite-parallax`, `sprite-ui`, `sprite-atlas`, `sprite-hit`, `sprite-anim`, `sprite-tilemap`, `sprite-stress`, `rt-recursive`, `pf-sprites`, `pf-overdraw`, `rv-sprites` |
+| SpriteBatch.Draw | `sprite-basics`, `sprite-origin`, `sprite-sheet`, `sprite-sort`, `sprite-parallax`, `sprite-ui`, `sprite-atlas`, `sprite-hit`, `sprite-anim`, `sprite-tilemap`, `sprite-lights`, `sprite-stress`, `rt-recursive`, `pf-sprites`, `pf-overdraw`, `rv-sprites` |
 | SpriteBatch.DrawString | `text-align`, `text-transform`, `text-hud`, `text-labels` |
 | SpriteEffect | `be-model` |
 | SpriteEffects | `sprite-basics`, `text-transform`, `rv-sprites` |

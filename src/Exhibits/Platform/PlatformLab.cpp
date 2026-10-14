@@ -374,6 +374,24 @@ private:
                     }
                 }
                 text("green yes, red no, gray not reported", 24, 260, Kit::kDim, 0.55f);
+                // CNA's own statement of what this renderer cannot do (RendererCapabilityProfile.GetAdditionalLimitationsText), wrapped to the left column.
+                text("CNA's own note on this profile:", 24, 292, Kit::kText, 0.55f);
+                std::string words(prof.GetAdditionalLimitationsText()), line;
+                float ly = 316.0f;
+                std::size_t pos = 0;
+                while (pos < words.size() && ly < 520.0f) {
+                    const std::size_t end = words.find(' ', pos);
+                    const std::string word = words.substr(pos, end == std::string::npos ? std::string::npos : end - pos);
+                    pos = end == std::string::npos ? words.size() : end + 1;
+                    if (line.size() + word.size() + 1 > 62) {
+                        text(line, 24, ly, Kit::kDim, 0.46f);
+                        ly += 19.0f;
+                        line.clear();
+                    }
+                    line += (line.empty() ? "" : " ") + word;
+                }
+                if (!line.empty() && ly < 520.0f) text(line, 24, ly, Kit::kDim, 0.46f);
+                if (words.empty()) text("(none stated)", 24, 316, Kit::kDim, 0.46f);
             }
         } catch (const std::exception& e) {
             text(std::string("capability profile unavailable: ") + e.what(), 24, 100, Kit::Rgba(255, 190, 150), 0.7f);

@@ -76,6 +76,8 @@ WingSpec TechniqueWing()
                {"SpriteBatch.Draw", "Rectangle", "SpriteEffects.FlipHorizontally", "Texture2D.SetData"}),
         Sprite("sprite-tilemap", "Tile Maps and Culling", "A level read from a Texture2D with GetData, a tile atlas drawn by source rectangle and only the visible tiles submitted", "tilemap",
                {"Texture2D.GetData", "SpriteBatch.Draw", "Rectangle.Intersects", "SpriteBatch.Begin", "Matrix.CreateScale"}),
+        Sprite("sprite-lights", "2D Lighting with a Light Map", "Lights added into a render target, then multiplied over the scene with Blend.DestinationColor: no shader", "lights",
+               {"RenderTarget2D", "BlendState.Additive", "Blend.DestinationColor", "SpriteBatch.Draw", "SamplerState.LinearClamp"}),
         Sprite("sprite-stress", "Thousands of Sprites", "One Begin/End with up to twenty thousand animated sprites and live throughput", "stress", {"SpriteBatch", "SpriteBatch.Draw"}),
     };
     return w;

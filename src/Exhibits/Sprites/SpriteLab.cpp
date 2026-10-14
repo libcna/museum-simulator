@@ -2,6 +2,7 @@
 // into a render target, using exactly the state it demonstrates (sort mode, blend, sampler, rasterizer,
 // transform), next to a control console. The live screen is an ordinary RenderTarget2D shown on the far wall.
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <optional>
@@ -12,6 +13,7 @@
 #include "Exhibits/ExhibitKit.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
 #include "Microsoft/Xna/Framework/Graphics/BlendState.hpp"
+#include "Microsoft/Xna/Framework/Graphics/RenderTarget2D.hpp"
 #include "Microsoft/Xna/Framework/Graphics/RasterizerState.hpp"
 #include "Microsoft/Xna/Framework/Graphics/SamplerState.hpp"
 #include "Microsoft/Xna/Framework/Graphics/SpriteEffects.hpp"
@@ -30,13 +32,13 @@ namespace {
 
 constexpr int kW = 960, kH = 540;
 
-enum class Mode { Basics, Origin, Sheet, Tint, Blend, Sort, Sampler, Parallax, Ui, Atlas, Stress, Scissor, Camera, Hit, Anim, Tilemap };
+enum class Mode { Basics, Origin, Sheet, Tint, Blend, Sort, Sampler, Parallax, Ui, Atlas, Stress, Scissor, Camera, Hit, Anim, Tilemap, Lights };
 
 Mode ParseMode(const std::string& s)
 {
     static const std::pair<const char*, Mode> table[] = {{"origin", Mode::Origin}, {"sheet", Mode::Sheet}, {"tint", Mode::Tint}, {"blend", Mode::Blend}, {"sort", Mode::Sort},
                                                          {"sampler", Mode::Sampler}, {"parallax", Mode::Parallax}, {"ui", Mode::Ui}, {"atlas", Mode::Atlas},
-                                                         {"stress", Mode::Stress}, {"scissor", Mode::Scissor}, {"camera", Mode::Camera}, {"hit", Mode::Hit}, {"anim", Mode::Anim}, {"tilemap", Mode::Tilemap}};
+                                                         {"stress", Mode::Stress}, {"scissor", Mode::Scissor}, {"camera", Mode::Camera}, {"hit", Mode::Hit}, {"anim", Mode::Anim}, {"tilemap", Mode::Tilemap}, {"lights", Mode::Lights}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
     return Mode::Basics;
@@ -145,6 +147,15 @@ public:
                 p.AddReadout("Tiles drawn this frame", [this] { return std::to_string(tilesDrawn_); });
                 p.AddReadout("Level data", [] { return std::string("a 96 x 60 Texture2D read with GetData"); });
                 break;
+            case Mode::Lights:
+                p.AddSlider("Ambient light", 0.0f, 1.0f, ambient_, [this](float v) { ambient_ = v; });
+                p.AddSlider("Light radius", 60.0f, 320.0f, lightRadius_, [this](float v) { lightRadius_ = v; }, "%.0f px", 1.0f);
+                p.AddSlider("Light intensity", 0.2f, 2.0f, lightGain_, [this](float v) { lightGain_ = v; });
+                p.AddChoice("Combine", {"Multiply (light map x scene)", "Add (washes the scene out)", "Light map alone"}, 0, [this](int v) { lightCombine_ = v; });
+                p.AddChoice("Light map size", {"960 x 540", "480 x 270", "240 x 135"}, 1, [this](int v) { lightSize_ = v; lightDirty_ = true; });
+                p.AddReadout("Multiply blend", [] { return std::string("Source = DestinationColor, Dest = Zero"); });
+                p.AddReadout("Light map", [this] { return lightMap_ ? std::to_string(lightMap_->getWidthProperty()) + " x " + std::to_string(lightMap_->getHeightProperty()) + ", cleared to the ambient colour" : std::string("-"); });
+                break;
             case Mode::Anim:
                 p.AddChoice("Clip", {"Idle (frames 0-1)", "Walk (frames 2-5)", "Jump (frames 6-7)", "All eight"}, 1, [this](int v) { clip_ = v; animTime_ = 0.0f; });
                 p.AddChoice("Loop mode", {"Loop", "Ping-pong", "Play once"}, 0, [this](int v) { loop_ = v; animTime_ = 0.0f; });
@@ -165,6 +176,7 @@ public:
         if (mode_ == Mode::Hit) BuildHitTextures();
         if (mode_ == Mode::Anim) BuildAnimSheet();
         if (mode_ == Mode::Tilemap) BuildTilemap();
+        if (mode_ == Mode::Lights) BuildLightTexture();
     }
 
     void Update(const UpdateContext& ctx) override
@@ -200,7 +212,7 @@ public:
 private:
     [[nodiscard]] std::string Title() const
     {
-        static const char* names[] = {"Sprites: position, rotation, scale and flip", "Sprite origin and rotation", "Sprite sheets and source rectangles", "Colour tint and alpha", "BlendState presets side by side", "SpriteSortMode and layer depth", "SamplerState filtering and addressing", "Scrolling and parallax", "UI panels and nine-slice", "Texture atlases", "Thousands of sprites", "Scissor rectangle clipping", "A 2D camera with a transform matrix", "Per-pixel collision", "Sprite animation: clips and loop modes", "Tile maps and culling"};
+        static const char* names[] = {"Sprites: position, rotation, scale and flip", "Sprite origin and rotation", "Sprite sheets and source rectangles", "Colour tint and alpha", "BlendState presets side by side", "SpriteSortMode and layer depth", "SamplerState filtering and addressing", "Scrolling and parallax", "UI panels and nine-slice", "Texture atlases", "Thousands of sprites", "Scissor rectangle clipping", "A 2D camera with a transform matrix", "Per-pixel collision", "Sprite animation: clips and loop modes", "Tile maps and culling", "2D lighting with a light map"};
         return names[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
@@ -219,6 +231,7 @@ private:
             case Mode::Stress: return {"SpriteBatch batches sprites into a few big draw calls. Raise the count to see how many sprites per", "second this renderer can push; the frame rate on your screen is the museum's own, so go gently."};
             case Mode::Scissor: return {"With RasterizerState.ScissorTestEnable and GraphicsDevice.ScissorRectangle, drawing is clipped to a", "rectangle: how scrolling lists and UI panels hide what overflows. Slide the rectangle over a long list."};
             case Mode::Tilemap: return {"A level is often just an image: each pixel's red value is a tile number, read once with Texture2D.GetData. Each frame the", "tile atlas is drawn with source rectangles, and only the tiles the camera can see: Rectangle.Intersects against the screen."};
+            case Mode::Lights: return {"2D lighting without a shader: every light is a soft round sprite added into a light map (a render target cleared to the ambient", "colour), then the light map is drawn over the scene with a multiply blend (source x destination). Lit pixels keep their colour, dark ones go dark."};
             case Mode::Hit: return {"Two sprites collide when their opaque pixels touch, not when their rectangles do. The cheap test is Rectangle.Intersects", "on the bounding boxes; only if that passes does the exact test read both textures' pixels (GetData). Magenta shows the shared ones."};
             case Mode::Anim: return {"Animation is a SourceRectangle that changes over time: elapsed seconds times frames-per-second picks the frame. A clip", "is a range of frames; loop mode decides what happens at the end (wrap, bounce back or stop on the last frame)."};
             default: return {"The transformMatrix passed to SpriteBatch.Begin turns a 2D world into a screen: translation pans, scale zooms,", "rotation turns the view. The same sprites are drawn; only the matrix changes."};
@@ -272,7 +285,105 @@ private:
             case Mode::Hit: DrawHit(sb); break;
             case Mode::Anim: DrawAnim(sb); break;
             case Mode::Tilemap: DrawTilemap(sb); break;
+            case Mode::Lights: DrawLights(sb); break;
         }
+    }
+
+    // The light map is its own render target, so it is drawn here, before the screen's pass, never inside DrawScreen.
+    void RenderOffscreen(const DrawContext& ctx) override
+    {
+        if (mode_ == Mode::Lights) RenderLightMap(ctx.device);
+        ScreenExhibit::RenderOffscreen(ctx);
+    }
+
+    // A soft round light: white in the middle falling to black at the rim (smooth, so lights blend into each other without a seam).
+    void BuildLightTexture()
+    {
+        constexpr int n = 128;
+        std::vector<Color> px(static_cast<std::size_t>(n * n));
+        for (int y = 0; y < n; ++y)
+            for (int x = 0; x < n; ++x) {
+                const float dx = (static_cast<float>(x) + 0.5f) / n * 2.0f - 1.0f, dy = (static_cast<float>(y) + 0.5f) / n * 2.0f - 1.0f;
+                const float r = std::sqrt(dx * dx + dy * dy);
+                const float f = std::clamp(1.0f - r, 0.0f, 1.0f);
+                const std::uint8_t v = static_cast<std::uint8_t>(f * f * (3.0f - 2.0f * f) * 255.0f);
+                px[static_cast<std::size_t>(y * n + x)] = Color(v, v, v, static_cast<std::uint8_t>(255));
+            }
+        lightTexture_ = std::make_unique<Texture2D>(*S().device, n, n);
+        lightTexture_->SetData(px.data(), n * n);
+    }
+
+    struct LightDef { float x, y, r, g, b; };
+    [[nodiscard]] std::array<LightDef, 3> Lights() const
+    {
+        return {{{480.0f + std::cos(time_ * 0.7f) * 300.0f, 270.0f + std::sin(time_ * 1.1f) * 140.0f, 1.0f, 0.78f, 0.45f},
+                 {480.0f + std::cos(time_ * 0.45f + 2.1f) * 250.0f, 270.0f + std::sin(time_ * 0.8f + 1.0f) * 170.0f, 0.45f, 0.7f, 1.0f},
+                 {480.0f + std::cos(time_ * 0.9f + 4.2f) * 330.0f, 270.0f + std::sin(time_ * 0.6f + 3.0f) * 120.0f, 0.6f, 1.0f, 0.55f}}};
+    }
+
+    void RenderLightMap(GraphicsDevice& d)
+    {
+        if (!lightTexture_) return;
+        static const int sizes[3][2] = {{960, 540}, {480, 270}, {240, 135}};
+        if (lightDirty_ || !lightMap_) {
+            lightMap_ = std::make_unique<RenderTarget2D>(d, sizes[lightSize_][0], sizes[lightSize_][1], false, SurfaceFormat::Color, DepthFormat::None);
+            lightDirty_ = false;
+        }
+        const float scale = static_cast<float>(lightMap_->getWidthProperty()) / 960.0f;
+        RenderStates::UnbindTextures(d);
+        d.SetRenderTarget(lightMap_.get());
+        d.setViewportProperty(Viewport(0, 0, lightMap_->getWidthProperty(), lightMap_->getHeightProperty()));
+        const auto a = static_cast<std::uint8_t>(std::clamp(ambient_, 0.0f, 1.0f) * 255.0f);
+        d.Clear(Color(a, a, a, static_cast<std::uint8_t>(255)));
+        SpriteBatch& sb = *S().sprites;
+        sb.Begin(SpriteSortMode::Deferred, &BlendState::Additive, &SamplerState::LinearClamp, nullptr, nullptr);
+        for (const LightDef& l : Lights()) {
+            const float size = lightRadius_ * 2.0f * scale;
+            const Color tint(static_cast<std::uint8_t>(std::clamp(l.r * lightGain_, 0.0f, 1.0f) * 255.0f), static_cast<std::uint8_t>(std::clamp(l.g * lightGain_, 0.0f, 1.0f) * 255.0f),
+                             static_cast<std::uint8_t>(std::clamp(l.b * lightGain_, 0.0f, 1.0f) * 255.0f), static_cast<std::uint8_t>(255));
+            sb.Draw(*lightTexture_, Rectangle(static_cast<int>(l.x * scale - size * 0.5f), static_cast<int>(l.y * scale - size * 0.5f), static_cast<int>(size), static_cast<int>(size)), tint);
+        }
+        sb.End();
+        d.SetRenderTarget(nullptr);
+    }
+
+    void DrawLights(SpriteBatch& sb)
+    {
+        // The scene: brick floor, a few crates and pillars, drawn plainly with full brightness.
+        Begin(sb, SpriteSortMode::Deferred, &BlendState::Opaque, &SamplerState::LinearWrap);
+        sb.Draw(Tex("cobble"), Rectangle(0, 0, kW, kH), Rectangle(0, 0, 960 * 2, 540 * 2), Color::White);
+        sb.End();
+        Begin(sb, SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::LinearClamp);
+        for (int i = 0; i < 9; ++i) {
+            const int x = 90 + (i % 5) * 190 + ((i / 5) * 90), y = 120 + (i / 5) * 230 + ((i % 3) * 30);
+            sb.Draw(Tex("wood"), Rectangle(x, y, 84, 84), Color::White);
+            sb.Draw(Tex("white"), Rectangle(x, y + 76, 84, 8), Color(0, 0, 0, 90));
+        }
+        for (int i = 0; i < 4; ++i) sb.Draw(Tex("stone"), Rectangle(60 + i * 270, 40, 56, 150), Color::White);
+        sb.End();
+        if (!lightMap_) return;
+        const Rectangle full(0, 0, kW, kH);
+        if (lightCombine_ == 2) {
+            Begin(sb, SpriteSortMode::Deferred, &BlendState::Opaque, &SamplerState::LinearClamp);
+            sb.Draw(*lightMap_, full, Color::White);
+            sb.End();
+        } else if (lightCombine_ == 1) {
+            Begin(sb, SpriteSortMode::Deferred, &BlendState::Additive, &SamplerState::LinearClamp);
+            sb.Draw(*lightMap_, full, Color::White);
+            sb.End();
+        } else {
+            BlendState multiply;
+            multiply.setColorSourceBlendProperty(Blend::DestinationColor);
+            multiply.setColorDestinationBlendProperty(Blend::Zero);
+            multiply.setAlphaSourceBlendProperty(Blend::DestinationAlpha);
+            multiply.setAlphaDestinationBlendProperty(Blend::Zero);
+            Begin(sb, SpriteSortMode::Deferred, &multiply, &SamplerState::LinearClamp);
+            sb.Draw(*lightMap_, full, Color::White);
+            sb.End();
+        }
+        Begin(sb);
+        Text(sb, "scene sprites -> light map (additive lights over the ambient colour) -> Draw(lightMap) with Blend.DestinationColor / Zero", 16, 12, Color(255, 240, 180, 255), 0.55f);
+        sb.End();
     }
 
     void DrawBasics(SpriteBatch& sb)
@@ -888,6 +999,11 @@ private:
     }
 
     Mode mode_;
+    std::unique_ptr<Texture2D> lightTexture_;
+    std::unique_ptr<RenderTarget2D> lightMap_;
+    float ambient_ = 0.18f, lightRadius_ = 190.0f, lightGain_ = 1.0f;
+    int lightCombine_ = 0, lightSize_ = 1;
+    bool lightDirty_ = true;
     std::unique_ptr<Texture2D> levelTexture_, tileAtlas_;
     std::vector<std::uint8_t> tiles_;
     float tileCamX_ = 0.5f, tileCamY_ = 0.5f, tileZoom_ = 2.0f;
