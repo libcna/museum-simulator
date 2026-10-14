@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 36 wings, 283 exhibit rooms (5 open to the sky), 349 walkable cells in all.
+10 floors, 36 wings, 284 exhibit rooms (5 open to the sky), 350 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -155,7 +155,8 @@ The application model, the maths of games, geometry tests and cameras
 | 1.7.01 | `vt-packed` | Packed Vector Formats | XNA 4.0 | IPackedVector, Byte4, NormalizedByte4, NormalizedShort4, Short4, HalfVector4, Rgba1010102, Rgba64, Bgra4444, Bgra5551, Bgr565, Rg32, Short2, NormalizedShort2, NormalizedByte2, HalfVector2, PackedValue |
 | 1.7.02 | `vt-rectangle` | Rectangle and Point | XNA 4.0 | Rectangle, Rectangle.Intersects, Rectangle.Intersect, Rectangle.Union, Rectangle.Contains, Rectangle.Inflate, Rectangle.Bottom, Rectangle.Location, Rectangle.IsEmpty, Point |
 | 1.7.03 | `vt-color` | Colour | XNA 4.0 | Color, Color.Lerp, Color.Multiply, Color.FromNonPremultiplied, Color.PackedValue, Color.ToVector3, Color.PackFromVector4 |
-| 1.7.04 | `vt-converters` | Type Converters | XNA 4.0 | Vector3Converter, Vector2Converter, Vector4Converter, QuaternionConverter, ColorConverter, RectangleConverter, PointConverter, BoundingBoxConverter, BoundingSphereConverter, PlaneConverter, RayConverter, MatrixConverter, MathTypeConverter, MathTypeConverter.ConvertToString, MathTypeConverter.ConvertFromString, MathTypeConverter.GetProperties |
+| 1.7.04 | `vt-colors` | The 141 Named Colours | XNA 4.0 | Color, Color.Transparent, Color.AliceBlue, Color.CornflowerBlue, Color.Gold, Color.Red, Color.Green, Color.Blue, Color.White, Color.Black, Color.YellowGreen, Color.R, Color.G, Color.B, Color.A, Color.PackedValue, Color.ToString |
+| 1.7.05 | `vt-converters` | Type Converters | XNA 4.0 | Vector3Converter, Vector2Converter, Vector4Converter, QuaternionConverter, ColorConverter, RectangleConverter, PointConverter, BoundingBoxConverter, BoundingSphereConverter, PlaneConverter, RayConverter, MatrixConverter, MathTypeConverter, MathTypeConverter.ConvertToString, MathTypeConverter.ConvertFromString, MathTypeConverter.GetProperties |
 
 ### Floor 2: Two-Dimensional Rendering
 
@@ -228,7 +229,7 @@ Vertex data, buffers, primitives and textures
 
 | Room | Key | Title | Origin | APIs |
 |---|---|---|---|---|
-| 3.2.01 | `tex-mip` | Mip Levels and Filtering | XNA 4.0 | Texture2D, SamplerState.Filter, SamplerState.MipMapLevelOfDetailBias, SamplerState.MaxMipLevel, SamplerState.MaxAnisotropy |
+| 3.2.01 | `tex-mip` | Mip Levels and Filtering | XNA 4.0 | Texture2D, SamplerState.Filter, TextureFilter.MinLinearMagPointMipLinear, TextureFilter.MinPointMagLinearMipPoint, SamplerState.MipMapLevelOfDetailBias, SamplerState.MaxMipLevel, SamplerState.MaxAnisotropy |
 | 3.2.02 | `tex-filter` | Magnification Filters | XNA 4.0 | SamplerState.PointClamp, SamplerState.LinearClamp, SamplerState.AnisotropicClamp |
 | 3.2.03 | `tex-address` | Addressing Modes | XNA 4.0 | TextureAddressMode, SamplerState.AddressU |
 | 3.2.04 | `tex-uv` | UV Transforms | XNA 4.0 | VertexPositionColorTexture, SamplerState.LinearWrap |
@@ -403,7 +404,7 @@ Sound, music, keyboards, mice and game pads
 | 7.1.04 | `au-synth` | A Synthesiser | XNA 4.0 | DynamicSoundEffectInstance, DynamicSoundEffectInstance.SubmitBuffer, DynamicSoundEffectInstance.SubmitFloatBufferEXT, AudioChannels, DynamicSoundEffectInstance.PendingBufferCount, DynamicSoundEffectInstance.GetSampleSizeInBytes, SoundEffect.GetSampleDuration |
 | 7.1.05 | `au-generate` | Generated Sounds | XNA 4.0 | SoundEffect(buffer, sampleRate, channels), AudioChannels |
 | 7.1.06 | `au-master` | Master Volume and Settings | XNA 4.0 | SoundEffect.MasterVolume, SoundEffect.DistanceScale, SoundEffect.DopplerScale, SoundEffect.SpeedOfSound |
-| 7.1.07 | `au-music` | Song and MediaPlayer | XNA 4.0 | Song, MediaPlayer.Play, MediaPlayer.Volume, SongCollection, MediaQueue, MediaPlayer.Queue, MediaPlayer.MoveNext, MediaPlayer.MovePrevious, MediaPlayer.IsShuffled, MediaPlayer.IsVisualizationEnabled, MediaPlayer.GetVisualizationData, VisualizationData, MediaState |
+| 7.1.07 | `au-music` | Song and MediaPlayer | XNA 4.0 | Song, Song.Duration, Song.TrackNumber, Song.PlayCount, Song.Rating, Song.IsRated, Song.IsProtected, Song.Artist, MediaPlayer.Play, MediaPlayer.Volume, SongCollection, MediaQueue, MediaPlayer.Queue, MediaPlayer.MoveNext, MediaPlayer.MovePrevious, MediaPlayer.IsShuffled, MediaPlayer.IsVisualizationEnabled, MediaPlayer.GetVisualizationData, VisualizationData, MediaState |
 | 7.1.08 | `au-video` | Video | XNA 4.0 | Video, VideoPlayer, VideoPlayer.Play, VideoPlayer.Pause, VideoPlayer.Resume, VideoPlayer.Stop, VideoPlayer.GetTexture, VideoPlayer.IsLooped, VideoPlayer.IsMuted, VideoPlayer.Volume, VideoPlayer.PlayPosition, VideoPlayer.State |
 | 7.1.09 | `au-mic` | The Microphone | XNA 4.0 | Microphone, Microphone.GetData, Microphone.SampleRate, Microphone.BufferDuration, Microphone.GetSampleSizeInBytes, Microphone.IsHeadset |
 | 7.1.10 | `au-xact` | XACT Cues and Banks | XNA 4.0 | AudioEngine, AudioEngine.Update, AudioEngine.GetCategory, AudioCategory.SetVolume, AudioCategory.Pause, WaveBank, SoundBank, SoundBank.GetCue, SoundBank.PlayCue, Cue.Play, Cue.Pause, Cue.Resume, Cue.Stop, AudioStopOptions |
@@ -437,7 +438,7 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 | 8.1.05 | `ct-pipeline` | The Content Compiler | CNA extension | cna-content, ContentManager.Load, ContentManager.GetContentManifest |
 | 8.1.06 | `ct-intermediate` | The Pipeline in the Game | XNA 4.0 | IntermediateSerializer, IntermediateSerializer.Serialize, IntermediateSerializer.Deserialize, ContentItem, ContentTypeDescriptor, InvalidContentException, ContentSerializerAttribute, ContentSerializerIgnoreAttribute, ContentSerializerCollectionItemNameAttribute |
 | 8.1.07 | `ct-processor` | Processing a Texture | XNA 4.0 | TextureImporter, TextureProcessor, TextureProcessor.ColorKeyEnabled, TextureProcessor.PremultiplyAlpha, TextureProcessor.GenerateMipmaps, TextureProcessor.ResizeToPowerOfTwo, TextureProcessor.TextureFormat, TextureProcessorOutputFormat, Texture2DContent, MipmapChain, BitmapContent, PixelBitmapContent |
-| 8.1.08 | `ct-storage` | Title Files and Saved Data | XNA 4.0 | TitleContainer.OpenStream, StorageDevice, StorageContainer, StorageContainer.CreateDirectory, StorageContainer.DeleteDirectory, StorageContainer.DirectoryExists, StorageContainer.GetFileNames, StorageContainer.GetDirectoryNames, StorageDevice.GetStorageRootEXT |
+| 8.1.08 | `ct-storage` | Title Files and Saved Data | XNA 4.0 | TitleContainer.OpenStream, StorageDevice, StorageContainer, StorageContainer.CreateDirectory, StorageContainer.DeleteDirectory, StorageContainer.DirectoryExists, StorageContainer.GetFileNames, StorageContainer.GetDirectoryNames, StorageDevice.GetStorageRootEXT, StorageDevice.DeleteContainer, StorageDevice.TotalSpace, StorageDevice.FreeSpace |
 | 8.1.09 | `ct-custom` | Teaching ContentManager a New Type | CNA extension | ContentManager.RegisterTypeReader, LooseFileContentTypeReader, ContentManager.RegisterCnjLoader, ContentLoadException |
 | 8.1.10 | `ct-reader` | Content Readers | XNA 4.0 | ContentTypeReader, ContentTypeReaderManager.AddTypeCreator, ContentReader, ContentManager.Load |
 | 8.1.11 | `ct-lifetime` | Resource Lifetime | XNA 4.0 | GraphicsResource.Dispose, GraphicsResource.IsDisposed, GraphicsResource.Disposing, GraphicsDevice.ResourceCreated, GraphicsDevice.ResourceDestroyed, ResourceCreatedEventArgs, ResourceDestroyedEventArgs, ContentManager.Unload |

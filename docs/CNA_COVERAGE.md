@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-869 distinct API names are claimed by at least one room.
+896 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -184,13 +184,28 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Clipboard.SetDataEXT | `in-text` |
 | Clipboard.SetPrimarySelectionTextEXT | `in-text` |
 | Clipboard.SetTextEXT | `in-text` |
-| Color | `vt-color`, `sprite-tint` |
+| Color | `vt-color`, `vt-colors`, `sprite-tint` |
+| Color.A | `vt-colors` |
+| Color.AliceBlue | `vt-colors` |
+| Color.B | `vt-colors` |
+| Color.Black | `vt-colors` |
+| Color.Blue | `vt-colors` |
+| Color.CornflowerBlue | `vt-colors` |
 | Color.FromNonPremultiplied | `vt-color` |
+| Color.G | `vt-colors` |
+| Color.Gold | `vt-colors` |
+| Color.Green | `vt-colors` |
 | Color.Lerp | `vt-color`, `sprite-tint` |
 | Color.Multiply | `vt-color` |
 | Color.PackFromVector4 | `vt-color` |
-| Color.PackedValue | `vt-color` |
+| Color.PackedValue | `vt-color`, `vt-colors` |
+| Color.R | `vt-colors` |
+| Color.Red | `vt-colors` |
+| Color.ToString | `vt-colors` |
 | Color.ToVector3 | `vt-color` |
+| Color.Transparent | `vt-colors` |
+| Color.White | `vt-colors` |
+| Color.YellowGreen | `vt-colors` |
 | ColorConverter | `vt-converters` |
 | ColorMatrixEffect | `fx-colormatrix` |
 | ColorMatrixEffect.SetColorMatrix | `fx-colormatrix` |
@@ -774,6 +789,13 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Snapshot.metrics | `cx-stats` |
 | Snapshot.resources | `cx-stats` |
 | Song | `au-music` |
+| Song.Artist | `au-music` |
+| Song.Duration | `au-music` |
+| Song.IsProtected | `au-music` |
+| Song.IsRated | `au-music` |
+| Song.PlayCount | `au-music` |
+| Song.Rating | `au-music` |
+| Song.TrackNumber | `au-music` |
 | SongCollection | `au-music` |
 | SoundBank | `au-xact` |
 | SoundBank.GetCue | `au-xact` |
@@ -820,7 +842,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | StorageContainer.GetDirectoryNames | `ct-storage` |
 | StorageContainer.GetFileNames | `ct-storage` |
 | StorageDevice | `ct-storage` |
+| StorageDevice.DeleteContainer | `ct-storage` |
+| StorageDevice.FreeSpace | `ct-storage` |
 | StorageDevice.GetStorageRootEXT | `ct-storage` |
+| StorageDevice.TotalSpace | `ct-storage` |
 | StringBuilder | `text-hud` |
 | SurfaceFormat | `tex-formats`, `rt-formats`, `rv-formats` |
 | SurfaceFormat.Dxt1 | `ct-formats` |
@@ -853,6 +878,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | TextureCube.GetData | `tex-cube` |
 | TextureCube.SetData | `tex-cube` |
 | TextureFilter | `sprite-sampler`, `rv-sampling` |
+| TextureFilter.MinLinearMagPointMipLinear | `tex-mip` |
+| TextureFilter.MinPointMagLinearMipPoint | `tex-mip` |
 | TextureImporter | `ct-processor` |
 | TextureProcessor | `ct-processor` |
 | TextureProcessor.ColorKeyEnabled | `ct-processor` |

@@ -56,7 +56,7 @@ public:
         ControlPanel& p = AddPanel(Title(), -4.8f, 1.5f, 1.8f, MathHelper::PiOver2, 2.1f);
         switch (mode_) {
             case Mode::Mip:
-                p.AddChoice("TextureFilter", {"Linear", "Point", "Anisotropic", "LinearMipPoint", "PointMipLinear"}, 0, [this](int v) { filter_ = v; });
+                p.AddChoice("TextureFilter", {"Linear", "Point", "Anisotropic", "LinearMipPoint", "PointMipLinear", "MinLinearMagPointMipLinear", "MinLinearMagPointMipPoint", "MinPointMagLinearMipLinear", "MinPointMagLinearMipPoint"}, 0, [this](int v) { filter_ = v; });
                 p.AddSlider("MipMapLevelOfDetailBias", -3.0f, 3.0f, bias_, [this](float v) { bias_ = v; });
                 p.AddSlider("MaxMipLevel (0 = full detail)", 0.0f, 8.0f, maxMip_, [this](float v) { maxMip_ = v; }, "%.0f", 1.0f);
                 p.AddSlider("MaxAnisotropy", 1.0f, 16.0f, aniso_, [this](float v) { aniso_ = v; }, "%.0f", 1.0f);
@@ -234,7 +234,8 @@ private:
     [[nodiscard]] SamplerState Sampler() const
     {
         SamplerState s = filter_ == 2 ? SamplerState::AnisotropicWrap : SamplerState::LinearWrap;
-        static const TextureFilter f[] = {TextureFilter::Linear, TextureFilter::Point, TextureFilter::Anisotropic, TextureFilter::LinearMipPoint, TextureFilter::PointMipLinear};
+        static const TextureFilter f[] = {TextureFilter::Linear, TextureFilter::Point, TextureFilter::Anisotropic, TextureFilter::LinearMipPoint, TextureFilter::PointMipLinear,
+                                          TextureFilter::MinLinearMagPointMipLinear, TextureFilter::MinLinearMagPointMipPoint, TextureFilter::MinPointMagLinearMipLinear, TextureFilter::MinPointMagLinearMipPoint};
         s.setFilterProperty(f[filter_]);
         s.setMipMapLevelOfDetailBiasProperty(bias_);
         s.setMaxMipLevelProperty(static_cast<int>(maxMip_));

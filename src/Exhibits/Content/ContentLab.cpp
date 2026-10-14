@@ -219,6 +219,7 @@ public:
                 p.AddButton("GetFileNames / GetDirectoryNames", [this] { DirectoryOp(2); });
                 p.AddButton("DeleteDirectory(\"slots\")", [this] { DirectoryOp(3); });
                 p.AddButton("Read a title file (OpenStream)", [this] { ReadTitleFile(); });
+                p.AddButton("StorageDevice.DeleteContainer(\"MuseumLab\")", [this] { DeleteWholeContainer(); });
                 p.AddReadout("Container", [this] { return container_ ? container_->getDisplayNameProperty() : std::string("not open"); });
                 break;
             case Mode::Custom:
@@ -692,7 +693,7 @@ private:
             device_ = Storage::StorageDevice::EndShowSelector(sel.get());
             std::unique_ptr<System::IAsyncResult> open = device_->BeginOpenContainer("MuseumLab", nullptr, nullptr);
             container_ = device_->EndOpenContainer(open.get());
-            row.detail = "root " + Storage::StorageDevice::GetStorageRootEXT() + "  free " + Fmt(static_cast<double>(device_->getFreeSpaceProperty()) / 1.0e9, "%.1f") + " GB";
+            row.detail = "root " + Storage::StorageDevice::GetStorageRootEXT() + "  free " + Fmt(static_cast<double>(device_->getFreeSpaceProperty()) / 1.0e9, "%.1f") + " of " + Fmt(static_cast<double>(device_->getTotalSpaceProperty()) / 1.0e9, "%.1f") + " GB";
             row.status = 0;
         } catch (const std::exception& e) {
             row.detail = std::string("storage unavailable: ") + e.what();
@@ -793,6 +794,22 @@ private:
                         row.status = 1;
                     }
             }
+        } catch (const std::exception& e) {
+            row.detail = e.what();
+            row.status = 2;
+        }
+        rows_.push_back(std::move(row));
+    }
+    // Removes the whole container (every file and folder in it) through the device; the open handle is dropped first.
+    void DeleteWholeContainer()
+    {
+        Row row;
+        row.name = "DeleteContainer(\"MuseumLab\")";
+        try {
+            if (!device_) { row.detail = "open the container first"; row.status = 1; rows_.push_back(std::move(row)); return; }
+            container_.reset();
+            device_->DeleteContainer("MuseumLab");
+            row.detail = "deleted with everything in it; open the container again to start over";
         } catch (const std::exception& e) {
             row.detail = e.what();
             row.status = 2;

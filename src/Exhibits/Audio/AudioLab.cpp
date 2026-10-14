@@ -138,6 +138,7 @@ public:
                 p.AddToggle("IsRepeating", false, [](bool v) { try { MediaPlayer::setIsRepeatingProperty(v); } catch (const std::exception&) {} });
                 p.AddReadout("State", [] { try { const MediaState s = MediaPlayer::getStateProperty(); return std::string(s == MediaState::Playing ? "Playing" : (s == MediaState::Paused ? "Paused" : "Stopped")); } catch (const std::exception&) { return std::string("unavailable"); } });
                 p.AddReadout("Position", [] { try { return Fmt1(static_cast<float>(MediaPlayer::getPlayPositionProperty().getTotalSecondsProperty())) + " s"; } catch (const std::exception&) { return std::string("-"); } });
+                p.AddReadout("Song of the last button", [this] { return SongInfo(); });
                 break;
             case Mode::Xact:
                 p.AddChoice("Cue", {"Tone", "Click", "Arpeggio", "Drums", "Chirp"}, 0, [this](int v) { xCueIndex_ = v; });
@@ -469,8 +470,22 @@ private:
     }
 
     // --- music and microphone -----------------------------------------------------------------------
+    // What a Song knows about itself. A song loaded from content carries no tags: no artist, album or genre, no rating, track 0.
+    [[nodiscard]] std::string SongInfo() const
+    {
+        const Song* song = songs_[static_cast<std::size_t>(std::clamp(lastSong_, 0, 1))].get();
+        if (song == nullptr) return "press a Play button";
+        try {
+            return "\"" + song->getNameProperty() + "\", " + Fmt1(static_cast<float>(song->getDurationProperty().getTotalSecondsProperty())) + " s, track " + std::to_string(song->getTrackNumberProperty()) + ", played " +
+                   std::to_string(song->getPlayCountProperty()) + "x, rated " + (song->getIsRatedProperty() ? std::to_string(song->getRatingProperty()) : std::string("no")) + ", protected " + (song->getIsProtectedProperty() ? "yes" : "no") +
+                   (song->getArtistProperty() != nullptr ? ", has an artist" : ", no artist/album/genre");
+        } catch (const std::exception& e) {
+            return std::string("unavailable: ") + std::string(e.what()).substr(0, 40);
+        }
+    }
     void PlaySong(int i)
     {
+        lastSong_ = i;
         try {
             if (!songs_[static_cast<std::size_t>(i)]) songs_[static_cast<std::size_t>(i)] = std::make_unique<Song>(content_->Load<Song>(i == 0 ? "Audio/arpeggio" : "Audio/ambience"));
             MediaPlayer::setVolumeProperty(mediaVolume_);
@@ -673,6 +688,7 @@ private:
     std::unique_ptr<SoundEffect> generated_;
     std::map<std::string, std::unique_ptr<SoundEffect>> cache_;
     std::array<std::unique_ptr<Song>, 2> songs_;
+    int lastSong_ = 0;
     std::unique_ptr<SongCollection> queue_;
     bool float32_ = false;
     bool visualize_ = true;

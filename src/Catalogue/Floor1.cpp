@@ -67,6 +67,19 @@ WingSpec ValueTypeWing()
         vt("vt-color", "Colour", "Color.Lerp, Multiply, FromNonPremultiplied and the packed 32-bit value", "color", {"Color", "Color.Lerp", "Color.Multiply", "Color.FromNonPremultiplied", "Color.PackedValue", "Color.ToVector3", "Color.PackFromVector4"}),
         []{
             RoomSpec r;
+            r.key = "vt-colors";
+            r.title = "The 141 Named Colours";
+            r.subtitle = "Color.Transparent and Color.AliceBlue to Color.YellowGreen, in declaration order, by hue or by brightness";
+            r.exhibit = "color-gallery";
+            r.width = 13;
+            r.depth = 13;
+            r.height = 5.0f;
+            r.theme = "white-cube";
+            r.apis = {"Color", "Color.Transparent", "Color.AliceBlue", "Color.CornflowerBlue", "Color.Gold", "Color.Red", "Color.Green", "Color.Blue", "Color.White", "Color.Black", "Color.YellowGreen", "Color.R", "Color.G", "Color.B", "Color.A", "Color.PackedValue", "Color.ToString"};
+            return r;
+        }(),
+        []{
+            RoomSpec r;
             r.key = "vt-converters";
             r.title = "Type Converters";
             r.subtitle = "Vector3, Color, BoundingBox, Ray, Matrix and more as text in four cultures: what ConvertToString writes and ConvertFromString refuses";

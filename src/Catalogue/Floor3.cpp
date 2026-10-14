@@ -78,7 +78,7 @@ WingSpec TextureWing()
     };
     w.rooms = {
         tex("tex-mip", "Mip Levels and Filtering", "A coloured mip chain on a receding plane with every SamplerState property live", "mip",
-            {"Texture2D", "SamplerState.Filter", "SamplerState.MipMapLevelOfDetailBias", "SamplerState.MaxMipLevel", "SamplerState.MaxAnisotropy"}),
+            {"Texture2D", "SamplerState.Filter", "TextureFilter.MinLinearMagPointMipLinear", "TextureFilter.MinPointMagLinearMipPoint", "SamplerState.MipMapLevelOfDetailBias", "SamplerState.MaxMipLevel", "SamplerState.MaxAnisotropy"}),
         tex("tex-filter", "Magnification Filters", "Point, Linear and Anisotropic on a tiny texture shown at a steep angle", "filter", {"SamplerState.PointClamp", "SamplerState.LinearClamp", "SamplerState.AnisotropicClamp"}),
         tex("tex-address", "Addressing Modes", "Wrap, Clamp and Mirror with UVs outside the 0..1 range", "address", {"TextureAddressMode", "SamplerState.AddressU"}),
         tex("tex-uv", "UV Transforms", "Tiling, scrolling and rotating texture coordinates without a shader", "uv", {"VertexPositionColorTexture", "SamplerState.LinearWrap"}),
