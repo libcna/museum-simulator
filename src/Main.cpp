@@ -47,7 +47,8 @@ int main(int argc, char** argv)
 #ifdef MUSEUM_NETWORKING
         // Two local offline profiles are signed in at start-up (unless the caller chose others): the networking rooms need two local
         // gamers to talk to each other. They live in CNA's own profile store, never in the museum's files.
-        if (std::getenv("CNA_GAMER_SERVICES_AUTO_SIGN_IN") == nullptr) {
+        // With a service configured (tools/online_stack.sh) the profiles are real accounts, signed in through the Guide.
+        if (std::getenv("CNA_GAMER_SERVICES_AUTO_SIGN_IN") == nullptr && std::getenv("CNA_GAMER_SERVICES_ENDPOINT") == nullptr) {
 #ifdef _WIN32
             _putenv_s("CNA_GAMER_SERVICES_AUTO_SIGN_IN", "Visitor,Guest");
 #else

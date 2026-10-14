@@ -237,6 +237,41 @@ WingSpec PlayersWing()
     return w;
 }
 
+WingSpec OnlineWing()
+{
+    WingSpec w;
+    w.name = "Online Service";
+    w.tagline = "CNA's account service: accounts, friends, messages and parties through the Guide (offline unless tools/online_stack.sh runs one)";
+    w.theme = "control-room";
+    w.accent = {0.45f, 0.75f, 0.95f};
+    w.spineSide = Wall::East;
+    const auto room = [](const char* key, const char* title, const char* subtitle, const char* mode, std::vector<std::string> apis) {
+        RoomSpec r;
+        r.key = key;
+        r.title = title;
+        r.subtitle = subtitle;
+        r.exhibit = "online-lab";
+        r.params = {{"mode", mode}};
+        r.width = 13;
+        r.depth = 13;
+        r.height = 5.0f;
+        r.theme = "control-room";
+        r.apis = std::move(apis);
+        r.origin = ApiOrigin::Xna;
+        return r;
+    };
+    w.rooms = {
+        room("on-account", "Accounts and the Guide", "Guide.ShowSignIn for real accounts, the profile of a signed-in gamer, achievements and the content page", "account",
+             {"Guide.ShowSignIn", "Guide.ShowAchievementsEXT", "Guide.ShowMarketplace", "SignedInGamer.IsSignedInToLive", "GamerProfile.GamerScore", "GamerProfile.Reputation", "GamerProfile.TotalAchievements", "CNA::GamerServices::resolveConfiguration"}),
+        room("on-friends", "Friends and Presence", "SignedInGamer.GetFriends, FriendGamer presence and flags, the Guide's friends, players and gamer-card pages", "friends",
+             {"SignedInGamer.GetFriends", "FriendCollection", "FriendGamer", "FriendGamer.IsOnline", "FriendGamer.IsAway", "FriendGamer.IsBusy", "FriendGamer.IsPlaying", "FriendGamer.IsJoinable", "FriendGamer.Presence", "Guide.ShowFriends",
+              "Guide.ShowPlayers", "Guide.ShowGamerCard", "Guide.ShowPlayerReview", "Guide.ShowFriendRequest"}),
+        room("on-messages", "Messages", "Guide.ShowMessages and ShowComposeMessage: the player's inbox and a message to friends", "messages", {"Guide.ShowMessages", "Guide.ShowComposeMessage"}),
+        room("on-party", "Parties", "Guide.ShowParty and ShowPartySessions, and SignedInGamer.PartySize", "party", {"Guide.ShowParty", "Guide.ShowPartySessions", "SignedInGamer.PartySize"}),
+    };
+    return w;
+}
+
 FloorSpec MakeFloor8()
 {
     FloorSpec f;
@@ -249,6 +284,7 @@ FloorSpec MakeFloor8()
     f.wings.push_back(CnaWing());
     f.wings.push_back(PlatformWing());
     f.wings.push_back(PlayersWing());
+    f.wings.push_back(OnlineWing());
     f.wings.push_back(HistoryWing());
     return f;
 }
