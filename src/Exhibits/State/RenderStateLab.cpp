@@ -581,7 +581,8 @@ private:
         fx.setTextureEnabledProperty(true);
         fx.setVertexColorEnabledProperty(true);
         fx.setDiffuseColorProperty(Vector3(1, 1, 1));
-        fx.setWorldProperty(Matrix::CreateTranslation(centre));
+        // A turned room (entered from the north) is built with its frame rotated: the quad has to turn with it or it faces the wall.
+        fx.setWorldProperty(Matrix::CreateRotationY(R().frameYaw) * Matrix::CreateTranslation(centre));
         fx.setViewProperty(ctx.view.view);
         fx.setProjectionProperty(ctx.view.projection);
         ctx.device.getSamplerStatesProperty()[0] = SamplerState::LinearClamp;
