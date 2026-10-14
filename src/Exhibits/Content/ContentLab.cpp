@@ -21,6 +21,9 @@
 #include "Exhibits/ScreenExhibit.hpp"
 #include "Microsoft/Xna/Framework/Audio/SoundEffect.hpp"
 #include "Microsoft/Xna/Framework/Content/ContentLoadException.hpp"
+#include "Microsoft/Xna/Framework/Content/ContentReader.hpp"
+#include "Microsoft/Xna/Framework/Content/ContentTypeReader.hpp"
+#include "Microsoft/Xna/Framework/Content/ContentTypeReaderManager.hpp"
 #include "Microsoft/Xna/Framework/Content/ContentManager.hpp"
 #include "Microsoft/Xna/Framework/Content/LooseFileContentTypeReader.hpp"
 #include "Microsoft/Xna/Framework/Content/ResourceContentManager.hpp"
@@ -41,12 +44,12 @@ namespace fs = std::filesystem;
 
 namespace {
 
-enum class Mode { Load, Cache, Formats, Failure, Pipeline, Storage, Lifetime, Custom, Resource };
+enum class Mode { Load, Cache, Formats, Failure, Pipeline, Storage, Lifetime, Custom, Resource, Reader };
 
 Mode ParseMode(const std::string& s)
 {
     static const std::pair<const char*, Mode> table[] = {{"cache", Mode::Cache},       {"formats", Mode::Formats}, {"failure", Mode::Failure}, {"pipeline", Mode::Pipeline},
-                                                         {"storage", Mode::Storage}, {"lifetime", Mode::Lifetime}, {"custom", Mode::Custom}, {"resource", Mode::Resource}};
+                                                         {"storage", Mode::Storage}, {"lifetime", Mode::Lifetime}, {"custom", Mode::Custom}, {"resource", Mode::Resource}, {"reader", Mode::Reader}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
     return Mode::Load;
@@ -132,6 +135,31 @@ Dish RecipeFromCnj(const std::string& json, ContentManager&)
     return r;
 }
 
+/** An application type stored in an .xnb file, and the ContentTypeReader that turns the file's bytes back into it. */
+struct Menu {
+    std::string name;
+    int cents = 0;
+    float spice = 0.0f;
+    std::vector<std::string> items;
+};
+
+class MenuReader final : public ContentTypeReader<Menu> {
+public:
+    MenuReader() : ContentTypeReader<Menu>("Museum.MenuReader") {}
+
+protected:
+    Menu Read(ContentReader& input, std::optional<Menu>) override
+    {
+        Menu m;
+        m.name = input.ReadString();
+        m.cents = input.ReadInt32();
+        m.spice = input.ReadSingle();
+        const int count = input.ReadInt32();
+        for (int i = 0; i < count && i < 64; ++i) m.items.push_back(input.ReadString());
+        return m;
+    }
+};
+
 /** One line of a result table; textures are kept so the screen can show what was loaded. */
 struct Row {
     std::string name;
@@ -194,6 +222,13 @@ public:
                 p.AddButton("Load Custom/mystery (.cnj, unknown type)", [this] { CustomLoad(2); });
                 p.AddButton("Load a .recipe without registering a reader", [this] { CustomLoad(3); });
                 p.AddReadout("Registered (per manager)", [this] { return std::string("Recipe: a .recipe reader; Dish: a \"Recipe\" .cnj loader"); });
+                break;
+            case Mode::Reader:
+                p.AddButton("Load Custom/menu (reader not registered yet)", [this] { ReaderLoad(false); });
+                p.AddButton("Register MenuReader, then load Custom/menu", [this] { ReaderLoad(true); });
+                p.AddButton("Remove the reader again", [this] { ReaderRemove(); });
+                p.AddReadout("MenuReader registered", [this] { return std::string(ContentTypeReaderManager::IsRegistered("Museum.MenuReader") ? "yes" : "no"); });
+                p.AddReadout("The file records", [] { return std::string("reader \"Museum.MenuReader\", version 0"); });
                 break;
             case Mode::Resource:
                 p.AddButton("Load Texture2D \"picture\" from memory", [this] { ResourceLoad(0); });
@@ -301,7 +336,7 @@ private:
 
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"Loading assets", "The ContentManager cache", "Loose image formats", "When loading fails", "The content compiler", "TitleContainer and storage", "Resource lifetime", "Teaching ContentManager a new type", "Content from memory"};
+        static const char* t[] = {"Loading assets", "The ContentManager cache", "Loose image formats", "When loading fails", "The content compiler", "TitleContainer and storage", "Resource lifetime", "Teaching ContentManager a new type", "Content from memory", "Content readers"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::string EmptyHint() const
@@ -322,6 +357,7 @@ private:
             case Mode::Failure: return {"A missing, mistyped or corrupt asset raises ContentLoadException: a game catches it and carries on. The museum", "does exactly that, shows the message here and keeps running (nothing is crashed on purpose)."};
             case Mode::Pipeline: return {"cna-content (CNA's content compiler) built the same three sources as .cnb (CNA's format) and .xnb (XNA's) when this", "museum was built. Both load through the same Load<T> call. Sizes are files on disk; times are measured live."};
             case Mode::Storage: return {"TitleContainer.OpenStream reads files shipped with the game; StorageDevice and StorageContainer keep saved data", "per user. CNA stores it under a per-user folder (CNAEXT: SetAppNameEXT and GetStorageRootEXT)."};
+            case Mode::Reader: return {"An .xnb file lists the type readers it needs by name. A game that has its own content type writes a ContentTypeReader for it,", "registers it under that name (ContentTypeReaderManager::AddTypeCreator) and Load<T> reads the file's bytes with it."};
             case Mode::Resource: return {"ResourceContentManager serves assets from a resource family instead of the content folder: a game can embed its", "compiled .xnb files in the executable. Here three .xnb files are held in memory behind a System.Resources.ResourceManager."};
             case Mode::Custom: return {"ContentManager is extensible: RegisterTypeReader teaches it a loose-file format for your own type, and", "RegisterCnjLoader (CNA extension) a named .cnj document type. Load<Recipe> then works like Load<Texture2D>, failures included."};
             default: return {"GraphicsResource objects are disposed explicitly with Dispose(); IsDisposed and the Disposing event let you track", "their lifetime. A texture you copy out of ContentManager outlives Unload(), so dispose it yourself when done."};
@@ -409,6 +445,7 @@ private:
             } catch (...) {
             }
         }
+        if (mode_ == Mode::Reader) (void)ContentTypeReaderManager::RemoveTypeCreatorEXT("Museum.MenuReader");   // the registry is process-wide
         rows_.clear();
         handles_.clear();
         tex_.clear();
@@ -744,6 +781,30 @@ private:
             for (const std::string& st : r.steps) steps += st + "; ";
             return r.name + ", " + std::to_string(r.minutes) + " min: " + steps;
         }, which >= 2);
+        if (rows_.size() > 6) rows_.erase(rows_.begin());
+    }
+
+    // --- content readers -----------------------------------------------------------------------------
+    void ReaderLoad(bool registerFirst)
+    {
+        if (registerFirst && !ContentTypeReaderManager::IsRegistered("Museum.MenuReader"))
+            ContentTypeReaderManager::AddTypeCreator("Museum.MenuReader", [] { return std::make_unique<MenuReader>(); });
+        auto m = NewManager(S().contentRoot);
+        Attempt("Load<Menu>(\"Custom/menu\")", [&](Row&) {
+            const Menu menu = m->Load<Menu>("Custom/menu");
+            std::string items;
+            for (const std::string& it : menu.items) items += it + ", ";
+            return "\"" + menu.name + "\": " + std::to_string(menu.cents / 100) + "." + (menu.cents % 100 < 10 ? "0" : "") + std::to_string(menu.cents % 100) + ", spice " + Fmt(menu.spice) + ", " + items;
+        }, !registerFirst && !ContentTypeReaderManager::IsRegistered("Museum.MenuReader"));
+        if (rows_.size() > 6) rows_.erase(rows_.begin());
+    }
+    void ReaderRemove()
+    {
+        const bool removed = ContentTypeReaderManager::RemoveTypeCreatorEXT("Museum.MenuReader");
+        Row row;
+        row.name = "RemoveTypeCreatorEXT(\"Museum.MenuReader\")";
+        row.detail = removed ? "removed: the next load fails again" : "it was not registered";
+        rows_.push_back(std::move(row));
         if (rows_.size() > 6) rows_.erase(rows_.begin());
     }
 

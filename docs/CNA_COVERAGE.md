@@ -25,7 +25,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Particle systems (application code on CNA dynamic buffers) | floor 6 | covered |
 | SoundEffect, instances, 3D audio, DynamicSoundEffectInstance, Song/MediaPlayer, Microphone, XACT (AudioEngine, WaveBank, SoundBank, Cue, AudioCategory) | floor 7 | covered (the XACT files are written by `tools/gen_xact.py`: the binary formats need no Microsoft tool) |
 | Keyboard, Mouse (relative mode, cursors), GamePad (+ keyboard emulation), PlayerIndex slots, TextInputEXT, Clipboard, Joysticks, TouchPanel gestures, devices | floor 7 | covered; every room works with no pad, joystick or touch screen |
-| ContentManager (cache, Unload, loose formats, failures), ResourceContentManager, cna-content (.cnb/.xnb), TitleContainer, StorageDevice | floor 8 | covered |
+| ContentManager (cache, Unload, loose formats, failures, custom ContentTypeReader for .xnb), ResourceContentManager, cna-content (.cnb/.xnb), TitleContainer, StorageDevice | floor 8 | covered |
 | DebugDraw, CRTEffect, DepthEffect, AsciiPostProcessEffect, ShaderPackageEXT (CNA_CNAEXT) | floor 8 | covered |
 | Diagnostics counters and resource list (CNA_DIAGNOSTICS=STATS) | floors 8-9 | covered |
 | CNA_DEVICES: SystemInfo, Locale, PowerInfo, DisplayInfo | floor 8 | covered |
@@ -49,7 +49,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-557 distinct API names are claimed by at least one room.
+560 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -156,7 +156,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ContentLoadException | `app-content`, `ct-failure`, `ct-custom`, `ct-resource` |
 | ContentManager | `models`, `app-content` |
 | ContentManager.GetContentManifest | `ct-pipeline` |
-| ContentManager.Load | `app-content`, `ct-cache`, `ct-failure`, `ct-pipeline`, `ct-resource` |
+| ContentManager.Load | `app-content`, `ct-cache`, `ct-failure`, `ct-pipeline`, `ct-reader`, `ct-resource` |
 | ContentManager.Load<Model> | `model-load`, `ct-load` |
 | ContentManager.Load<SoundEffect> | `au-basics`, `ct-load` |
 | ContentManager.Load<Texture2D> | `ct-load`, `ct-formats` |
@@ -164,6 +164,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ContentManager.RegisterTypeReader | `ct-custom` |
 | ContentManager.RootDirectory | `ct-load` |
 | ContentManager.Unload | `app-content`, `ct-cache`, `ct-lifetime` |
+| ContentReader | `ct-reader` |
+| ContentTypeReader | `ct-reader` |
+| ContentTypeReaderManager.AddTypeCreator | `ct-reader` |
 | CubeMapFace | `tex-cube`, `rt-cube` |
 | Cue.Pause | `au-xact` |
 | Cue.Play | `au-xact` |

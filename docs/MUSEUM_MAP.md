@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 34 wings, 255 exhibit rooms (5 open to the sky), 319 walkable cells in all.
+10 floors, 34 wings, 256 exhibit rooms (5 open to the sky), 320 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -426,8 +426,9 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 | 8.1.05 | `ct-pipeline` | The Content Compiler | CNA extension | cna-content, ContentManager.Load, ContentManager.GetContentManifest |
 | 8.1.06 | `ct-storage` | Title Files and Saved Data | XNA 4.0 | TitleContainer.OpenStream, StorageDevice, StorageContainer, StorageDevice.GetStorageRootEXT |
 | 8.1.07 | `ct-custom` | Teaching ContentManager a New Type | CNA extension | ContentManager.RegisterTypeReader, LooseFileContentTypeReader, ContentManager.RegisterCnjLoader, ContentLoadException |
-| 8.1.08 | `ct-lifetime` | Resource Lifetime | XNA 4.0 | GraphicsResource.Dispose, GraphicsResource.IsDisposed, GraphicsResource.Disposing, GraphicsDevice.ResourceCreated, GraphicsDevice.ResourceDestroyed, ResourceCreatedEventArgs, ResourceDestroyedEventArgs, ContentManager.Unload |
-| 8.1.09 | `ct-resource` | Content from Memory | XNA 4.0 | ResourceContentManager, System.Resources.ResourceManager, ContentManager.Load, ContentLoadException |
+| 8.1.08 | `ct-reader` | Content Readers | XNA 4.0 | ContentTypeReader, ContentTypeReaderManager.AddTypeCreator, ContentReader, ContentManager.Load |
+| 8.1.09 | `ct-lifetime` | Resource Lifetime | XNA 4.0 | GraphicsResource.Dispose, GraphicsResource.IsDisposed, GraphicsResource.Disposing, GraphicsDevice.ResourceCreated, GraphicsDevice.ResourceDestroyed, ResourceCreatedEventArgs, ResourceDestroyedEventArgs, ContentManager.Unload |
+| 8.1.10 | `ct-resource` | Content from Memory | XNA 4.0 | ResourceContentManager, System.Resources.ResourceManager, ContentManager.Load, ContentLoadException |
 
 **CNA Extensions** - What CNA adds to XNA 4.0: DebugDraw, post-process effects, engine statistics, point lists and device queries
 
