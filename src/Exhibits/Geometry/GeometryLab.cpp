@@ -137,7 +137,8 @@ public:
                 break;
             case Mode::Instancing:
                 p.AddSlider("Cubes", 100.0f, 20000.0f, static_cast<float>(count_ = 2000), [this](float v) { count_ = static_cast<int>(v); dirty_ = true; }, "%.0f", 100.0f);
-                p.AddChoice("Method", {"DrawInstancedPrimitives", "A draw call per cube"}, 0, [this](int v) { naive_ = v == 1; });
+                p.AddChoice("Method", {"DrawInstancedPrimitives", "A draw call per cube", "DrawInstancedPrimitivesBaseInstanceEXT (skip the first cubes)"}, 0, [this](int v) { naive_ = v == 1; baseInstance_ = v == 2; });
+                p.AddSlider("First instance (BaseInstanceEXT)", 0.0f, 1000.0f, 0.0f, [this](float v) { firstInstance_ = static_cast<int>(v); }, "%.0f", 50.0f);
                 p.AddReadout("Draw calls per frame", [this] { return naive_ || !instanceRefusal_.empty() ? std::to_string(count_) : std::string("1"); });
                 p.AddReadout("Instancing supported", [this] { if (!instanceRefusal_.empty()) return std::string("reported yes, draw refused (see log)"); return std::string(S().device->SupportsCapability(CNA::GraphicsCapability::Instancing) ? "yes" : "NO on this renderer"); });
                 p.AddReadout("Frame rate", [this] { return Fmt(S().stats->fps) + " fps"; });
@@ -639,7 +640,13 @@ private:
             device.setIndicesProperty(cubeI_.get());
             device.SetVertexBuffers(bindings);
             try {
-                device.DrawInstancedPrimitives(PrimitiveType::TriangleList, 0, 0, 24, 0, 12, count_);
+                if (baseInstance_ && device.SupportsRendererFeatureEXT(CNA::RendererFeature::BaseInstanceDrawing)) {
+                    // The same instance stream, started part-way: the first cubes are simply not drawn.
+                    const int first = std::min(firstInstance_, count_ - 1);
+                    device.DrawInstancedPrimitivesBaseInstanceEXT(PrimitiveType::TriangleList, 0, 0, 24, 0, 12, count_ - first, first);
+                } else {
+                    device.DrawInstancedPrimitives(PrimitiveType::TriangleList, 0, 0, 24, 0, 12, count_);
+                }
                 instanced = true;
             } catch (const std::exception& e) {
                 // FNA3D reports Instancing but its stock effects declare no instance stream, so the stock-effect route throws.
@@ -671,6 +678,8 @@ private:
     float time_ = 0.0f, spin_ = 0.0f, speed_ = 1.0f, turn_ = 25.0f, apex_ = 0.9f;
     int cull_ = 1, prim_ = 0, count_ = 8, grid_ = 32, shape_ = 0, dataOptions_ = 0;
     bool dirty_ = true, wire_ = false, merged_ = false, naive_ = false;
+    bool baseInstance_ = false;
+    int firstInstance_ = 0;
     std::string instanceRefusal_;   // why DrawInstancedPrimitives was refused on this renderer; empty while it works
     int vertexCount_ = 0, triangleCount_ = 0, bigTris_ = 0, bigCount_ = 0;
     std::unique_ptr<VertexBuffer> cubeV_, flatCube_, sharedCube_, procV_, bigV_, mergedV_, instV_;

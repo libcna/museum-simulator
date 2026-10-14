@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-801 distinct API names are claimed by at least one room.
+803 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -353,6 +353,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.Clear | `rs-stencilcount` |
 | GraphicsDevice.DrawIndexedPrimitives | `geo-indexed`, `geo-manybuffers`, `geo-dynindex`, `geo-terrain`, `pf-objects` |
 | GraphicsDevice.DrawInstancedPrimitives | `geo-instancing`, `pf-objects` |
+| GraphicsDevice.DrawInstancedPrimitivesBaseInstanceEXT | `geo-instancing` |
 | GraphicsDevice.DrawPrimitives | `geo-indexed` |
 | GraphicsDevice.DrawUserIndexedPrimitives | `geo-dynamic` |
 | GraphicsDevice.DrawUserPrimitives | `geo-triangle`, `geo-primitives`, `cx-points`, `pf-buffers`, `pf-particles`, `rv-geometry` |
@@ -652,6 +653,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | RenderTargetUsage.PreserveContents | `rt-recursive` |
 | RendererCapabilityProfile | `app-device` |
 | RendererFeature | `pl-renderer` |
+| RendererFeature.BaseInstanceDrawing | `geo-instancing` |
 | RendererFormatUsage | `pl-renderer` |
 | RendererLimit | `pl-renderer` |
 | ResourceContentManager | `ct-resource` |

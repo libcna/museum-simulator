@@ -220,7 +220,7 @@ Vertex data, buffers, primitives and textures
 | 3.1.06 | `geo-procedural` | Procedural Geometry | XNA 4.0 | VertexBuffer, IndexBuffer, RasterizerState.FillMode |
 | 3.1.07 | `geo-index32` | 32-Bit Indices | XNA 4.0 | IndexBuffer, IndexElementSize |
 | 3.1.08 | `geo-manybuffers` | Many Small Buffers | XNA 4.0 | VertexBuffer, GraphicsDevice.DrawIndexedPrimitives |
-| 3.1.09 | `geo-instancing` | Hardware Instancing | XNA 4.0 | VertexBufferBinding, GraphicsDevice.DrawInstancedPrimitives, GraphicsCapability.Instancing |
+| 3.1.09 | `geo-instancing` | Hardware Instancing | XNA 4.0 | VertexBufferBinding, GraphicsDevice.DrawInstancedPrimitives, GraphicsCapability.Instancing, GraphicsDevice.DrawInstancedPrimitivesBaseInstanceEXT, RendererFeature.BaseInstanceDrawing |
 | 3.1.10 | `geo-dynindex` | Dynamic Index Buffers | XNA 4.0 | DynamicIndexBuffer, SetDataOptions.Discard, GraphicsDevice.DrawIndexedPrimitives, IndexBuffer |
 | 3.1.11 | `geo-terrain` | Heightmap Terrain | XNA 4.0 | Texture2D.GetData, VertexBuffer, IndexBuffer, VertexPositionNormalTexture, GraphicsDevice.DrawIndexedPrimitives, RasterizerState.FillMode, MathHelper.Lerp |
 
