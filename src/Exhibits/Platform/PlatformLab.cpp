@@ -105,6 +105,12 @@ public:
                 p.AddReadout("Adapter", [this] { return adapterName_; });
                 p.AddReadout("Display modes", [this] { return std::to_string(modes_.size()); });
                 p.AddReadout("Profile", [this] { return profileName_; });
+                p.AddChoice("Is this shape widescreen? (IsWideScreenAspectRatioEXT)", {"4:3", "5:4", "16:10", "16:9", "21:9"}, 3, [this](int v) { aspectIndex_ = v; });
+                p.AddReadout("IsWideScreenAspectRatioEXT", [this] {
+                    static const float ratios[] = {4.0f / 3.0f, 5.0f / 4.0f, 16.0f / 10.0f, 16.0f / 9.0f, 21.0f / 9.0f};
+                    const float r = ratios[std::clamp(aspectIndex_, 0, 4)];
+                    return std::string(GraphicsAdapter::IsWideScreenAspectRatioEXT(r) ? "widescreen" : "not widescreen");
+                });
                 break;
             case Mode::Renderer:
                 p.AddReadout("Active renderer", [this] { return std::string(S().device->GetGraphicsRendererName()); });
@@ -401,6 +407,7 @@ private:
     Mode mode_;
     float refresh_ = 0.0f;
     std::vector<std::string> lines_;
+    int aspectIndex_ = 3;
     std::string adapterName_ = "-", profileName_ = "-", maturity_ = "-", platformName_ = "-", originalTitle_;
     std::vector<DisplayMode> modes_;
     std::vector<std::pair<std::string, bool>> caps_;

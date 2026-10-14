@@ -412,7 +412,7 @@ Sound, music, keyboards, mice and game pads
 |---|---|---|---|---|
 | 7.2.01 | `in-keyboard` | The Keyboard | XNA 4.0 | Keyboard.GetState, KeyboardState.IsKeyDown, KeyboardState.GetPressedKeys, Keyboard.GetKeyNameEXT, Keyboard.GetModStateEXT, Keyboard.GetKeyFromNameEXT, Keyboard.GetScancodeNameEXT |
 | 7.2.02 | `in-edges` | Pressed, Held, Released | XNA 4.0 | KeyboardState, Keys |
-| 7.2.03 | `in-mouse` | The Mouse | XNA 4.0 | Mouse.GetState, MouseState, ButtonState, Mouse.IsRelativeMouseModeEXT, Mouse.SetCursor, MouseCursor, MouseCursor.FromTexture2D |
+| 7.2.03 | `in-mouse` | The Mouse | XNA 4.0 | Mouse.GetState, MouseState, ButtonState, Mouse.IsRelativeMouseModeEXT, Mouse.SetCursor, MouseCursor, MouseCursor.FromTexture2D, Mouse.SetCaptureEXT |
 | 7.2.04 | `in-pad` | The Game Pad | XNA 4.0 | GamePad.GetState, GamePadState, GamePadDeadZone, Buttons, GamePadState.IsButtonDown, GamePadState.IsButtonUp, GamePadState.Equals, GamePad.SetVibration, GamePad.KeyboardEmulationEnabledEXT, GamePad.SetTriggerVibrationEXT, GamePad.SetLightBarEXT, GamePad.GetGUIDEXT, GamePad.GetGyroEXT, GamePad.GetPlayerIndexEXT, GamePad.GetButtonLabelEXT, GamePad.GetTouchpadFingerCountEXT |
 | 7.2.05 | `in-players` | Four Player Slots | XNA 4.0 | PlayerIndex, GamePad.GetCapabilities, GamePadCapabilities, GamePad.GetNameEXT |
 | 7.2.06 | `in-text` | Text Input and Clipboard | CNA extension | TextInputEXT.TextInput, TextInputEXT.StartTextInput, Clipboard.SetTextEXT, Clipboard.GetTextEXT, Clipboard.SetDataEXT, Clipboard.GetMimeTypesEXT, TextInputEXT.StartTextInputWithTypeEXT, TextInputTypeEXT |
@@ -461,7 +461,7 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 |---|---|---|---|---|
 | 8.3.01 | `pl-exceptions` | Exceptions CNA Throws | XNA 4.0 | System.ObjectDisposedException, System.ArgumentOutOfRangeException, System.InvalidOperationException, ContentLoadException, System.IO.FileNotFoundException, GamerServicesNotAvailableException, GuideAlreadyVisibleException, StorageContainer, TitleContainer.OpenStream, SpriteBatch.Begin, SpriteBatch.End |
 | 8.3.02 | `pl-window` | The Game Window | XNA 4.0 | GameWindow.Title, GameWindow.ClientBounds, GameWindow.AllowUserResizing, GameWindow.ClientSizeChanged, Game.Activated, GameWindow.FileDropEXT |
-| 8.3.03 | `pl-adapter` | Adapter and Back Buffer | XNA 4.0 | GraphicsAdapter, DisplayMode, GraphicsDevice.GraphicsProfile, PresentationParameters, GraphicsAdapter.IsProfileSupported, GraphicsAdapter.QueryRenderTargetFormat, GraphicsAdapter.QueryBackBufferFormat, GraphicsAdapter.Adapters |
+| 8.3.03 | `pl-adapter` | Adapter and Back Buffer | XNA 4.0 | GraphicsAdapter, DisplayMode, GraphicsDevice.GraphicsProfile, PresentationParameters, GraphicsAdapter.IsProfileSupported, GraphicsAdapter.QueryRenderTargetFormat, GraphicsAdapter.QueryBackBufferFormat, GraphicsAdapter.Adapters, GraphicsAdapter.IsWideScreenAspectRatioEXT |
 | 8.3.04 | `pl-renderer` | The Active Renderer | CNA extension | GraphicsDevice.GetRendererCapabilityProfileEXT, RendererFeature, RendererLimit, RendererFormatUsage, GraphicsDevice.GetGraphicsRendererName, GraphicsDevice.GetDisplayColorSpaceEXT, GraphicsDevice.SupportsDisplayColorSpaceEXT, GraphicsDevice.SetDisplayColorSpaceEXT, GraphicsDevice.SupportsImageBasedLightingEXT, GraphicsDevice.GetTrackedResourceCount, GraphicsDevice.GetLogicalSizeEXT |
 | 8.3.05 | `pl-platform` | Platform Capabilities | CNA extension | Game.GetPlatformCapabilitiesEXT, PlatformCapabilities |
 

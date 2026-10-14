@@ -119,6 +119,8 @@ public:
                 p.AddReadout("Position X, Y", [this] { return std::to_string(mx_) + ", " + std::to_string(my_); });
                 p.AddReadout("Wheel (vertical)", [this] { return std::to_string(wheel_); });
                 p.AddReadout("Wheel (horizontal)", [this] { return std::to_string(hwheel_); });
+                p.AddToggle("Capture the mouse (SetCaptureEXT)", false, [this](bool v) { try { captured_ = Mouse::SetCaptureEXT(v) ? v : false; } catch (const std::exception&) { captured_ = false; } });
+                p.AddReadout("Mouse capture", [this] { return std::string(captured_ ? "on: events keep coming while a button is held outside the window" : "off"); });
                 p.AddReadout("Relative mode", [] { return std::string(Mouse::getIsRelativeMouseModeEXTProperty() ? "on: X, Y are movement" : "off: X, Y are window pixels"); });
                 break;
             case Mode::Pad:
@@ -921,6 +923,7 @@ private:
     std::string lastKey_ = "(none yet)";
     std::string lookup_ = "-", lookupNames_ = "-", mimeTypes_ = "-", triggerNote_ = "-", identityNote_ = "-";
     int inputType_ = 0;
+    bool captured_ = false;
     // edges
     int watch_ = 0, presses_ = 0, releases_ = 0;
     float hold_ = 0.0f, longest_ = 0.0f;
