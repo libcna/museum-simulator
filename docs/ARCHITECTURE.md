@@ -90,6 +90,21 @@ generated from the catalogue.
 `--fixed-step` makes every run reproducible; `--view` and `--no-hud` make screenshots comparable
 (`tools/reference.sh`).
 
+### When a renderer refuses something
+
+The museum draws on six renderers that differ in what they accept, and an exhibit must never end the visit. Three layers, from
+the narrowest:
+
+1. **Ask first** (`SupportsCapability`, `SupportsShaderLanguageEXT`, `GetShaderDialectEXT`, `ExecutesShaderEffectSourceEXT`):
+   a room states what is missing instead of drawing it. Shader sources exist in three dialects (GLSL ES, WGSL, Vulkan GLSL,
+   `Exhibits/Shaders/ShaderSources.cpp`); a renderer that takes none gets the scene unprocessed and a line saying so.
+2. **Probe** (`Rendering/Probes.cpp`) when there is no flag to ask: a one-off render test whose answer is cached and shown on
+   the panel (does `PunctualLightEXT` light anything here?). The same probe is a validation check, so the matrix counts it.
+3. **Guard** (`MuseumWorld::Guard`, `MuseumGame::Stage`): an exception from an exhibit hook is logged as
+   `[museum][exhibit-error]`, toasted, counted, and after three the room's hooks are switched off; one from a frame stage
+   (sky, world, overlays, HUD) is logged once as `[museum][draw-error]`. `tools/tour.sh` fails (exit 3) if either appears, so a
+   renderer's gaps are listed, not hidden. A few rooms fall back on purpose and say so on the panel (instancing, glTF models).
+
 ## Build
 
 `CMakeLists.txt` builds everything except `main()` as the static library `museum_core`, which the executable and
