@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-812 distinct API names are claimed by at least one room.
+815 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -770,6 +770,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | StringBuilder | `text-hud` |
 | SurfaceFormat | `tex-formats`, `rt-formats`, `rv-formats` |
 | SurfaceFormat.Dxt1 | `ct-formats` |
+| SurfaceFormat.Single | `tex-volume` |
+| SurfaceFormat.Vector4 | `tex-volume` |
 | System.ArgumentOutOfRangeException | `pl-exceptions` |
 | System.IO.FileNotFoundException | `pl-exceptions` |
 | System.IO.MemoryStream | `tex-io` |
@@ -790,6 +792,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Texture2DContent | `ct-processor` |
 | Texture3D | `tex-volume` |
 | Texture3D.GetData | `tex-volume` |
+| Texture3D.GetData(level, box) | `tex-volume` |
 | Texture3D.SetData | `tex-volume` |
 | TextureAddressMode | `sprite-sampler`, `tex-address`, `rv-sampling` |
 | TextureCube | `tex-cube`, `model-ibl` |

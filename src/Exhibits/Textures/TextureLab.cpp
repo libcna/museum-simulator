@@ -106,8 +106,10 @@ public:
                 break;
             case Mode::Volume:
                 p.AddSlider("Slice", 0.0f, 1.0f, slice_, [this](float v) { slice_ = v; });
-                p.AddReadout("Texture3D", [] { return std::string("32 x 32 x 32 Color texels"); });
+                p.AddChoice("SurfaceFormat", {"Color (byte elements)", "Single (float elements)", "Vector4 (float4 elements)"}, 0, [this](int v) { volumeFormat_ = v; BuildVolume(); });
+                p.AddReadout("Texture3D", [this] { return volumeText_; });
                 p.AddReadout("Round trip checksum", [this] { return checksum_; });
+                p.AddReadout("GetData(level, box ...)", [this] { return subBox_; });
                 p.AddReadout("Sampled by stock effects?", [] { return std::string("no: store and read back only"); });
                 break;
             case Mode::Io:
@@ -522,11 +524,14 @@ private:
         S().shapes->Sphere().Draw(device);
     }
 
+    // The volume is generated once as float channels, stored in the chosen SurfaceFormat through the typed SetData overload that
+    // format takes (Color, float, Vector4), read back whole and as a sub-box, and shown as Color slices.
     void BuildVolume()
     {
         GraphicsDevice& d = *S().device;
         const int n = 32;
-        std::vector<Color> data(static_cast<std::size_t>(n * n * n));
+        const std::size_t count = static_cast<std::size_t>(n * n * n);
+        std::vector<Vector4> field(count);
         for (int z = 0; z < n; ++z)
             for (int y = 0; y < n; ++y)
                 for (int x = 0; x < n; ++x) {
@@ -534,23 +539,66 @@ private:
                     const float v = 0.5f + 0.5f * std::sin(fx * 0.4f) * std::cos(fy * 0.35f) * std::sin(fz * 0.3f + 1.0f);
                     const float dx = fx - 16.0f, dy = fy - 16.0f, dz = fz - 16.0f;
                     const float ring = std::exp(-std::pow(std::sqrt(dx * dx + dy * dy + dz * dz) - 9.0f, 2.0f) * 0.12f);
-                    data[static_cast<std::size_t>((z * n + y) * n + x)] = Color(static_cast<std::uint8_t>(255 * ring), static_cast<std::uint8_t>(255 * v), static_cast<std::uint8_t>(255 * (1 - v)), static_cast<std::uint8_t>(255));
+                    field[static_cast<std::size_t>((z * n + y) * n + x)] = Vector4(ring, v, 1.0f - v, 1.0f);
                 }
+        const std::uint8_t opaque = 255;
+        const auto toByte = [](float f) { return static_cast<std::uint8_t>(std::clamp(f, 0.0f, 1.0f) * 255.0f + 0.5f); };
+        volumeData_.clear();
+        subBox_ = "-";
         try {
-            volume_ = std::make_unique<Texture3D>(d, n, n, n, false, SurfaceFormat::Color);
-            volume_->SetData(data.data(), static_cast<int>(data.size()));
-            std::vector<Color> back(data.size());
-            volume_->GetData(back.data(), static_cast<int>(back.size()));
-            unsigned long long a = 0, b = 0;
-            for (std::size_t i = 0; i < data.size(); ++i) {
-                a += data[i].getPackedValueProperty();
-                b += back[i].getPackedValueProperty();
+            const bool single = volumeFormat_ == 1, vec4 = volumeFormat_ == 2;
+            volume_ = std::make_unique<Texture3D>(d, n, n, n, false, single ? SurfaceFormat::Single : vec4 ? SurfaceFormat::Vector4 : SurfaceFormat::Color);
+            volumeData_.resize(count);
+            std::size_t wrong = 0;
+            constexpr int lo = 4, hi = 12, side = hi - lo;
+            std::vector<std::size_t> boxIndex;
+            for (int z = lo; z < hi; ++z)
+                for (int y = lo; y < hi; ++y)
+                    for (int x = lo; x < hi; ++x) boxIndex.push_back(static_cast<std::size_t>((z * n + y) * n + x));
+            std::size_t boxWrong = 0;
+            if (single) {
+                std::vector<float> in(count), back(count), box(boxIndex.size());
+                for (std::size_t i = 0; i < count; ++i) in[i] = field[i].X;
+                volume_->SetData(in.data(), static_cast<int>(count));
+                volume_->GetData(back.data(), static_cast<int>(count));
+                volume_->GetData(0, lo, lo, hi, hi, lo, hi, box.data(), 0, static_cast<int>(box.size()));
+                for (std::size_t i = 0; i < count; ++i) {
+                    if (back[i] != in[i]) ++wrong;
+                    volumeData_[i] = Color(toByte(back[i]), toByte(back[i]), toByte(back[i]), opaque);
+                }
+                for (std::size_t i = 0; i < boxIndex.size(); ++i) if (box[i] != in[boxIndex[i]]) ++boxWrong;
+            } else if (vec4) {
+                std::vector<Vector4> back(count), box(boxIndex.size());
+                volume_->SetData(field.data(), static_cast<int>(count));
+                volume_->GetData(back.data(), static_cast<int>(count));
+                volume_->GetData(0, lo, lo, hi, hi, lo, hi, box.data(), 0, static_cast<int>(box.size()));
+                for (std::size_t i = 0; i < count; ++i) {
+                    if (back[i].X != field[i].X || back[i].Y != field[i].Y || back[i].Z != field[i].Z || back[i].W != field[i].W) ++wrong;
+                    volumeData_[i] = Color(toByte(back[i].X), toByte(back[i].Y), toByte(back[i].Z), opaque);
+                }
+                for (std::size_t i = 0; i < boxIndex.size(); ++i) if (box[i].Y != field[boxIndex[i]].Y) ++boxWrong;
+            } else {
+                std::vector<Color> in(count), back(count), box(boxIndex.size());
+                for (std::size_t i = 0; i < count; ++i) in[i] = Color(toByte(field[i].X), toByte(field[i].Y), toByte(field[i].Z), opaque);
+                volume_->SetData(in.data(), static_cast<int>(count));
+                volume_->GetData(back.data(), static_cast<int>(count));
+                volume_->GetData(0, lo, lo, hi, hi, lo, hi, box.data(), 0, static_cast<int>(box.size()));
+                for (std::size_t i = 0; i < count; ++i) {
+                    if (back[i].getPackedValueProperty() != in[i].getPackedValueProperty()) ++wrong;
+                    volumeData_[i] = back[i];
+                }
+                for (std::size_t i = 0; i < boxIndex.size(); ++i) if (box[i].getPackedValueProperty() != in[boxIndex[i]].getPackedValueProperty()) ++boxWrong;
             }
-            checksum_ = a == b ? "identical after GetData (OK)" : "MISMATCH after GetData";
-            volumeData_ = back;
+            checksum_ = wrong == 0 ? "identical after GetData (OK)" : std::to_string(wrong) + " texels differ after GetData";
+            subBox_ = std::to_string(side) + " x " + std::to_string(side) + " x " + std::to_string(side) + " box: " + (boxWrong == 0 ? "matches (OK)" : std::to_string(boxWrong) + " differ");
+            volumeText_ = std::string("32 x 32 x 32 ") + (single ? "Single (float) texels" : vec4 ? "Vector4 texels" : "Color texels");
         } catch (const std::exception& e) {
-            checksum_ = std::string("Texture3D not available: ") + std::string(e.what()).substr(0, 24);
+            volume_.reset();
+            volumeData_.clear();
+            checksum_ = std::string("Texture3D not available: ") + std::string(e.what()).substr(0, 40);
         }
+        shownSlice_ = -1;
+        Museum::Log("texture", "volume format %d: %s; %s", volumeFormat_, checksum_.c_str(), subBox_.c_str());
     }
     void DrawVolume(const DrawContext& ctx)
     {
@@ -564,7 +612,7 @@ private:
             shownSlice_ = z;
         }
         Quad(ctx, sliceTex_.get(), At(0.0f, 1.9f, 0.0f), 3.2f, 3.2f, Vector2(0, 0), Vector2(1, 1), SamplerState::PointClamp);
-        gizmos_.Label(R().ToWorld(0.0f, 3.7f, 0.0f), "slice " + std::to_string(z) + " of 32 (read back with GetData)", Color(255, 230, 150, 255), 0.55f);
+        gizmos_.Label(R().ToWorld(0.0f, 3.7f, 0.0f), "slice " + std::to_string(z) + " of 32 (read back with GetData, " + (volumeFormat_ == 1 ? "float" : volumeFormat_ == 2 ? "Vector4" : "Color") + ")", Color(255, 230, 150, 255), 0.55f);
     }
 
     // Source image: a colour wheel, fine diagonal lines (hard for JPEG) and, optionally, a transparent corner.
@@ -676,10 +724,10 @@ private:
     std::unique_ptr<AlphaTestEffect> alphaFx_;
     std::unique_ptr<Texture3D> volume_;
     std::vector<Color> pixels_, volumeData_;
-    std::string readback_ = "-", checksum_ = "-", cubeCheck_ = "-", ioBytes_ = "-", ioSize_ = "-", ioError_ = "-";
+    std::string volumeText_ = "32 x 32 x 32 Color texels", subBox_ = "-", readback_ = "-", checksum_ = "-", cubeCheck_ = "-", ioBytes_ = "-", ioSize_ = "-", ioError_ = "-";
     double setMs_ = 0.0;
     float time_ = 0.0f, scrollX_ = 0.0f, scrollY_ = 0.0f;
-    int filter_ = 0, size_ = 128, fn_ = 0, shownSlice_ = -1;
+    int filter_ = 0, size_ = 128, fn_ = 0, shownSlice_ = -1, volumeFormat_ = 0;
     float bias_ = 0.0f, maxMip_ = 0.0f, aniso_ = 4.0f, tilt_ = 55.0f, zoom_ = 2.0f, offset_ = 0.0f, scrollU_ = 0.3f, scrollV_ = 0.0f, rot_ = 0.0f, ref_ = 128.0f;
     float amount_ = 0.8f, fresnel_ = 1.0f, speed_ = 0.5f, slice_ = 0.5f;
     int encodeSize_ = 128, decodeMode_ = 0;

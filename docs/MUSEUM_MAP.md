@@ -236,7 +236,7 @@ Vertex data, buffers, primitives and textures
 | 3.2.06 | `tex-formats` | Surface Formats | XNA 4.0 | SurfaceFormat, PackedVector.Bgr565, PackedVector.Bgra4444, PackedVector.Alpha8, PackedVector.HalfVector4 |
 | 3.2.07 | `tex-alpha` | Alpha: Test, Blend, Opaque | XNA 4.0 | AlphaTestEffect, BlendState.NonPremultiplied, CompareFunction |
 | 3.2.08 | `tex-cube` | Cube Maps and Environment Maps | XNA 4.0 | TextureCube, EnvironmentMapEffect, CubeMapFace, TextureCube.SetData, TextureCube.GetData |
-| 3.2.09 | `tex-volume` | Volume Textures | XNA 4.0 | Texture3D, Texture3D.SetData, Texture3D.GetData |
+| 3.2.09 | `tex-volume` | Volume Textures | XNA 4.0 | Texture3D, Texture3D.SetData, Texture3D.GetData, Texture3D.GetData(level, box), SurfaceFormat.Single, SurfaceFormat.Vector4 |
 | 3.2.10 | `tex-io` | Encoding and Decoding Images | XNA 4.0 | Texture2D.SaveAsPng, Texture2D.SaveAsJpeg, Texture2D.FromStream, System.IO.MemoryStream |
 
 ### Floor 4: Effects and Lighting
