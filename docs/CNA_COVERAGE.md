@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-785 distinct API names are claimed by at least one room.
+791 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -162,7 +162,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CNA::getGraphicsRendererName | `hist-cna` |
 | CNAEXT | `hist-compare` |
 | CRTMaskType | `cx-crt` |
+| Clipboard.GetMimeTypesEXT | `in-text` |
 | Clipboard.GetTextEXT | `in-text` |
+| Clipboard.SetDataEXT | `in-text` |
 | Clipboard.SetTextEXT | `in-text` |
 | Color | `vt-color`, `sprite-tint` |
 | Color.FromNonPremultiplied | `vt-color` |
@@ -420,8 +422,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Joysticks.GetCapabilitiesEXT | `in-joystick` |
 | Joysticks.GetJoysticksEXT | `in-joystick` |
 | Joysticks.GetStateEXT | `in-joystick` |
+| Keyboard.GetKeyFromNameEXT | `in-keyboard` |
 | Keyboard.GetKeyNameEXT | `in-keyboard` |
 | Keyboard.GetModStateEXT | `in-keyboard` |
+| Keyboard.GetScancodeNameEXT | `in-keyboard` |
 | Keyboard.GetState | `in-keyboard` |
 | KeyboardState | `in-edges` |
 | KeyboardState.GetPressedKeys | `in-keyboard` |
@@ -753,7 +757,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | System.ObjectDisposedException | `pl-exceptions` |
 | System.Resources.ResourceManager | `ct-resource` |
 | TextInputEXT.StartTextInput | `in-text` |
+| TextInputEXT.StartTextInputWithTypeEXT | `in-text` |
 | TextInputEXT.TextInput | `in-text` |
+| TextInputTypeEXT | `in-text` |
 | Texture2D | `materials`, `app-content`, `tex-mip`, `rf-garden` |
 | Texture2D.FromStream | `tex-io` |
 | Texture2D.GetData | `sprite-atlas`, `sprite-hit`, `sprite-tilemap`, `geo-terrain`, `tex-dynamic`, `ct-formats`, `rv-targets`, `rv-formats` |

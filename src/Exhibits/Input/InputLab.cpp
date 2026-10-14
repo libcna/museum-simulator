@@ -17,6 +17,7 @@
 #include "CNA/Input/InputDevices.hpp"
 #include "CNA/Input/Joysticks.hpp"
 #include "CNA/Input/Power.hpp"
+#include "CNA/Input/TextInputType.hpp"
 #include "CNA/Input/Sensors.hpp"
 #include "Diagnostics/Log.hpp"
 #include "Exhibits/ExhibitFactories.hpp"
@@ -101,6 +102,9 @@ public:
                 p.AddReadout("Modifiers", [this] { return Modifiers(); });
                 p.AddToggle("Label pressed keys by layout name", true, [this](bool v) { names_ = v; });
                 p.AddReadout("Last key pressed", [this] { return lastKey_; });
+                p.AddChoice("Look a key up by name", {"Space", "Return", "Left Shift", "A", "F5", "Escape", "Keypad Enter", "Not a key"}, 0, [this](int v) { LookUp(v); });
+                p.AddReadout("GetKeyFromNameEXT", [this] { return lookup_; });
+                p.AddReadout("Scancode name / key name", [this] { return lookupNames_; });
                 break;
             case Mode::Edges:
                 p.AddChoice("Watch key", {"Space", "Z", "X", "Enter", "Left Shift"}, 0, [this](int v) { watch_ = v; Reset(); });
@@ -138,6 +142,9 @@ public:
                 p.AddButton("Clear", [this] { text_.clear(); });
                 p.AddButton("Copy text to clipboard", [this] { Copy(); });
                 p.AddButton("Paste clipboard", [this] { Paste(); });
+                p.AddChoice("Text input type (on-screen keyboard)", {"Text", "TextName", "TextEmail", "TextUsername", "TextPasswordHidden", "TextPasswordVisible", "Number", "NumberPasswordHidden", "NumberPasswordVisible"}, 0, [this](int v) { inputType_ = v; if (typing_) StartTyping(); });
+                p.AddButton("Copy as HTML too (SetDataEXT, text/html)", [this] { CopyHtml(); });
+                p.AddReadout("Clipboard formats (GetMimeTypesEXT)", [this] { return mimeTypes_; });
                 p.AddReadout("Text input", [this] { return std::string(typing_ ? "ACTIVE: keys type, Esc stops" : "off"); });
                 p.AddReadout("Clipboard", [this] { return clipboardNote_; });
                 break;
@@ -667,7 +674,12 @@ private:
     {
         typing_ = true;
         S().mutableStats->typingCapture = true;
-        try { TextInputEXT::StartTextInput(); } catch (const std::exception&) {}
+        try {
+            // The type picks what a touch device's on-screen keyboard offers (an email keyboard, digits only, a hidden password); a desktop ignores it.
+            TextInputEXT::StartTextInputWithTypeEXT(static_cast<CNA::Input::TextInputTypeEXT>(inputType_));
+        } catch (const std::exception&) {
+            try { TextInputEXT::StartTextInput(); } catch (const std::exception&) {}
+        }
     }
     void StopTyping()
     {
@@ -681,6 +693,33 @@ private:
         if (c == u'\r' || c == u'\n') text_ += '\n';
         else if (c >= 32 && c < 127) text_ += static_cast<char>(c);
         else if (c >= 127) text_ += '?';
+    }
+    void LookUp(int which)
+    {
+        static const char* names[] = {"Space", "Return", "Left Shift", "A", "F5", "Escape", "Keypad Enter", "Not a key"};
+        try {
+            const Keys k = Keyboard::GetKeyFromNameEXT(names[which]);
+            lookup_ = std::string("\"") + names[which] + "\" is Keys " + std::to_string(static_cast<int>(k));
+            lookupNames_ = "'" + Keyboard::GetScancodeNameEXT(k) + "' / '" + Keyboard::GetKeyNameEXT(k) + "'";
+        } catch (const std::exception& e) {
+            lookup_ = std::string("\"") + names[which] + "\": " + std::string(e.what()).substr(0, 50);
+            lookupNames_ = "-";
+        }
+    }
+    // The clipboard holds several formats of one copy: plain text and, here, the same text as an HTML fragment.
+    void CopyHtml()
+    {
+        try {
+            const std::string html = "<b>" + text_ + "</b>";
+            const std::vector<std::uint8_t> bytes(html.begin(), html.end());
+            const bool ok = CNA::Input::Clipboard::SetDataEXT("text/html", bytes);
+            std::string list;
+            for (const std::string& m : CNA::Input::Clipboard::GetMimeTypesEXT()) list += (list.empty() ? "" : ", ") + m;
+            mimeTypes_ = list.empty() ? "none" : list;
+            clipboardNote_ = ok ? "wrote text/html (" + std::to_string(bytes.size()) + " bytes)" : "the clipboard refused text/html";
+        } catch (const std::exception& e) {
+            clipboardNote_ = std::string("unavailable: ") + e.what();
+        }
     }
     void Copy()
     {
@@ -856,6 +895,8 @@ private:
     std::unique_ptr<Texture2D> ringTexture_;
     std::unique_ptr<MouseCursor> customCursor_;
     std::string lastKey_ = "(none yet)";
+    std::string lookup_ = "-", lookupNames_ = "-", mimeTypes_ = "-";
+    int inputType_ = 0;
     // edges
     int watch_ = 0, presses_ = 0, releases_ = 0;
     float hold_ = 0.0f, longest_ = 0.0f;
