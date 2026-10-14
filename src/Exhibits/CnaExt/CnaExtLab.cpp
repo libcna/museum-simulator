@@ -106,7 +106,7 @@ public:
                 p.AddReadout("Primitives (engine counter)", [this] { return pointsMetric_; });
                 break;
             case Mode::Package:
-                p.AddChoice("Variants in the package", {"GLSL ES and GLSL desktop", "GLSL ES only", "GLSL desktop only", "HLSL and MSL only"}, 0, [this](int v) { packageChoice_ = v; packageDirty_ = true; });
+                p.AddChoice("Variants in the package", {"GLSL ES, GLSL desktop and WGSL", "GLSL ES only", "GLSL desktop only", "HLSL and MSL only", "WGSL only"}, 0, [this](int v) { packageChoice_ = v; packageDirty_ = true; });
                 p.AddSlider("Tint amount", 0.0f, 1.0f, tint_, [this](float v) { tint_ = v; });
                 p.AddReadout("Selected variant", [this] { return selectedLabel_; });
                 p.AddReadout("This renderer's dialect", [this] { return std::string(S().device->GetShaderDialectEXT() == CNA::ShaderDialectEXT::GlslDesktop ? "GLSL desktop" : (S().device->GetShaderDialectEXT() == CNA::ShaderDialectEXT::GlslEs ? "GLSL ES" : "other")); });
@@ -389,6 +389,28 @@ void main() {
         static const std::string desktopSrc = "#version 330 core\n" + esSrc.substr(esSrc.find('\n') + 1);
         return es ? esSrc.c_str() : desktopSrc.c_str();
     }
+    // The package declares entry point "main" (the one name a packaged ShaderEffect accepts); the WebGPU renderer then looks for
+    // vs_main and fs_main inside the WGSL itself.
+    static constexpr const char* kWgslVertex = R"WGSL(
+struct VOut { @builtin(position) position: vec4f, @location(0) uv: vec2f, @location(1) color: vec4f };
+@vertex fn vs_main(@location(0) position: vec3f, @location(1) uv: vec2f, @location(2) color: vec4f) -> VOut {
+    var o: VOut;
+    o.position = vec4f(position, 1.0);
+    o.uv = uv;
+    o.color = color;
+    return o;
+}
+)WGSL";
+    static constexpr const char* kWgslFragment = R"WGSL(
+struct U { uAmount: vec4f };
+@group(0) @binding(0) var<uniform> u: U;
+@group(0) @binding(1) var texSampler: sampler;
+@group(0) @binding(2) var tex: texture_2d<f32>;
+@fragment fn fs_main(@location(0) uv: vec2f, @location(1) color: vec4f) -> @location(0) vec4f {
+    let c = textureSampleLevel(tex, texSampler, uv, 0.0) * color;
+    return vec4f(mix(c.rgb, c.rgb * vec3f(1.0, 0.55, 0.25), u.uAmount.x), c.a);   // warm tint
+}
+)WGSL";
     static std::string Fragment(bool es)
     {
         const std::string body = R"(
@@ -415,7 +437,7 @@ void main() {
         using CNA::ShaderStageEXT;
         using CNA::Graphics::ShaderCodeEXT;
         std::vector<ShaderCodeEXT> variants;
-        const bool es = packageChoice_ == 0 || packageChoice_ == 1, desktop = packageChoice_ == 0 || packageChoice_ == 2, other = packageChoice_ == 3;
+        const bool es = packageChoice_ == 0 || packageChoice_ == 1, desktop = packageChoice_ == 0 || packageChoice_ == 2, other = packageChoice_ == 3, wgsl = packageChoice_ == 0 || packageChoice_ == 4;
         if (es) {
             variants.emplace_back(ShaderLanguageEXT::GlslEs, ShaderStageEXT::Vertex, "main", "tint.vert (GLSL ES 3.00)", std::string(Vertex(true)));
             variants.emplace_back(ShaderLanguageEXT::GlslEs, ShaderStageEXT::Fragment, "main", "tint.frag (GLSL ES 3.00)", Fragment(true));
@@ -423,6 +445,10 @@ void main() {
         if (desktop) {
             variants.emplace_back(ShaderLanguageEXT::GlslDesktop, ShaderStageEXT::Vertex, "main", "tint.vert (GLSL 3.30)", std::string(Vertex(false)));
             variants.emplace_back(ShaderLanguageEXT::GlslDesktop, ShaderStageEXT::Fragment, "main", "tint.frag (GLSL 3.30)", Fragment(false));
+        }
+        if (wgsl) {
+            variants.emplace_back(ShaderLanguageEXT::Wgsl, ShaderStageEXT::Vertex, "main", "tint.vert.wgsl", std::string(kWgslVertex));
+            variants.emplace_back(ShaderLanguageEXT::Wgsl, ShaderStageEXT::Fragment, "main", "tint.frag.wgsl", std::string(kWgslFragment));
         }
         if (other) {
             variants.emplace_back(ShaderLanguageEXT::Hlsl, ShaderStageEXT::Vertex, "main", "tint.vs.hlsl", std::string("float4 main() : SV_Position { return 0; }"));
@@ -432,14 +458,21 @@ void main() {
         CNA::Graphics::ShaderPackageEXT package(variants, {ShaderStageEXT::Vertex, ShaderStageEXT::Fragment});
         try {
             const auto selection = package.selectFor(*S().device);
-            selectedLabel_ = selection.isUsable() ? std::string(selection.getLanguage() == ShaderLanguageEXT::GlslEs ? "GLSL ES" : (selection.getLanguage() == ShaderLanguageEXT::GlslDesktop ? "GLSL desktop" : "other")) : std::string("none usable");
+            selectedLabel_ = selection.isUsable() ? std::string(selection.getLanguage() == ShaderLanguageEXT::GlslEs ? "GLSL ES" : (selection.getLanguage() == ShaderLanguageEXT::GlslDesktop ? "GLSL desktop" : (selection.getLanguage() == ShaderLanguageEXT::Wgsl ? "WGSL" : "other"))) : std::string("none usable");
             packageNote_ = selection.isUsable() ? std::string("selected ") + selectedLabel_ : selection.getDiagnostic();
             for (const ShaderCodeEXT& v : package.getVariants())
-                packageLines_.push_back(std::string(v.getLanguage() == ShaderLanguageEXT::GlslEs ? "GLSL ES     " : (v.getLanguage() == ShaderLanguageEXT::GlslDesktop ? "GLSL desktop" : (v.getLanguage() == ShaderLanguageEXT::Hlsl ? "HLSL        " : "MSL         "))) + "  " + v.getSourceLabel() + "  " + std::to_string(v.getPayloadByteSize()) + " bytes");
-            if (selection.isUsable()) packageEffect_ = std::make_unique<ShaderEffect>(*S().device, package);
+                packageLines_.push_back(std::string(v.getLanguage() == ShaderLanguageEXT::GlslEs ? "GLSL ES     " : (v.getLanguage() == ShaderLanguageEXT::GlslDesktop ? "GLSL desktop" : (v.getLanguage() == ShaderLanguageEXT::Hlsl ? "HLSL        " : (v.getLanguage() == ShaderLanguageEXT::Wgsl ? "WGSL        " : "MSL         ")))) + "  " + v.getSourceLabel() + "  " + std::to_string(v.getPayloadByteSize()) + " bytes");
+            if (selection.isUsable()) {
+                packageEffect_ = std::make_unique<ShaderEffect>(*S().device, package);
+                // WGSL and SPIR-V have no loose uniforms: this declares the block uAmount lives in (ignored by the GLSL renderers).
+                static const char* const names[] = {"uAmount"};
+                static const int offsets[] = {0};
+                packageEffect_->DeclareUniformBlockEXT(16, names, offsets, 1);
+            }
         } catch (const std::exception& e) {
             packageNote_ = e.what();
             selectedLabel_ = "error";
+            Museum::Log("package", "%s", e.what());
         }
 #endif
     }

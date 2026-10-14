@@ -10,6 +10,7 @@
 #include "Diagnostics/Log.hpp"
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
+#include "Exhibits/Shaders/ShaderSources.hpp"
 #include "Microsoft/Xna/Framework/Graphics/ShaderEffect.hpp"
 #include "Microsoft/Xna/Framework/Graphics/SpriteEffects.hpp"
 #include "Rendering/MiniView.hpp"
@@ -179,8 +180,21 @@ public:
         if (def_ == nullptr) def_ = &kShaders[0];
     }
 
+    // Which dialect this renderer takes, from what it says it executes: GLSL ES / desktop GLSL, else the museum's WGSL, else none.
+    void ChooseDialect()
+    {
+        GraphicsDevice& d = *S().device;
+        const bool glsl = d.SupportsShaderLanguageEXT(CNA::ShaderLanguageEXT::GlslEs, CNA::ShaderStageEXT::Fragment) ||
+                          d.SupportsShaderLanguageEXT(CNA::ShaderLanguageEXT::GlslDesktop, CNA::ShaderStageEXT::Fragment);
+        wgsl_ = !glsl && ShaderSources::WgslBody(def_->key) != nullptr && d.SupportsShaderLanguageEXT(CNA::ShaderLanguageEXT::Wgsl, CNA::ShaderStageEXT::Fragment);
+        // A renderer whose dialect is SPIR-V (SDL_GPU) compiles Vulkan-flavoured GLSL text at run time.
+        vulkan_ = !glsl && !wgsl_ && d.GetShaderDialectEXT() == CNA::ShaderDialectEXT::SpirV && d.ExecutesShaderEffectSourceEXT();
+        supported_ = glsl || wgsl_ || vulkan_;
+    }
+
     void BuildStatic(RoomBuilder& b) override
     {
+        ChooseDialect();
         ControlPanel& p = AddPanel(def_->title, -4.8f, 1.5f, 1.8f, MathHelper::PiOver2, 2.1f);
         p.AddSlider("uAmount", 0.0f, 1.0f, amount_, [this](float v) { amount_ = v; });
         const std::string key = def_->key;
@@ -188,11 +202,11 @@ public:
         if (key == "pixelate") p.AddToggle("Posterise colours (uMode)", false, [this](bool v) { mode_ = v ? 1.0f : 0.0f; });
         if (key == "kernel") p.AddChoice("uMode", {"Sharpen", "Emboss", "Laplacian outline"}, 1, [this](int v) { mode_ = static_cast<float>(v); });
         if (key == "blur" || key == "edge" || key == "kernel") p.AddSlider("Texel size scale", 0.5f, 3.0f, texelScale_, [this](float v) { texelScale_ = v; });
-        p.AddReadout("Shader compiled", [this] { return effect_ && effect_->IsEffectValid() ? std::string("yes") : (supported_ ? std::string("NO") : std::string("not run: no GLSL here")); });
+        p.AddReadout("Shader compiled", [this] { return effect_ && effect_->IsEffectValid() ? std::string("yes") : (supported_ ? std::string("NO") : std::string("not run: no GLSL or WGSL here")); });
         p.AddReadout("Shader language", [this] { return LanguageName(); });
         p.AddReadout("Renderer", [this] { return std::string(S().device->GetGraphicsRendererName()); });
         AddInfoSign(b, std::string("Shader lab: ") + def_->title,
-                    {"CNA extension: ShaderEffect compiles GLSL source at run time and plugs into SpriteBatch.Begin(..., effect).", "A 3D scene is rendered to a texture, then drawn through the effect: the post-processing workflow.",
+                    {"CNA extension: ShaderEffect compiles GLSL (or, on WebGPU, WGSL) source at run time and plugs into SpriteBatch.Begin(..., effect).", "A 3D scene is rendered to a texture, then drawn through the effect: the post-processing workflow.",
                      "Uniforms are set by name (SetUniformFloat); the source of this shader is on the wall to the left."});
         // The source listing, one text line per source line.
         SignSpec src;
@@ -200,8 +214,8 @@ public:
         src.pixelWidth = 1400;
         src.pixelHeight = 900;
         src.background = Color(10, 14, 22, 255);
-        src.lines.push_back({std::string(def_->title) + "  -  fragment shader (GLSL ES 3.00)", true, Kit::kCnaExt});
-        std::string body = def_->body, line;
+        src.lines.push_back({std::string(def_->title) + (wgsl_ ? "  -  fragment shader (WGSL, this renderer's dialect)" : (vulkan_ ? "  -  fragment shader body (GLSL; this renderer's header is Vulkan GLSL 450)" : "  -  fragment shader (GLSL ES 3.00)")), true, Kit::kCnaExt});
+        std::string body = wgsl_ ? ShaderSources::WgslBody(def_->key) : def_->body, line;
         for (char c : body + "\n") {
             if (c == '\n') {
                 src.lines.push_back({line, false, Color(190, 235, 200, 255)});
@@ -217,11 +231,22 @@ public:
     {
         GraphicsDevice& d = *S().device;
         source_ = std::make_unique<MiniView>(S(), 960, 540);
-        supported_ = d.SupportsShaderLanguageEXT(CNA::ShaderLanguageEXT::GlslEs, CNA::ShaderStageEXT::Fragment) ||
-                     d.SupportsShaderLanguageEXT(CNA::ShaderLanguageEXT::GlslDesktop, CNA::ShaderStageEXT::Fragment);
+        // The sources are written in two dialects: GLSL ES 3.00 (the OpenGL renderers) and WGSL (WebGPU). Anything else,
+        // SPIR-V or no source execution at all (FNA3D), gets the scene without the effect and a line saying so.
+        ChooseDialect();
+        const char* wgsl = ShaderSources::WgslBody(def_->key);
         if (supported_) {
             try {
-                effect_ = std::make_unique<ShaderEffect>(d, def_->vertex, std::string(kHeader) + def_->body);
+                if (wgsl_) {
+                    const bool wave = std::string(def_->key) == "vertexwave";
+                    effect_ = std::make_unique<ShaderEffect>(d, wave ? ShaderSources::kWgslVertexWave : ShaderSources::kWgslVertex,
+                                                             std::string(ShaderSources::kWgslFragmentPrologue) + wgsl);
+                    effect_->DeclareUniformBlockEXT(ShaderSources::kUniformBlockSize, ShaderSources::kUniformNames, ShaderSources::kUniformOffsets, 4);
+                } else if (vulkan_) {
+                    effect_ = std::make_unique<ShaderEffect>(d, std::string(def_->key) == "vertexwave" ? ShaderSources::kVulkanGlslVertexWave : ShaderSources::kVulkanGlslVertex, std::string(ShaderSources::kVulkanGlslFragmentHeader) + def_->body);
+                } else {
+                    effect_ = std::make_unique<ShaderEffect>(d, def_->vertex, std::string(kHeader) + def_->body);
+                }
                 if (!effect_->IsEffectValid()) {
                     error_ = effect_->GetCompileErrorEXT();
                     Museum::Log("shader", "%s did not compile: %s", def_->key, error_.c_str());
@@ -257,10 +282,15 @@ protected:
         const bool valid = effect_ && effect_->IsEffectValid();
         if (valid) {
             effect_->Apply();
-            effect_->SetUniformFloat("uAmount", amount_);
-            effect_->SetUniformFloat("uTime", time_);
-            effect_->SetUniformFloat("uMode", mode_);
-            effect_->SetUniformVec2("uTexel", texelScale_ / 960.0f, texelScale_ / 540.0f);
+            if (vulkan_) {   // one vec4 and one float, names ignored (see ShaderSources.cpp)
+                effect_->SetUniformVec4("color", texelScale_ / 960.0f, texelScale_ / 540.0f, time_, mode_);
+                effect_->SetUniformFloat("slot0", amount_);
+            } else {
+                effect_->SetUniformFloat("uAmount", amount_);
+                effect_->SetUniformFloat("uTime", time_);
+                effect_->SetUniformFloat("uMode", mode_);
+                effect_->SetUniformVec2("uTexel", texelScale_ / 960.0f, texelScale_ / 540.0f);
+            }
         }
         const std::string key = def_->key;
         if (key == "vertexwave" && valid) {
@@ -281,7 +311,7 @@ protected:
         if (!valid) {
             sb.Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::LinearClamp, nullptr, nullptr);
             sb.Draw(*S().whiteTexture, Rectangle(0, 480, 960, 60), Color(0, 0, 0, 200));
-            sb.DrawString(*S().font, supported_ ? "shader failed to compile: " + error_.substr(0, 60) : "this renderer does not execute GLSL source: showing the unprocessed scene", Vector2(14, 496), Color(255, 190, 150, 255), 0.0f, Vector2(0, 0), 0.7f, SpriteEffects::None, 0.0f);
+            sb.DrawString(*S().font, supported_ ? "shader failed to compile: " + error_.substr(0, 60) : "this renderer takes neither GLSL ES nor the museum's WGSL: showing the unprocessed scene", Vector2(14, 496), Color(255, 190, 150, 255), 0.0f, Vector2(0, 0), 0.7f, SpriteEffects::None, 0.0f);
             sb.End();
         }
     }
@@ -290,6 +320,8 @@ private:
     [[nodiscard]] std::string LanguageName() const
     {
         if (!supported_) return "none";
+        if (wgsl_) return "WGSL";
+        if (vulkan_) return "GLSL 450 for Vulkan (compiled to SPIR-V)";
         return S().device->GetShaderDialectEXT() == CNA::ShaderDialectEXT::GlslDesktop ? "GLSL (desktop, adapted)" : "GLSL ES 3.00";
     }
 
@@ -297,7 +329,7 @@ private:
     std::unique_ptr<MiniView> source_;
     std::unique_ptr<ShaderEffect> effect_;
     std::string error_;
-    bool supported_ = false;
+    bool supported_ = false, wgsl_ = false, vulkan_ = false;
     float time_ = 0.0f, amount_ = 0.7f, mode_ = 1.0f, texelScale_ = 1.5f;
 };
 

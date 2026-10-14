@@ -62,8 +62,8 @@ Run `tools/renderer_check.sh` for the current figures; they are not copied anywh
 | OPENGL33 | clean | 0.00 % of pixels differ by more than 15/255 |
 | SOFTWARE | clean (about 25 minutes for the whole museum under Xvfb) | 4.6 % |
 | FNA3D | clean, 0 exhibit errors (44 s) after two room fallbacks, below | 30 reference views: 22 within 1 %; `lights` 7.8 % (point and spot lights ignored), `pbr` 9.9 % (BasicEffect stand-in), `shader` 5.6 % (no custom shaders), `debugdraw` 4.6 %, `skinned-effect` 2.1 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
-| WEBGPU | clean (81 s) | 30 reference views: 25 within 1 %; `shader` 5.6 % (GLSL not accepted), `debugdraw` 4.7 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
-| SDL_GPU | clean (156 s) | 30 reference views: all within 1 % but `shader` 5.6 % (GLSL not accepted) |
+| WEBGPU | clean (78 s) | 30 reference views: 26 within 1 %; `debugdraw` 4.7 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
+| SDL_GPU | clean (173 s) | 30 reference views: all within 1 % |
 
 Re-checked on 2026-10-14 with 250 rooms after the room-frame change and the new rooms: `tools/tour.sh -f 3 -p` exits 0 on all three
 renderers (OPENGLES3 65 s, OPENGL33 62 s, SOFTWARE 1,501 s); the stencil, cube-map, SkinnedEffect, terrain and off-centre rooms
@@ -96,9 +96,17 @@ look the same on all three.
    stock effect throws; and it has no PBR shading path, so every glTF model (PbrEffect) throws when drawn. The instancing
    rooms fall back to one draw per cube and the model rooms to a lit `BasicEffect`, each saying so on its panel. The
    shader rooms already used `CustomEffects`. (CNA documents both limits in `docs/fna3d-renderer.md`.)
-9. **WEBGPU and SDL_GPU take other shader dialects** (WGSL; SPIR-V / Vulkan GLSL): the museum's GLSL ES 3.00 `ShaderEffect`
-   sources are refused, so the shader rooms (floor 4) show the scene without the effect and say so. The museum has not been
-   given sources in those dialects.
+9. **Custom shaders need source in the renderer's own dialect** (`GetShaderDialectEXT`). The shader rooms carry three: GLSL ES 3.00
+   (OPENGLES3, OPENGL33 and SOFTWARE-adapted), WGSL (WEBGPU, `Exhibits/Shaders/ShaderSources.cpp`: the same twelve algorithms
+   line for line) and Vulkan GLSL 450 (SDL_GPU: the GLSL ES bodies behind another header; the renderer compiles it to SPIR-V
+   with shaderc). FNA3D takes none (`CustomEffects` false), so its shader rooms show the scene unprocessed and say so. The
+   shader package room (`cx-package`) now holds a WGSL variant too, and "selects WGSL" on WEBGPU. Two behaviours of CNA to know
+   when writing these: SDL_GPU's `ShaderEffect` has **one fixed 128-byte uniform block whatever the uniform names say** (a
+   viewport size, a matrix, one vec4 "color", one float "slot0"; every `SetUniformVec2/3/4` writes the same vec4), so the lab
+   packs its four uniforms into those two slots; and a packaged `ShaderEffect` must name its entry point `main` while the WGSL
+   inside it is still looked up as `vs_main`/`fs_main`. WEBGPU's SpriteBatch route writes **colour attachment 0 only**, so the
+   multiple-render-target room's edge map stays empty there (the room measures it and says so); the shadow-map caster of
+   `cx-shadow` is GLSL-only and reports that.
 10. **CNA: the SOFTWARE renderer ignored `BasicEffect.PunctualLightEXT`** (point and spot lights): a lit sphere stayed black, and
     there is no capability flag to ask first, so the museum added `Rendering/Probes.cpp`, a one-off render test whose answer
     the light rooms print on their panels and the validation matrix counts. Fixed in CNA (`53aba6ef1`: EasyGL's falloff and

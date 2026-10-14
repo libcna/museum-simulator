@@ -15,6 +15,7 @@
 #include "Microsoft/Xna/Framework/Graphics/PrimitiveType.hpp"
 #include "Microsoft/Xna/Framework/Graphics/RenderTargetBinding.hpp"
 #include "Microsoft/Xna/Framework/Graphics/RenderTargetCube.hpp"
+#include "Exhibits/Shaders/ShaderSources.hpp"
 #include "Microsoft/Xna/Framework/Graphics/ShaderEffect.hpp"
 #include "Microsoft/Xna/Framework/Graphics/SurfaceFormat.hpp"
 #include "Microsoft/Xna/Framework/Graphics/Viewport.hpp"
@@ -110,7 +111,8 @@ public:
                 break;
             case Mode::Mrt:
                 p.AddReadout("MultipleRenderTargets", [this] { return std::string(S().device->SupportsCapability(CNA::GraphicsCapability::MultipleRenderTargets) ? "supported" : "NOT supported here"); });
-                p.AddReadout("ShaderEffect GLSL", [this] { return effect_ && effect_->IsEffectValid() ? std::string("compiled") : std::string("unavailable"); });
+                p.AddReadout("Second target (edges)", [this] { return secondTarget_; });
+                p.AddReadout("ShaderEffect source", [this] { return effect_ && effect_->IsEffectValid() ? "compiled (" + dialect_ + ")" : std::string("unavailable"); });
                 p.AddHeading("One pass, two outputs");
                 break;
             case Mode::Cube:
@@ -143,8 +145,23 @@ public:
             source_ = std::make_unique<MiniView>(S(), 480, 270);
             gray_ = std::make_unique<RenderTarget2D>(d, 480, 270, false, SurfaceFormat::Color, DepthFormat::None);
             edge_ = std::make_unique<RenderTarget2D>(d, 480, 270, false, SurfaceFormat::Color, DepthFormat::None);
-            if (d.SupportsShaderLanguageEXT(CNA::ShaderLanguageEXT::GlslEs, CNA::ShaderStageEXT::Fragment) || d.SupportsShaderLanguageEXT(CNA::ShaderLanguageEXT::GlslDesktop, CNA::ShaderStageEXT::Fragment)) {
-                try { effect_ = std::make_unique<ShaderEffect>(d, kMrtVert, kMrtFrag); } catch (const std::exception&) {}
+            // Source in the renderer's own dialect: GLSL ES, WGSL, or Vulkan GLSL for the SPIR-V renderer.
+            try {
+                if (d.SupportsShaderLanguageEXT(CNA::ShaderLanguageEXT::GlslEs, CNA::ShaderStageEXT::Fragment) || d.SupportsShaderLanguageEXT(CNA::ShaderLanguageEXT::GlslDesktop, CNA::ShaderStageEXT::Fragment)) {
+                    effect_ = std::make_unique<ShaderEffect>(d, kMrtVert, kMrtFrag);
+                } else if (d.SupportsShaderLanguageEXT(CNA::ShaderLanguageEXT::Wgsl, CNA::ShaderStageEXT::Fragment)) {
+                    static const char* const names[] = {"uTexel"};
+                    static const int offsets[] = {0};
+                    effect_ = std::make_unique<ShaderEffect>(d, ShaderSources::kWgslVertex, ShaderSources::kMrtWgslFragment);
+                    effect_->DeclareUniformBlockEXT(ShaderSources::kMrtBlockSize, names, offsets, 1);
+                    dialect_ = "WGSL";
+                } else if (d.GetShaderDialectEXT() == CNA::ShaderDialectEXT::SpirV && d.ExecutesShaderEffectSourceEXT()) {
+                    effect_ = std::make_unique<ShaderEffect>(d, ShaderSources::kVulkanGlslVertex, ShaderSources::kMrtVulkanFragment);
+                    dialect_ = "GLSL 450 for Vulkan";
+                    packedUniforms_ = true;
+                }
+            } catch (const std::exception& e) {
+                Museum::Log("targets", "MRT shader: %s", e.what());
             }
         }
         if (mode_ == Mode::Formats) ProbeFormats();
@@ -458,11 +475,25 @@ private:
         d.SetRenderTargets(bindings);
         d.Clear(Color::Black);
         effect_->Apply();
-        effect_->SetUniformVec2("uTexel", 1.0f / 480.0f, 1.0f / 270.0f);
+        if (packedUniforms_) effect_->SetUniformVec4("color", 1.0f / 480.0f, 1.0f / 270.0f, 0.0f, 0.0f);   // SDL_GPU: one fixed uniform block, names ignored
+        else effect_->SetUniformVec2("uTexel", 1.0f / 480.0f, 1.0f / 270.0f);
         S().sprites->Begin(SpriteSortMode::Deferred, &BlendState::Opaque, &SamplerState::LinearClamp, nullptr, nullptr, effect_.get());
         S().sprites->Draw(*source_->Texture(), Rectangle(0, 0, 480, 270), Color::White);
         S().sprites->End();
         d.SetRenderTarget(nullptr);
+        // Once, a while in: did the second target receive anything? (A renderer's SpriteBatch route may write attachment 0 only.)
+        if (++mrtFrames_ == 20) {
+            try {
+                std::vector<Color> px(static_cast<std::size_t>(480 * 270));
+                edge_->GetData(px.data(), static_cast<int>(px.size()));
+                int lit = 0;
+                for (const Color& c : px) lit += c.getRProperty() > 8 ? 1 : 0;
+                secondTarget_ = lit > 200 ? "written" : "stays empty (the SpriteBatch route writes attachment 0 only)";
+                Museum::Log("targets", "MRT second target: %d lit pixels", lit);
+            } catch (const std::exception& e) {
+                secondTarget_ = std::string("unreadable: ") + std::string(e.what()).substr(0, 24);
+            }
+        }
     }
 
     void ProbeFormats()
@@ -505,6 +536,9 @@ private:
     std::array<bool, 6> live_{true, true, true, true, true, true};
     std::unique_ptr<RenderTarget2D> fbA_, fbB_, mirror_, gray_, edge_;
     std::unique_ptr<ShaderEffect> effect_;
+    std::string dialect_ = "GLSL", secondTarget_ = "-";
+    int mrtFrames_ = 0;
+    bool packedUniforms_ = false;
     std::array<std::string, 6> formatStatus_{"-", "-", "-", "-", "-", "-"};
     Matrix mirrorView_, mirrorProj_;
     Vector3 player_{0, 1.65f, 0}, forward_{0, 0, -1};
