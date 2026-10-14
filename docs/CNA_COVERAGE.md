@@ -49,7 +49,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-565 distinct API names are claimed by at least one room.
+568 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -298,6 +298,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.GetGraphicsRendererName | `pl-renderer` |
 | GraphicsDevice.GetLogicalSizeEXT | `pl-renderer` |
 | GraphicsDevice.GetRendererCapabilityProfileEXT | `pl-renderer` |
+| GraphicsDevice.GetShaderDialectEXT | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave` |
 | GraphicsDevice.GetTrackedResourceCount | `pl-renderer` |
 | GraphicsDevice.GraphicsProfile | `pl-adapter` |
 | GraphicsDevice.ResourceCreated | `ct-lifetime` |
@@ -309,6 +310,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.SetStringMarkerEXT | `cx-points` |
 | GraphicsDevice.SupportsDisplayColorSpaceEXT | `pl-renderer` |
 | GraphicsDevice.SupportsImageBasedLightingEXT | `model-ibl`, `pl-renderer` |
+| GraphicsDevice.SupportsShaderLanguageEXT | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave` |
 | GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT | `rt-formats` |
 | GraphicsDevice.Viewport | `cam-split`, `rv-geometry` |
 | GraphicsDeviceManager | `app-viewport` |
@@ -512,6 +514,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ShaderCodeEXT | `cx-package` |
 | ShaderEffect | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `rt-mrt`, `cx-shadow` |
 | ShaderEffect(device, package) | `cx-package` |
+| ShaderEffect.DeclareUniformBlockEXT | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `cx-package` |
 | ShaderEffect.SetUniformFloat | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave` |
 | ShaderLanguageEXT | `cx-package` |
 | ShaderPackageEXT.selectFor | `cx-package` |

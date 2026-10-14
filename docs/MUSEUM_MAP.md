@@ -269,18 +269,18 @@ BasicEffect, the stock effects, lighting and custom shaders
 
 | Room | Key | Title | Origin | APIs |
 |---|---|---|---|---|
-| 4.3.01 | `fx-grade` | Colour Grading | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
-| 4.3.02 | `fx-blur` | Blur | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
-| 4.3.03 | `fx-pixelate` | Pixelate and Posterise | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
-| 4.3.04 | `fx-ripple` | Water Ripple | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
-| 4.3.05 | `fx-edge` | Edge Detection | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
-| 4.3.06 | `fx-crt` | CRT Look | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
-| 4.3.07 | `fx-plasma` | Procedural Shader | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
-| 4.3.08 | `fx-swirl` | Swirl | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
-| 4.3.09 | `fx-chromatic` | Chromatic Aberration | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
-| 4.3.10 | `fx-kernel` | Convolution Kernels | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
-| 4.3.11 | `fx-halftone` | Halftone | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
-| 4.3.12 | `fx-vertexwave` | Vertex Shader | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.01 | `fx-grade` | Colour Grading | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.02 | `fx-blur` | Blur | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.03 | `fx-pixelate` | Pixelate and Posterise | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.04 | `fx-ripple` | Water Ripple | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.05 | `fx-edge` | Edge Detection | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.06 | `fx-crt` | CRT Look | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.07 | `fx-plasma` | Procedural Shader | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.08 | `fx-swirl` | Swirl | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.09 | `fx-chromatic` | Chromatic Aberration | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.10 | `fx-kernel` | Convolution Kernels | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.11 | `fx-halftone` | Halftone | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
+| 4.3.12 | `fx-vertexwave` | Vertex Shader | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
 
 ### Floor 5: Render State and Render Targets
 
@@ -438,7 +438,7 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 | 8.2.02 | `cx-crt` | CRT Effect | CNA extension | CNA::Graphics::CRTEffect, CRTMaskType, SpriteBatch.Begin(effect) |
 | 8.2.03 | `cx-depth` | Colour Depth Effect | CNA extension | CNA::Graphics::DepthEffect, DepthEffectMode, DitherMode |
 | 8.2.04 | `cx-ascii` | ASCII Post-Process | CNA extension | CNA::Graphics::AsciiPostProcessEffect, AsciiQuantizeMode |
-| 8.2.05 | `cx-package` | Shader Packages | CNA extension | CNA::Graphics::ShaderPackageEXT, ShaderPackageEXT.selectFor, ShaderCodeEXT, ShaderEffect(device, package), ShaderLanguageEXT |
+| 8.2.05 | `cx-package` | Shader Packages | CNA extension | CNA::Graphics::ShaderPackageEXT, ShaderPackageEXT.selectFor, ShaderCodeEXT, ShaderEffect(device, package), ShaderLanguageEXT, ShaderEffect.DeclareUniformBlockEXT |
 | 8.2.06 | `cx-shadow` | Shadow Mapping | CNA extension | IShadowReceiverEXT, BasicEffect.ShadowMapEXT, BasicEffect.LightViewProjectionEXT, BasicEffect.ShadowDepthBiasEXT, BasicEffect.ShadowFilterRadiusEXT, ShadowCascadeStateEXT, BasicEffect.ShadowCascadesEXT, ShaderEffect, Matrix.CreateOrthographic |
 | 8.2.07 | `cx-stats` | Engine Statistics | CNA extension | CNA::Diagnostics::GetProvider, Snapshot.metrics, Snapshot.resources, SetRuntimeMode |
 | 8.2.08 | `cx-points` | Point Lists | CNA extension | PrimitiveType.PointListEXT, GraphicsDevice.DrawUserPrimitives, GraphicsDevice.SetStringMarkerEXT |

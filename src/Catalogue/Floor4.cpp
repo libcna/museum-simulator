@@ -22,7 +22,7 @@ WingSpec ShaderWing()
         r.depth = 13;
         r.height = 5.2f;
         r.theme = "neon-lab";
-        r.apis = {"ShaderEffect", "ShaderEffect.SetUniformFloat", "SpriteBatch.Begin(effect)", "RenderTarget2D"};
+        r.apis = {"ShaderEffect", "ShaderEffect.SetUniformFloat", "ShaderEffect.DeclareUniformBlockEXT", "GraphicsDevice.GetShaderDialectEXT", "GraphicsDevice.SupportsShaderLanguageEXT", "SpriteBatch.Begin(effect)", "RenderTarget2D"};
         r.origin = ApiOrigin::CnaExtension;
         return r;
     };
