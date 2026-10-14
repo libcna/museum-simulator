@@ -12,13 +12,19 @@
 #include "Audio/AudioSystem.hpp"
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
+#include "Microsoft/Xna/Framework/Audio/AudioCategory.hpp"
 #include "Microsoft/Xna/Framework/Audio/AudioChannels.hpp"
+#include "Microsoft/Xna/Framework/Audio/AudioEngine.hpp"
 #include "Microsoft/Xna/Framework/Audio/AudioEmitter.hpp"
 #include "Microsoft/Xna/Framework/Audio/AudioListener.hpp"
+#include "Microsoft/Xna/Framework/Audio/AudioStopOptions.hpp"
+#include "Microsoft/Xna/Framework/Audio/Cue.hpp"
 #include "Microsoft/Xna/Framework/Audio/DynamicSoundEffectInstance.hpp"
 #include "Microsoft/Xna/Framework/Audio/Microphone.hpp"
 #include "Microsoft/Xna/Framework/Audio/SoundEffect.hpp"
+#include "Microsoft/Xna/Framework/Audio/SoundBank.hpp"
 #include "Microsoft/Xna/Framework/Audio/SoundEffectInstance.hpp"
+#include "Microsoft/Xna/Framework/Audio/WaveBank.hpp"
 #include "Microsoft/Xna/Framework/Content/ContentManager.hpp"
 #include "Microsoft/Xna/Framework/Media/MediaPlayer.hpp"
 #include "Microsoft/Xna/Framework/Media/MediaState.hpp"
@@ -31,12 +37,12 @@ using namespace Microsoft::Xna::Framework::Graphics;
 
 namespace {
 
-enum class Mode { Basics, Layers, Spatial, Synth, Generate, Master, Music, Microphone };
+enum class Mode { Basics, Layers, Spatial, Synth, Generate, Master, Music, Microphone, Xact };
 
 Mode ParseMode(const std::string& s)
 {
     static const std::pair<const char*, Mode> table[] = {{"layers", Mode::Layers}, {"spatial", Mode::Spatial}, {"synth", Mode::Synth}, {"generate", Mode::Generate},
-                                                         {"master", Mode::Master}, {"music", Mode::Music}, {"microphone", Mode::Microphone}};
+                                                         {"master", Mode::Master}, {"music", Mode::Music}, {"microphone", Mode::Microphone}, {"xact", Mode::Xact}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
     return Mode::Basics;
@@ -124,6 +130,19 @@ public:
                 p.AddReadout("State", [] { try { const MediaState s = MediaPlayer::getStateProperty(); return std::string(s == MediaState::Playing ? "Playing" : (s == MediaState::Paused ? "Paused" : "Stopped")); } catch (const std::exception&) { return std::string("unavailable"); } });
                 p.AddReadout("Position", [] { try { return Fmt1(static_cast<float>(MediaPlayer::getPlayPositionProperty().getTotalSecondsProperty())) + " s"; } catch (const std::exception&) { return std::string("-"); } });
                 break;
+            case Mode::Xact:
+                p.AddChoice("Cue", {"Tone", "Click", "Arpeggio", "Drums", "Chirp"}, 0, [this](int v) { xCueIndex_ = v; });
+                p.AddButton("Play: GetCue then Play", [this] { XactPlay(); });
+                p.AddButton("Pause", [this] { if (xCue_ != nullptr) try { xCue_->Pause(); } catch (const std::exception&) {} });
+                p.AddButton("Resume", [this] { if (xCue_ != nullptr) try { xCue_->Resume(); } catch (const std::exception&) {} });
+                p.AddButton("Stop (as authored)", [this] { if (xCue_ != nullptr) try { xCue_->Stop(AudioStopOptions::AsAuthored); } catch (const std::exception&) {} });
+                p.AddButton("Stop (immediate)", [this] { if (xCue_ != nullptr) try { xCue_->Stop(AudioStopOptions::Immediate); } catch (const std::exception&) {} });
+                p.AddButton("PlayCue: fire and forget", [this] { XactFire(); });
+                for (int i = 0; i < 3; ++i) p.AddSlider(std::string(kXactCategories[i]) + " category volume", 0.0f, 1.0f, catVolume_[static_cast<std::size_t>(i)], [this, i](float v) { XactCategoryVolume(i, v); });
+                p.AddToggle("Pause the Music category", false, [this](bool v) { XactPauseMusic(v); });
+                p.AddReadout("Cue", [this] { return XactState(); });
+                p.AddReadout("Banks", [this] { return xStatus_; });
+                break;
             case Mode::Microphone:
                 p.AddButton("Start / stop capture", [this] { ToggleMic(); });
                 p.AddReadout("Microphones found", [this] { return micCount_; });
@@ -157,6 +176,8 @@ public:
                 synth_ = std::make_unique<DynamicSoundEffectInstance>(22050, AudioChannels::Mono);
             } else if (mode_ == Mode::Generate) {
                 Generate();
+            } else if (mode_ == Mode::Xact) {
+                LoadXact();
             }
         } catch (const std::exception& e) {
             Museum::Log("audio", "%s: %s", Title().c_str(), e.what());
@@ -185,6 +206,9 @@ public:
             distance_ = Vector3::Distance(ctx.playerPosition, pos);
         }
         if (mode_ == Mode::Microphone && mic_ != nullptr && micRunning_) PollMic();
+        if (mode_ == Mode::Xact && xEngine_) {
+            try { xEngine_->Update(); } catch (const std::exception&) {}
+        }
         for (float& f : flash_) f = std::max(0.0f, f - ctx.dt * 2.0f);
     }
 
@@ -240,6 +264,27 @@ protected:
                 break;
             }
             case Mode::Music: text(std::string("Songs are streamed by MediaPlayer, one at a time, independently of SoundEffect."), 40, 120, Kit::kText, 0.8f); break;
+            case Mode::Xact: {
+                static const char* cues[5] = {"Tone", "Click", "Arpeggio", "Drums", "Chirp"};
+                static const int category[5] = {0, 0, 1, 1, 2};
+                for (int c = 0; c < 3; ++c) {
+                    const int x = 40 + c * 300;
+                    rect(x, 80, 280, 380, Color(24, 30, 46, 255));
+                    rect(x, 80, 280, 6, c == 0 ? Color(110, 170, 255, 255) : (c == 1 ? Color(255, 190, 90, 255) : Color(130, 235, 150, 255)));
+                    text(std::string(kXactCategories[c]) + "  (volume " + Fmt1(catVolume_[static_cast<std::size_t>(c)]) + ")", static_cast<float>(x) + 14.0f, 96.0f, Kit::kGold, 0.8f);
+                    int row = 0;
+                    for (int i = 0; i < 5; ++i) {
+                        if (category[i] != c) continue;
+                        const bool selected = i == xCueIndex_;
+                        const bool live = selected && xCue_ != nullptr && xActive_ && XactPlaying();
+                        rect(x + 14, 150 + row * 70, 252, 54, live ? Color(80, 200, 120, 255) : (selected ? Color(70, 86, 130, 255) : Color(40, 48, 72, 255)));
+                        text(cues[i], static_cast<float>(x) + 28.0f, 164.0f + static_cast<float>(row) * 70.0f, live ? Color(10, 30, 16, 255) : Kit::kText, 0.8f);
+                        ++row;
+                    }
+                }
+                text(xStatus_, 40, 478, Kit::kDim, 0.65f);
+                break;
+            }
             case Mode::Microphone: {
                 rect(60, 200, static_cast<int>(840.0f * std::min(1.0f, micLevel_ * 4.0f)), 80, Color(110, 255, 160, 255));
                 text(micState_, 60, 310, Kit::kText, 0.9f);
@@ -263,7 +308,7 @@ private:
     }
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"SoundEffect.Play: volume, pitch, pan", "SoundEffectInstance layers", "3D audio: emitter and listener", "A synthesiser with DynamicSoundEffectInstance", "Sounds generated in code", "Master volume and 3D settings", "Song and MediaPlayer", "The microphone"};
+        static const char* t[] = {"SoundEffect.Play: volume, pitch, pan", "SoundEffectInstance layers", "3D audio: emitter and listener", "A synthesiser with DynamicSoundEffectInstance", "Sounds generated in code", "Master volume and 3D settings", "Song and MediaPlayer", "The microphone", "XACT: cues, banks and categories"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
@@ -276,6 +321,7 @@ private:
             case Mode::Generate: return {"A SoundEffect can be built from a buffer of PCM bytes instead of a file: here five sound effects are", "synthesised in code, drawn as a waveform and spectrum, then played. No asset files are involved."};
             case Mode::Master: return {"SoundEffect.MasterVolume scales everything the audio engine plays. The static DistanceScale, DopplerScale and", "SpeedOfSound settings shape 3D audio globally; this museum restores them when you leave a room that changes them."};
             case Mode::Music: return {"Song and MediaPlayer play music as a stream, with a queue, pause, repeat and volume of their own. The", "songs are the museum's generated WAV files loaded through the ContentManager."};
+            case Mode::Xact: return {"XACT is XNA's audio authoring route: a settings file (categories), a wave bank (the sounds) and a sound bank (named cues).", "AudioEngine loads them, GetCue gives a Cue you can Play, Pause and Stop; categories mix groups. The files were written by tools/gen_xact.py."};
             default: return {"Microphone captures 16-bit mono PCM. If the machine has no microphone CNA reports it (the Microphones found", "readout) and nothing is recorded. With one, the level meter shows the signal strength."};
         }
     }
@@ -455,6 +501,70 @@ private:
         } catch (const std::exception&) {}
     }
 
+    static constexpr const char* kXactCategories[3] = {"Default", "Music", "Effects"};
+
+    void LoadXact()
+    {
+        const std::string root = S().contentRoot + "/Xact/";
+        try {
+            xEngine_ = std::make_unique<AudioEngine>(root + "museum.xgs");
+            xWaves_ = std::make_unique<WaveBank>(xEngine_.get(), root + "museum.xwb");
+            xBank_ = std::make_unique<SoundBank>(xEngine_.get(), root + "museum.xsb");
+            xStatus_ = "museum.xgs (3 categories), museum.xwb (5 waves), museum.xsb (5 cues)";
+        } catch (const std::exception& e) {
+            xBank_.reset();
+            xWaves_.reset();
+            xEngine_.reset();
+            xStatus_ = std::string("not available here: ") + std::string(e.what()).substr(0, 60);
+            Museum::Log("audio", "XACT: %s", e.what());
+        }
+    }
+    void XactPlay()
+    {
+        if (!xBank_) return;
+        static const char* names[5] = {"Tone", "Click", "Arpeggio", "Drums", "Chirp"};
+        try {
+            xCue_ = xBank_->GetCue(names[xCueIndex_]);
+            xCue_->Play();
+            xActive_ = true;
+        } catch (const std::exception& e) {
+            xStatus_ = std::string("Play failed: ") + std::string(e.what()).substr(0, 50);
+        }
+    }
+    void XactFire()
+    {
+        if (!xBank_) return;
+        static const char* names[5] = {"Tone", "Click", "Arpeggio", "Drums", "Chirp"};
+        try { xBank_->PlayCue(names[xCueIndex_]); } catch (const std::exception&) {}
+    }
+    void XactCategoryVolume(int i, float v)
+    {
+        catVolume_[static_cast<std::size_t>(i)] = v;
+        if (xEngine_) try { xEngine_->GetCategory(kXactCategories[i]).SetVolume(v); } catch (const std::exception&) {}
+    }
+    void XactPauseMusic(bool pause)
+    {
+        if (!xEngine_) return;
+        try {
+            AudioCategory music = xEngine_->GetCategory("Music");
+            if (pause) music.Pause(); else music.Resume();
+        } catch (const std::exception&) {}
+    }
+    [[nodiscard]] bool XactPlaying() const
+    {
+        try { return xCue_ != nullptr && xCue_->getIsPlayingProperty(); } catch (const std::exception&) { return false; }
+    }
+    [[nodiscard]] std::string XactState() const
+    {
+        if (!xEngine_) return "XACT not available";
+        if (xCue_ == nullptr) return "no cue yet";
+        try {
+            return xCue_->getNameProperty() + ": " + (xCue_->getIsStoppedProperty() ? "stopped" : (xCue_->getIsPausedProperty() ? "paused" : (xCue_->getIsPlayingProperty() ? "playing" : (xCue_->getIsPreparedProperty() ? "prepared" : "created"))));
+        } catch (const std::exception&) {
+            return "?";
+        }
+    }
+
     void RestoreGlobals()
     {
         SoundEffect::setDistanceScaleProperty(1.0f);
@@ -465,6 +575,15 @@ private:
 
     Mode mode_;
     std::mt19937 rng_;
+    // XACT: declared engine first, so the sound bank and wave bank are destroyed before it.
+    std::unique_ptr<AudioEngine> xEngine_;
+    std::unique_ptr<WaveBank> xWaves_;
+    std::unique_ptr<SoundBank> xBank_;
+    Cue* xCue_ = nullptr;
+    int xCueIndex_ = 0;
+    bool xActive_ = false;
+    std::array<float, 3> catVolume_{1.0f, 1.0f, 1.0f};
+    std::string xStatus_ = "-";
     std::unique_ptr<Content::ContentManager> content_;
     std::array<std::unique_ptr<SoundEffect>, 4> effects_;
     std::array<std::unique_ptr<SoundEffectInstance>, 4> layers_;

@@ -34,6 +34,9 @@ WingSpec AudioWing()
         au("au-master", "Master Volume and Settings", "SoundEffect.MasterVolume and the static 3D audio properties", "master", {"SoundEffect.MasterVolume", "SoundEffect.DistanceScale", "SoundEffect.DopplerScale", "SoundEffect.SpeedOfSound"}),
         au("au-music", "Song and MediaPlayer", "Streaming music with a queue, pause, repeat and volume", "music", {"Song", "MediaPlayer.Play", "MediaPlayer.Volume", "MediaState"}),
         au("au-mic", "The Microphone", "Capturing 16-bit PCM and a level meter; reports cleanly when there is no microphone", "microphone", {"Microphone", "Microphone.GetData", "Microphone.SampleRate", "Microphone.BufferDuration", "Microphone.GetSampleSizeInBytes", "Microphone.IsHeadset"}),
+        au("au-xact", "XACT Cues and Banks", "AudioEngine, WaveBank and SoundBank loaded from files written by tools/gen_xact.py; Cue.Play, Pause, Stop and category volumes", "xact",
+           {"AudioEngine", "AudioEngine.Update", "AudioEngine.GetCategory", "AudioCategory.SetVolume", "AudioCategory.Pause", "WaveBank", "SoundBank", "SoundBank.GetCue", "SoundBank.PlayCue",
+            "Cue.Play", "Cue.Pause", "Cue.Resume", "Cue.Stop", "AudioStopOptions"}),
     };
     return w;
 }

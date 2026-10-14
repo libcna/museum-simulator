@@ -23,7 +23,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | RenderTarget2D, RenderTargetCube, MRT, float formats, mirrors, multisampling, OcclusionQuery, stencil counting and two-sided stencil | floor 5 | covered |
 | glTF models, PbrEffect, image-based lighting, morph targets, material variants, rigid and skinned animation, instancing, import report | floor 6 | covered |
 | Particle systems (application code on CNA dynamic buffers) | floor 6 | covered |
-| SoundEffect, instances, 3D audio, DynamicSoundEffectInstance, Song/MediaPlayer, Microphone | floor 7 | covered |
+| SoundEffect, instances, 3D audio, DynamicSoundEffectInstance, Song/MediaPlayer, Microphone, XACT (AudioEngine, WaveBank, SoundBank, Cue, AudioCategory) | floor 7 | covered (the XACT files are written by `tools/gen_xact.py`: the binary formats need no Microsoft tool) |
 | Keyboard, Mouse (relative mode, cursors), GamePad (+ keyboard emulation), PlayerIndex slots, TextInputEXT, Clipboard, Joysticks, TouchPanel gestures, devices | floor 7 | covered; every room works with no pad, joystick or touch screen |
 | ContentManager (cache, Unload, loose formats, failures), ResourceContentManager, cna-content (.cnb/.xnb), TitleContainer, StorageDevice | floor 8 | covered |
 | DebugDraw, CRTEffect, DepthEffect, AsciiPostProcessEffect, ShaderPackageEXT (CNA_CNAEXT) | floor 8 | covered |
@@ -38,7 +38,6 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Feature | Status |
 |---|---|
 | haptic effects (devices are listed, none played) | planned: see HANDOFF.md |
-| XACT audio (`AudioEngine`, `SoundBank`, `WaveBank`, `Cue`) | not implemented: it needs `.xgs`/`.xwb`/`.xsb` files from Microsoft's XACT authoring tool; no sample files ship with CNA and none can be generated here |
 | `MediaLibrary`, albums, playlists, pictures (`Microsoft.Xna.Framework.Media`) | not implemented: they describe a device's media store, which a desktop does not have |
 | Video playback (`VideoPlayer`) | not implemented: needs CNA_ENABLE_VIDEO (FFmpeg), which this build leaves off |
 | GamerServices, Net (network sessions), avatars | not implemented: networking and online services are outside the museum's scope |
@@ -50,7 +49,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-543 distinct API names are claimed by at least one room.
+557 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -60,9 +59,15 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ApiOrigin | `hist-compare` |
 | ApplyClipToBonesEXT | `model-rigid` |
 | AsciiQuantizeMode | `cx-ascii` |
+| AudioCategory.Pause | `au-xact` |
+| AudioCategory.SetVolume | `au-xact` |
 | AudioChannels | `au-synth`, `au-generate` |
 | AudioEmitter | `audio`, `au-spatial` |
+| AudioEngine | `au-xact` |
+| AudioEngine.GetCategory | `au-xact` |
+| AudioEngine.Update | `au-xact` |
 | AudioListener | `audio`, `au-spatial` |
+| AudioStopOptions | `au-xact` |
 | BasicEffect | `lighting`, `light-types`, `light-falloff`, `model-effects`, `rv-effects` |
 | BasicEffect.Alpha | `be-combos`, `be-alpha` |
 | BasicEffect.AmbientLightColor | `be-lights` |
@@ -160,6 +165,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ContentManager.RootDirectory | `ct-load` |
 | ContentManager.Unload | `app-content`, `ct-cache`, `ct-lifetime` |
 | CubeMapFace | `tex-cube`, `rt-cube` |
+| Cue.Pause | `au-xact` |
+| Cue.Play | `au-xact` |
+| Cue.Resume | `au-xact` |
+| Cue.Stop | `au-xact` |
 | CullMode | `rs-cull` |
 | Curve | `curve-class` |
 | Curve.IsConstant | `curve-class` |
@@ -508,6 +517,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Snapshot.metrics | `cx-stats` |
 | Snapshot.resources | `cx-stats` |
 | Song | `au-music` |
+| SoundBank | `au-xact` |
+| SoundBank.GetCue | `au-xact` |
+| SoundBank.PlayCue | `au-xact` |
 | SoundEffect | `audio`, `au-basics` |
 | SoundEffect(buffer, sampleRate, channels) | `au-generate` |
 | SoundEffect.DistanceScale | `au-spatial`, `au-master` |
@@ -594,6 +606,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Viewport | `app-viewport`, `cam-split` |
 | Viewport.Project | `mat-screen`, `text-labels` |
 | Viewport.Unproject | `mat-screen` |
+| WaveBank | `au-xact` |
 | XNA 4.0 | `hist-xna`, `hist-compare` |
 | cna-content | `ct-pipeline` |
 | layerDepth | `sprite-sort` |
