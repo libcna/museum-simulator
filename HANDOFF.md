@@ -40,6 +40,8 @@ given; anything unverified says so. Counts are not repeated here: run `build/bin
 
 ## Build, run and test
 
+**Sanitizers (checked 2026-10-14):** a full AddressSanitizer + UBSan build (`build-asan/`, configured with `-DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -g1 -Wno-maybe-uninitialized"`, ~4.7 GB, deleted afterwards) toured all 257 rooms with every control operated in 246 s and ran `museum_tests` (6402 checks): no reports after the directory fix above. Leak detection was off (`detect_leaks=0`).
+
 `tools/check_all.sh` runs the whole battery (a few minutes); the individual tools are:
 
 ```bash
@@ -64,7 +66,7 @@ OPENGLES3, OPENGL33 and SOFTWARE here.
 
 ## CNA findings (details in `docs/KNOWN_ISSUES.md`)
 
-Fixed in CNA while building the museum: `.tif`/`.tiff` advertised for `Texture2D` but not decodable; EasyGL capability
+Fixed in CNA while building the museum: a directory read as an image file (found with AddressSanitizer, 2026-10-14); `.tif`/`.tiff` advertised for `Texture2D` but not decodable; EasyGL capability
 limits (colour attachments, sampled textures, vertex inputs) reported as 0.
 
 Not defects, but easy to trip over: lit `BasicEffect` with `TextureEnabled=false` renders black on EasyGL (bind a 1x1 white
