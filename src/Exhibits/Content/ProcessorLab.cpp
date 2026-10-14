@@ -253,8 +253,8 @@ private:
                         texture->SetData(reinterpret_cast<const std::uint8_t*>(data.data()), static_cast<int>(data.size()));
                         level.texture = std::move(texture);
                     }
-                } catch (const std::exception&) {
-                    level.note = (level.format[0] == 'D' && (level.width < 4 || level.height < 4)) ? "under one 4x4 block" : "not uploaded here";
+                } catch (const std::exception& e) {
+                    level.note = (level.format[0] == 'D' && (level.width < 4 || level.height < 4)) ? "under one 4x4 block" : std::string(e.what()).substr(0, 60);
                 }
                 levels_.push_back(std::move(level));
             }
