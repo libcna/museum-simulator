@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 35 wings, 265 exhibit rooms (5 open to the sky), 330 walkable cells in all.
+10 floors, 35 wings, 266 exhibit rooms (5 open to the sky), 331 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -463,8 +463,9 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 | 8.4.01 | `gs-players` | Signed-in Players | XNA 4.0 | Gamer.SignedInGamers, SignedInGamer.Presence, SignedInGamer.Privileges, SignedInGamer.GameDefaults, Gamer.GetProfile, GamerProfile, SignedInGamer.SignedIn, GamerPresenceMode |
 | 8.4.02 | `gs-achievements` | Achievements | XNA 4.0 | SignedInGamer.AwardAchievement, SignedInGamer.GetAchievements, Achievement, AchievementCollection |
 | 8.4.03 | `gs-guide` | The Guide | XNA 4.0 | Guide.BeginShowMessageBox, Guide.EndShowMessageBox, Guide.BeginShowKeyboardInput, Guide.IsTrialMode, Guide.SimulateTrialMode, Guide.IsVisible, Guide.NotificationPosition, MessageBoxIcon |
-| 8.4.04 | `net-packets` | Packets | XNA 4.0 | PacketWriter, PacketReader, PacketWriter.Write, PacketReader.ReadVector3, PacketReader.ReadQuaternion, PacketReader.ReadMatrix |
-| 8.4.05 | `net-session` | A Network Session | XNA 4.0 | NetworkSession.Create, NetworkSession.Update, NetworkSession.StartGame, NetworkSession.EndGame, NetworkSession.SimulatedLatency, NetworkSession.SimulatedPacketLoss, NetworkSession.SessionState, LocalNetworkGamer.SendData, LocalNetworkGamer.ReceiveData, SendDataOptions, NetworkGamer.IsReady, NetworkSession.GamerJoined, NetworkSession.GameStarted |
+| 8.4.04 | `gs-avatar` | Avatars | XNA 4.0 | AvatarDescription, AvatarDescription.CreateRandom, AvatarDescription.BeginGetFromGamer, AvatarRenderer, AvatarAnimation, AvatarAnimationPreset, AvatarExpression, AvatarBodyType |
+| 8.4.05 | `net-packets` | Packets | XNA 4.0 | PacketWriter, PacketReader, PacketWriter.Write, PacketReader.ReadVector3, PacketReader.ReadQuaternion, PacketReader.ReadMatrix |
+| 8.4.06 | `net-session` | A Network Session | XNA 4.0 | NetworkSession.Create, NetworkSession.Update, NetworkSession.StartGame, NetworkSession.EndGame, NetworkSession.SimulatedLatency, NetworkSession.SimulatedPacketLoss, NetworkSession.SessionState, LocalNetworkGamer.SendData, LocalNetworkGamer.ReceiveData, SendDataOptions, NetworkGamer.IsReady, NetworkSession.GamerJoined, NetworkSession.GameStarted |
 
 **History and Versions** - Where XNA came from, and what this very build of CNA is made of
 

@@ -27,7 +27,7 @@ given; anything unverified says so. Counts are not repeated here: run `build/bin
   instancing, `PunctualLightEXT` ignored; WEBGPU/SDL_GPU: GLSL shader rooms show no effect). Cross-renderer finding fixed in CNA:
   EasyGL sampled a rendered `RenderTargetCube` upside down (`a6e8104d2`); SOFTWARE ignored point/spot lights (`53aba6ef1`).
   A full AddressSanitizer + UBSan tour and `museum_tests` were clean after one CNA fix (a directory read as an image, `49b1d3a99`); a second pass over FNA3D, WEBGPU and SDL_GPU found one museum bug (dangling stand-in effects in `ModelLab`, fixed) and one UB in MojoShader (recorded).
-- **New wing "Players and Networking" (floor 8)**: `gs-players`, `gs-achievements`, `gs-guide`, `net-packets`, `net-session`, built on CNA's
+- **New wing "Players and Networking" (floor 8)**: `gs-players`, `gs-achievements`, `gs-guide`, `gs-avatar` (AvatarDescription/AvatarAnimation/AvatarRenderer: 17 presets, expression override, random or the Visitor's own avatar; checked on OPENGLES3, FNA3D, WEBGPU, SDL_GPU), `net-packets`, `net-session`, built on CNA's
   GamerServices and Net (`MUSEUM_NETWORKING`, default ON; the rooms say so when it is off). Two local offline profiles ("Visitor", "Guest")
   are signed in at start-up through `CNA_GAMER_SERVICES_AUTO_SIGN_IN` (set in `Main.cpp` unless the caller set it; test runs keep CNA's
   profile store in `<build>/gamer-profiles`). The museum awards six achievements itself as the visitor explores

@@ -40,7 +40,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | haptic effects (devices are listed, none played) | planned: see HANDOFF.md |
 | `MediaLibrary`, albums, playlists, pictures (`Microsoft.Xna.Framework.Media`) | not implemented: they describe a device's media store, which a desktop does not have |
 | Video playback (`VideoPlayer`) | not implemented: needs CNA_ENABLE_VIDEO (FFmpeg), which this build leaves off |
-| GamerServices and Net beyond the basics: leaderboards, friends, invitations, parties, voice, online sessions, avatars, a SystemLink session between two machines | not demonstrated: the *Players and Networking* wing covers signed-in gamers, presence, privileges, profiles, achievements, the Guide, PacketWriter/Reader and a Local and a SystemLink session between the two local profiles; the rest needs a second machine, an account service or avatar assets |
+| GamerServices and Net beyond the basics: leaderboards, friends, invitations, parties, voice, online sessions, a SystemLink session between two machines | not demonstrated: the *Players and Networking* wing covers signed-in gamers, presence, privileges, profiles, achievements, the Guide, PacketWriter/Reader and a Local and a SystemLink session between the two local profiles; the *Avatars* room shows AvatarDescription, AvatarAnimation and AvatarRenderer; the rest needs a second machine or an account service |
 | `FileDialog`, `MessageBox`, `SystemTray`, `UrlLauncher`, `Camera` (CNA_DEVICES) | not implemented: they open real dialogs or hardware; the room reports whether each is supported |
 | Compiled XNA effects (`.fxb`), C API, Inspector | not implemented: disabled in CNA's default build for the renderers used here |
 | Retired renderers and removed CNA features (for example VULKAN, the post-process chain) | deliberately not demonstrated |
@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-613 distinct API names are claimed by at least one room.
+621 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -69,6 +69,14 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | AudioEngine.Update | `au-xact` |
 | AudioListener | `audio`, `au-spatial` |
 | AudioStopOptions | `au-xact` |
+| AvatarAnimation | `gs-avatar` |
+| AvatarAnimationPreset | `gs-avatar` |
+| AvatarBodyType | `gs-avatar` |
+| AvatarDescription | `gs-avatar` |
+| AvatarDescription.BeginGetFromGamer | `gs-avatar` |
+| AvatarDescription.CreateRandom | `gs-avatar` |
+| AvatarExpression | `gs-avatar` |
+| AvatarRenderer | `gs-avatar` |
 | BasicEffect | `lighting`, `light-types`, `light-falloff`, `model-effects`, `rv-effects` |
 | BasicEffect.Alpha | `be-combos`, `be-alpha` |
 | BasicEffect.AmbientLightColor | `be-lights` |

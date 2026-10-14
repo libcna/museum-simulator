@@ -45,6 +45,7 @@ constexpr Entry kEntries[] = {
     {"platform-lab", MakePlatformLab},
     {"players-lab", MakePlayersLab},
     {"net-lab", MakeNetLab},
+    {"avatar-lab", MakeAvatarLab},
     {"perf-lab", MakePerfLab},
     {"validation-lab", MakeValidationLab},
     {"roof-lab", MakeRoofLab},

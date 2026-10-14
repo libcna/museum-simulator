@@ -195,6 +195,8 @@ WingSpec PlayersWing()
              {"SignedInGamer.AwardAchievement", "SignedInGamer.GetAchievements", "Achievement", "AchievementCollection"}),
         room("gs-guide", "The Guide", "Message boxes and text input drawn by the platform overlay, trial mode and notification position", "players-lab", "guide",
              {"Guide.BeginShowMessageBox", "Guide.EndShowMessageBox", "Guide.BeginShowKeyboardInput", "Guide.IsTrialMode", "Guide.SimulateTrialMode", "Guide.IsVisible", "Guide.NotificationPosition", "MessageBoxIcon"}),
+        room("gs-avatar", "Avatars", "AvatarDescription, AvatarAnimation and AvatarRenderer: CNA's original avatars standing in the museum's own scene", "avatar-lab", "avatar",
+             {"AvatarDescription", "AvatarDescription.CreateRandom", "AvatarDescription.BeginGetFromGamer", "AvatarRenderer", "AvatarAnimation", "AvatarAnimationPreset", "AvatarExpression", "AvatarBodyType"}),
         room("net-packets", "Packets", "PacketWriter and PacketReader: XNA's types as bytes, in order, with their cost", "net-lab", "packets",
              {"PacketWriter", "PacketReader", "PacketWriter.Write", "PacketReader.ReadVector3", "PacketReader.ReadQuaternion", "PacketReader.ReadMatrix"}),
         room("net-session", "A Network Session", "A Local session between two players: send, receive, simulated latency and loss, start and end", "net-lab", "session",
