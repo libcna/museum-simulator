@@ -33,6 +33,19 @@ WingSpec AudioWing()
         au("au-generate", "Generated Sounds", "SoundEffect built from a PCM buffer: laser, explosion, bell, coin and wind", "generate", {"SoundEffect(buffer, sampleRate, channels)", "AudioChannels"}),
         au("au-master", "Master Volume and Settings", "SoundEffect.MasterVolume and the static 3D audio properties", "master", {"SoundEffect.MasterVolume", "SoundEffect.DistanceScale", "SoundEffect.DopplerScale", "SoundEffect.SpeedOfSound"}),
         au("au-music", "Song and MediaPlayer", "Streaming music with a queue, pause, repeat and volume", "music", {"Song", "MediaPlayer.Play", "MediaPlayer.Volume", "MediaState"}),
+        []{
+            RoomSpec r;
+            r.key = "au-video";
+            r.title = "Video";
+            r.subtitle = "VideoPlayer decodes a WebM clip with FFmpeg: every frame is a Texture2D, the soundtrack plays through CNA's mixer";
+            r.exhibit = "video-lab";
+            r.width = 13;
+            r.depth = 13;
+            r.height = 5.2f;
+            r.theme = "audio-hall";
+            r.apis = {"Video", "VideoPlayer", "VideoPlayer.Play", "VideoPlayer.Pause", "VideoPlayer.Resume", "VideoPlayer.Stop", "VideoPlayer.GetTexture", "VideoPlayer.IsLooped", "VideoPlayer.IsMuted", "VideoPlayer.Volume", "VideoPlayer.PlayPosition", "VideoPlayer.State"};
+            return r;
+        }(),
         au("au-mic", "The Microphone", "Capturing 16-bit PCM and a level meter; reports cleanly when there is no microphone", "microphone", {"Microphone", "Microphone.GetData", "Microphone.SampleRate", "Microphone.BufferDuration", "Microphone.GetSampleSizeInBytes", "Microphone.IsHeadset"}),
         au("au-xact", "XACT Cues and Banks", "AudioEngine, WaveBank and SoundBank loaded from files written by tools/gen_xact.py; Cue.Play, Pause, Stop and category volumes", "xact",
            {"AudioEngine", "AudioEngine.Update", "AudioEngine.GetCategory", "AudioCategory.SetVolume", "AudioCategory.Pause", "WaveBank", "SoundBank", "SoundBank.GetCue", "SoundBank.PlayCue",

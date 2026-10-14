@@ -49,7 +49,9 @@ set(CNA_BUILD_C_API    OFF CACHE BOOL   "Build the CNA C API")
 option(MUSEUM_NETWORKING "Demonstrate Microsoft.Xna.Framework.Net and GamerServices" ON)
 set(CNA_ENABLE_NET     ${MUSEUM_NETWORKING} CACHE BOOL "Build CNA networking" FORCE)
 set(CNA_ENABLE_GAMER_SERVICES ${MUSEUM_NETWORKING} CACHE BOOL "Build CNA GamerServices" FORCE)
-set(CNA_ENABLE_VIDEO   OFF CACHE STRING "Enable FFmpeg video playback")
+# Video playback (VideoPlayer) needs FFmpeg's libraries. AUTO uses them when they are installed; the Video room says so when not.
+set(MUSEUM_VIDEO "AUTO" CACHE STRING "Enable FFmpeg video playback (OFF, AUTO or ON)")
+set(CNA_ENABLE_VIDEO "${MUSEUM_VIDEO}" CACHE STRING "Enable FFmpeg video playback" FORCE)
 # CNA features the museum demonstrates: the CNAEXT graphics extensions (DebugDraw, CRT/ASCII/depth effects,
 # shader packages), device/sensor extensions, and CNA's engine statistics counters. All three are optional:
 # the exhibits that need them check for them and say so in the room when they are missing.

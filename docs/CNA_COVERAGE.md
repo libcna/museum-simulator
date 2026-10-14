@@ -39,7 +39,6 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 |---|---|
 | haptic effects (devices are listed, none played) | planned: see HANDOFF.md |
 | `MediaLibrary`, albums, playlists, pictures (`Microsoft.Xna.Framework.Media`) | not implemented: they describe a device's media store, which a desktop does not have |
-| Video playback (`VideoPlayer`) | not implemented: needs CNA_ENABLE_VIDEO (FFmpeg), which this build leaves off |
 | GamerServices and Net beyond the basics: friends, invitations, parties, voice, online sessions, a SystemLink session between two machines | not demonstrated: the *Players and Networking* wing covers signed-in gamers, presence, privileges, profiles, achievements, the Guide, PacketWriter/Reader and a Local and a SystemLink session between the two local profiles; the *Leaderboards* room writes and reads ratings from the two local profiles; the *Avatars* room shows AvatarDescription, AvatarAnimation and AvatarRenderer; the rest needs a second machine or an account service |
 | `FileDialog`, `MessageBox`, `SystemTray`, `UrlLauncher`, `Camera` (CNA_DEVICES) | not implemented: they open real dialogs or hardware; the room reports whether each is supported |
 | Compiled XNA effects (`.fxb`), C API, Inspector | not implemented: disabled in CNA's default build for the renderers used here |
@@ -48,7 +47,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-648 distinct API names are claimed by at least one room.
+660 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -693,6 +692,18 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | VertexPositionColorTexture | `tex-uv`, `an-conveyor` |
 | VertexPositionNormalTexture | `geo-dynamic`, `geo-terrain` |
 | VertexPositionNormalTextureSkinned | `model-skinfx` |
+| Video | `au-video` |
+| VideoPlayer | `au-video` |
+| VideoPlayer.GetTexture | `au-video` |
+| VideoPlayer.IsLooped | `au-video` |
+| VideoPlayer.IsMuted | `au-video` |
+| VideoPlayer.Pause | `au-video` |
+| VideoPlayer.Play | `au-video` |
+| VideoPlayer.PlayPosition | `au-video` |
+| VideoPlayer.Resume | `au-video` |
+| VideoPlayer.State | `au-video` |
+| VideoPlayer.Stop | `au-video` |
+| VideoPlayer.Volume | `au-video` |
 | Viewport | `app-viewport`, `cam-split` |
 | Viewport.Project | `mat-screen`, `text-labels` |
 | Viewport.Unproject | `mat-screen` |

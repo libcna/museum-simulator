@@ -27,6 +27,7 @@ given; anything unverified says so. Counts are not repeated here: run `build/bin
   instancing, `PunctualLightEXT` ignored; WEBGPU/SDL_GPU: GLSL shader rooms show no effect). Cross-renderer finding fixed in CNA:
   EasyGL sampled a rendered `RenderTargetCube` upside down (`a6e8104d2`); SOFTWARE ignored point/spot lights (`53aba6ef1`).
   A full AddressSanitizer + UBSan tour and `museum_tests` were clean after one CNA fix (a directory read as an image, `49b1d3a99`); a second pass over FNA3D, WEBGPU and SDL_GPU found one museum bug (dangling stand-in effects in `ModelLab`, fixed) and one UB in MojoShader (recorded).
+- **Video (floor 7, Audio wing)**: `au-video` (kind `video-lab`, `src/Exhibits/Audio/VideoLab.cpp`) plays `Content/Video/zoom.webm` (tools/gen_video.sh, 125 KB, VP8+Vorbis) through `VideoPlayer`; every frame is a Texture2D drawn as a sprite. CMake `MUSEUM_VIDEO` (default AUTO: on when FFmpeg libraries are installed; the MinGW tree has none, so the room says so there). Found a CNA bug: destroying a Video before its player corrupted the heap (fixed, CNA `0562550c3`).
 - **Type converters (floor 1, Value Types wing)**: `vt-converters` (kind `converter-lab`, `src/Exhibits/Math/ConverterLab.cpp`): Design converters for Vector2/3/4, Quaternion, Color, Rectangle, Point; four cultures, readback of good/bad text, PropertyDescriptor.SetValue. Needs CNA's `cna_design` (linked when the target exists; `MUSEUM_DESIGN`).
 - **Pipeline in the game (floor 8, Content Pipeline wing)**: `ct-intermediate` (kind `pipeline-lab`, `src/Exhibits/Content/PipelineLab.cpp`) writes a museum-defined content type (`Plaque`, `DescribeContent`) as XNA intermediate XML with CNA's `IntermediateSerializer`, reads it back and shows what a damaged document is refused with. CMake option `MUSEUM_PIPELINE` (default ON) links CNA's `cna_content_pipeline` into the museum; OFF: the room says so. Not yet verified on the MinGW/Wine tree.
 - **New wing "Players and Networking" (floor 8)**: `gs-players`, `gs-achievements`, `gs-guide`, `gs-leaderboards` (LeaderboardWriter/Reader, paging, pivot read; ratings persist in CNA's local store), `gs-avatar` (AvatarDescription/AvatarAnimation/AvatarRenderer: 17 presets, expression override, random or the Visitor's own avatar; checked on OPENGLES3, FNA3D, WEBGPU, SDL_GPU), `net-packets`, `net-session`, built on CNA's
@@ -132,5 +133,5 @@ texture is bound (`RenderStates::UnbindTextures`).
 
 ## Intentionally not implemented
 
-Video (needs FFmpeg: `CNA_ENABLE_VIDEO` is off), networking/GamerServices/avatars, interactive device dialogs
+Friends, invitations, parties, voice and online sessions (they need a second machine or an account service), `MediaLibrary`, interactive device dialogs
 (`FileDialog`, `MessageBox`, `SystemTray`, `UrlLauncher`, camera), compiled `.fxb` effects, retired renderers.
