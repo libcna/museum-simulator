@@ -31,7 +31,11 @@
 #include "Microsoft/Xna/Framework/Net/QualityOfService.hpp"
 #include "Microsoft/Xna/Framework/Net/LocalNetworkGamer.hpp"
 #include "Microsoft/Xna/Framework/Net/NetworkSession.hpp"
+#include "Microsoft/Xna/Framework/Net/HostChangedEventArgs.hpp"
+#include "Microsoft/Xna/Framework/Net/NetworkSessionEndReason.hpp"
 #include "Microsoft/Xna/Framework/Net/NetworkSessionEndedEventArgs.hpp"
+#include "Microsoft/Xna/Framework/Net/NetworkSessionJoinError.hpp"
+#include "Microsoft/Xna/Framework/Net/NetworkSessionJoinException.hpp"
 #include "Microsoft/Xna/Framework/Net/PacketReader.hpp"
 #include "Microsoft/Xna/Framework/Net/PacketWriter.hpp"
 #include "Microsoft/Xna/Framework/Net/SendDataOptions.hpp"
@@ -282,7 +286,7 @@ private:
             ended_ = lobby_->GameEnded.Add([this](System::Object*, const GameEndedEventArgs&) { Log("GameEnded"); });
             joined_ = lobby_->GamerJoined.Add([this](System::Object*, const GamerJoinedEventArgs&) { Log("GamerJoined"); });
             left_ = lobby_->GamerLeft.Add([this](System::Object*, const GamerLeftEventArgs&) { Log("GamerLeft"); });
-            sessionEnded_ = lobby_->SessionEnded.Add([this](System::Object*, const NetworkSessionEndedEventArgs&) { Log("SessionEnded"); });
+            sessionEnded_ = lobby_->SessionEnded.Add([this](System::Object*, const NetworkSessionEndedEventArgs& e) { Log(std::string("SessionEnded: ") + EndReasonName(e.getEndReasonProperty())); });
             subscribed_ = true;
             Log("Create(Local, 2 local, 8 max): " + std::to_string(lobby_->getLocalGamersProperty().getCountProperty()) + " local gamer(s)");
             status_ = "lobby open";
@@ -302,6 +306,7 @@ private:
 
     void CloseTransport()
     {
+        UnhookHost();
         Dispose(host_);
         phase_ = Phase::Off;
         transportStatus_ = "off: a Local session delivers no packets";
@@ -366,6 +371,7 @@ private:
             DisposeLobby();   // the same profiles cannot be in a Local lobby and a SystemLink session at once (one session per process, as in XNA)
             host_ = NetworkSession::Create(NetType(), 2, 8);
             phase_ = Phase::Connected;
+            HookHost();
             transportStatus_ = online_ ? "PlayerMatch session through the account service: packets travel by its relay" : "SystemLink session, both profiles local: packets flow in memory";
             Log(std::string("Create(") + (online_ ? "PlayerMatch" : "SystemLink") + ", 2 local, 8 max): " + std::to_string(host_->getLocalGamersProperty().getCountProperty()) + " local gamer(s)");
             if (wantReady_) SetReady(true);
@@ -489,6 +495,45 @@ private:
             tried_ = false;
         }
     }
+    [[nodiscard]] static const char* EndReasonName(NetworkSessionEndReason r)
+    {
+        switch (r) {
+            case NetworkSessionEndReason::ClientSignedOut: return "ClientSignedOut";
+            case NetworkSessionEndReason::HostEndedSession: return "HostEndedSession";
+            case NetworkSessionEndReason::RemovedByHost: return "RemovedByHost";
+            default: return "Disconnected";
+        }
+    }
+    [[nodiscard]] static const char* JoinErrorName(NetworkSessionJoinError e)
+    {
+        switch (e) {
+            case NetworkSessionJoinError::SessionNotFound: return "SessionNotFound";
+            case NetworkSessionJoinError::SessionNotJoinable: return "SessionNotJoinable";
+            default: return "SessionFull";
+        }
+    }
+    // The events a session over a real transport raises: the end of it with its reason, a new host after host migration, players leaving.
+    void HookHost()
+    {
+        if (host_ == nullptr || hostHooked_) return;
+        hostEnded_ = host_->SessionEnded.Add([this](System::Object*, const NetworkSessionEndedEventArgs& e) { Log(std::string("SessionEnded: ") + EndReasonName(e.getEndReasonProperty())); phase_ = Phase::Failed; transportStatus_ = std::string("the session ended: ") + EndReasonName(e.getEndReasonProperty()); });
+        hostChanged_ = host_->HostChanged.Add([this](System::Object*, const HostChangedEventArgs& e) {
+            Log(std::string("HostChanged: ") + (e.getOldHostProperty() != nullptr ? e.getOldHostProperty()->getGamertagProperty() : "?") + " -> " + (e.getNewHostProperty() != nullptr ? e.getNewHostProperty()->getGamertagProperty() : "?"));
+        });
+        hostLeft_ = host_->GamerLeft.Add([this](System::Object*, const GamerLeftEventArgs&) { Log("GamerLeft"); });
+        hostHooked_ = true;
+    }
+    void UnhookHost()
+    {
+        if (host_ == nullptr || !hostHooked_) return;
+        try {
+            host_->SessionEnded.Remove(hostEnded_);
+            host_->HostChanged.Remove(hostChanged_);
+            host_->GamerLeft.Remove(hostLeft_);
+        } catch (const std::exception&) {}
+        hostHooked_ = false;
+    }
+
     // Asks the Guide to invite the friends to this machine's online session.
     void InviteFriends()
     {
@@ -533,11 +578,19 @@ private:
             delete join_;
             join_ = nullptr;
             phase_ = Phase::Connected;
+            HookHost();
             transportStatus_ = "joined a session on another museum: packets travel over the network";
             found_ = "joined";
             ApplyImpairment();
             Log("Joined: " + std::to_string(host_->getAllGamersProperty().getCountProperty()) + " gamer(s) in the session");
             if (wantReady_) SetReady(true);
+        } catch (const NetworkSessionJoinException& e) {
+            delete join_;
+            join_ = nullptr;
+            joinInvited_ = false;
+            found_ = std::string("EndJoin refused: NetworkSessionJoinException, JoinError ") + JoinErrorName(e.getJoinErrorProperty());
+            Log(found_);
+            tried_ = false;
         } catch (const std::exception& e) {
             delete join_;
             join_ = nullptr;
@@ -698,6 +751,8 @@ private:
     std::deque<std::string> log_;
     std::string status_ = "-";
     int gameMode_ = 3, searchMode_ = 0, remoteReceived_ = 0;
+    std::size_t hostEnded_ = 0, hostChanged_ = 0, hostLeft_ = 0;
+    bool hostHooked_ = false;
     bool online_ = false, inviteAccepted_ = false, inviteSubscribed_ = false, joinInvited_ = false;
     std::size_t inviteToken_ = 0;
     float latencyMs_ = 0.0f, loss_ = 0.0f, remoteRate_ = 0.0f, windowClock_ = 0.0f;

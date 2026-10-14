@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-766 distinct API names are claimed by at least one room.
+777 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -396,6 +396,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GuideAlreadyVisibleException | `pl-exceptions` |
 | HalfVector2 | `vt-packed` |
 | HalfVector4 | `vt-packed` |
+| HostChangedEventArgs | `net-session` |
 | IAvatarAnimation | `gs-avatar` |
 | IDrawable | `app-components` |
 | IEffectFog | `be-model` |
@@ -414,6 +415,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | IntermediateSerializer.Deserialize | `ct-intermediate` |
 | IntermediateSerializer.Serialize | `ct-intermediate` |
 | InvalidContentException | `ct-intermediate` |
+| InviteAcceptedEventArgs | `net-session` |
 | Joysticks.GetCapabilitiesEXT | `in-joystick` |
 | Joysticks.GetJoysticksEXT | `in-joystick` |
 | Joysticks.GetStateEXT | `in-joystick` |
@@ -533,13 +535,22 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | NetworkSession.EndJoin | `net-session` |
 | NetworkSession.GameStarted | `net-session` |
 | NetworkSession.GamerJoined | `net-session` |
+| NetworkSession.HostChanged | `net-session` |
+| NetworkSession.InviteAccepted | `net-session` |
+| NetworkSession.JoinInvited | `net-session` |
+| NetworkSession.SessionEnded | `net-session` |
 | NetworkSession.SessionProperties | `net-session` |
 | NetworkSession.SessionState | `net-session` |
 | NetworkSession.SimulatedLatency | `net-session` |
 | NetworkSession.SimulatedPacketLoss | `net-session` |
 | NetworkSession.StartGame | `net-session` |
 | NetworkSession.Update | `net-session` |
+| NetworkSessionEndReason | `net-session` |
+| NetworkSessionEndedEventArgs | `net-session` |
+| NetworkSessionJoinError | `net-session` |
+| NetworkSessionJoinException | `net-session` |
 | NetworkSessionProperties | `net-session` |
+| NetworkSessionType.PlayerMatch | `net-session` |
 | NormalizedByte2 | `vt-packed` |
 | NormalizedByte4 | `vt-packed` |
 | NormalizedShort2 | `vt-packed` |
