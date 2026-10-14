@@ -54,6 +54,15 @@ WingSpec ShaderWing()
         fb.origin = ApiOrigin::Xna;
         w.rooms.push_back(fb);
     }
+    {
+        RoomSpec er = sh("fx-errors", "Shader Compile Errors", "Six deliberate mistakes in a shader: what IsEffectValid, GetCompileErrorEXT and GetShaderDiagnosticsEXT hand back, and the log parser on fixed logs", "errors");
+        er.exhibit = "shader-errors";
+        er.params = {};
+        er.apis = {"ShaderEffect", "ShaderEffect.IsEffectValid", "ShaderEffect.GetCompileErrorEXT", "ShaderEffect.GetShaderDiagnosticsEXT", "CNA::ShaderDiagnosticEXT", "ShaderDiagnosticEXT.parseCompilerLog", "CNA::ShaderCompilationExceptionEXT",
+                   "GraphicsDevice.ExecutesShaderEffectSourceEXT", "GraphicsDevice.GetShaderDialectEXT"};
+        er.origin = ApiOrigin::CnaExtension;
+        w.rooms.push_back(er);
+    }
     return w;
 }
 

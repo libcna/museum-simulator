@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 36 wings, 280 exhibit rooms (5 open to the sky), 346 walkable cells in all.
+10 floors, 36 wings, 281 exhibit rooms (5 open to the sky), 347 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -286,6 +286,7 @@ BasicEffect, the stock effects, lighting and custom shaders
 | 4.3.12 | `fx-vertexwave` | Vertex Shader | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D |
 | 4.3.13 | `fx-colormatrix` | Colour Matrix | CNA extension | ShaderEffect, ShaderEffect.SetUniformFloat, ShaderEffect.DeclareUniformBlockEXT, GraphicsDevice.GetShaderDialectEXT, GraphicsDevice.SupportsShaderLanguageEXT, SpriteBatch.Begin(effect), RenderTarget2D, ColorMatrixEffect, ColorMatrixEffect.SetColorMatrix, ColorMatrixEffect.SetColorOffset, Matrix |
 | 4.3.14 | `fx-compiled` | Compiled XNA Effects | XNA 4.0 | Effect, Effect(GraphicsDevice, byte[]), Effect.Parameters, Effect.Techniques, EffectParameter, EffectParameter.SetValue, EffectParameter.GetValueSingle, EffectParameter.GetValueVector2, EffectTechnique, EffectPass, EffectParameterClass, EffectParameterType, GraphicsCapability.CompiledEffects, SpriteBatch.Begin |
+| 4.3.15 | `fx-errors` | Shader Compile Errors | CNA extension | ShaderEffect, ShaderEffect.IsEffectValid, ShaderEffect.GetCompileErrorEXT, ShaderEffect.GetShaderDiagnosticsEXT, CNA::ShaderDiagnosticEXT, ShaderDiagnosticEXT.parseCompilerLog, CNA::ShaderCompilationExceptionEXT, GraphicsDevice.ExecutesShaderEffectSourceEXT, GraphicsDevice.GetShaderDialectEXT |
 
 ### Floor 5: Render State and Render Targets
 

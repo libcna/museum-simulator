@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-805 distinct API names are claimed by at least one room.
+812 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -159,6 +159,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CNA::Graphics::DepthEffect | `cx-depth` |
 | CNA::Graphics::ShaderPackageEXT | `cx-package` |
 | CNA::GraphicsRendererSelection.GetAvailable | `hist-cna` |
+| CNA::ShaderCompilationExceptionEXT | `fx-errors` |
+| CNA::ShaderDiagnosticEXT | `fx-errors` |
 | CNA::getGraphicsBackendMaturity | `hist-cna` |
 | CNA::getGraphicsRendererName | `hist-cna` |
 | CNAEXT | `hist-compare` |
@@ -358,12 +360,13 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.DrawPrimitives | `geo-indexed` |
 | GraphicsDevice.DrawUserIndexedPrimitives | `geo-dynamic` |
 | GraphicsDevice.DrawUserPrimitives | `geo-triangle`, `geo-primitives`, `cx-points`, `pf-buffers`, `pf-particles`, `rv-geometry` |
+| GraphicsDevice.ExecutesShaderEffectSourceEXT | `fx-errors` |
 | GraphicsDevice.GetBackBufferData | `vr-index` |
 | GraphicsDevice.GetDisplayColorSpaceEXT | `pl-renderer` |
 | GraphicsDevice.GetGraphicsRendererName | `pl-renderer` |
 | GraphicsDevice.GetLogicalSizeEXT | `pl-renderer` |
 | GraphicsDevice.GetRendererCapabilityProfileEXT | `pl-renderer` |
-| GraphicsDevice.GetShaderDialectEXT | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix` |
+| GraphicsDevice.GetShaderDialectEXT | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `fx-errors` |
 | GraphicsDevice.GetTrackedResourceCount | `pl-renderer` |
 | GraphicsDevice.GraphicsProfile | `pl-adapter` |
 | GraphicsDevice.ResourceCreated | `ct-lifetime` |
@@ -682,9 +685,13 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SetMorphWeightsEXT | `model-morph` |
 | SetRuntimeMode | `cx-stats` |
 | ShaderCodeEXT | `cx-package` |
-| ShaderEffect | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `rt-mrt`, `cx-shadow` |
+| ShaderDiagnosticEXT.parseCompilerLog | `fx-errors` |
+| ShaderEffect | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `fx-errors`, `rt-mrt`, `cx-shadow` |
 | ShaderEffect(device, package) | `cx-package` |
 | ShaderEffect.DeclareUniformBlockEXT | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `cx-package` |
+| ShaderEffect.GetCompileErrorEXT | `fx-errors` |
+| ShaderEffect.GetShaderDiagnosticsEXT | `fx-errors` |
+| ShaderEffect.IsEffectValid | `fx-errors` |
 | ShaderEffect.SetUniformFloat | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix` |
 | ShaderLanguageEXT | `cx-package` |
 | ShaderPackageEXT.selectFor | `cx-package` |
