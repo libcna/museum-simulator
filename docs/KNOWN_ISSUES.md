@@ -50,10 +50,11 @@ Found by the museum's own exhibits; fixed in the CNA repository (commit ids are 
   with a long precision) reports a signed-integer overflow ("1000000000 * 10"). Upstream code CNA fetches; nothing in the museum
   or CNA's own sources is involved.
 
-- **Multisampled render target re-bound every frame with `RenderTargetUsage.PreserveContents` shows no smoothing on OPENGLES3**
-  (4 samples asked and reported). The same target drawn once and read back, or sampled through SpriteBatch, *is* smoothed
-  (checks in `rv-targets`), and with `DiscardContents` re-bound every frame it is smoothed too (room `rt-msaa`). The
-  museum therefore uses `DiscardContents` for that room. A minimal repro would be a per-frame re-bind loop in a validation check.
+- **Multisampled render target re-bound every frame with `RenderTargetUsage.PreserveContents` showed no smoothing on OPENGLES3** (observed
+  earlier in the campaign; **not reproducible on 2026-10-14**). The room *Multisampled Targets* drawn with `PreserveContents` is now
+  pixel-identical to the `DiscardContents` one (smoothed at 4 and 8 samples), and the validation check "PreserveContents target re-bound
+  three times keeps the smoothing" (`rv-targets`: bind, clear, draw, unbind, three times over one target) passes on OPENGLES3, OPENGL33
+  and SOFTWARE. The cause was never found; CNA's render-target code changed in between. The room keeps `DiscardContents`.
 - A multisample request of 2 returns a target that reports 0 samples on this machine (Mesa llvmpipe); 8 is clamped to 4.
   This is the driver's capability, reported honestly by `RenderTarget2D.MultiSampleCount`.
 - `OcclusionQuery.PixelCount` on OPENGLES3/OPENGL33 is an any-samples boolean (0 or 1), documented by CNA; the room shows

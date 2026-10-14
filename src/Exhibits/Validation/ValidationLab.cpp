@@ -935,6 +935,24 @@ private:
                     const Image kept = edgeShades(4, keepGot, RenderTargetUsage::PreserveContents);
                     const int c = kept.Count(mid);
                     Add("Same with RenderTargetUsage.PreserveContents", "smoothed edges as with DiscardContents", std::to_string(c) + " mid-shade pixels read back (target reports " + std::to_string(keepGot) + " samples)", c > 0, kept);
+                    {   // the same target bound, cleared, drawn and unbound three times over, as a room does every frame (earlier open observation)
+                        RenderTarget2D reused(d, kSize, kSize, false, SurfaceFormat::Color, DepthFormat::Depth24, 4, RenderTargetUsage::PreserveContents);
+                        for (int frame = 0; frame < 3; ++frame) {
+                            d.SetRenderTarget(&reused);
+                            d.setViewportProperty(Viewport(0, 0, kSize, kSize));
+                            d.setBlendStateProperty(BlendState::Opaque);
+                            d.setDepthStencilStateProperty(DepthStencilState::None);
+                            d.setRasterizerStateProperty(RasterizerState::CullNone);
+                            d.Clear(ClearOptions::Target | ClearOptions::DepthBuffer, Color(0, 0, 0, 255), 1.0f, 0);
+                            DrawClip(d, {VertexPositionColor(Vector3(-0.9f, -0.9f, 0.5f), Color::White), VertexPositionColor(Vector3(0.9f, 0.7f, 0.5f), Color::White), VertexPositionColor(Vector3(-0.9f, 0.7f, 0.5f), Color::White)});
+                            d.SetRenderTarget(nullptr);
+                        }
+                        Image again;
+                        again.px.resize(static_cast<std::size_t>(kSize * kSize));
+                        reused.GetData(again.px.data(), static_cast<int>(again.px.size()));
+                        const int e = again.Count(mid);
+                        Add("PreserveContents target re-bound three times keeps the smoothing", "mid shades after the third pass", std::to_string(e) + " mid-shade pixels read back", e > 0, again);
+                    }
                     const int viaSprite = sampled.Count(mid);
                     Add("PreserveContents target drawn with SpriteBatch keeps the smoothing", "mid shades survive being sampled as a texture", std::to_string(viaSprite) + " mid-shade pixels after sampling", viaSprite > 0, sampled);
                 } catch (const std::exception& e) {
