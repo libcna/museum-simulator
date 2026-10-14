@@ -31,6 +31,7 @@ CNA_GRAPHICS_RENDERER=WEBGPU VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.js
 |---|---|
 | `tools/renderer_check.sh [R...]` | runs the floor 9 *Renderer Validation* rooms on each renderer; prints PASS/FAIL counts and leaves every check in `build/renderer_check/<R>.checks` |
 | `tools/tour.sh` | walks into every room and runs a few frames: catches exceptions and unsupported-call failures |
+| `tools/room_diff.sh RENDERER [-b BASE]` | the arrival view of every room on two renderers, ranked by differing pixels: the quickest way to find a renderer divergence among all 257 rooms (below) |
 | `tools/reference.sh capture\|compare` | stored images for 30 named views (OPENGLES3 only) (`tests/reference/<R>`) |
 | `tools/roomshots.sh`, `tools/shot.sh` | contact sheets and single screenshots for comparing renderers by eye |
 
@@ -97,6 +98,20 @@ position-only 12-byte vertex are all refused although XNA's own Direct3D 9 accep
 targets) of the 52 checks that ran. Noted in `docs/KNOWN_ISSUES.md`; the museum was **not** bent to fit (no white-texture
 workarounds): the place to fix it is the renderer, which would need the vertex declaration (not the stride) at draw time.
 
+## Every room against OPENGLES3 (`tools/room_diff.sh`, 2026-10-14)
+
+Rooms whose arrival view differs from OPENGLES3's by more than 2 % of pixels (640 x 360, fixed clock and step):
+
+| Renderer | Rooms over 2 % | What they are |
+|---|---|---|
+| OPENGL33 | 1 of 256 | `rs-fill` (it can draw wireframe, OPENGLES3 cannot) |
+| SDL_GPU | 7 | `rs-depthbias` (z-fighting at zero bias resolves differently), `fx-plasma` and `fx-swirl` (floating-point trig in the shader), `rs-fill`, `cx-shadow`, `cx-package`, `pf-dashboard` (live numbers) |
+| WEBGPU | 28 | those, plus `tex-formats` (Bgr565, Bgra4444 and Alpha8 are not offered), `cx-debugdraw`, and about twenty `vec-*`, `mat-*`, `quat-*` rooms whose 1-pixel grid lines sit one pixel off (a rasterisation difference, not a bug) |
+| FNA3D | 42 | no custom shaders (`fx-*`, `cx-crt`, `cx-depth`...), no point or spot lights (`light-*`, `be-punctual`), PBR models drawn as a lit `BasicEffect`, `tex-formats`, wireframe and the same grid-line offset |
+
+This pass found one real defect that the 30 stored views and the pixel checks had missed: `rs-blendfactor` was opaque on WEBGPU
+(fixed in CNA, see finding 12 and the new "Blend.BlendFactor on a 3D draw after an ordinary one" check).
+
 ## Findings
 
 1. **SOFTWARE appeared to render the museum from the wrong camera angle.** It was not a renderer problem. SOFTWARE has
@@ -140,7 +155,11 @@ workarounds): the place to fix it is the renderer, which would need the vertex d
     the light rooms print on their panels and the validation matrix counts. Fixed in CNA (`53aba6ef1`: EasyGL's falloff and
     cone, no shadow map; shared example test). **FNA3D still ignores it** (its stock effects are compiled XNA binaries with no
     point light; open, listed in `docs/KNOWN_ISSUES.md`), which is the one FAIL in the FNA3D row.
-11. **An exception inside one room no longer takes the museum down** (a museum fix found by FNA3D's instancing exception, which
+11. **CNA: WEBGPU applied the blend factor current at the flush to every queued 3D draw**, so a draw made with `Blend.BlendFactor` and
+    followed by `BlendState.Opaque` (which resets the factor to white) came out opaque. Found by `room_diff` (the render-state room
+    looked right on every other renderer), reproduced by a new validation check, fixed in CNA (`09c3108e5`: each queued draw carries
+    its factor; shared example test, fails without the change).
+12. **An exception inside one room no longer takes the museum down** (a museum fix found by FNA3D's instancing exception, which
     escaped `Game::Run`): the world catches exceptions from each room's hooks, logs `[museum][exhibit-error]`, toasts the
     message and switches the room's hooks off after three. `tools/tour.sh` reports them and exits 3.
 

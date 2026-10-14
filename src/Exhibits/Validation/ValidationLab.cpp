@@ -486,6 +486,59 @@ private:
             const auto img = run(Color(10, 20, 30, 255), &BlendState::Opaque, Color(200, 100, 50, 10));
             Add("Opaque ignores source alpha", "200,100,50", Rgb(img->At(32, 32)), Dist(img->At(32, 32), 200, 100, 50) <= 1, img);
         }
+        {   // Blend.BlendFactor: the constant colour set on the BlendState replaces the source alpha as the weight
+            BlendState bs;
+            bs.setColorSourceBlendProperty(Blend::BlendFactor);
+            bs.setColorDestinationBlendProperty(Blend::InverseBlendFactor);
+            bs.setAlphaSourceBlendProperty(Blend::One);
+            bs.setAlphaDestinationBlendProperty(Blend::Zero);
+            bs.setBlendFactorProperty(Color(static_cast<std::uint8_t>(128), static_cast<std::uint8_t>(64), static_cast<std::uint8_t>(255), static_cast<std::uint8_t>(255)));
+            const auto img = run(Color(0, 0, 0, 255), &bs, Color(200, 100, 50, 255));
+            Add("Blend.BlendFactor: BlendState.BlendFactor (128,64,255) weights the source", "100,25,50 +-3 (source * factor)", Rgb(img->At(32, 32)), Dist(img->At(32, 32), 100, 25, 50) <= 3, img);
+        }
+        {   // the same factor on a 3D draw (BasicEffect, DrawUserPrimitives): a different path from SpriteBatch on most renderers
+            BlendState bs;
+            bs.setColorSourceBlendProperty(Blend::BlendFactor);
+            bs.setColorDestinationBlendProperty(Blend::InverseBlendFactor);
+            bs.setAlphaSourceBlendProperty(Blend::One);
+            bs.setAlphaDestinationBlendProperty(Blend::Zero);
+            bs.setBlendFactorProperty(Color(static_cast<std::uint8_t>(128), static_cast<std::uint8_t>(64), static_cast<std::uint8_t>(255), static_cast<std::uint8_t>(255)));
+            Begin(d, rt, Color(0, 0, 0, 255));
+            d.setBlendStateProperty(BlendState::Opaque);
+            DrawClip(d, Quad(0, 0, 64, 64, 0.6f, Color(0, 0, 0, 255)));   // an ordinary draw first, in the same pass
+            d.setBlendStateProperty(bs);
+            DrawClip(d, Quad(16, 16, 48, 48, 0.5f, Color(200, 100, 50, 255)));
+            d.setBlendStateProperty(BlendState::Opaque);   // back to ordinary blending before anything is presented: a deferred renderer must have kept the factor with the draw
+            const auto img = End(d, rt);
+            if (img) Add("Blend.BlendFactor on a 3D draw after an ordinary one", "100,25,50 +-3 (source * factor)", Rgb(img->At(32, 32)), Dist(img->At(32, 32), 100, 25, 50) <= 3, img);
+        }
+        {   // and on a textured, vertex-coloured BasicEffect draw (what the render-state rooms use)
+            BlendState bs;
+            bs.setColorSourceBlendProperty(Blend::BlendFactor);
+            bs.setColorDestinationBlendProperty(Blend::InverseBlendFactor);
+            bs.setAlphaSourceBlendProperty(Blend::One);
+            bs.setAlphaDestinationBlendProperty(Blend::Zero);
+            bs.setBlendFactorProperty(Color(static_cast<std::uint8_t>(128), static_cast<std::uint8_t>(64), static_cast<std::uint8_t>(255), static_cast<std::uint8_t>(255)));
+            Begin(d, rt, Color(0, 0, 0, 255));
+            d.setBlendStateProperty(bs);
+            BasicEffect fx(d);
+            fx.setTextureEnabledProperty(true);
+            fx.setTextureProperty(S().whiteTexture);
+            fx.setVertexColorEnabledProperty(true);
+            fx.setLightingEnabledProperty(false);
+            fx.setWorldProperty(Matrix::getIdentityProperty());
+            fx.setViewProperty(Matrix::getIdentityProperty());
+            fx.setProjectionProperty(Matrix::getIdentityProperty());
+            const Color tint(200, 100, 50, 255);
+            const VertexPositionColorTexture q[6] = {{Vector3(-0.5f, -0.5f, 0.5f), tint, Vector2(0, 1)}, {Vector3(0.5f, -0.5f, 0.5f), tint, Vector2(1, 1)}, {Vector3(0.5f, 0.5f, 0.5f), tint, Vector2(1, 0)},
+                                                     {Vector3(-0.5f, -0.5f, 0.5f), tint, Vector2(0, 1)}, {Vector3(0.5f, 0.5f, 0.5f), tint, Vector2(1, 0)}, {Vector3(-0.5f, 0.5f, 0.5f), tint, Vector2(0, 0)}};
+            for (auto& pass : fx.getCurrentTechniqueProperty()->getPassesProperty()) {
+                pass.Apply();
+                d.DrawUserPrimitives(PrimitiveType::TriangleList, q, 0, 2);
+            }
+            const auto img = End(d, rt);
+            if (img) Add("Blend.BlendFactor on a textured BasicEffect draw", "100,25,50 +-3 (source * factor)", Rgb(img->At(32, 32)), Dist(img->At(32, 32), 100, 25, 50) <= 3, img);
+        }
         {   // colour write mask: red only
             BlendState bs = BlendState::Opaque;
             bs.setColorWriteChannelsProperty(ColorWriteChannels::Red);
