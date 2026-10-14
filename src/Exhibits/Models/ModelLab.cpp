@@ -89,6 +89,8 @@ public:
                 p.AddToggle("AnimationPlayer running", true, [this](bool v) { play_ = v; });
                 p.AddSlider("Speed", 0.0f, 3.0f, speed_, [this](float v) { speed_ = v; });
                 p.AddToggle("Show the skeleton", true, [this](bool v) { skeleton_ = v; });
+                p.AddButton("ApplyBindPoseBoneTransformsEXT: the rest pose", [this] { BindPose(); });
+                p.AddReadout("Bind pose applied to", [this] { return bindPoseText_; });
                 p.AddReadout("Joints", [this] { return skin_ ? std::to_string(skin_->BoneCount) : std::string("-"); });
                 p.AddReadout("Clips", [this] { return skin_ ? std::to_string(skin_->AnimationClips.size()) : std::string("-"); });
                 break;
@@ -598,6 +600,19 @@ private:
     std::unique_ptr<Model> model_;
     const AnimationClip* clip_ = nullptr;
     SkinningData* skin_ = nullptr;
+    // Stops the animation and poses every skinned effect in the bind pose (what the skeleton looks like with no clip playing).
+    void BindPose()
+    {
+        if (!model_ || !skin_) return;
+        try {
+            const std::size_t n = ApplyBindPoseBoneTransformsEXT(*model_, *skin_);
+            play_ = false;
+            bindPoseText_ = std::to_string(n) + " skinned effect(s); the animation is paused (toggle it to resume)";
+        } catch (const std::exception& e) {
+            bindPoseText_ = std::string(e.what()).substr(0, 60);
+        }
+    }
+    std::string bindPoseText_ = "-";
     std::unique_ptr<AnimationPlayer> player_;
     std::vector<Effect*> originals_;
     std::vector<std::unique_ptr<BasicEffect>> overrides_;

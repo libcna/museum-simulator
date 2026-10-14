@@ -336,7 +336,7 @@ glTF models and their effects, procedural and skeletal animation, particle syste
 | 6.1.01 | `model-load` | Loading Models | CNA extension | ContentManager.Load<Model>, Model, ModelMesh, ModelMeshPart, Model.BoundingSphereEXT, Model.Root, ModelBone.Children, Model.CopyBoneTransformsTo |
 | 6.1.02 | `model-pbr` | Metallic and Rough | CNA extension | PbrEffect, PbrEffect.MetallicFactor, PbrEffect.RoughnessFactor, PbrEffect.EmissiveFactor |
 | 6.1.03 | `model-rigid` | Rigid Animation | CNA extension | ModelAnimationsEXT, ApplyClipToBonesEXT, Model.CopyAbsoluteBoneTransformsTo, ModelBone |
-| 6.1.04 | `model-skinned` | Skinned Animation | CNA extension | SkinningData, AnimationPlayer, SkinnedPbrEffect.SetBoneTransforms |
+| 6.1.04 | `model-skinned` | Skinned Animation | CNA extension | AnimationPlayer.ApplyBindPoseBoneTransformsEXT, SkinningData, AnimationPlayer, SkinnedPbrEffect.SetBoneTransforms |
 | 6.1.05 | `model-instances` | Many Instances | CNA extension | Model.Draw, BoundingFrustum.Contains, Model.BoundingSphereEXT |
 | 6.1.06 | `model-bounds` | Bounding Volumes | CNA extension | ModelMesh.BoundingSphere, Model.BoundingSphereEXT, BoundingSphere.Transform |
 | 6.1.07 | `model-effects` | Swapping Effects | CNA extension | ModelMeshPart.Effect, BasicEffect, PbrEffect |

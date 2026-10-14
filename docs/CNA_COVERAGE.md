@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-793 distinct API names are claimed by at least one room.
+794 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -58,6 +58,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | AlphaTestEffect | `tex-alpha`, `rv-effects` |
 | AnimationClipEXT | `model-skinext` |
 | AnimationPlayer | `model-skinned` |
+| AnimationPlayer.ApplyBindPoseBoneTransformsEXT | `model-skinned` |
 | ApiOrigin | `hist-compare` |
 | ApplyClipToBonesEXT | `model-rigid` |
 | AsciiQuantizeMode | `cx-ascii` |
