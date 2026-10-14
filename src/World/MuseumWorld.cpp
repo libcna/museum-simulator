@@ -89,6 +89,11 @@ void MuseumWorld::Guard(RoomInstance& inst, const char* hook, Fn&& fn)
         Museum::Log("exhibit-error", "%s %s threw: %s%s", key.c_str(), hook, e.what(), inst.failures >= 3 ? " (room switched off)" : "");
         exhibitError_ = key + ": " + e.what();
         if (inst.failures >= 3) inst.disabled = true;
+        // A hook that threw may have left a render target bound; the frame goes on drawing to the back buffer.
+        try {
+            if (services_.device != nullptr) services_.device->SetRenderTarget(nullptr);
+        } catch (const std::exception&) {
+        }
     }
 }
 
