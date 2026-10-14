@@ -96,7 +96,7 @@ WingSpec TargetWing()
         rt("rt-formats", "Render Target Formats", "Which SurfaceFormats can be rendered to on this renderer, tested by doing it", "formats", {"SurfaceFormat", "RenderTarget2D.Format", "GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT"}, ApiOrigin::CnaExtension),
         rt("rt-cube", "A Live Cube Map", "RenderTargetCube: the scene drawn six times from a sphere's centre, then used as its mirror by EnvironmentMapEffect",
            "cube", {"RenderTargetCube", "GraphicsDevice.SetRenderTarget", "CubeMapFace", "EnvironmentMapEffect", "EnvironmentMapEffect.EnvironmentMap"}),
-        QueryRoom("rt-msaa", "Multisampled Targets", "The same edges at 0, 2, 4 and 8 samples, magnified", "msaa", {"RenderTarget2D.MultiSampleCount", "GraphicsCapability.MultiSampleAntiAliasing", "RenderTarget2D"}),
+        QueryRoom("rt-msaa", "Multisampled Targets", "The same edges at 0, 2, 4 and 8 samples, magnified", "msaa", {"RenderTarget2D.MultiSampleCount", "GraphicsCapability.MultiSampleAntiAliasing", "RenderTarget2D", "RasterizerState.MultiSampleAntiAlias"}),
     };
     return w;
 }

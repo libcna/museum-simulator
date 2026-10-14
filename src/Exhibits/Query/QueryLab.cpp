@@ -47,6 +47,7 @@ public:
             p.AddReadout("Sphere drawn", [this] { return std::string(skipped_ ? "skipped last frame" : "drawn"); });
         } else {
             p.AddToggle("Rotate the shapes", true, [this](bool v) { rotate_ = v; });
+            p.AddToggle("RasterizerState.MultiSampleAntiAlias", true, [this](bool v) { msaaRaster_ = v; });
             p.AddSlider("Zoom into the edges", 2.0f, 12.0f, zoom_, [this](float v) { zoom_ = v; }, "%.0f", 1.0f);
             p.AddReadout("MultiSampleAntiAliasing", [this] { return std::string(msaa_ ? "supported" : "NOT supported by this renderer"); });
             for (int i = 0; i < 4; ++i) p.AddReadout(std::string("Samples asked: ") + std::to_string(kCounts[i]), [this, i] { return targets_[static_cast<std::size_t>(i)] ? "got " + std::to_string(targets_[static_cast<std::size_t>(i)]->getMultiSampleCountProperty()) : std::string("-"); });
@@ -211,7 +212,9 @@ private:
             d.SetRenderTarget(t);
             d.Clear(ClearOptions::Target | ClearOptions::DepthBuffer, Color(24, 28, 44, 255), 1.0f, 0);
             RenderStates::SetOpaque3D(d);
-            d.setRasterizerStateProperty(RasterizerState::CullNone);
+            RasterizerState raster = RasterizerState::CullNone;
+            raster.setMultiSampleAntiAliasProperty(msaaRaster_);   // off: the multisampled target is rasterised as if it had one sample
+            d.setRasterizerStateProperty(raster);
             flat_->setWorldProperty(Matrix::getIdentityProperty());
             flat_->setViewProperty(Matrix::getIdentityProperty());
             flat_->setProjectionProperty(Matrix::getIdentityProperty());
@@ -243,7 +246,7 @@ private:
     std::unique_ptr<OcclusionQuery> query_;
     std::unique_ptr<RenderTarget2D> targets_[4];
     float time_ = 0.0f, wallX_ = -2.0f, sphereZ_ = 5.0f, zoom_ = 5.0f;
-    bool autoSlide_ = true, supported_ = true, inQuery_ = false, complete_ = false, precise_ = false, skipped_ = false, rotate_ = true, msaa_ = true;
+    bool autoSlide_ = true, supported_ = true, inQuery_ = false, complete_ = false, precise_ = false, skipped_ = false, rotate_ = true, msaa_ = true, msaaRaster_ = true;
     int pixels_ = 0;
 };
 
