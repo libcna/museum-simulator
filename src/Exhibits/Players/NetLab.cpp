@@ -102,6 +102,9 @@ public:
             p.AddReadout("SessionState", [this] { NetworkSession* n = Primary(); return n != nullptr ? std::string(StateName(n->getSessionStateProperty())) + (n->getIsHostProperty() ? ", this machine hosts" : "") : std::string("no session"); });
             p.AddReadout("IsEveryoneReady", [this] { NetworkSession* n = Primary(); return n != nullptr ? std::string(n->getIsEveryoneReadyProperty() ? "true" : "false") : std::string("-"); });
             p.AddReadout("Gamers (local / all)", [this] { NetworkSession* n = Primary(); return n != nullptr ? std::to_string(n->getLocalGamersProperty().getCountProperty()) + " / " + std::to_string(n->getAllGamersProperty().getCountProperty()) : std::string("-"); });
+            p.AddToggle("AllowHostMigration", false, [this](bool v) { NetworkSession* n = Primary(); if (n != nullptr) { try { n->setAllowHostMigrationProperty(v); } catch (const std::exception&) {} } });
+            p.AddReadout("SessionType / MaxGamers / private slots", [this] { return SessionShape(); });
+            p.AddReadout("Host / remote / previous gamers", [this] { return GamerRoles(); });
             p.AddButton("Guide.ShowSignIn: an account for PlayerMatch", [this] { try { Microsoft::Xna::Framework::GamerServices::Guide::ShowSignIn(1, true); Museum::Log("online", "ShowSignIn(1, true) opened"); } catch (const std::exception& e) { status_ = std::string(e.what()).substr(0, 50); } });
             p.AddToggle("Deliver packets: a SystemLink session (visible on your network)", false, [this](bool v) { SetTransport(v); });
             p.AddSlider("SimulatedLatency (ms, on arriving packets)", 0.0f, 500.0f, 0.0f, [this](float v) { latencyMs_ = v; ApplyImpairment(); }, "%.0f", 10.0f);
@@ -465,6 +468,21 @@ private:
         }
     }
 
+    [[nodiscard]] std::string SessionShape()
+    {
+        NetworkSession* n = Primary();
+        if (n == nullptr) return "no session";
+        static const char* const types[] = {"Local", "SystemLink", "PlayerMatch", "Ranked"};
+        const int t = static_cast<int>(n->getSessionTypeProperty());
+        return std::string(t >= 0 && t < 4 ? types[t] : "?") + " / " + std::to_string(n->getMaxGamersProperty()) + " / " + std::to_string(n->getPrivateGamerSlotsProperty()) + ", migration " + (n->getAllowHostMigrationProperty() ? "allowed" : "off");
+    }
+    [[nodiscard]] std::string GamerRoles()
+    {
+        NetworkSession* n = Primary();
+        if (n == nullptr) return "no session";
+        const NetworkGamer* host = n->getHostProperty();
+        return std::string(host != nullptr ? host->getGamertagProperty() : std::string("none")) + " / " + std::to_string(n->getRemoteGamersProperty().getCountProperty()) + " / " + std::to_string(n->getPreviousGamersProperty().getCountProperty());
+    }
     [[nodiscard]] bool HasRemoteGamers() const
     {
         if (host_ == nullptr) return false;
