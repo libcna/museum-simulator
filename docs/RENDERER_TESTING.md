@@ -124,6 +124,8 @@ Rooms whose arrival view differs from OPENGLES3's by more than 2 % of pixels (64
 | WEBGPU | 28 | those, plus `tex-formats` (Bgr565, Bgra4444 and Alpha8 are not offered), `cx-debugdraw`, and about twenty `vec-*`, `mat-*`, `quat-*` rooms whose 1-pixel grid lines sit one pixel off (a rasterisation difference, not a bug) |
 | FNA3D | 42 | no custom shaders (`fx-*`, `cx-crt`, `cx-depth`...), no point or spot lights (`light-*`, `be-punctual`), PBR models drawn as a lit `BasicEffect`, `tex-formats`, wireframe and the same grid-line offset |
 
+Repeated on 2026-10-14 evening over 284 rooms: OPENGL33 vs OPENGLES3 differs by more than 1 % only in `rs-fill` (wireframe); SOFTWARE vs OPENGLES3 differs by more than 8 % only in `model-instances` (24 %: PbrEffect's flat base-colour fallback on thousands of pixels), `fx-kernel` and `fx-plasma` (SOFTWARE has no shader dialect, so the plain scene is shown).
+
 This pass found two real defects that the 30 stored views and the pixel checks had missed, one in the museum and one in CNA. The museum's: `geo-manybuffers` drew black cones on OPENGLES3 and every GPU renderer (only SOFTWARE lit them): all its vertices have texture coordinate (0, 0), so the screen-space derivatives are zero and anisotropic filtering of a zero footprint is undefined (black on Mesa's software GL and Vulkan). It now samples with a linear sampler. CNA's: `rs-blendfactor` was opaque on WEBGPU
 (fixed in CNA, see finding 12 and the new "Blend.BlendFactor on a 3D draw after an ordinary one" check).
 
