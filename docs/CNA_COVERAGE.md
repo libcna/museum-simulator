@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-924 distinct API names are claimed by at least one room.
+927 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -430,10 +430,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.GetDisplayColorSpaceEXT | `pl-renderer` |
 | GraphicsDevice.GetGraphicsRendererName | `pl-renderer` |
 | GraphicsDevice.GetLogicalSizeEXT | `pl-renderer` |
+| GraphicsDevice.GetRenderTargets | `rt-mrt` |
 | GraphicsDevice.GetRendererCapabilityProfileEXT | `pl-renderer` |
 | GraphicsDevice.GetRendererCapabilityReportEXT | `pl-renderer` |
 | GraphicsDevice.GetShaderDialectEXT | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `fx-errors` |
 | GraphicsDevice.GetTrackedResourceCount | `pl-renderer` |
+| GraphicsDevice.GetVertexBuffers | `geo-instancing` |
 | GraphicsDevice.GraphicsProfile | `pl-adapter` |
 | GraphicsDevice.ResourceCreated | `ct-lifetime` |
 | GraphicsDevice.ResourceDestroyed | `ct-lifetime` |
@@ -443,6 +445,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.SetRenderTarget | `rendertarget`, `rt-basic`, `rt-control`, `rt-cube`, `pf-targets`, `rv-targets` |
 | GraphicsDevice.SetRenderTargets | `rt-mrt` |
 | GraphicsDevice.SetStringMarkerEXT | `cx-points` |
+| GraphicsDevice.SetVertexBuffers | `geo-instancing` |
 | GraphicsDevice.SupportsDisplayColorSpaceEXT | `pl-renderer` |
 | GraphicsDevice.SupportsImageBasedLightingEXT | `model-ibl`, `pl-renderer` |
 | GraphicsDevice.SupportsShaderLanguageEXT | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix` |

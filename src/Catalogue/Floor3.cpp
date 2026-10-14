@@ -49,7 +49,7 @@ WingSpec BuffersWing()
         Geo("geo-index32", "32-Bit Indices", "A grid of up to 160 000 vertices drawn with IndexElementSize.ThirtyTwoBits", "index32", {"IndexBuffer", "IndexElementSize"}),
         Geo("geo-manybuffers", "Many Small Buffers", "Hundreds of VertexBuffers against one merged buffer: the cost of draw calls", "manybuffers", {"VertexBuffer", "GraphicsDevice.DrawIndexedPrimitives"}),
         Geo("geo-instancing", "Hardware Instancing", "DrawInstancedPrimitives with a per-instance world matrix stream, against one call per cube", "instancing",
-            {"VertexBufferBinding", "GraphicsDevice.DrawInstancedPrimitives", "GraphicsCapability.Instancing", "GraphicsDevice.DrawInstancedPrimitivesBaseInstanceEXT", "RendererFeature.BaseInstanceDrawing"}),
+            {"VertexBufferBinding", "GraphicsDevice.GetVertexBuffers", "GraphicsDevice.SetVertexBuffers", "GraphicsDevice.DrawInstancedPrimitives", "GraphicsCapability.Instancing", "GraphicsDevice.DrawInstancedPrimitivesBaseInstanceEXT", "RendererFeature.BaseInstanceDrawing"}),
         Geo("geo-dynindex", "Dynamic Index Buffers", "A DynamicIndexBuffer rewritten every frame to draw only the part of a big mesh near a moving point", "dynindex",
             {"DynamicIndexBuffer", "SetDataOptions.Discard", "GraphicsDevice.DrawIndexedPrimitives", "IndexBuffer"}),
         [] {

@@ -114,6 +114,7 @@ public:
             case Mode::Mrt:
                 p.AddReadout("MultipleRenderTargets", [this] { return std::string(S().device->SupportsCapability(CNA::GraphicsCapability::MultipleRenderTargets) ? "supported" : "NOT supported here"); });
                 p.AddReadout("Second target (edges)", [this] { return secondTarget_; });
+                p.AddReadout("GetRenderTargets() while bound", [this] { return boundTargets_; });
                 p.AddReadout("ShaderEffect source", [this] { return effect_ && effect_->IsEffectValid() ? "compiled (" + dialect_ + ")" : std::string("unavailable"); });
                 p.AddHeading("One pass, two outputs");
                 break;
@@ -579,6 +580,9 @@ private:
         if (!effect_ || !effect_->IsEffectValid() || !d.SupportsCapability(CNA::GraphicsCapability::MultipleRenderTargets)) return;
         const std::vector<RenderTargetBinding> bindings = {RenderTargetBinding(gray_.get()), RenderTargetBinding(edge_.get())};
         d.SetRenderTargets(bindings);
+        const std::vector<RenderTargetBinding> bound = d.GetRenderTargets();
+        boundTargets_ = std::to_string(bound.size()) + " bindings, both textures " + (bound.size() == 2 && bound[0].getRenderTargetProperty() == gray_.get() && bound[1].getRenderTargetProperty() == edge_.get() ? "as set" : "NOT as set");
+        if (mrtFrames_ == 0) Museum::Log("targets", "GetRenderTargets while bound: %s", boundTargets_.c_str());
         d.Clear(Color::Black);
         effect_->Apply();
         if (packedUniforms_) effect_->SetUniformVec4("color", 1.0f / 480.0f, 1.0f / 270.0f, 0.0f, 0.0f);   // SDL_GPU: one fixed uniform block, names ignored
@@ -647,7 +651,7 @@ private:
     std::array<bool, 6> live_{true, true, true, true, true, true};
     std::unique_ptr<RenderTarget2D> fbA_, fbB_, mirror_, gray_, edge_;
     std::unique_ptr<ShaderEffect> effect_;
-    std::string dialect_ = "GLSL", secondTarget_ = "-";
+    std::string dialect_ = "GLSL", secondTarget_ = "-", boundTargets_ = "-";
     int mrtFrames_ = 0;
     bool packedUniforms_ = false;
     std::array<std::string, 6> formatStatus_{"-", "-", "-", "-", "-", "-"};

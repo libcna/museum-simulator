@@ -221,7 +221,7 @@ Vertex data, buffers, primitives and textures
 | 3.1.06 | `geo-procedural` | Procedural Geometry | XNA 4.0 | VertexBuffer, IndexBuffer, RasterizerState.FillMode |
 | 3.1.07 | `geo-index32` | 32-Bit Indices | XNA 4.0 | IndexBuffer, IndexElementSize |
 | 3.1.08 | `geo-manybuffers` | Many Small Buffers | XNA 4.0 | VertexBuffer, GraphicsDevice.DrawIndexedPrimitives |
-| 3.1.09 | `geo-instancing` | Hardware Instancing | XNA 4.0 | VertexBufferBinding, GraphicsDevice.DrawInstancedPrimitives, GraphicsCapability.Instancing, GraphicsDevice.DrawInstancedPrimitivesBaseInstanceEXT, RendererFeature.BaseInstanceDrawing |
+| 3.1.09 | `geo-instancing` | Hardware Instancing | XNA 4.0 | VertexBufferBinding, GraphicsDevice.GetVertexBuffers, GraphicsDevice.SetVertexBuffers, GraphicsDevice.DrawInstancedPrimitives, GraphicsCapability.Instancing, GraphicsDevice.DrawInstancedPrimitivesBaseInstanceEXT, RendererFeature.BaseInstanceDrawing |
 | 3.1.10 | `geo-dynindex` | Dynamic Index Buffers | XNA 4.0 | DynamicIndexBuffer, SetDataOptions.Discard, GraphicsDevice.DrawIndexedPrimitives, IndexBuffer |
 | 3.1.11 | `geo-terrain` | Heightmap Terrain | XNA 4.0 | Texture2D.GetData, VertexBuffer, IndexBuffer, VertexPositionNormalTexture, GraphicsDevice.DrawIndexedPrimitives, RasterizerState.FillMode, MathHelper.Lerp |
 
@@ -321,7 +321,7 @@ RasterizerState, DepthStencilState, BlendState and off-screen rendering
 | 5.2.03 | `rt-control` | Control Room | XNA 4.0 | RenderTarget2D, GraphicsDevice.SetRenderTarget |
 | 5.2.04 | `rt-recursive` | Feedback | XNA 4.0 | RenderTarget2D, RenderTargetUsage.PreserveContents, SpriteBatch.Draw |
 | 5.2.05 | `rt-mirror` | A Planar Mirror | XNA 4.0 | RenderTarget2D, Matrix.CreateLookAt, RasterizerState.CullMode |
-| 5.2.06 | `rt-mrt` | Multiple Render Targets | CNA extension | GraphicsDevice.SetRenderTargets, RenderTargetBinding, ShaderEffect |
+| 5.2.06 | `rt-mrt` | Multiple Render Targets | CNA extension | GraphicsDevice.SetRenderTargets, GraphicsDevice.GetRenderTargets, RenderTargetBinding, ShaderEffect |
 | 5.2.07 | `rt-formats` | Render Target Formats | CNA extension | SurfaceFormat, RenderTarget2D.Format, GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT |
 | 5.2.08 | `rt-cube` | A Live Cube Map | XNA 4.0 | RenderTargetCube, GraphicsDevice.SetRenderTarget, CubeMapFace, EnvironmentMapEffect, EnvironmentMapEffect.EnvironmentMap |
 | 5.2.09 | `rt-bloom` | Bloom from Blending | XNA 4.0 | BlendFunction.ReverseSubtract, BlendState.Additive, RenderTarget2D, SpriteBatch.Begin, SamplerState.LinearClamp |
