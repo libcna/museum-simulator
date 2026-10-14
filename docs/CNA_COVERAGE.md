@@ -39,7 +39,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 |---|---|
 | haptic effects (devices are listed, none played) | planned: see HANDOFF.md |
 | `MediaLibrary`, albums, playlists, pictures (`Microsoft.Xna.Framework.Media`) | not implemented: they describe a device's media store, which a desktop does not have |
-| GamerServices and Net beyond the basics: friends, invitations, parties, voice, online sessions | not demonstrated: the *Players and Networking* wing covers signed-in gamers, presence, privileges, profiles, achievements, the Guide, PacketWriter/Reader and a Local and a SystemLink session between the two local profiles, and a search for SystemLink sessions (a second museum on the network is found, with its slots, properties and round-trip time); the *Leaderboards* room writes and reads ratings from the two local profiles; the *Avatars* room shows AvatarDescription, AvatarAnimation and AvatarRenderer; the rest needs a second machine or an account service |
+| GamerServices and Net beyond the basics: friends, invitations, parties, voice, online sessions | not demonstrated: the *Players and Networking* wing covers signed-in gamers, presence, privileges, profiles, achievements, the Guide, PacketWriter/Reader and a Local and a SystemLink session between the two local profiles, a search for SystemLink sessions and joining one (a second museum process is found and joined, its gamers appear as remote, packets cross the network); the *Leaderboards* room writes and reads ratings from the two local profiles; the *Avatars* room shows AvatarDescription, AvatarAnimation and AvatarRenderer; the rest needs a second machine or an account service |
 | `FileDialog`, `MessageBox`, `SystemTray`, `UrlLauncher`, `Camera` (CNA_DEVICES) | not implemented: they open real dialogs or hardware; the room reports whether each is supported |
 | Compiled XNA effects (`.fxb`), C API, Inspector | not implemented: disabled in CNA's default build for the renderers used here |
 | Retired renderers and removed CNA features (for example VULKAN, the post-process chain) | deliberately not demonstrated |
@@ -47,7 +47,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-686 distinct API names are claimed by at least one room.
+692 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -468,12 +468,18 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Mouse.SetCursor | `in-mouse` |
 | MouseCursor | `in-mouse` |
 | MouseState | `in-mouse` |
+| NetworkGamer.IsHost | `net-session` |
+| NetworkGamer.IsLocal | `net-session` |
 | NetworkGamer.IsReady | `net-session` |
+| NetworkGamer.RoundtripTime | `net-session` |
+| NetworkSession.AllGamers | `net-session` |
 | NetworkSession.AllowJoinInProgress | `net-session` |
 | NetworkSession.BeginFind | `net-session` |
+| NetworkSession.BeginJoin | `net-session` |
 | NetworkSession.Create | `net-session` |
 | NetworkSession.EndFind | `net-session` |
 | NetworkSession.EndGame | `net-session` |
+| NetworkSession.EndJoin | `net-session` |
 | NetworkSession.GameStarted | `net-session` |
 | NetworkSession.GamerJoined | `net-session` |
 | NetworkSession.SessionProperties | `net-session` |

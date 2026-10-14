@@ -92,6 +92,7 @@ public:
             p.AddToggle("AllowJoinInProgress", false, [this](bool v) { joinInProgress_ = v; ApplySessionSettings(); });
             p.AddChoice("Search for game mode", {"any", "this session's", "one nobody hosts"}, 0, [this](int v) { searchMode_ = v; });
             p.AddButton("NetworkSession.BeginFind (SystemLink)", [this] { BeginFind(); });
+            p.AddButton("NetworkSession.BeginJoin (the first session found)", [this] { BeginJoin(); });
             p.AddReadout("Find", [this] { return found_; });
             p.AddSlider("Packets per second", 2.0f, 60.0f, rate_, [this](float v) { rate_ = v; }, "%.0f", 1.0f);
             p.AddReadout("Transport", [this] { return transportStatus_; });
@@ -128,6 +129,7 @@ public:
             if (lobby_ != nullptr) lobby_->Update();
             Pump(ctx.dt);
             PollFind();
+            PollJoin();
         }
 #endif
     }
@@ -312,7 +314,8 @@ private:
 
     void ResetStats()
     {
-        sent_ = received_ = 0;
+        sent_ = received_ = remoteReceived_ = 0;
+        remote_trail_.clear();
         trail_.clear();
         received_trail_.clear();
     }
@@ -395,6 +398,8 @@ private:
             found_ = std::to_string(list.getCountProperty()) + " session(s) found" + (list.getCountProperty() == 0 ? (searchMode_ == 0 ? " (nobody on this network hosts a SystemLink session: start a second museum and switch packet delivery on there)" : " (no session matches those search properties)") : "");
             tried_ = false;   // the room's Local session reopens
             foundLines_.clear();
+            available_.clear();
+            for (int i = 0; i < list.getCountProperty(); ++i) available_.push_back(list[i]);
             for (int i = 0; i < list.getCountProperty() && i < 3; ++i) {
                 const AvailableNetworkSession& a = list[i];
                 char buf[220];
@@ -409,6 +414,56 @@ private:
             delete find_;
             find_ = nullptr;
             found_ = std::string("EndFind: ") + std::string(e.what()).substr(0, 56);
+        }
+    }
+
+    [[nodiscard]] bool HasRemoteGamers() const
+    {
+        if (host_ == nullptr) return false;
+        try {
+            for (int i = 0; i < host_->getAllGamersProperty().getCountProperty(); ++i)
+                if (!host_->getAllGamersProperty()[i]->getIsLocalProperty()) return true;
+        } catch (const std::exception&) {}
+        return false;
+    }
+
+    // Joining is asynchronous too. The joined session replaces the room's own: its gamers are the two local profiles here and whoever the host has.
+    void BeginJoin()
+    {
+        if (find_ != nullptr || join_ != nullptr) return;
+        if (available_.empty()) {
+            found_ = "nothing to join: press BeginFind first (and start a second museum with packet delivery on)";
+            return;
+        }
+        try {
+            CloseSession();
+            tried_ = true;
+            ResetStats();
+            join_ = NetworkSession::BeginJoin(&available_[0], {}, std::any{});
+            found_ = "joining " + available_[0].getHostGamertagProperty() + "'s session...";
+            transportStatus_ = "joining";
+        } catch (const std::exception& e) {
+            found_ = std::string("BeginJoin: ") + std::string(e.what()).substr(0, 56);
+            tried_ = false;
+        }
+    }
+    void PollJoin()
+    {
+        if (join_ == nullptr || !join_->getIsCompletedProperty()) return;
+        try {
+            host_ = NetworkSession::EndJoin(join_);
+            delete join_;
+            join_ = nullptr;
+            phase_ = Phase::Connected;
+            transportStatus_ = "joined a session on another museum: packets travel over the network";
+            found_ = "joined";
+            Log("Joined: " + std::to_string(host_->getAllGamersProperty().getCountProperty()) + " gamer(s) in the session");
+            if (wantReady_) SetReady(true);
+        } catch (const std::exception& e) {
+            delete join_;
+            join_ = nullptr;
+            found_ = std::string("EndJoin: ") + std::string(e.what()).substr(0, 56);
+            tried_ = false;
         }
     }
 
@@ -460,6 +515,12 @@ private:
                 const int seq = r.ReadInt32();
                 const float sentAt = r.ReadSingle();
                 const Vector2 p(r.ReadSingle(), r.ReadSingle());
+                if (from != nullptr && !from->getIsLocalProperty()) {
+                    ++remoteReceived_;
+                    remote_trail_.push_back(p);
+                    if (remote_trail_.size() > 60) remote_trail_.pop_front();
+                    continue;
+                }
                 ++received_;
                 lastSeq_ = seq;
                 ageMs_ = (time_ - sentAt) * 1000.0f;
@@ -479,12 +540,13 @@ private:
             return;
         }
         const float px = 24.0f, py = 100.0f, size = 300.0f;
+        const bool remote = HasRemoteGamers();
         for (int pane = 0; pane < 2; ++pane) {
             const float x = px + static_cast<float>(pane) * 330.0f;
             rect(x, py, size, size, Color(18, 24, 38, 240));
             rect(x, py, size, 3, pane == 0 ? Kit::kGold : Kit::Rgba(110, 170, 255));
-            text(pane == 0 ? "the Visitor's dot (what is sent)" : "what the Guest receives", x, py - 28, pane == 0 ? Kit::kGold : Kit::Rgba(150, 190, 255), 0.55f);
-            const std::deque<Vector2>& points = pane == 0 ? trail_ : received_trail_;
+            text(pane == 0 ? "the Visitor's dot (what is sent)" : (remote ? "what arrives from the other museum" : "what the Guest receives"), x, py - 28, pane == 0 ? Kit::kGold : Kit::Rgba(150, 190, 255), 0.55f);
+            const std::deque<Vector2>& points = pane == 0 ? trail_ : (remote ? remote_trail_ : received_trail_);
             for (std::size_t i = 0; i < points.size(); ++i) {
                 const float a = 0.25f + 0.75f * static_cast<float>(i) / static_cast<float>(std::max<std::size_t>(1, points.size()));
                 const float cx = x + size * 0.5f + points[i].X * size * 0.5f, cy = py + size * 0.5f + points[i].Y * size * 0.5f;
@@ -499,6 +561,21 @@ private:
         std::snprintf(line, sizeof line, "sent %d   received %d   missing %.0f %%   last arrived #%d, %.0f ms old   %d B/s out   %d B/s in", sent_, received_, static_cast<double>(std::max(0.0f, lost)), lastSeq_,
                       static_cast<double>(ageMs_), host_ != nullptr ? host_->getBytesPerSecondSentProperty() : 0, host_ != nullptr ? host_->getBytesPerSecondReceivedProperty() : 0);
         text(line, 24, 420, Kit::kText, 0.5f);
+        if (remote) text("from remote gamers: " + std::to_string(remoteReceived_) + " packets", 24, 395 + 0.0f, Kit::Rgba(150, 190, 255), 0.5f);
+        if (host_ != nullptr) {
+            text("gamers in the session", 670, 330, Kit::kDim, 0.55f);
+            try {
+                float gy = 354.0f;
+                for (int i = 0; i < host_->getAllGamersProperty().getCountProperty() && i < 6; ++i) {
+                    NetworkGamer* g = host_->getAllGamersProperty()[i];
+                    char gl[160];
+                    std::snprintf(gl, sizeof gl, "%s  %s%s  round trip %.0f ms", g->getGamertagProperty().c_str(), g->getIsLocalProperty() ? "local" : "REMOTE", g->getIsHostProperty() ? ", host" : "",
+                                  g->getRoundtripTimeProperty().getTotalMillisecondsProperty());
+                    text(gl, 670, gy, g->getIsLocalProperty() ? Kit::kText : Kit::Rgba(150, 190, 255), 0.45f);
+                    gy += 20.0f;
+                }
+            } catch (const std::exception&) {}
+        }
         text("events", 670, 70, Kit::kDim, 0.55f);
         float y = 96.0f;
         for (const std::string& l : log_) {
@@ -535,7 +612,10 @@ private:
     std::deque<Vector2> trail_, received_trail_;
     std::deque<std::string> log_;
     std::string status_ = "-";
-    int gameMode_ = 3, searchMode_ = 0;
+    int gameMode_ = 3, searchMode_ = 0, remoteReceived_ = 0;
+    std::deque<Vector2> remote_trail_;
+    std::vector<AvailableNetworkSession> available_;
+    System::IAsyncResult* join_ = nullptr;
     bool joinInProgress_ = false;
     System::IAsyncResult* find_ = nullptr;
     std::string found_ = "not searched yet";
