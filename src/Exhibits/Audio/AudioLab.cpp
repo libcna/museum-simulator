@@ -27,6 +27,9 @@
 #include "Microsoft/Xna/Framework/Audio/WaveBank.hpp"
 #include "Microsoft/Xna/Framework/Content/ContentManager.hpp"
 #include "Microsoft/Xna/Framework/Media/MediaPlayer.hpp"
+#include "Microsoft/Xna/Framework/Media/MediaQueue.hpp"
+#include "Microsoft/Xna/Framework/Media/SongCollection.hpp"
+#include "Microsoft/Xna/Framework/Media/VisualizationData.hpp"
 #include "Microsoft/Xna/Framework/Media/MediaState.hpp"
 #include "Microsoft/Xna/Framework/Media/Song.hpp"
 
@@ -123,6 +126,11 @@ public:
             case Mode::Music:
                 p.AddButton("Play song 1: arpeggio", [this] { PlaySong(0); });
                 p.AddButton("Play song 2: ambience", [this] { PlaySong(1); });
+                p.AddButton("Play both as a queue (SongCollection)", [this] { PlayQueue(); });
+                p.AddButton("MediaPlayer.MoveNext", [] { try { MediaPlayer::MoveNext(); } catch (const std::exception&) {} });
+                p.AddButton("MediaPlayer.MovePrevious", [] { try { MediaPlayer::MovePrevious(); } catch (const std::exception&) {} });
+                p.AddToggle("IsShuffled", false, [](bool v) { try { MediaPlayer::setIsShuffledProperty(v); } catch (const std::exception&) {} });
+                p.AddToggle("IsVisualizationEnabled", true, [this](bool v) { visualize_ = v; try { MediaPlayer::setIsVisualizationEnabledProperty(v); } catch (const std::exception&) {} });
                 p.AddButton("Pause / resume", [this] { TogglePause(); });
                 p.AddButton("Stop", [] { try { MediaPlayer::Stop(); } catch (const std::exception&) {} });
                 p.AddSlider("MediaPlayer.Volume", 0.0f, 1.0f, mediaVolume_, [this](float v) { mediaVolume_ = v; try { MediaPlayer::setVolumeProperty(v); } catch (const std::exception&) {} });
@@ -263,7 +271,7 @@ protected:
                 text("it scales every SoundEffect and SoundEffectInstance at once", 60, 360, Kit::kDim, 0.75f);
                 break;
             }
-            case Mode::Music: text(std::string("Songs are streamed by MediaPlayer, one at a time, independently of SoundEffect."), 40, 120, Kit::kText, 0.8f); break;
+            case Mode::Music: DrawMusic(sb); break;
             case Mode::Xact: {
                 static const char* cues[5] = {"Tone", "Click", "Arpeggio", "Drums", "Chirp"};
                 static const int category[5] = {0, 0, 1, 1, 2};
@@ -453,10 +461,70 @@ private:
         try {
             if (!songs_[static_cast<std::size_t>(i)]) songs_[static_cast<std::size_t>(i)] = std::make_unique<Song>(content_->Load<Song>(i == 0 ? "Audio/arpeggio" : "Audio/ambience"));
             MediaPlayer::setVolumeProperty(mediaVolume_);
+            MediaPlayer::setIsVisualizationEnabledProperty(visualize_);
             MediaPlayer::Play(songs_[static_cast<std::size_t>(i)].get());
         } catch (const std::exception& e) {
             Museum::Log("audio", "song: %s", e.what());
         }
+    }
+    // A queue: Play(SongCollection) plays the songs in order (or shuffled); MoveNext and MovePrevious step through it.
+    void PlayQueue()
+    {
+        try {
+            for (int i = 0; i < 2; ++i)
+                if (!songs_[static_cast<std::size_t>(i)]) songs_[static_cast<std::size_t>(i)] = std::make_unique<Song>(content_->Load<Song>(i == 0 ? "Audio/arpeggio" : "Audio/ambience"));
+            queue_ = std::make_unique<SongCollection>(std::vector<Song*>{songs_[0].get(), songs_[1].get()});
+            MediaPlayer::setVolumeProperty(mediaVolume_);
+            MediaPlayer::setIsVisualizationEnabledProperty(visualize_);
+            MediaPlayer::Play(*queue_);
+        } catch (const std::exception& e) {
+            Museum::Log("audio", "queue: %s", e.what());
+        }
+    }
+    // The frequency bars and waveform MediaPlayer measures from what it is playing (VisualizationData, 256 values each).
+    void DrawMusic(SpriteBatch& sb)
+    {
+        Texture2D& white = *S().whiteTexture;
+        const auto text = [&](const std::string& t, float x, float y, Color c, float sc) { sb.DrawString(*S().font, t, Vector2(x, y), c, 0.0f, Vector2(0, 0), sc, SpriteEffects::None, 0.0f); };
+        text("Songs are streamed by MediaPlayer, one at a time, independently of SoundEffect.", 40, 70, Kit::kText, 0.7f);
+        try {
+            std::string active = "nothing queued";
+            if (MediaPlayer::getQueueProperty().getCountProperty() > 0)
+                active = "queue " + std::to_string(MediaPlayer::getQueueProperty().getActiveSongIndexProperty() + 1) + " of " + std::to_string(MediaPlayer::getQueueProperty().getCountProperty()) + ": " +
+                         (MediaPlayer::getQueueProperty().getActiveSongProperty() != nullptr ? MediaPlayer::getQueueProperty().getActiveSongProperty()->getNameProperty() : "?");
+            text("MediaPlayer.Queue: " + active + (MediaPlayer::getIsShuffledProperty() ? "   (shuffled)" : ""), 40, 100, Kit::kDim, 0.6f);
+            if (visualize_) {
+                VisualizationData data;
+                MediaPlayer::GetVisualizationData(data);
+                const auto& f = data.getFrequenciesProperty();
+                const auto& w = data.getSamplesProperty();
+                sb.Draw(white, Rectangle(40, 140, 880, 160), Color(18, 24, 38, 255));
+                // The values are small; a slowly falling peak scales them to the box so quiet music still draws.
+                float peakF = 0.0f, peakW = 0.0f;
+                for (int i = 0; i < 256; ++i) {
+                    peakF = std::max(peakF, f[static_cast<std::size_t>(i)]);
+                    peakW = std::max(peakW, std::abs(w[static_cast<std::size_t>(i)]));
+                }
+                visPeakF_ = std::max(std::max(peakF, 0.002f), visPeakF_ * 0.995f);
+                visPeakW_ = std::max(std::max(peakW, 0.002f), visPeakW_ * 0.995f);
+                for (int i = 0; i < 64; ++i) {
+                    float m = 0.0f;
+                    for (int j = 0; j < 4; ++j) m = std::max(m, f[static_cast<std::size_t>(i * 4 + j)]);
+                    const int h = static_cast<int>(std::min(1.0f, m / visPeakF_) * 150.0f);
+                    sb.Draw(white, Rectangle(48 + i * 13, 296 - h, 11, h), Color(110, 190, 255, 255));
+                }
+                text("frequencies", 48, 142, Kit::kDim, 0.5f);
+                sb.Draw(white, Rectangle(40, 320, 880, 140), Color(18, 24, 38, 255));
+                for (int i = 0; i < 255; ++i) {
+                    const float a = w[static_cast<std::size_t>(i)], b = w[static_cast<std::size_t>(i + 1)];
+                    const int y0 = 390 - static_cast<int>(std::clamp(a / visPeakW_, -1.0f, 1.0f) * 60.0f), y1 = 390 - static_cast<int>(std::clamp(b / visPeakW_, -1.0f, 1.0f) * 60.0f);
+                    sb.Draw(white, Rectangle(40 + i * 880 / 256, std::min(y0, y1), 4, std::abs(y1 - y0) + 2), Color(255, 214, 120, 255));
+                }
+                text("samples", 48, 322, Kit::kDim, 0.5f);
+            } else {
+                text("IsVisualizationEnabled is off: MediaPlayer does not analyse the audio.", 40, 160, Kit::kDim, 0.7f);
+            }
+        } catch (const std::exception&) {}
     }
     void TogglePause()
     {
@@ -592,6 +660,9 @@ private:
     std::unique_ptr<SoundEffect> generated_;
     std::map<std::string, std::unique_ptr<SoundEffect>> cache_;
     std::array<std::unique_ptr<Song>, 2> songs_;
+    std::unique_ptr<SongCollection> queue_;
+    bool visualize_ = true;
+    float visPeakF_ = 0.01f, visPeakW_ = 0.01f;
     Microphone* mic_ = nullptr;
     std::vector<float> samples_;
     std::array<float, 4> layerVolume_{0.4f, 0.0f, 0.0f, 0.0f}, flash_{};

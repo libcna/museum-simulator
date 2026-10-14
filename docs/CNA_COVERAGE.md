@@ -47,7 +47,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-702 distinct API names are claimed by at least one room.
+711 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -433,8 +433,15 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Matrix.Multiply | `mat-order`, `mat-hierarchy`, `mat-screen`, `an-clock`, `an-gears`, `an-kinetic`, `an-walker` |
 | Matrix.Translation | `mat-hierarchy` |
 | Matrix.Transpose | `mat-normals` |
+| MediaPlayer.GetVisualizationData | `au-music` |
+| MediaPlayer.IsShuffled | `au-music` |
+| MediaPlayer.IsVisualizationEnabled | `au-music` |
+| MediaPlayer.MoveNext | `au-music` |
+| MediaPlayer.MovePrevious | `au-music` |
 | MediaPlayer.Play | `au-music` |
+| MediaPlayer.Queue | `au-music` |
 | MediaPlayer.Volume | `au-music` |
+| MediaQueue | `au-music` |
 | MediaState | `au-music` |
 | MeshBuilder | `an-gears` |
 | MessageBoxIcon | `gs-guide` |
@@ -627,6 +634,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Snapshot.metrics | `cx-stats` |
 | Snapshot.resources | `cx-stats` |
 | Song | `au-music` |
+| SongCollection | `au-music` |
 | SoundBank | `au-xact` |
 | SoundBank.GetCue | `au-xact` |
 | SoundBank.PlayCue | `au-xact` |
@@ -749,6 +757,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Viewport | `app-viewport`, `cam-split` |
 | Viewport.Project | `mat-screen`, `text-labels` |
 | Viewport.Unproject | `mat-screen` |
+| VisualizationData | `au-music` |
 | WaveBank | `au-xact` |
 | XNA 4.0 | `hist-xna`, `hist-compare` |
 | cna-content | `ct-pipeline` |

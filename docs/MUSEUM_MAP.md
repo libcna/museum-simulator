@@ -397,7 +397,7 @@ Sound, music, keyboards, mice and game pads
 | 7.1.04 | `au-synth` | A Synthesiser | XNA 4.0 | DynamicSoundEffectInstance, DynamicSoundEffectInstance.SubmitBuffer, AudioChannels, DynamicSoundEffectInstance.PendingBufferCount, DynamicSoundEffectInstance.GetSampleSizeInBytes, SoundEffect.GetSampleDuration |
 | 7.1.05 | `au-generate` | Generated Sounds | XNA 4.0 | SoundEffect(buffer, sampleRate, channels), AudioChannels |
 | 7.1.06 | `au-master` | Master Volume and Settings | XNA 4.0 | SoundEffect.MasterVolume, SoundEffect.DistanceScale, SoundEffect.DopplerScale, SoundEffect.SpeedOfSound |
-| 7.1.07 | `au-music` | Song and MediaPlayer | XNA 4.0 | Song, MediaPlayer.Play, MediaPlayer.Volume, MediaState |
+| 7.1.07 | `au-music` | Song and MediaPlayer | XNA 4.0 | Song, MediaPlayer.Play, MediaPlayer.Volume, SongCollection, MediaQueue, MediaPlayer.Queue, MediaPlayer.MoveNext, MediaPlayer.MovePrevious, MediaPlayer.IsShuffled, MediaPlayer.IsVisualizationEnabled, MediaPlayer.GetVisualizationData, VisualizationData, MediaState |
 | 7.1.08 | `au-video` | Video | XNA 4.0 | Video, VideoPlayer, VideoPlayer.Play, VideoPlayer.Pause, VideoPlayer.Resume, VideoPlayer.Stop, VideoPlayer.GetTexture, VideoPlayer.IsLooped, VideoPlayer.IsMuted, VideoPlayer.Volume, VideoPlayer.PlayPosition, VideoPlayer.State |
 | 7.1.09 | `au-mic` | The Microphone | XNA 4.0 | Microphone, Microphone.GetData, Microphone.SampleRate, Microphone.BufferDuration, Microphone.GetSampleSizeInBytes, Microphone.IsHeadset |
 | 7.1.10 | `au-xact` | XACT Cues and Banks | XNA 4.0 | AudioEngine, AudioEngine.Update, AudioEngine.GetCategory, AudioCategory.SetVolume, AudioCategory.Pause, WaveBank, SoundBank, SoundBank.GetCue, SoundBank.PlayCue, Cue.Play, Cue.Pause, Cue.Resume, Cue.Stop, AudioStopOptions |
