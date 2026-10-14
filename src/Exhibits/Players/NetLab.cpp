@@ -16,6 +16,9 @@
 
 #ifdef MUSEUM_NETWORKING
 #include "Microsoft/Xna/Framework/GamerServices/Gamer.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/FriendCollection.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/Guide.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/InviteAcceptedEventArgs.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/SignedInGamer.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/SignedInGamerCollection.hpp"
 #include "Microsoft/Xna/Framework/Net/GameEndedEventArgs.hpp"
@@ -62,7 +65,15 @@ class NetLab final : public ScreenExhibit {
 public:
     NetLab(const RoomDef& room, Services& services) : ScreenExhibit(room, services, 960, 540, 7.6f), mode_(ParseMode(room.params.Get("mode"))) {}
 
-    ~NetLab() override { CloseSession(); }
+    ~NetLab() override
+    {
+        CloseSession();
+#ifdef MUSEUM_NETWORKING
+        if (inviteSubscribed_) {
+            try { NetworkSession::InviteAccepted.Remove(inviteToken_); } catch (const std::exception&) {}
+        }
+#endif
+    }
 
     void BuildStatic(RoomBuilder& b) override
     {
@@ -87,15 +98,18 @@ public:
             p.AddReadout("SessionState", [this] { NetworkSession* n = Primary(); return n != nullptr ? std::string(StateName(n->getSessionStateProperty())) + (n->getIsHostProperty() ? ", this machine hosts" : "") : std::string("no session"); });
             p.AddReadout("IsEveryoneReady", [this] { NetworkSession* n = Primary(); return n != nullptr ? std::string(n->getIsEveryoneReadyProperty() ? "true" : "false") : std::string("-"); });
             p.AddReadout("Gamers (local / all)", [this] { NetworkSession* n = Primary(); return n != nullptr ? std::to_string(n->getLocalGamersProperty().getCountProperty()) + " / " + std::to_string(n->getAllGamersProperty().getCountProperty()) : std::string("-"); });
+            p.AddButton("Guide.ShowSignIn: an account for PlayerMatch", [this] { try { Microsoft::Xna::Framework::GamerServices::Guide::ShowSignIn(1, true); Museum::Log("online", "ShowSignIn(1, true) opened"); } catch (const std::exception& e) { status_ = std::string(e.what()).substr(0, 50); } });
             p.AddToggle("Deliver packets: a SystemLink session (visible on your network)", false, [this](bool v) { SetTransport(v); });
             p.AddSlider("SimulatedLatency (ms, on arriving packets)", 0.0f, 500.0f, 0.0f, [this](float v) { latencyMs_ = v; ApplyImpairment(); }, "%.0f", 10.0f);
             p.AddSlider("SimulatedPacketLoss", 0.0f, 0.5f, 0.0f, [this](float v) { loss_ = v; ApplyImpairment(); }, "%.2f", 0.05f);
             p.AddSlider("SessionProperties[0] (game mode)", 0.0f, 9.0f, static_cast<float>(gameMode_), [this](float v) { gameMode_ = static_cast<int>(v); ApplySessionSettings(); }, "%.0f", 1.0f);
             p.AddToggle("AllowJoinInProgress", false, [this](bool v) { joinInProgress_ = v; ApplySessionSettings(); });
             p.AddChoice("Search for game mode", {"any", "this session's", "one nobody hosts"}, 0, [this](int v) { searchMode_ = v; });
+            p.AddButton("Guide.ShowGameInvite (your friends)", [this] { InviteFriends(); });
             p.AddButton("NetworkSession.BeginFind (SystemLink)", [this] { BeginFind(); });
             p.AddButton("NetworkSession.BeginJoin (the first session found)", [this] { BeginJoin(); });
             p.AddReadout("Find", [this] { return found_; });
+            p.AddToggle("Over the account service (PlayerMatch), not SystemLink", false, [this](bool v) { online_ = v; if (host_ != nullptr) { SetTransport(false); SetTransport(true); } });
             p.AddSlider("Packets per second", 2.0f, 60.0f, rate_, [this](float v) { rate_ = v; }, "%.0f", 1.0f);
             p.AddReadout("Transport", [this] { return transportStatus_; });
         }
@@ -108,7 +122,12 @@ public:
     void OnScreenLoaded() override
     {
 #ifdef MUSEUM_NETWORKING
-        if (mode_ == Mode::Session) OpenLobby();
+        if (mode_ == Mode::Session) {
+            OpenLobby();
+            // A player who accepts an invitation in the Guide raises InviteAccepted at the next Update; the game then joins with JoinInvited.
+            inviteToken_ = NetworkSession::InviteAccepted.Add([this](System::Object*, const Microsoft::Xna::Framework::GamerServices::InviteAcceptedEventArgs&) { inviteAccepted_ = true; Log("InviteAccepted raised: joining with JoinInvited"); });
+            inviteSubscribed_ = true;
+        }
 #endif
     }
 
@@ -345,10 +364,10 @@ private:
         try {
             ResetStats();
             DisposeLobby();   // the same profiles cannot be in a Local lobby and a SystemLink session at once (one session per process, as in XNA)
-            host_ = NetworkSession::Create(NetworkSessionType::SystemLink, 2, 8);
+            host_ = NetworkSession::Create(NetType(), 2, 8);
             phase_ = Phase::Connected;
-            transportStatus_ = "SystemLink session, both profiles local: packets flow in memory";
-            Log("Create(SystemLink, 2 local, 8 max): " + std::to_string(host_->getLocalGamersProperty().getCountProperty()) + " local gamer(s)");
+            transportStatus_ = online_ ? "PlayerMatch session through the account service: packets travel by its relay" : "SystemLink session, both profiles local: packets flow in memory";
+            Log(std::string("Create(") + (online_ ? "PlayerMatch" : "SystemLink") + ", 2 local, 8 max): " + std::to_string(host_->getLocalGamersProperty().getCountProperty()) + " local gamer(s)");
             if (wantReady_) SetReady(true);
         } catch (const std::exception& e) {
             CloseTransport();
@@ -358,6 +377,8 @@ private:
             Museum::Log("net", "%s", transportStatus_.c_str());
         }
     }
+
+    [[nodiscard]] NetworkSessionType NetType() const { return online_ ? NetworkSessionType::PlayerMatch : NetworkSessionType::SystemLink; }
 
     // The settings a host edits on a live session: its properties (what a search can filter on) and whether players may join once it has started.
     void ApplySessionSettings()
@@ -402,7 +423,7 @@ private:
             NetworkSessionProperties props;
             if (searchMode_ == 1) props[0] = gameMode_;
             if (searchMode_ == 2) props[0] = (gameMode_ + 5) % 10;
-            find_ = NetworkSession::BeginFind(NetworkSessionType::SystemLink, 2, props, {}, std::any{});
+            find_ = NetworkSession::BeginFind(NetType(), 2, props, {}, std::any{});
             found_ = "searching the local network...";
         } catch (const std::exception& e) {
             found_ = std::string("BeginFind: ") + std::string(e.what()).substr(0, 56);
@@ -468,11 +489,47 @@ private:
             tried_ = false;
         }
     }
+    // Asks the Guide to invite the friends to this machine's online session.
+    void InviteFriends()
+    {
+        try {
+            std::vector<Microsoft::Xna::Framework::GamerServices::Gamer*> to;
+            auto* gamers = Microsoft::Xna::Framework::GamerServices::Gamer::getSignedInGamersProperty();
+            Microsoft::Xna::Framework::GamerServices::FriendCollection friends = gamers != nullptr && gamers->getCountProperty() > 0 ? (*gamers)[0]->GetFriends() : Microsoft::Xna::Framework::GamerServices::FriendCollection::CreateInternal({});
+            for (int i = 0; i < friends.getCountProperty() && i < 8; ++i) to.push_back(friends[i]);
+            Microsoft::Xna::Framework::GamerServices::Guide::ShowGameInvite(Microsoft::Xna::Framework::PlayerIndex::One, to);
+            Museum::Log("online", "ShowGameInvite opened");
+            Log("Guide.ShowGameInvite opened for " + std::to_string(to.size()) + " friend(s)");
+        } catch (const std::exception& e) {
+            Log(std::string("ShowGameInvite: ") + std::string(e.what()).substr(0, 60));
+        }
+    }
+    // The invitation was accepted in the Guide: the same asynchronous join, through the invitation.
+    void BeginJoinInvited()
+    {
+        try {
+            CloseSession();
+            tried_ = true;
+            ResetStats();
+            joinInvited_ = true;
+            join_ = NetworkSession::BeginJoinInvited(2, {}, std::any{});
+            found_ = "joining the invitation...";
+        } catch (const std::exception& e) {
+            found_ = std::string("BeginJoinInvited: ") + std::string(e.what()).substr(0, 56);
+            tried_ = false;
+            joinInvited_ = false;
+        }
+    }
     void PollJoin()
     {
+        if (inviteAccepted_ && join_ == nullptr && find_ == nullptr) {
+            inviteAccepted_ = false;
+            BeginJoinInvited();
+        }
         if (join_ == nullptr || !join_->getIsCompletedProperty()) return;
         try {
-            host_ = NetworkSession::EndJoin(join_);
+            host_ = joinInvited_ ? NetworkSession::EndJoinInvited(join_) : NetworkSession::EndJoin(join_);
+            joinInvited_ = false;
             delete join_;
             join_ = nullptr;
             phase_ = Phase::Connected;
@@ -508,9 +565,10 @@ private:
         if (host_ == nullptr || phase_ != Phase::Connected) return;
         try {
             host_->Update();
-            if (host_->getLocalGamersProperty().getCountProperty() < 2) return;
+            if (host_->getLocalGamersProperty().getCountProperty() < 1) return;
+            // Two local gamers (the offline profiles) talk to each other; one account online talks to whoever else is in the session.
             LocalNetworkGamer* sender = host_->getLocalGamersProperty()[0];
-            LocalNetworkGamer* guest = host_->getLocalGamersProperty()[1];
+            LocalNetworkGamer* guest = host_->getLocalGamersProperty().getCountProperty() > 1 ? host_->getLocalGamersProperty()[1] : sender;
             sendClock_ += dt * rate_;
             while (sendClock_ >= 1.0f) {
                 sendClock_ -= 1.0f;
@@ -525,7 +583,7 @@ private:
                 trail_.push_back(p);
                 if (trail_.size() > 60) trail_.pop_front();
             }
-            while (sender->getIsDataAvailableProperty()) {   // the sender's own copy: drained so the queue does not grow
+            while (guest != sender && sender->getIsDataAvailableProperty()) {   // the sender's own copy: drained so the queue does not grow
                 PacketReader r;
                 NetworkGamer* from = nullptr;
                 sender->ReceiveData(r, from);
@@ -544,6 +602,7 @@ private:
                     if (remote_trail_.size() > 60) remote_trail_.pop_front();
                     continue;
                 }
+                if (guest == sender) continue;   // one local gamer: its own packets coming back are not "received"
                 ++received_;
                 lastSeq_ = seq;
                 ageMs_ = (time_ - sentAt) * 1000.0f;
@@ -583,6 +642,9 @@ private:
         char line[200];
         std::snprintf(line, sizeof line, "sent %d   received %d   missing %.0f %%   last arrived #%d, %.0f ms old   %d B/s out   %d B/s in", sent_, received_, static_cast<double>(std::max(0.0f, lost)), lastSeq_,
                       static_cast<double>(ageMs_), host_ != nullptr ? host_->getBytesPerSecondSentProperty() : 0, host_ != nullptr ? host_->getBytesPerSecondReceivedProperty() : 0);
+        if (host_ != nullptr && host_->getLocalGamersProperty().getCountProperty() < 2) {   // one account: nothing comes back from itself
+            std::snprintf(line, sizeof line, "sent %d   %d B/s out   %d B/s in", sent_, host_->getBytesPerSecondSentProperty(), host_->getBytesPerSecondReceivedProperty());
+        }
         text(line, 24, 420, Kit::kText, 0.5f);
         if (remote) text("from remote gamers: " + std::to_string(remoteReceived_) + " packets, " + std::to_string(static_cast<int>(remoteRate_ + 0.5f)) + " per second (the other museum sends " + std::to_string(static_cast<int>(rate_)) + ")", 24, 395 + 0.0f, Kit::Rgba(150, 190, 255), 0.5f);
         if (host_ != nullptr) {
@@ -636,6 +698,8 @@ private:
     std::deque<std::string> log_;
     std::string status_ = "-";
     int gameMode_ = 3, searchMode_ = 0, remoteReceived_ = 0;
+    bool online_ = false, inviteAccepted_ = false, inviteSubscribed_ = false, joinInvited_ = false;
+    std::size_t inviteToken_ = 0;
     float latencyMs_ = 0.0f, loss_ = 0.0f, remoteRate_ = 0.0f, windowClock_ = 0.0f;
     int remoteWindow_ = 0;
     std::deque<Vector2> remote_trail_;

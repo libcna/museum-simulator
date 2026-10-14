@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 35 wings, 274 exhibit rooms (5 open to the sky), 339 walkable cells in all.
+10 floors, 36 wings, 278 exhibit rooms (5 open to the sky), 344 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -475,13 +475,22 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 | 8.4.06 | `net-packets` | Packets | XNA 4.0 | PacketWriter, PacketReader, PacketWriter.Write, PacketReader.ReadVector3, PacketReader.ReadQuaternion, PacketReader.ReadMatrix |
 | 8.4.07 | `net-session` | A Network Session | XNA 4.0 | NetworkSession.Create, NetworkSession.Update, NetworkSession.StartGame, NetworkSession.EndGame, NetworkSession.SimulatedLatency, NetworkSession.SimulatedPacketLoss, NetworkSession.SessionState, LocalNetworkGamer.SendData, LocalNetworkGamer.ReceiveData, SendDataOptions, NetworkGamer.IsReady, NetworkSession.GamerJoined, NetworkSession.GameStarted, NetworkSession.BeginFind, NetworkSession.EndFind, AvailableNetworkSession, AvailableNetworkSessionCollection, QualityOfService, NetworkSessionProperties, NetworkSession.SessionProperties, NetworkSession.AllowJoinInProgress, NetworkSession.BeginJoin, NetworkSession.EndJoin, NetworkGamer.IsLocal, NetworkGamer.IsHost, NetworkGamer.RoundtripTime, NetworkSession.AllGamers |
 
+**Online Service** - CNA's account service: accounts, friends, messages and parties through the Guide (offline unless tools/online_stack.sh runs one)
+
+| Room | Key | Title | Origin | APIs |
+|---|---|---|---|---|
+| 8.5.01 | `on-account` | Accounts and the Guide | XNA 4.0 | Guide.ShowSignIn, Guide.ShowAchievementsEXT, Guide.ShowMarketplace, SignedInGamer.IsSignedInToLive, GamerProfile.GamerScore, GamerProfile.Reputation, GamerProfile.TotalAchievements, CNA::GamerServices::resolveConfiguration |
+| 8.5.02 | `on-friends` | Friends and Presence | XNA 4.0 | SignedInGamer.GetFriends, FriendCollection, FriendGamer, FriendGamer.IsOnline, FriendGamer.IsAway, FriendGamer.IsBusy, FriendGamer.IsPlaying, FriendGamer.IsJoinable, FriendGamer.Presence, Guide.ShowFriends, Guide.ShowPlayers, Guide.ShowGamerCard, Guide.ShowPlayerReview, Guide.ShowFriendRequest |
+| 8.5.03 | `on-messages` | Messages | XNA 4.0 | Guide.ShowMessages, Guide.ShowComposeMessage |
+| 8.5.04 | `on-party` | Parties | XNA 4.0 | Guide.ShowParty, Guide.ShowPartySessions, SignedInGamer.PartySize |
+
 **History and Versions** - Where XNA came from, and what this very build of CNA is made of
 
 | Room | Key | Title | Origin | APIs |
 |---|---|---|---|---|
-| 8.5.01 | `hist-xna` | XNA, 2004 to Today | XNA 4.0 | Game, GraphicsProfile, XNA 4.0 |
-| 8.5.02 | `hist-cna` | This Build of CNA | CNA extension | CNA::GraphicsRendererSelection.GetAvailable, CNA::getGraphicsBackendMaturity, CNA::getGraphicsRendererName |
-| 8.5.03 | `hist-compare` | XNA 4.0 and What CNA Adds | CNA extension | ApiOrigin, XNA 4.0, CNAEXT |
+| 8.6.01 | `hist-xna` | XNA, 2004 to Today | XNA 4.0 | Game, GraphicsProfile, XNA 4.0 |
+| 8.6.02 | `hist-cna` | This Build of CNA | CNA extension | CNA::GraphicsRendererSelection.GetAvailable, CNA::getGraphicsBackendMaturity, CNA::getGraphicsRendererName |
+| 8.6.03 | `hist-compare` | XNA 4.0 and What CNA Adds | CNA extension | ApiOrigin, XNA 4.0, CNAEXT |
 
 ### Floor 9: Performance and Validation
 

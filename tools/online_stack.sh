@@ -37,6 +37,16 @@ for a in json.load(open("Content/GamerServices/Achievements.json")):
     a.setdefault("display", True)
     subprocess.run([admin, db, "achievement", title], input=json.dumps(a).encode(), check=True, stdout=subprocess.DEVNULL)
 PY
+  # The museum's score board (what LeaderboardKey.BestScoreLifeTime reads, game mode 0): higher is better, the best rating is kept.
+  python3 -I - "$bin" "$db" "$title" <<'PY'
+import json, subprocess, sys
+admin, db, title = sys.argv[1] + "/cna-gamer-services-admin", sys.argv[2], sys.argv[3]
+def run(cmd, doc):
+    subprocess.run([admin, db, cmd, title], input=json.dumps(doc).encode(), check=True, stdout=subprocess.DEVNULL)
+run("leaderboard", {"key": "BestScoreLifeTime", "mode": 0, "ascending": False, "aggregation": "best", "arbitrated": False, "columns": {}})
+for tag, rating in (("Curator", 120), ("Archivist", 80)):
+    run("seed-leaderboard", {"key": "BestScoreLifeTime", "mode": 0, "gamertag": tag, "rating": rating, "columns": {}})
+PY
   # Visitor and Curator start as friends and Curator has left a message; Archivist is a stranger to add from the Guide.
   # (The administration tool has no command for either, so the fixture writes the service's own tables.)
   python3 -I - "$db" <<'PY'

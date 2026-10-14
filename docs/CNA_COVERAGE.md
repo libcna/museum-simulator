@@ -39,7 +39,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 |---|---|
 | haptic effects (devices are listed, none played) | planned: see HANDOFF.md |
 | `MediaLibrary`, albums, playlists, pictures (`Microsoft.Xna.Framework.Media`) | deliberately not demonstrated: CNA builds them by scanning the visitor's own Music and Pictures folders, and the museum does not read personal files (the only way to point it elsewhere is a test-only hook inside CNA) |
-| GamerServices and Net beyond the basics: friends, invitations, parties, voice, online sessions | not demonstrated: the *Players and Networking* wing covers signed-in gamers, presence, privileges, profiles, achievements, the Guide, PacketWriter/Reader and a Local and a SystemLink session between the two local profiles, a search for SystemLink sessions and joining one (a second museum process is found and joined, its gamers appear as remote, packets cross the network); the *Leaderboards* room writes and reads ratings from the two local profiles; the *Avatars* room shows AvatarDescription, AvatarAnimation and AvatarRenderer; the rest needs a second machine or an account service |
+| GamerServices voice chat, a shared party between three or more accounts, host migration | not demonstrated: the *Online Service* wing needs the sibling CNA gamer-services server (`tools/online_stack.sh`); it demonstrates accounts, friends, presence, messages, parties, online leaderboards, PlayerMatch sessions with find, join and invitations between two accounts. Voice needs a microphone and a second machine |
 | `FileDialog`, `MessageBox`, `SystemTray`, `UrlLauncher`, `Camera` (CNA_DEVICES) | not implemented: they open real dialogs or hardware; the room reports whether each is supported |
 | C API, Inspector | not implemented: disabled in CNA's default build |
 | Compiled XNA effects (`.fxb`) | demonstrated in *Compiled XNA Effects*, which runs a real XNA-compiled effect on FNA3D (the only renderer with `CompiledEffects`) and says so elsewhere |
@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-732 distinct API names are claimed by at least one room.
+759 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -151,6 +151,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CNA::Devices::PowerInfo | `cx-devices` |
 | CNA::Devices::SystemInfo | `cx-devices` |
 | CNA::Diagnostics::GetProvider | `cx-stats`, `pf-dashboard` |
+| CNA::GamerServices::resolveConfiguration | `on-account` |
 | CNA::Graphics::AsciiPostProcessEffect | `cx-ascii` |
 | CNA::Graphics::CRTEffect | `cx-crt` |
 | CNA::Graphics::DebugDraw | `cx-debugdraw` |
@@ -263,6 +264,14 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | EnvironmentMapEffect | `tex-cube`, `rt-cube` |
 | EnvironmentMapEffect.EnvironmentMap | `rt-cube` |
 | EvaluateMorphWeightsEXT | `model-morph` |
+| FriendCollection | `on-friends` |
+| FriendGamer | `on-friends` |
+| FriendGamer.IsAway | `on-friends` |
+| FriendGamer.IsBusy | `on-friends` |
+| FriendGamer.IsJoinable | `on-friends` |
+| FriendGamer.IsOnline | `on-friends` |
+| FriendGamer.IsPlaying | `on-friends` |
+| FriendGamer.Presence | `on-friends` |
 | Game | `info`, `app-lifecycle`, `hist-xna` |
 | Game.Activated | `pl-window` |
 | Game.Components | `app-components` |
@@ -309,6 +318,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Gamer.SignedInGamers | `gs-players` |
 | GamerPresenceMode | `gs-players` |
 | GamerProfile | `gs-players` |
+| GamerProfile.GamerScore | `on-account` |
+| GamerProfile.Reputation | `on-account` |
+| GamerProfile.TotalAchievements | `on-account` |
 | GestureType | `in-touch` |
 | GltfImportDiagnosticEXT | `model-report` |
 | GltfImportReportEXT | `model-report` |
@@ -367,6 +379,18 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Guide.IsTrialMode | `gs-guide` |
 | Guide.IsVisible | `gs-guide` |
 | Guide.NotificationPosition | `gs-guide` |
+| Guide.ShowAchievementsEXT | `on-account` |
+| Guide.ShowComposeMessage | `on-messages` |
+| Guide.ShowFriendRequest | `on-friends` |
+| Guide.ShowFriends | `on-friends` |
+| Guide.ShowGamerCard | `on-friends` |
+| Guide.ShowMarketplace | `on-account` |
+| Guide.ShowMessages | `on-messages` |
+| Guide.ShowParty | `on-party` |
+| Guide.ShowPartySessions | `on-party` |
+| Guide.ShowPlayerReview | `on-friends` |
+| Guide.ShowPlayers | `on-friends` |
+| Guide.ShowSignIn | `on-account` |
 | Guide.SimulateTrialMode | `gs-guide` |
 | HalfVector2 | `vt-packed` |
 | HalfVector4 | `vt-packed` |
@@ -640,6 +664,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SignedInGamer.AwardAchievement | `gs-achievements` |
 | SignedInGamer.GameDefaults | `gs-players` |
 | SignedInGamer.GetAchievements | `gs-achievements` |
+| SignedInGamer.GetFriends | `on-friends` |
+| SignedInGamer.IsSignedInToLive | `on-account` |
+| SignedInGamer.PartySize | `on-party` |
 | SignedInGamer.Presence | `gs-players` |
 | SignedInGamer.Privileges | `gs-players` |
 | SignedInGamer.SignedIn | `gs-players` |

@@ -18,6 +18,9 @@ step "elevator to every floor" tools/nav_test.sh
 step "renderer self-checks" tools/renderer_check.sh OPENGLES3
 step "visual regression" tools/reference.sh compare
 step "memory over three tours" tools/leak_check.sh
+if [ "${ONLINE:-0}" = 1 ]; then   # needs Xvfb, xdotool, sqlite3 and the built service (tools/online_stack.sh); exit 77 = skipped
+  step "online service (sign-in, scored round, achievement)" bash -c 'tools/online_check.sh; rc=$?; [ $rc = 77 ] && exit 0; exit $rc'
+fi
 if [ "${SLOW:-0}" = 1 ]; then
   for r in OPENGL33 SOFTWARE; do
     step "tour on $r" env CNA_GRAPHICS_RENDERER=$r MUSEUM_TIMEOUT=2400 tools/tour.sh -f 3 -p

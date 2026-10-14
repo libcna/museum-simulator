@@ -28,6 +28,9 @@
 #include "Microsoft/Xna/Framework/GamerServices/MessageBoxIcon.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/SignedInGamer.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/SignedInGamerCollection.hpp"
+#include "Microsoft/Xna/Framework/Net/LocalNetworkGamer.hpp"
+#include "Microsoft/Xna/Framework/Net/NetworkSession.hpp"
+#include "Microsoft/Xna/Framework/Net/NetworkSessionType.hpp"
 #include "Microsoft/Xna/Framework/PlayerIndex.hpp"
 #endif
 
@@ -48,6 +51,7 @@ Mode ParseMode(const std::string& s)
 
 #ifdef MUSEUM_NETWORKING
 using namespace Microsoft::Xna::Framework::GamerServices;
+using namespace Microsoft::Xna::Framework::Net;
 
 constexpr GamerPresenceMode kPresences[] = {GamerPresenceMode::None, GamerPresenceMode::SinglePlayer, GamerPresenceMode::Multiplayer, GamerPresenceMode::LocalCoOp,
                                             GamerPresenceMode::ExplorationMode, GamerPresenceMode::PuzzleMode, GamerPresenceMode::AtMenu, GamerPresenceMode::Paused};
@@ -119,6 +123,7 @@ public:
             case Mode::Leaderboards:
                 p.AddChoice("LeaderboardKey", {"BestScoreLifeTime", "BestScoreRecent", "BestTimeLifeTime", "BestTimeRecent"}, 0, [this](int v) { boardKey_ = v; dirty_ = true; });
                 p.AddChoice("Gamer to write", {"first signed-in", "second signed-in"}, 0, [this](int v) { writer_ = v; });
+                p.AddButton("Guide.ShowSignIn: an account scores on the service", [this] { try { Guide::ShowSignIn(1, true); Museum::Log("online", "ShowSignIn(1, true) opened"); } catch (const std::exception& e) { boardError_ = std::string(e.what()).substr(0, 60); } });
                 p.AddButton("LeaderboardWriter: add 10 to the rating", [this] { AddRating(10); });
                 p.AddButton("LeaderboardWriter: add 100 to the rating", [this] { AddRating(100); });
                 p.AddButton("LeaderboardWriter: reset the rating", [this] { AddRating(std::numeric_limits<long long>::min()); });
@@ -315,12 +320,39 @@ private:
         try {
             SignedInGamer* g = Nth(writer_);
             if (g == nullptr) return;
+            if (g->getIsSignedInToLiveProperty()) {
+                PlayOnlineRound(g, delta);
+                return;
+            }
             LeaderboardEntry* entry = g->getLeaderboardWriterProperty().GetLeaderboard(BoardId());
             entry->setRatingProperty(delta == std::numeric_limits<long long>::min() ? 0 : entry->getRatingProperty() + delta);
             dirty_ = true;
         } catch (const std::exception& e) {
             boardError_ = std::string(e.what()).substr(0, 60);
+            Museum::Log("online", "leaderboard write: %s", e.what());
         }
+    }
+    // An account's rating reaches the service only when a game session ends: a LocalWithLeaderboards session is created, started, the
+    // gamer's entry is set and EndGame commits it (the writes are transient until then).
+    void PlayOnlineRound(SignedInGamer* g, long long delta)
+    {
+        long long current = 0;
+        {
+            LeaderboardReader read = LeaderboardReader::Read(BoardId(), std::vector<Gamer*>{g}, g, 1);
+            const auto entries = read.getEntriesProperty();
+            for (int i = 0; i < entries.getCountProperty(); ++i)
+                if (entries[i].getGamerProperty() != nullptr && entries[i].getGamerProperty()->getGamertagProperty() == g->getGamertagProperty()) current = entries[i].getRatingProperty();
+        }
+        std::unique_ptr<NetworkSession> session(NetworkSession::Create(NetworkSessionType::LocalWithLeaderboards, 1, 2));
+        for (int i = 0; i < session->getLocalGamersProperty().getCountProperty(); ++i) session->getLocalGamersProperty()[i]->setIsReadyProperty(true);
+        session->StartGame();
+        for (int i = 0; i < 3; ++i) session->Update();   // the state changes to Playing on an update
+        g->getLeaderboardWriterProperty().GetLeaderboard(BoardId())->setRatingProperty(delta == std::numeric_limits<long long>::min() ? 0 : current + delta);
+        session->EndGame();
+        session->Update();
+        boardError_ = "round played in a LocalWithLeaderboards session; EndGame sent the rating to the service";
+        Museum::Log("online", "round played: %s rated %lld", g->getGamertagProperty().c_str(), current + delta);
+        dirty_ = true;
     }
     void Page(bool down)
     {
