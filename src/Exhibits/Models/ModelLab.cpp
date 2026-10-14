@@ -20,7 +20,11 @@
 #include "Microsoft/Xna/Framework/Graphics/ModelMesh.hpp"
 #include "Microsoft/Xna/Framework/Graphics/ModelMeshPart.hpp"
 #include "Microsoft/Xna/Framework/Graphics/AlphaModeEXT.hpp"
+#include "Microsoft/Xna/Framework/Graphics/IEffectMatrices.hpp"
 #include "Microsoft/Xna/Framework/Graphics/PbrEffect.hpp"
+#include "Microsoft/Xna/Framework/Graphics/SamplerState.hpp"
+#include "Microsoft/Xna/Framework/Graphics/TextureAddressMode.hpp"
+#include "Microsoft/Xna/Framework/Graphics/TextureFilter.hpp"
 #include "Microsoft/Xna/Framework/Graphics/TextureTransformEXT.hpp"
 #include "Rendering/TextureLibrary.hpp"
 #include "Microsoft/Xna/Framework/Graphics/SkinnedPbrEffect.hpp"
@@ -34,12 +38,12 @@ using namespace MathKit;
 
 namespace {
 
-enum class Mode { Info, Pbr, Rigid, Skinned, Instances, Bounds, Effects, Report, Ibl, Morph, Variants, Material };
+enum class Mode { Info, Pbr, Rigid, Skinned, Instances, Bounds, Effects, Report, Ibl, Morph, Variants, Material, Wrap };
 
 Mode ParseMode(const std::string& s)
 {
     static const std::pair<const char*, Mode> table[] = {{"pbr", Mode::Pbr}, {"rigid", Mode::Rigid}, {"skinned", Mode::Skinned}, {"instances", Mode::Instances},
-                                                         {"bounds", Mode::Bounds}, {"effects", Mode::Effects}, {"report", Mode::Report}, {"ibl", Mode::Ibl}, {"morph", Mode::Morph}, {"variants", Mode::Variants}, {"material", Mode::Material}};
+                                                         {"bounds", Mode::Bounds}, {"effects", Mode::Effects}, {"report", Mode::Report}, {"ibl", Mode::Ibl}, {"morph", Mode::Morph}, {"variants", Mode::Variants}, {"material", Mode::Material}, {"wrap", Mode::Wrap}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
     return Mode::Info;
@@ -52,7 +56,7 @@ public:
     ~ModelLab() override { RestoreOriginalEffects(); }
     ModelLab(const RoomDef& room, Services& services) : Exhibit(room, services), mode_(ParseMode(room.params.Get("mode"))), gizmos_(services)
     {
-        name_ = room.params.Get("model", mode_ == Mode::Rigid ? "robot" : (mode_ == Mode::Skinned ? "tentacle" : (mode_ == Mode::Morph ? "morph" : (mode_ == Mode::Variants ? "variants" : "knot"))));
+        name_ = room.params.Get("model", mode_ == Mode::Rigid ? "robot" : (mode_ == Mode::Skinned ? "tentacle" : (mode_ == Mode::Morph ? "morph" : (mode_ == Mode::Variants ? "variants" : (mode_ == Mode::Wrap ? "wrapquads" : "knot")))));
     }
 
     void BuildStatic(RoomBuilder& b) override
@@ -68,6 +72,7 @@ public:
                 p.AddReadout("Root bone / its children", [this] { return RootBone(); });
                 p.AddReadout("CopyBoneTransformsTo", [this] { return BoneCopy(); });
                 p.AddReadout("Part effect class", [this] { return EffectName(); });
+                p.AddReadout("Part topology / base-colour sampler (CNA ext.)", [this] { return PartState(); });
                 p.AddReadout("BoundingSphere (CNA ext.)", [this] { return Bounds(); });
                 p.AddReadout("Skins / animation payload", [this] { return Payload(); });
                 break;
@@ -109,6 +114,13 @@ public:
             case Mode::Effects:
                 p.AddChoice("Effect on every part", {"Original (PbrEffect)", "BasicEffect, lit", "BasicEffect, unlit"}, 0, [this](int v) { effectChoice_ = v; ApplyEffects(); });
                 p.AddReadout("ModelMeshPart.Effect", [this] { return EffectName(); });
+                break;
+            case Mode::Wrap:
+                p.AddToggle("Apply each part's sampler state before drawing", true, [this](bool v) { applySamplers_ = v; });
+                p.AddReadout("Left quad: part sampler (slot 0)", [this] { return SamplerOf(0); });
+                p.AddReadout("Middle quad: part sampler (slot 0)", [this] { return SamplerOf(1); });
+                p.AddReadout("Right quad: part sampler (slot 0)", [this] { return SamplerOf(2); });
+                p.AddReadout("What happens if it is not applied", [] { return std::string("every quad draws with the device's LinearWrap"); });
                 break;
             case Mode::Material:
                 p.AddChoice("Base colour texture", {"brick", "coin (has alpha)", "checker"}, 0, [this](int v) { texture_ = v; });
@@ -220,6 +232,7 @@ public:
             case Mode::Instances: DrawInstances(ctx, o); break;
             case Mode::Bounds: DrawBounds(ctx, o); break;
             case Mode::Report: break;
+            case Mode::Wrap: DrawWrap(ctx, o); break;
             default: {
                 const float scale = FitScale();
                 const Matrix world = Matrix::CreateScale(scale) * (mode_ == Mode::Variants ? Matrix::CreateRotationX(MathHelper::ToRadians(62.0f)) : Matrix::getIdentityProperty()) * Matrix::CreateRotationY(mode_ == Mode::Rigid || mode_ == Mode::Skinned ? spin_t_ * 0.4f : spin_t_) * Matrix::CreateTranslation(o + Vector3(0, mode_ == Mode::Skinned || mode_ == Mode::Rigid ? 0.0f : 1.3f, 0));
@@ -239,12 +252,13 @@ public:
 private:
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"Loading a glTF model", "PbrEffect: metallic and roughness", "Rigid animation from a glTF clip", "Skinned animation", "Many model instances", "Model and mesh bounds", "Swapping a model's effects", "The glTF import report", "Image-based lighting", "Morph targets", "Material variants", "PBR material maps"};
+        static const char* t[] = {"Loading a glTF model", "PbrEffect: metallic and roughness", "Rigid animation from a glTF clip", "Skinned animation", "Many model instances", "Model and mesh bounds", "Swapping a model's effects", "The glTF import report", "Image-based lighting", "Morph targets", "Material variants", "PBR material maps", "Sampler states from a glTF file"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
     {
         switch (mode_) {
+            case Mode::Wrap: return {"A glTF texture carries a sampler: filter and wrap mode. CNA keeps it on each ModelMeshPart (SamplerStates, CNA extension) and leaves the device alone,", "so the application applies it before the draw. The three quads share one picture and UVs from 0 to 2: repeat tiles it, clamp smears its edge, mirror flips alternate tiles."};
             case Mode::Info: return {"ContentManager.Load<Model> reads a glTF file into a Model: meshes made of parts, a bone tree, and for each part", "an Effect. Pick a model to see what the importer produced. Materials arrive as PbrEffect (a CNA extension)."};
             case Mode::Pbr: return {"glTF materials are metallic-roughness: MetallicFactor 1 turns a surface into mirror-like metal that takes its", "colour from reflections, RoughnessFactor blurs the highlight. The model's own PbrEffects are edited on a private copy."};
             case Mode::Rigid: return {"A glTF animation that moves ordinary nodes arrives as a clip in the model's Tag (ModelAnimationsEXT).", "ApplyClipToBonesEXT poses the bones at a time; Model.Draw then uses the absolute bone transforms. Axes mark the joints."};
@@ -545,6 +559,63 @@ private:
             for (int i = 0; i < m->getMeshPartsProperty().getCountProperty(); ++i) tri += m->getMeshPartsProperty()[i]->getPrimitiveCountProperty();
         return std::to_string(tri);
     }
+    // What the importer recorded on the first part besides its effect: the primitive topology the index buffer holds and the sampler
+    // state the glTF asked for on the base colour slot. CNA stores both on the part; the application decides whether to apply them.
+    [[nodiscard]] std::string PartState() const
+    {
+        if (!model_ || model_->getMeshesProperty().getCountProperty() == 0 || model_->getMeshesProperty()[0]->getMeshPartsProperty().getCountProperty() == 0) return "-";
+        const ModelMeshPart* part = model_->getMeshesProperty()[0]->getMeshPartsProperty()[0];
+        static const char* const topology[] = {"TriangleList", "TriangleStrip", "LineList", "LineStrip", "PointList"};
+        const int type = static_cast<int>(part->getPrimitiveTypeEXTProperty());
+        const SamplerState& sampler = part->getSamplerStatesEXTProperty()[0];
+        const auto address = [](TextureAddressMode m) { return m == TextureAddressMode::Wrap ? "Wrap" : m == TextureAddressMode::Clamp ? "Clamp" : "Mirror"; };
+        const auto filter = [](TextureFilter f) { return f == TextureFilter::Point ? "Point" : f == TextureFilter::Linear ? "Linear" : f == TextureFilter::Anisotropic ? "Anisotropic" : "mixed"; };
+        return std::string(type >= 0 && type < 5 ? topology[type] : "other") + " / " + filter(sampler.getFilterProperty()) + ", " + address(sampler.getAddressUProperty()) + " x " + address(sampler.getAddressVProperty());
+    }
+    // The quads sit side by side in the model's own bone tree; each mesh is drawn on its own so the sampler state of its part can be
+    // put on the device first, which is how an application honours what the file asked for.
+    void DrawWrap(const DrawContext& ctx, const Vector3& o)
+    {
+        GraphicsDevice& d = ctx.device;
+        d.setRasterizerStateProperty(RasterizerState::CullNone);
+        const Matrix world = Matrix::CreateScale(2.4f) * Matrix::CreateRotationY(R().frameYaw) * Matrix::CreateTranslation(o + Off(0, 1.35f, 0));
+        std::vector<Matrix> bones(static_cast<std::size_t>(model_->getBonesProperty().getCountProperty()));
+        model_->CopyAbsoluteBoneTransformsTo(bones);
+        for (ModelMesh* mesh : model_->getMeshesProperty()) {
+            const ModelBone* parent = mesh->getParentBoneProperty();
+            const Matrix bone = parent != nullptr ? bones[static_cast<std::size_t>(parent->getIndexProperty())] : Matrix::getIdentityProperty();
+            for (int i = 0; i < mesh->getMeshPartsProperty().getCountProperty(); ++i) {
+                ModelMeshPart* part = mesh->getMeshPartsProperty()[i];
+                if (auto* matrices = dynamic_cast<IEffectMatrices*>(part->getEffectProperty())) {
+                    matrices->setWorldProperty(bone * world);
+                    matrices->setViewProperty(ctx.view.view);
+                    matrices->setProjectionProperty(ctx.view.projection);
+                }
+                if (auto* pbr = dynamic_cast<PbrEffect*>(part->getEffectProperty())) {
+                    pbr->setAmbientLightColorProperty(Vector3(0.9f, 0.9f, 0.9f));
+                    pbr->setEmissiveFactorProperty(Vector3::Zero);
+                }
+                d.getSamplerStatesProperty()[0] = applySamplers_ ? part->getSamplerStatesEXTProperty()[0] : SamplerState::LinearWrap;
+            }
+            try {
+                mesh->Draw();
+            } catch (const std::exception& e) {
+                if (refusal_.empty()) Museum::Log("models", "wrap quads: drawing refused (%s)", std::string(e.what()).substr(0, 90).c_str());
+                refusal_ = e.what();
+            }
+        }
+        d.getSamplerStatesProperty()[0] = SamplerState::LinearWrap;
+        gizmos_.Label(R().ToWorld(-2.9f, 0.1f, 0.0f), "REPEAT", Color(255, 230, 150, 255), 0.55f);
+        gizmos_.Label(R().ToWorld(0.0f, 0.1f, 0.0f), "CLAMP_TO_EDGE", Color(255, 230, 150, 255), 0.55f);
+        gizmos_.Label(R().ToWorld(2.9f, 0.1f, 0.0f), "MIRRORED_REPEAT", Color(255, 230, 150, 255), 0.55f);
+    }
+    [[nodiscard]] std::string SamplerOf(int mesh) const
+    {
+        if (!model_ || mesh >= model_->getMeshesProperty().getCountProperty() || model_->getMeshesProperty()[mesh]->getMeshPartsProperty().getCountProperty() == 0) return "-";
+        const SamplerState& sampler = model_->getMeshesProperty()[mesh]->getMeshPartsProperty()[0]->getSamplerStatesEXTProperty()[0];
+        const auto address = [](TextureAddressMode m) { return m == TextureAddressMode::Wrap ? "Wrap" : m == TextureAddressMode::Clamp ? "Clamp" : "Mirror"; };
+        return std::string(sampler.getFilterProperty() == TextureFilter::Linear ? "Linear" : "other filter") + ", " + address(sampler.getAddressUProperty()) + " x " + address(sampler.getAddressVProperty());
+    }
     [[nodiscard]] std::string EffectName() const
     {
         if (!model_ || model_->getMeshesProperty().getCountProperty() == 0 || model_->getMeshesProperty()[0]->getMeshPartsProperty().getCountProperty() == 0) return "-";
@@ -618,7 +689,7 @@ private:
     std::vector<std::unique_ptr<BasicEffect>> overrides_;
     float time_ = 0.0f, spin_t_ = 0.0f, spin_ = 0.5f, clock_ = 0.0f, clipLength_ = 4.0f, speed_ = 1.0f, scale_ = 1.0f;
     float metal_ = 0.8f, rough_ = 0.3f, hue_ = 0.1f, emissive_ = 0.0f;
-    bool play_ = true, skeleton_ = true, cull_ = true, showModel_ = true, showMeshes_ = true;
+    bool play_ = true, applySamplers_ = true, skeleton_ = true, cull_ = true, showModel_ = true, showMeshes_ = true;
     int count_ = 120, drawn_ = 0, effectChoice_ = 0;
 };
 

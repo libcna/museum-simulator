@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 36 wings, 282 exhibit rooms (5 open to the sky), 348 walkable cells in all.
+10 floors, 36 wings, 283 exhibit rooms (5 open to the sky), 349 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -334,7 +334,7 @@ glTF models and their effects, procedural and skeletal animation, particle syste
 
 | Room | Key | Title | Origin | APIs |
 |---|---|---|---|---|
-| 6.1.01 | `model-load` | Loading Models | CNA extension | ContentManager.Load<Model>, Model, ModelMesh, ModelMeshPart, Model.BoundingSphereEXT, Model.Root, ModelBone.Children, Model.CopyBoneTransformsTo |
+| 6.1.01 | `model-load` | Loading Models | CNA extension | ContentManager.Load<Model>, Model, ModelMesh, ModelMeshPart, Model.BoundingSphereEXT, Model.Root, ModelBone.Children, Model.CopyBoneTransformsTo, ModelMeshPart.PrimitiveTypeEXT, ModelMeshPart.SamplerStatesEXT |
 | 6.1.02 | `model-pbr` | Metallic and Rough | CNA extension | PbrEffect, PbrEffect.MetallicFactor, PbrEffect.RoughnessFactor, PbrEffect.EmissiveFactor |
 | 6.1.03 | `model-rigid` | Rigid Animation | CNA extension | ModelAnimationsEXT, ApplyClipToBonesEXT, Model.CopyAbsoluteBoneTransformsTo, ModelBone |
 | 6.1.04 | `model-skinned` | Skinned Animation | CNA extension | AnimationPlayer.ApplyBindPoseBoneTransformsEXT, SkinningData, AnimationPlayer, SkinnedPbrEffect.SetBoneTransforms |
@@ -343,12 +343,13 @@ glTF models and their effects, procedural and skeletal animation, particle syste
 | 6.1.07 | `model-effects` | Swapping Effects | CNA extension | ModelMeshPart.Effect, BasicEffect, PbrEffect |
 | 6.1.08 | `model-report` | Import Report | CNA extension | GltfImportReportEXT, GltfImportDiagnosticEXT |
 | 6.1.09 | `model-material` | PBR Material Maps | CNA extension | PbrEffect.NormalMap, PbrEffect.EmissiveMap, TextureTransformEXT, AlphaModeEXT, PbrEffect.AlphaCutoff |
-| 6.1.10 | `model-morph` | Morph Targets | CNA extension | MorphTargetDataEXT, SetMorphWeightsEXT, EvaluateMorphWeightsEXT, ModelMeshPart.Tag |
-| 6.1.11 | `model-variants` | Material Variants | CNA extension | Model.MaterialVariantEXT, Model.MaterialVariantNamesEXT, PbrEffect |
-| 6.1.12 | `model-ibl` | Image-Based Lighting | CNA extension | ImageBasedLightEXT, PbrEffect.ImageBasedLight, TextureCube, PbrEffect.MetallicFactor, PbrEffect.RoughnessFactor, GraphicsDevice.SupportsImageBasedLightingEXT |
-| 6.1.13 | `model-skinfx` | SkinnedEffect | XNA 4.0 | SkinnedEffect, SkinnedEffect.SetBoneTransforms, SkinnedEffect.WeightsPerVertex, VertexPositionNormalTextureSkinned, VertexBuffer, IndexBuffer |
-| 6.1.14 | `model-skinext` | Your Own Skinned Model | CNA extension | SkinnedModelEXT, SkinnedModelEXT.ComputeBoneTransformsEXT, SkinnedModelEXT.AttachPartEXT, SkinnedModelEXT.RemovePartEXT, SkinnedModelEXT.AddPartEXT, AnimationClipEXT, BoneTrackEXT, KeyframeEXT, SkinnedEffect.SetBoneTransforms, VertexPositionNormalTextureSkinned |
-| 6.1.15 | `model-cameras` | Cameras in a glTF File | CNA extension | Model.CamerasEXT, ModelCameraEXT, ModelCameraEXT.Projection, ModelCameraEXT.WorldTransform, ModelCameraEXT.IsPerspective, Model.CreateInfinitePerspectiveFieldOfViewEXT, BoundingFrustum, Matrix.Invert |
+| 6.1.10 | `model-sampler` | Sampler States from a glTF File | CNA extension | ModelMeshPart.SamplerStatesEXT, ModelMeshPart.SetSamplerStateEXT, ModelMesh.Draw, Model.CopyAbsoluteBoneTransformsTo, GraphicsDevice.SamplerStates, SamplerState, TextureAddressMode, PbrEffect.Texture |
+| 6.1.11 | `model-morph` | Morph Targets | CNA extension | MorphTargetDataEXT, SetMorphWeightsEXT, EvaluateMorphWeightsEXT, ModelMeshPart.Tag |
+| 6.1.12 | `model-variants` | Material Variants | CNA extension | Model.MaterialVariantEXT, Model.MaterialVariantNamesEXT, PbrEffect |
+| 6.1.13 | `model-ibl` | Image-Based Lighting | CNA extension | ImageBasedLightEXT, PbrEffect.ImageBasedLight, TextureCube, PbrEffect.MetallicFactor, PbrEffect.RoughnessFactor, GraphicsDevice.SupportsImageBasedLightingEXT |
+| 6.1.14 | `model-skinfx` | SkinnedEffect | XNA 4.0 | SkinnedEffect, SkinnedEffect.SetBoneTransforms, SkinnedEffect.WeightsPerVertex, VertexPositionNormalTextureSkinned, VertexBuffer, IndexBuffer |
+| 6.1.15 | `model-skinext` | Your Own Skinned Model | CNA extension | SkinnedModelEXT, SkinnedModelEXT.ComputeBoneTransformsEXT, SkinnedModelEXT.AttachPartEXT, SkinnedModelEXT.RemovePartEXT, SkinnedModelEXT.AddPartEXT, AnimationClipEXT, BoneTrackEXT, KeyframeEXT, SkinnedEffect.SetBoneTransforms, VertexPositionNormalTextureSkinned |
+| 6.1.16 | `model-cameras` | Cameras in a glTF File | CNA extension | Model.CamerasEXT, ModelCameraEXT, ModelCameraEXT.Projection, ModelCameraEXT.WorldTransform, ModelCameraEXT.IsPerspective, Model.CreateInfinitePerspectiveFieldOfViewEXT, BoundingFrustum, Matrix.Invert |
 
 **Animation Complex** - Procedural animation: motion built from maths and matrix hierarchies
 

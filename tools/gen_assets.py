@@ -9,7 +9,7 @@ asset licenses. Run from anywhere:
 Outputs are deterministic: running it twice produces identical files.
 
   Content/Textures/*.png   small tileable textures
-  Content/Models/*.gltf    glTF 2.0 models (embedded base64 buffer)
+  Content/Models/*.gltf    glTF 2.0 models (embedded base64 buffer; wrapquads.gltf also embeds its picture)
   Content/Audio/*.wav      16-bit mono PCM sounds
 """
 import base64
@@ -1093,6 +1093,58 @@ def build_variants():
                           "materials": materials})
 
 
+def png_bytes(width, height, rgba):
+    """The encoder of write_png, returning the file's bytes (for a glTF data URI)."""
+    raw = bytearray()
+    stride = width * 4
+    for y in range(height):
+        raw.append(0)
+        raw.extend(rgba[y * stride:(y + 1) * stride])
+
+    def chunk(tag, data):
+        body = tag + data
+        return struct.pack(">I", len(data)) + body + struct.pack(">I", zlib.crc32(body) & 0xFFFFFFFF)
+
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(bytes(raw), 9)) + chunk(b"IEND", b""))
+
+
+def build_wrapquads():
+    """Three quads with one picture and UVs running 0..2, so the glTF sampler's wrap mode decides what shows outside 0..1:
+    REPEAT tiles the picture, CLAMP_TO_EDGE smears its edge pixels, MIRRORED_REPEAT flips every other tile."""
+    size = 64
+    img = Image(size, size)
+    quadrant = {(0, 0): (214, 70, 60), (1, 0): (80, 190, 100), (0, 1): (70, 110, 220), (1, 1): (240, 200, 70)}   # top-left, top-right, bottom-left, bottom-right
+    for y in range(size):
+        for x in range(size):
+            c = quadrant[(x * 2 // size, y * 2 // size)]
+            shade = 0.55 if min(x, y, size - 1 - x, size - 1 - y) < 2 else 1.0
+            if x < 14 and y < 14 and (x < 4 or y < 4):   # a white notch in the top-left corner tells the tiles' orientation apart
+                c, shade = (255, 255, 255), 1.0
+            img.set(x, y, tuple(clamp8(k * shade) for k in c) + (255,))
+    rgba = bytearray()
+    for r, g, b, a in img.px:
+        rgba += bytes((r, g, b, a))
+    uri = "data:image/png;base64," + base64.b64encode(png_bytes(size, size, rgba)).decode()
+    g = GltfDoc()
+    pos = [(-0.5, -0.5, 0.0), (0.5, -0.5, 0.0), (0.5, 0.5, 0.0), (-0.5, 0.5, 0.0)]
+    uv = [(0.0, 2.0), (2.0, 2.0), (2.0, 0.0), (0.0, 0.0)]   # glTF's v grows downwards: the top edge of the quad is v = 0
+    pa = g.accessor(b"".join(struct.pack("<3f", *p) for p in pos), 5126, 4, "VEC3", 34962, ([-0.5, -0.5, 0.0], [0.5, 0.5, 0.0]))
+    na = g.accessor(b"".join(struct.pack("<3f", 0.0, 0.0, 1.0) for _ in pos), 5126, 4, "VEC3", 34962)
+    ua = g.accessor(b"".join(struct.pack("<2f", *t) for t in uv), 5126, 4, "VEC2", 34962)
+    ia = g.accessor(b"".join(struct.pack("<H", i) for i in (0, 1, 2, 0, 2, 3)), 5123, 6, "SCALAR", 34963)
+    names = [("repeat", 10497), ("clamp", 33071), ("mirror", 33648)]
+    g.finish("wrapquads", {
+        "scene": 0, "scenes": [{"nodes": [0, 1, 2]}],
+        "nodes": [{"name": n, "mesh": i, "translation": [(i - 1) * 1.2, 0.0, 0.0]} for i, (n, _) in enumerate(names)],
+        "meshes": [{"primitives": [{"attributes": {"POSITION": pa, "NORMAL": na, "TEXCOORD_0": ua}, "indices": ia, "material": i}]} for i in range(3)],
+        "materials": [{"name": n, "pbrMetallicRoughness": {"baseColorTexture": {"index": i}, "metallicFactor": 0.0, "roughnessFactor": 0.9}} for i, (n, _) in enumerate(names)],
+        "textures": [{"sampler": i, "source": 0} for i in range(3)],
+        "images": [{"uri": uri}],
+        "samplers": [{"magFilter": 9729, "minFilter": 9729, "wrapS": w, "wrapT": w} for _, w in names],
+    })
+
+
 # ----------------------------------------------------------------------------
 # Audio
 # ----------------------------------------------------------------------------
@@ -1260,6 +1312,7 @@ def main():
     build_tentacle()
     build_morph()
     build_variants()
+    build_wrapquads()
     for fn in (audio_ambience, audio_tone, audio_drums, audio_arpeggio, audio_chirp, audio_step,
                audio_click, audio_splash, audio_fire, audio_spark):
         fn()

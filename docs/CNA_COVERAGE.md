@@ -48,7 +48,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-863 distinct API names are claimed by at least one room.
+869 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -404,6 +404,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.GraphicsProfile | `pl-adapter` |
 | GraphicsDevice.ResourceCreated | `ct-lifetime` |
 | GraphicsDevice.ResourceDestroyed | `ct-lifetime` |
+| GraphicsDevice.SamplerStates | `model-sampler` |
 | GraphicsDevice.ScissorRectangle | `sprite-scissor`, `rs-scissor`, `rv-geometry` |
 | GraphicsDevice.SetDisplayColorSpaceEXT | `pl-renderer` |
 | GraphicsDevice.SetRenderTarget | `rendertarget`, `rt-basic`, `rt-control`, `rt-cube`, `pf-targets`, `rv-targets` |
@@ -558,7 +559,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Model | `models`, `animation`, `model-load` |
 | Model.BoundingSphereEXT | `model-load`, `model-instances`, `model-bounds` |
 | Model.CamerasEXT | `model-cameras` |
-| Model.CopyAbsoluteBoneTransformsTo | `model-rigid` |
+| Model.CopyAbsoluteBoneTransformsTo | `model-rigid`, `model-sampler` |
 | Model.CopyBoneTransformsTo | `model-load` |
 | Model.CreateInfinitePerspectiveFieldOfViewEXT | `model-cameras` |
 | Model.Draw | `model-instances` |
@@ -574,8 +575,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ModelCameraEXT.WorldTransform | `model-cameras` |
 | ModelMesh | `models`, `model-load` |
 | ModelMesh.BoundingSphere | `model-bounds` |
+| ModelMesh.Draw | `model-sampler` |
 | ModelMeshPart | `model-load` |
 | ModelMeshPart.Effect | `model-effects` |
+| ModelMeshPart.PrimitiveTypeEXT | `model-load` |
+| ModelMeshPart.SamplerStatesEXT | `model-load`, `model-sampler` |
+| ModelMeshPart.SetSamplerStateEXT | `model-sampler` |
 | ModelMeshPart.Tag | `model-morph` |
 | MorphTargetDataEXT | `model-morph` |
 | Mouse.GetGlobalPositionEXT | `in-devices` |
@@ -643,6 +648,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | PbrEffect.MetallicFactor | `model-pbr`, `model-ibl` |
 | PbrEffect.NormalMap | `model-material` |
 | PbrEffect.RoughnessFactor | `model-pbr`, `model-ibl` |
+| PbrEffect.Texture | `model-sampler` |
 | PixelBitmapContent | `ct-processor` |
 | Plane | `vec-reflect`, `col-ray-plane` |
 | Plane.DotCoordinate | `col-plane-box` |
@@ -715,7 +721,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Rg32 | `vt-packed` |
 | Rgba1010102 | `vt-packed` |
 | Rgba64 | `vt-packed` |
-| SamplerState | `materials`, `sprite-sampler` |
+| SamplerState | `materials`, `sprite-sampler`, `model-sampler` |
 | SamplerState.AddressU | `tex-address`, `rv-sampling` |
 | SamplerState.AnisotropicClamp | `tex-filter` |
 | SamplerState.Filter | `tex-mip` |
@@ -842,7 +848,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Texture3D.GetData | `tex-volume` |
 | Texture3D.GetData(level, box) | `tex-volume` |
 | Texture3D.SetData | `tex-volume` |
-| TextureAddressMode | `sprite-sampler`, `tex-address`, `rv-sampling` |
+| TextureAddressMode | `sprite-sampler`, `tex-address`, `model-sampler`, `rv-sampling` |
 | TextureCube | `tex-cube`, `model-ibl` |
 | TextureCube.GetData | `tex-cube` |
 | TextureCube.SetData | `tex-cube` |
