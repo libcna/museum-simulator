@@ -15,7 +15,9 @@
 #include "Exhibits/ScreenExhibit.hpp"
 #ifdef MUSEUM_PIPELINE
 #include "Exhibits/Content/PipelineSupport.hpp"
+#include "Microsoft/Xna/Framework/Content/Pipeline/EffectImporter.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/Processors/CompiledEffectContent.hpp"
+#include "Microsoft/Xna/Framework/Content/Pipeline/Processors/EffectProcessor.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/Serialization/Compiler/ContentCompiler.hpp"
 #endif
 #include "Microsoft/Xna/Framework/Graphics/Effect.hpp"
@@ -32,6 +34,7 @@ using namespace Microsoft::Xna::Framework::Graphics;
 namespace {
 
 #ifdef MUSEUM_PIPELINE
+namespace Xna = Microsoft::Xna::Framework::Content::Pipeline;
 namespace Compiler = Microsoft::Xna::Framework::Content::Pipeline::Serialization::Compiler;
 namespace Processors = Microsoft::Xna::Framework::Content::Pipeline::Processors;
 #endif
@@ -65,6 +68,12 @@ public:
     void BuildStatic(RoomBuilder& b) override
     {
         ControlPanel& p = AddPanel("Compiled effect", -4.8f, 1.5f, 1.8f, MathHelper::PiOver2, 2.1f);
+#ifdef MUSEUM_PIPELINE
+        p.AddChoice("Effect pipeline input", {"precompiled .fxb", "source .fx via fxc"}, 0, [this](int v) {
+            sourceEffect_ = v == 1;
+            LoadPixelEffect();
+        });
+#endif
         p.AddToggle("Draw through the effect", true, [this](bool v) { use_ = v; });
         p.AddSlider("Weight (parameter)", 0.0f, 1.0f, weight_, [this](float v) { weight_ = v; }, "%.2f");
         p.AddSlider("Offset.X (parameter, texels)", -24.0f, 24.0f, offset_.X, [this](float v) { offset_.X = v; }, "%.1f", 0.5f);
@@ -80,7 +89,7 @@ public:
         p.AddReadout("Techniques", [this] { return techniques_; });
         p.AddReadout("Read back (GetValue*)", [this] { return readBack_; });
         AddInfoSign(b, "Compiled XNA Effects",
-                    {"An XNA project compiles its .fx files into Effect assets. CNA loads that binary (Effect(device, bytes), or a ContentManager reading the Effect from an .xnb) and reflects it like XNA does.",
+                    {"An XNA project compiles its .fx files into Effect assets. The first choice wraps an existing .fxb in an XNB; the second runs EffectImporter and EffectProcessor, which needs Microsoft's legacy fxc (set CNA_FXC and, on Linux, CNA_FXC_LAUNCHER=wine), then writes and loads the XNB.",
                      "The lower graph is genuine vs_3_0 texture sampling: its sampler has no state assignment, so GraphicsDevice.VertexTextures[2] and VertexSamplerStates[2] are authoritative.",
                      "Switch PointClamp / PointWrap: samples beyond both texture edges clamp or wrap without reapplying the pass (float vertex textures are point-filtered in XNA)."});
     }
@@ -89,35 +98,7 @@ public:
     {
         compiledSupported_ = S().device->SupportsCapability(CNA::GraphicsCapability::CompiledEffects);
         capability_ = compiledSupported_ ? "true" : "false: this renderer cannot run compiled effects";
-        try {
-            std::ifstream in(S().contentRoot + "/Effects/blur2tap.fxb", std::ios::binary);
-            const std::vector<char> raw((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-            if (raw.empty()) throw std::runtime_error("Content/Effects/blur2tap.fxb is missing");
-            const std::vector<SharpRuntime::bytecs> bytes(raw.begin(), raw.end());
-#ifdef MUSEUM_PIPELINE
-            auto compiled = std::make_shared<Processors::CompiledEffectContent>(bytes);
-            Compiler::ContentCompiler compiler;
-            Compiler::CompileOptions options;
-            options.assetName = "blur2tap";
-            options.targetProfile = GraphicsProfile::HiDef;
-            options.container.graphicsProfile = CNA::Internal::Xnb::XnbGraphicsProfile::HiDef;
-            const CNA::Internal::Xnb::XnbAssetWriteResult result =
-                compiler.Compile<Processors::CompiledEffectContent>(compiled, options);
-            if (!manager_) manager_ = std::make_unique<PipelineSupport::MemoryContentManager>(&S().game->getServicesProperty());
-            manager_->Unload();
-            manager_->bytes = result.bytes;
-            effect_ = manager_->Load<std::shared_ptr<Effect>>("blur2tap");
-            status_ = std::to_string(bytes.size()) + " byte FXB -> " +
-                      std::to_string(result.bytes.size()) + " byte XNB -> EffectReader";
-#else
-            effect_ = std::make_shared<Effect>(*S().device, bytes);
-            status_ = std::to_string(bytes.size()) + " bytes loaded";
-#endif
-            Describe();
-        } catch (const std::exception& e) {
-            status_ = std::string("refused: ") + std::string(e.what()).substr(0, 70);
-            Museum::Log("fx", "%s", e.what());
-        }
+        LoadPixelEffect();
         try {
             std::ifstream in(S().contentRoot + "/Effects/vertextexture.fxb", std::ios::binary);
             const std::vector<char> raw((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
@@ -180,6 +161,61 @@ private:
         Vector3 position;
         Vector2 sample;
     };
+
+    void LoadPixelEffect()
+    {
+        effect_.reset();
+        failed_ = false;
+        parameters_ = techniques_ = readBack_ = "-";
+        try {
+#ifdef MUSEUM_PIPELINE
+            std::shared_ptr<Processors::CompiledEffectContent> compiled;
+            std::string input;
+            if (sourceEffect_) {
+                PipelineSupport::ImporterContext importerContext;
+                Xna::EffectImporter importer;
+                const std::shared_ptr<Xna::Graphics::EffectContent> source =
+                    importer.Import(S().contentRoot + "/Effects/blur2tap.fx", importerContext);
+                if (!source->getEffectCodeProperty().has_value()) throw std::runtime_error("EffectImporter returned no source");
+                Processors::EffectProcessor processor;
+                PipelineSupport::ProcessorContext processorContext;
+                compiled = processor.Process(source, processorContext);
+                input = std::to_string(source->getEffectCodeProperty()->size()) + " byte FX source -> " +
+                        std::to_string(compiled->GetEffectCode().size()) + " byte FXB";
+            } else {
+                std::ifstream in(S().contentRoot + "/Effects/blur2tap.fxb", std::ios::binary);
+                const std::vector<char> raw((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+                if (raw.empty()) throw std::runtime_error("Content/Effects/blur2tap.fxb is missing");
+                const std::vector<SharpRuntime::bytecs> bytes(raw.begin(), raw.end());
+                compiled = std::make_shared<Processors::CompiledEffectContent>(bytes);
+                input = std::to_string(bytes.size()) + " byte FXB";
+            }
+            Compiler::ContentCompiler compiler;
+            Compiler::CompileOptions options;
+            options.assetName = "blur2tap";
+            options.targetProfile = GraphicsProfile::HiDef;
+            options.container.graphicsProfile = CNA::Internal::Xnb::XnbGraphicsProfile::HiDef;
+            const CNA::Internal::Xnb::XnbAssetWriteResult result =
+                compiler.Compile<Processors::CompiledEffectContent>(compiled, options);
+            if (!manager_) manager_ = std::make_unique<PipelineSupport::MemoryContentManager>(&S().game->getServicesProperty());
+            manager_->Unload();
+            manager_->bytes = result.bytes;
+            effect_ = manager_->Load<std::shared_ptr<Effect>>("blur2tap");
+            status_ = input + " -> " + std::to_string(result.bytes.size()) + " byte XNB -> EffectReader";
+#else
+            std::ifstream in(S().contentRoot + "/Effects/blur2tap.fxb", std::ios::binary);
+            const std::vector<char> raw((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+            if (raw.empty()) throw std::runtime_error("Content/Effects/blur2tap.fxb is missing");
+            const std::vector<SharpRuntime::bytecs> bytes(raw.begin(), raw.end());
+            effect_ = std::make_shared<Effect>(*S().device, bytes);
+            status_ = std::to_string(bytes.size()) + " bytes loaded";
+#endif
+            Describe();
+        } catch (const std::exception& e) {
+            status_ = std::string("refused: ") + std::string(e.what()).substr(0, 150);
+            Museum::Log("fx", "%s", e.what());
+        }
+    }
 
     void BuildVertexTexture()
     {
@@ -275,6 +311,9 @@ private:
     std::vector<VertexTextureVertex> vertexVertices_;
     bool use_ = true, failed_ = false;
     bool compiledSupported_ = false, vertexWrap_ = false;
+#ifdef MUSEUM_PIPELINE
+    bool sourceEffect_ = false;
+#endif
     float weight_ = 0.5f;
     float vertexAmount_ = 0.42f;
     Vector2 offset_{6.0f, 0.0f};
