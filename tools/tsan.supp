@@ -1,0 +1,6 @@
+# Debian's system GLib is not ThreadSanitizer-instrumented, so synchronization
+# inside its worker pools is invisible to TSan (reports have appeared in both
+# g_queue_pop_tail and g_strsplit during SDL startup). CNA and museum frames
+# remain instrumented and are not suppressed.
+race:libglib-2.0.so
+race:libgio-2.0.so
