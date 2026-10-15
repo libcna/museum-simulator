@@ -51,7 +51,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-997 distinct API names are claimed by at least one room.
+1000 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -832,7 +832,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Rgba1010102 | `vt-packed` |
 | Rgba64 | `vt-packed` |
 | SamplerState | `materials`, `sprite-sampler`, `model-sampler` |
-| SamplerState.AddressU | `tex-address`, `rv-sampling` |
+| SamplerState.AddressU | `tex-address`, `tex-volshader`, `rv-sampling` |
+| SamplerState.AddressV | `tex-volshader` |
+| SamplerState.AddressW | `tex-volshader` |
 | SamplerState.AnisotropicClamp | `tex-filter` |
 | SamplerState.Filter | `tex-mip` |
 | SamplerState.LinearClamp | `sprite-lights`, `tex-filter`, `rt-bloom`, `rv-sprites` |
@@ -856,6 +858,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ShaderEffect.GetCompileErrorEXT | `fx-errors` |
 | ShaderEffect.GetShaderDiagnosticsEXT | `fx-errors` |
 | ShaderEffect.IsEffectValid | `fx-errors` |
+| ShaderEffect.SetTexture(Texture3D) | `tex-volshader` |
 | ShaderEffect.SetUniformFloat | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix` |
 | ShaderLanguageEXT | `cx-package` |
 | ShaderPackageEXT.selectFor | `cx-package` |
@@ -967,15 +970,15 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Texture2D.SaveAsPng | `tex-io` |
 | Texture2D.SetData | `sprite-ui`, `sprite-atlas`, `sprite-anim`, `tex-dynamic`, `rv-formats` |
 | Texture2DContent | `ct-processor` |
-| Texture3D | `tex-volume` |
+| Texture3D | `tex-volume`, `tex-volshader` |
 | Texture3D.GetData | `tex-volume` |
 | Texture3D.GetData(level, box) | `tex-volume` |
 | Texture3D.SetData | `tex-volume` |
-| TextureAddressMode | `sprite-sampler`, `tex-address`, `model-sampler`, `rv-sampling` |
+| TextureAddressMode | `sprite-sampler`, `tex-address`, `tex-volshader`, `model-sampler`, `rv-sampling` |
 | TextureCube | `tex-cube`, `model-ibl` |
 | TextureCube.GetData | `tex-cube` |
 | TextureCube.SetData | `tex-cube` |
-| TextureFilter | `sprite-sampler`, `rv-sampling` |
+| TextureFilter | `sprite-sampler`, `tex-volshader`, `rv-sampling` |
 | TextureFilter.MinLinearMagPointMipLinear | `tex-mip` |
 | TextureFilter.MinPointMagLinearMipPoint | `tex-mip` |
 | TextureImporter | `ct-processor` |

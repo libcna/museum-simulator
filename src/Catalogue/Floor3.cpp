@@ -87,6 +87,20 @@ WingSpec TextureWing()
         tex("tex-alpha", "Alpha: Test, Blend, Opaque", "AlphaTestEffect with a reference alpha against blending and opaque drawing", "alpha", {"AlphaTestEffect", "BlendState.NonPremultiplied", "CompareFunction"}),
         tex("tex-cube", "Cube Maps and Environment Maps", "A procedural TextureCube reflected by EnvironmentMapEffect", "cube", {"TextureCube", "EnvironmentMapEffect", "CubeMapFace", "TextureCube.SetData", "TextureCube.GetData"}),
         tex("tex-volume", "Volume Textures", "Texture3D storage and readback in Color, float and Vector4 formats, whole volume or a box, shown slice by slice", "volume", {"Texture3D", "Texture3D.SetData", "Texture3D.GetData", "Texture3D.GetData(level, box)", "SurfaceFormat.Single", "SurfaceFormat.Vector4"}),
+        []{
+            RoomSpec r;
+            r.key = "tex-volshader";
+            r.title = "Sampling a Volume in a Shader";
+            r.subtitle = "ShaderEffect.SetTexture(unit, Texture3D) feeds a sampler3D; the third coordinate, AddressW and the filter decide what each pixel reads";
+            r.exhibit = "volumeshader-lab";
+            r.width = 13;
+            r.depth = 13;
+            r.height = 5.2f;
+            r.theme = "white-cube";
+            r.apis = {"ShaderEffect.SetTexture(Texture3D)", "SamplerState.AddressW", "SamplerState.AddressU", "SamplerState.AddressV", "Texture3D", "TextureAddressMode", "TextureFilter"};
+            r.origin = ApiOrigin::CnaExtension;
+            return r;
+        }(),
         tex("tex-io", "Encoding and Decoding Images", "Texture2D.SaveAsPng and SaveAsJpeg into a stream, then Texture2D.FromStream back with fit and zoom", "io",
             {"Texture2D.SaveAsPng", "Texture2D.SaveAsJpeg", "Texture2D.FromStream", "System.IO.MemoryStream"}),
     };

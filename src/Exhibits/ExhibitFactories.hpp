@@ -61,6 +61,7 @@ std::unique_ptr<Exhibit> MakeLogLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeColorGalleryLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeFontBuildLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeMeshBuildLab(const RoomDef& room, Services& services);
+std::unique_ptr<Exhibit> MakeVolumeShaderLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeSkinExtLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeModelCamerasLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeOnlineLab(const RoomDef& room, Services& services);

@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 36 wings, 286 exhibit rooms (5 open to the sky), 352 walkable cells in all.
+10 floors, 36 wings, 287 exhibit rooms (5 open to the sky), 353 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -238,7 +238,8 @@ Vertex data, buffers, primitives and textures
 | 3.2.07 | `tex-alpha` | Alpha: Test, Blend, Opaque | XNA 4.0 | AlphaTestEffect, BlendState.NonPremultiplied, CompareFunction |
 | 3.2.08 | `tex-cube` | Cube Maps and Environment Maps | XNA 4.0 | TextureCube, EnvironmentMapEffect, CubeMapFace, TextureCube.SetData, TextureCube.GetData |
 | 3.2.09 | `tex-volume` | Volume Textures | XNA 4.0 | Texture3D, Texture3D.SetData, Texture3D.GetData, Texture3D.GetData(level, box), SurfaceFormat.Single, SurfaceFormat.Vector4 |
-| 3.2.10 | `tex-io` | Encoding and Decoding Images | XNA 4.0 | Texture2D.SaveAsPng, Texture2D.SaveAsJpeg, Texture2D.FromStream, System.IO.MemoryStream |
+| 3.2.10 | `tex-volshader` | Sampling a Volume in a Shader | CNA extension | ShaderEffect.SetTexture(Texture3D), SamplerState.AddressW, SamplerState.AddressU, SamplerState.AddressV, Texture3D, TextureAddressMode, TextureFilter |
+| 3.2.11 | `tex-io` | Encoding and Decoding Images | XNA 4.0 | Texture2D.SaveAsPng, Texture2D.SaveAsJpeg, Texture2D.FromStream, System.IO.MemoryStream |
 
 ### Floor 4: Effects and Lighting
 
