@@ -52,7 +52,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1102 distinct API names are claimed by at least one room.
+1114 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -275,7 +275,13 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Compass | `in-phone` |
 | Compass.IsSupported | `in-phone` |
 | CompassReading.MagneticHeading | `in-phone` |
+| CompileOptions | `ct-compiler` |
+| CompileOptions.compressContent | `ct-compiler` |
+| CompileOptions.targetPlatform | `ct-compiler` |
+| CompileOptions.targetProfile | `ct-compiler` |
 | ContainmentType | `col-box-box` |
+| ContentCompiler | `ct-compiler` |
+| ContentCompiler.Compile | `ct-compiler` |
 | ContentIdentity | `ct-fontbuild` |
 | ContentImporter | `ct-modelimport` |
 | ContentImporterAttribute | `ct-modelimport` |
@@ -284,13 +290,15 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ContentLoadException | `app-content`, `ct-failure`, `ct-custom`, `ct-resource`, `pl-exceptions` |
 | ContentManager | `models`, `app-content` |
 | ContentManager.GetContentManifest | `ct-pipeline` |
-| ContentManager.Load | `app-content`, `ct-cache`, `ct-failure`, `ct-pipeline`, `ct-reader`, `ct-resource` |
+| ContentManager.Load | `app-content`, `ct-cache`, `ct-failure`, `ct-pipeline`, `ct-compiler`, `ct-reader`, `ct-resource` |
 | ContentManager.Load<Model> | `model-load`, `ct-load` |
 | ContentManager.Load<SoundEffect> | `au-basics`, `ct-load` |
 | ContentManager.Load<Texture2D> | `ct-load`, `ct-formats` |
+| ContentManager.OpenStream | `ct-compiler` |
 | ContentManager.RegisterCnjLoader | `ct-custom` |
 | ContentManager.RegisterTypeReader | `ct-custom` |
 | ContentManager.RootDirectory | `ct-load` |
+| ContentManager.RouteLoadsThroughOpenStreamEXT | `ct-compiler` |
 | ContentManager.Unload | `app-content`, `ct-cache`, `ct-lifetime` |
 | ContentProcessorContext.Convert | `ct-modelimport` |
 | ContentReader | `ct-reader` |
@@ -1050,6 +1058,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | System.InvalidOperationException | `pl-exceptions` |
 | System.ObjectDisposedException | `pl-exceptions` |
 | System.Resources.ResourceManager | `ct-resource` |
+| TargetPlatform | `ct-compiler` |
 | TextInputEXT.StartTextInput | `in-text` |
 | TextInputEXT.StartTextInputWithTypeEXT | `in-text` |
 | TextInputEXT.TextInput | `in-text` |
@@ -1061,7 +1070,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Texture2D.SaveAsJpeg | `tex-io` |
 | Texture2D.SaveAsPng | `tex-io` |
 | Texture2D.SetData | `sprite-ui`, `sprite-atlas`, `sprite-anim`, `tex-dynamic`, `rv-formats` |
-| Texture2DContent | `ct-processor` |
+| Texture2DContent | `ct-processor`, `ct-compiler` |
 | Texture3D | `tex-volume`, `tex-volshader` |
 | Texture3D.GetData | `tex-volume` |
 | Texture3D.GetData(level, box) | `tex-volume` |
@@ -1073,8 +1082,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | TextureFilter | `sprite-sampler`, `tex-volshader`, `rv-sampling` |
 | TextureFilter.MinLinearMagPointMipLinear | `tex-mip` |
 | TextureFilter.MinPointMagLinearMipPoint | `tex-mip` |
-| TextureImporter | `ct-processor` |
-| TextureProcessor | `ct-processor` |
+| TextureImporter | `ct-processor`, `ct-compiler` |
+| TextureProcessor | `ct-processor`, `ct-compiler` |
 | TextureProcessor.ColorKeyEnabled | `ct-processor` |
 | TextureProcessor.GenerateMipmaps | `ct-processor` |
 | TextureProcessor.PremultiplyAlpha | `ct-processor` |
@@ -1156,6 +1165,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | WaveBank.IsInUse | `au-xact` |
 | XImporter | `ct-modelimport` |
 | XNA 4.0 | `hist-xna`, `hist-compare` |
+| XnbAssetWriteResult | `ct-compiler` |
+| XnbFileOptions | `ct-compiler` |
+| XnbOutputCompression | `ct-compiler` |
 | cna-content | `ct-pipeline` |
 | layerDepth | `sprite-sort` |
 <!-- END COVERAGE -->

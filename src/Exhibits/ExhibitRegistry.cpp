@@ -65,6 +65,7 @@ constexpr Entry kEntries[] = {
     {"phonesensor-lab", MakePhoneSensorLab},
     {"diagnostics-lab", MakeDiagnosticsLab},
     {"modelimport-lab", MakeModelImportLab},
+    {"compiler-lab", MakeCompilerLab},
     {"vertextypes-lab", MakeVertexTypesLab},
     {"perf-lab", MakePerfLab},
     {"validation-lab", MakeValidationLab},
