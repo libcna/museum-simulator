@@ -94,6 +94,10 @@ VERBOSE=1 tools/build.sh               # stream the whole build log
 MUSEUM_CMAKE_ARGS="-DCNA_CNAEXT=OFF" RECONFIGURE=1 tools/build.sh    # build without CNA's extension module
 ```
 
+`MUSEUM_CMAKE_ARGS` accepts shell quoting, so a value containing spaces stays one CMake argument (for example
+`MUSEUM_CMAKE_ARGS='-DCMAKE_CXX_FLAGS="-O1 -g1"'`). The build script uses at most two compile jobs by default;
+`JOBS` may lower that limit but must not raise it for this project.
+
 The museum switches on three CNA options in its `CMakeLists.txt`: `CNA_CNAEXT` (DebugDraw and the post-process
 effects), `CNA_DEVICES` (device queries) and `CNA_DIAGNOSTICS=FULL` (engine counters and the CPU-zone timeline). Each exhibit that needs one
 checks for it and says so in the room when it is missing (a build with all three off was tried: it compiles, every room runs, and those rooms show a notice).

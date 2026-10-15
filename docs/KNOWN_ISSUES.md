@@ -31,6 +31,7 @@ Found by the museum's own exhibits; fixed in the CNA repository (commit ids are 
 
 | Found in | Defect | Status |
 |---|---|---|
+| Full ASan+UBSan museum tour / Diagnostics | At process exit, the main thread's `thread_local` diagnostics context was destroyed before static graphics resources. Their destructors then emitted `ResourceDestroyed` into the freed context (`heap-use-after-free` in `EmitRawEvent`). | fixed in CNA (`e541a636f`): late events are dropped after thread-context release. All 41 focused diagnostics tests pass; reverting only the fix makes the regression death test fail with exit status 3. |
 | Audio and Input / Video | Destroying a `Video` while a `VideoPlayer` still played it left the player's `CloseDecoder` writing a null pointer into the freed video: heap corruption ("corrupted size vs. prev_size") at exit, in about one run in ten to twenty. | fixed in CNA (`~Video` stops its player; a regression test was added to `VideoPlayerTests.cpp` and compiles, but the full `CnaTests` binary was not run here) |
 | Platform / Exceptions CNA Throws | `TitleContainer.OpenStream` of a missing title file threw a bare `std::runtime_error`; XNA documents `FileNotFoundException`. | fixed in CNA (`5ccb70808`; its callers now catch `std::exception`) |
 | Online Service / Messages | The Guide's Messages page asked the service for 50 messages; the service lists at most 32 (protocol v1), so the page always said "Messages could not be read". | fixed in CNA (`GuideSocial.cpp` asks for 32; the fake backend now enforces the service's bounds) |

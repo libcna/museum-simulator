@@ -9,7 +9,7 @@ given; anything unverified says so. Counts are not repeated below the first sect
 where every room demonstrates real CNA/XNA API with live controls. Branch `develop` of this repository. Related repositories (separate git repos, all under
 `/rv/data/development/github.com/libcna/`): `cna`, `sharp-runtime`, `xna4-decomp` (XNA docs XML), `xna4-spec`. Never create a second engine above CNA; CNA defects are fixed in CNA.
 
-**Numbers now** (run `build/bin/cna-3d-museum --validate`; generated docs carry them): 10 floors, 293 exhibit rooms, 1,141 API names, `museum_tests` 7,808 checks.
+**Numbers now** (run `build/bin/cna-3d-museum --validate`; generated docs carry them): 10 floors, 293 exhibit rooms, 1,141 API names, `museum_tests` 7,806 checks.
 
 **Rules that bind every session** (from `../CLAUDE.md` and the user): 
 - compile with **at most 2 CPU cores** (`JOBS=2`, `--parallel 2`, `ninja -j2`; lowered from 3 by the user on 2026-10-15: "pouzivej 2 cpu jadra na kompilaci max"); museum runs under Mesa keep `LP_NUM_THREADS=3`; do not run two heavy jobs together. To stop a stray build use `kill <pid>` (from `ps -eo pid,args | grep ninja`), never `pkill -f '...build-asan...'`: the pattern also matches the calling shell and kills it;
@@ -36,32 +36,26 @@ extensions to `in-touch` (simulated fingers are now real touch points), `gs-guid
 `AvatarRenderer` vertex buffers now carry declarations (1897c32a4: another session's new stock-effect input check had made `gs-avatar` throw on every renderer); the same check no longer applies to custom `ShaderEffect`
 draws (757924d35: it broke `cx-shadow`). Earlier in the campaign: DirectX9 layout gate (d3f1a9e51), `~Video`, TypeConverter messages in sharp-runtime (f2aecfef), and others listed below.
 
-**Verification state at the end** (all with the code as committed, except the last bullet):
-- `tools/check_all.sh` all nine steps green (OPENGLES3) after the CNA fixes; multi-renderer `tools/tour.sh -f 3 -p` (script `multi_tours.sh` pattern: `BUILD_DIR=build-probe CNA_GRAPHICS_RENDERER=R`): FNA3D, WEBGPU, SDL_GPU, STUB 0 exhibit errors;
-  HEADLESS 4 (cube maps: `tex-cube`, `model-ibl`, a documented limitation); Wine DIRECTX9 0 exhibit errors (133 s).
+**Verification state at the end:**
+- `tools/check_all.sh` all nine steps green (OPENGLES3) after the CNA diagnostics fix. Multi-renderer `tools/tour.sh -f 3 -p` over all 293 rooms: FNA3D 53 s, WEBGPU 125 s and SDL_GPU 307 s, each exit 0 with 0 exhibit errors. HEADLESS reached final stats in 29 s and reported the four known cube-data exceptions in `tex-cube`/`model-ibl` (exit 3). STUB correctly refuses startup because it has no 3D pipeline; the strengthened tour guard now reports that incomplete run as exit 4 instead of a false pass.
 - Fuzz seeds 12 and 13 (`tools/tour.sh -f 3 -z 30 -s N`) each found one museum bug: `rs-stencilcount` two-sided scene drew lit meshes through the flat (vertex-colour) effect, which CNA now correctly refuses
   ("Color0 is missing"). Fixed in `RenderStateLab.cpp` (uses `BeginLit`). **Re-run on 2026-10-15 night by the previous agent (Codex), after the fix: seeds 12 and 13 each clean over all 293 rooms, 30 fuzz actions per panel, 0 exhibit errors, 0 draw errors**
   (run in blocks of 40-60 rooms because Xvfb sometimes closed mid-run; the blocks and their stats lines were read from that agent's transcript, not re-run by the next one).
-- **ASan+UBSan, 2026-10-15 night (this session, code as committed plus the uncommitted `tools/` edits below): `museum_tests` exit 0 with no sanitizer report; `tools/tour.sh -f 3 -p` over all 293 rooms with every control operated, 190 s, exit 0, 0 exhibit errors, no `AddressSanitizer`/`runtime error` line in the log** (`ASAN_OPTIONS=detect_leaks=0`, `LP_NUM_THREADS=3`, `CNA_GRAPHICS_RENDERER=OPENGLES3`, `BUILD_DIR=build-asan MUSEUM_TIMEOUT=3000`).
-  The build itself first failed with a real CNA bug, now fixed (next bullet). `build-asan/` (9.7 GB) was deleted afterwards. To repeat: `tools/build.sh` cannot be used, it splits `MUSEUM_CMAKE_ARGS` at spaces (`-g1` reaches CMake as its own argument and configure fails);
-  use plain `cmake -S . -B build-asan -G Ninja -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=RelWithDebInfo "-DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer -g1 -Wno-maybe-uninitialized" -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined -DCNA_GRAPHICS_RENDERERS=OPENGLES3 -DCNA_GRAPHICS_RENDERER=OPENGLES3` (the same pair `tools/build.sh` builds from `MUSEUM_RENDERERS`)
-  (configure ~90 s because it builds SDL3 once), then `cmake --build build-asan --parallel 2 --target cna-3d-museum museum_tests`.
+- **ASan+UBSan, 2026-10-15 night: `museum_tests` exit 0 with no sanitizer report; `tools/tour.sh -f 3 -p` over all 293 rooms with every control operated, 190 s, exit 0, 0 exhibit errors, no `AddressSanitizer`/`runtime error` line in the log** (`ASAN_OPTIONS=detect_leaks=0`, `LP_NUM_THREADS=3`, `CNA_GRAPHICS_RENDERER=OPENGLES3`, `BUILD_DIR=build-asan MUSEUM_TIMEOUT=3000`).
+  The build itself first failed with a real CNA bug, now fixed (next bullet). `build-asan/` (9.7 GB) was deleted afterwards. `tools/build.sh` now shell-parses `MUSEUM_CMAKE_ARGS` into an array, so quoted compiler flags containing spaces work; this was integration-tested with a cache value containing a space. Keep `JOBS=2` for the sanitizer build.
 - **CNA bug found by that ASan build and fixed in `../cna` (commit `e541a636f`, branch `avatar-v3-expansion`, NOT on `main`)**: `cna-content` (run as a post-link step) died with `heap-use-after-free` in `Diagnostics.cpp:498 EmitRawEvent` at `exit()`:
   the thread-local `ThreadContextHolder` deleted its context but left the pointer dangling, and static `BlendState`/`GraphicsResource` objects (destroyed after the thread-locals) then emitted `ResourceDestroyed` into freed memory. Fix: `threadContextReleased` flag (trivially destructible thread-local), pointer nulled,
   `GetThreadContext()` throws once released, so the late event is counted as a producer drop. Regression test `DiagnosticsEventsTest.EventEmittedByAStaticDestructorAfterThreadContextReleaseIsDropped` (death test in `modules/diagnostics/tests/CNA/Diagnostics/DiagnosticsTests.cpp`).
-  **The user forbade running anything in `../cna` that turn, so that test was written but never compiled or run, and the fix was verified only indirectly (the ASan build and tour above). See "Unfinished" below.**
-- Not re-run after the last few commits: TSan on the threaded rooms, `room_diff.sh` for OPENGL33/SOFTWARE, Wine SOFTWARE tour, `tools/online_check.sh`, and the multi-renderer tours and `tools/check_all.sh` after the CNA diagnostics change.
+  Follow-up verification configured `../cna/build-probe` with `CNA_DIAGNOSTICS=FULL`: all 41 `CnaDiagnosticsTests` passed. Removing only the production fix made the new death test fail with the expected exit status 3; restoring it made all 41 pass again. The tree was returned to `CNA_BUILD_TESTS=OFF`, `CNA_DIAGNOSTICS=OFF`.
+- Not re-run after the last few commits: TSan on the threaded rooms, `room_diff.sh` for OPENGL33/SOFTWARE, Wine SOFTWARE tour and `tools/online_check.sh`.
 - Unverified code: `ReflectLab.cpp` (`be-model`) now has branches for array parameters and transposed matrices (`GetValueMatrixArray`, `GetValueMatrixTransposeArray`, `GetValueMatrixTranspose`, `Single`/`Vector*Array`); it compiles and the room runs, but no screen showing those branches was looked at, so the catalogue does not claim them. Check the SkinnedEffect page (Bones array), then add the names to the `be-model` list in `Floor4.cpp`.
 
-**Unfinished from the 2026-10-15 night session (do these first, they are small)**
-1. **Uncommitted museum files** (`git status` shows exactly these two, both written by the previous agent, reviewed here but not tested by the next one): `tools/tour.sh` now exits 4 with "tour ended before its final stats step" when the log has no `[museum][stats]` line
-   (so an Xvfb that closed mid-run can no longer look like a pass); `tools/_headless.sh` passes `-e "$log.xvfb"` to `xvfb-run` so Xvfb's own stderr goes to `<log>.xvfb` (these files land next to the tour logs in `build*/`, which `/build*/` in `.gitignore` covers). Run one short tour (`tools/tour.sh -f 3 info models`), then commit both.
-2. **`../cna` diagnostics test never built or run.** Build and run `CnaDiagnosticsTests` (`cmake/UnitTests.cmake` names the focused target; CNA tests need `CNA_BUILD_TESTS=ON` in `build-probe/`, then reconfigure OFF; `--parallel 2`). Expect the new death test to pass. Then do the mutation check: revert only the `Diagnostics.cpp` hunk
-   of `e541a636f` locally and confirm the test FAILS (the late event is pushed into the freed context, so `_Exit(3)`, or ASan aborts); without that it is not proven that the test catches the defect. Do not commit the revert. The commit is on `avatar-v3-expansion` with other sessions' avatar work; whoever merges to `main` should know it is there.
-3. **`build/` (default tree) was not rebuilt after the CNA diagnostics fix.** Rebuild it (`JOBS=2 tools/build.sh`), run `build/bin/museum_tests`, then `tools/check_all.sh` (about nine steps, a few minutes; it must stay green) and the multi-renderer `-p` tours once, since `../cna` changed.
-4. **`tools/build.sh` quoting bug**: `MUSEUM_CMAKE_ARGS` is word-split, so a value with spaces (`-DCMAKE_CXX_FLAGS="... -g1 ..."`) breaks configure. Make it an array or document the plain-cmake route in the Build section; this is why the ASan configure above is spelled out.
-5. **Update the sanitizer paragraph under "Build, run and test"** (it still says 272 rooms and 6402 checks, from 2026-10-14) with the 293-room result above, once item 3 is green.
-6. `docs/KNOWN_ISSUES.md`: add a line that the Diagnostics exit-order use-after-free was found and fixed (it is not a known issue any more, but the exit-order trap is worth one sentence: thread-locals die before static destructors).
+**Completed follow-up from the 2026-10-15 night session**
+1. The committed tour-completion guard and separate Xvfb stderr log passed a short `info models` tour. They also exposed that STUB's immediate, successful refusal had previously looked like a completed tour; it now exits 4 because there is no final stats line.
+2. The CNA diagnostics test and its mutation check passed as described above; no production-source diff was left in `../cna`.
+3. The default tree was rebuilt, `museum_tests` passed (7,806 checks), and all nine `tools/check_all.sh` steps passed. FNA3D, WEBGPU and SDL_GPU full press-all tours are clean; HEADLESS has only its four documented cube-data exceptions.
+4. `tools/build.sh` now preserves shell-quoted `MUSEUM_CMAKE_ARGS` values containing spaces and defaults to the required maximum of two compile jobs.
+5. The sanitizer summary below and `docs/KNOWN_ISSUES.md` were updated.
 
 **Open items and next steps, in priority order**
 1. More fuzz seeds (14 and up) on OPENGLES3, in blocks like the earlier ones (`tools/tour.sh -f 3 -z 30 -s N room-key ...`, 40-60 rooms per block, `LP_NUM_THREADS=3`); fix any museum bug they find; keep seed 8's unexplained Release heap abort in `docs/KNOWN_ISSUES.md` in mind (not reproducible under ASan).
@@ -74,7 +68,7 @@ draws (757924d35: it broke `cx-shadow`). Earlier in the campaign: DirectX9 layou
 6. Mesa llvmpipe quirk worth knowing: a textured draw whose vertices all share one texture coordinate is black with a mip-mapped sampler on OPENGLES3/OPENGL33 (see KNOWN_ISSUES); rooms drawing models without UVs use `LinearClamp`.
 7. Never stop at "nothing left": run another audit (headers, CNA examples/tests/docs), another multi-renderer tour after any CNA change by other sessions (they changed stock-effect validation twice this stretch), and the full `tools/check_all.sh`.
 
-**Final-report numbers for the campaign** (approximate, refresh before reporting): floors 10, rooms 293, API names 1,141, museum_tests 7,808 checks; renderers exercised: OPENGLES3, OPENGL33, SOFTWARE, FNA3D, WEBGPU, SDL_GPU, HEADLESS, STUB (natively), DIRECTX9 and SOFTWARE under Wine.
+**Final-report numbers for the campaign** (approximate, refresh before reporting): floors 10, rooms 293, API names 1,141, museum_tests 7,806 checks; renderers exercised: OPENGLES3, OPENGL33, SOFTWARE, FNA3D, WEBGPU, SDL_GPU, HEADLESS, STUB (startup refusal), DIRECTX9 and SOFTWARE under Wine.
 
 ## State (checked 2026-10-13, extended 2026-10-14 and 2026-10-15)
 
@@ -185,7 +179,7 @@ draws (757924d35: it broke `cx-shadow`). Earlier in the campaign: DirectX9 layou
 
 ## Build, run and test
 
-**Sanitizers (re-checked 2026-10-14 after the Avatars, Leaderboards, pipeline, converters and Video rooms: all 272 rooms with every control operated under ASan+UBSan, exit 0, no reports, `build-asan/` deleted afterwards; the earlier check, on 257 rooms):** a full AddressSanitizer + UBSan build (`build-asan/`, configured with `-DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -g1 -Wno-maybe-uninitialized"`, ~4.7 GB, deleted afterwards) toured all 257 rooms with every control operated in 246 s and ran `museum_tests` (6402 checks): no reports after the directory fix above. Leak detection was off (`detect_leaks=0`).
+**Sanitizers (re-checked 2026-10-15):** a full AddressSanitizer + UBSan build (`build-asan/`, `RelWithDebInfo`, `-fsanitize=address,undefined -fno-omit-frame-pointer -g1 -Wno-maybe-uninitialized`) ran `museum_tests` and toured all 293 rooms with every control operated in 190 s: exit 0, 0 exhibit errors and no sanitizer report. Leak detection was off (`detect_leaks=0`). The 9.7 GB build tree was deleted afterwards. That build exposed the CNA Diagnostics exit-order use-after-free fixed by `e541a636f` before the final clean run.
 
 `tools/check_all.sh` runs the whole battery (a few minutes); the individual tools are:
 
@@ -201,8 +195,8 @@ tools/gen_docs.sh                                # regenerate counts, map, cover
 tools/readme_shots.sh                            # regenerate docs/images/*.jpg
 ```
 
-Project rules that matter (from `../CLAUDE.md`): one build directory `build/`, one shared ccache (`CCACHE_DIR`
-is exported by the environment, never set by the repo), no building in `/tmp`, full `-j` but watch RAM, never delete
+Project rules that matter (from `../CLAUDE.md` plus the user's stricter instruction): one build directory `build/`, one shared ccache (`CCACHE_DIR`
+is exported by the environment, never set by the repo), no building in `/tmp`, at most two compile jobs, never delete
 another session's files.
 
 **CNA is a moving target.** `../cna` is edited by other agents while this project builds against it. Its configure step

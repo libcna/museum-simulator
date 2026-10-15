@@ -12,7 +12,7 @@ CNA_GRAPHICS_RENDERER=OPENGL33 build/bin/cna-3d-museum
 Six renderers have run the museum here: OPENGLES3, OPENGL33, SOFTWARE, and (since 2026-10-14) FNA3D, WEBGPU and SDL_GPU
 (the last two on Mesa's llvmpipe software Vulkan driver, `VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json`).
 Direct3D 9 runs only through Wine (below); Metal and WebGL2 are untested (no suitable device). Two non-visual renderers were tried for robustness: **STUB**
-(no 3D pipeline: the museum says so and exits 0) and **HEADLESS** (all 257 rooms run; four exceptions are caught and reported
+(no 3D pipeline: the museum says so and exits 0 before executing a tour; `tools/tour.sh` therefore returns 4 for the missing final stats) and **HEADLESS** (all 293 rooms run; four exceptions are caught and reported
 because it stores no cube-map data: `tex-cube` and the image-based-lighting model rooms switch themselves off).
 VULKAN was retired from CNA on 2026-10-13 and has been removed from the museum's documentation and build lines.
 
@@ -70,13 +70,13 @@ Run `tools/renderer_check.sh` for the current figures; they are not copied anywh
 | OPENGLES3 | clean | - |
 | OPENGL33 | clean | 0.00 % of pixels differ by more than 15/255 |
 | SOFTWARE | clean (about 25 minutes for the whole museum under Xvfb) | 4.6 % |
-| FNA3D | clean, 0 exhibit errors (44 s) after two room fallbacks, below | 30 reference views: 22 within 1 %; `lights` 7.8 % (point and spot lights ignored), `pbr` 9.9 % (BasicEffect stand-in), `shader` 5.6 % (no custom shaders), `debugdraw` 4.6 %, `skinned-effect` 2.1 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
-| WEBGPU | clean (78 s) | 30 reference views: 26 within 1 %; `debugdraw` 4.7 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
-| SDL_GPU | clean (173 s) | 30 reference views: all within 1 % |
+| FNA3D | clean, 0 exhibit errors (53 s) after two room fallbacks, below | 30 reference views: 22 within 1 %; `lights` 7.8 % (point and spot lights ignored), `pbr` 9.9 % (BasicEffect stand-in), `shader` 5.6 % (no custom shaders), `debugdraw` 4.6 %, `skinned-effect` 2.1 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
+| WEBGPU | clean (125 s) | 30 reference views: 26 within 1 %; `debugdraw` 4.7 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
+| SDL_GPU | clean (307 s) | 30 reference views: all within 1 % |
 
 Windows build under Wine (MinGW cross build, 2026-10-15, 286 rooms): SOFTWARE `pressall` tour exits 0 with 0 exhibit errors in 1730 s (networking, avatars and video are not built into that tree, so 915 panel controls instead of 998).
 
-Latest (2026-10-14 evening, 285 rooms, after the shader-error, sampler, colour, log and XACT-variable rooms): `tools/tour.sh -f 3 -p` exits 0 with 0 exhibit errors on FNA3D (67 s), WEBGPU (111 s) and SDL_GPU (269 s); ASan+UBSan on OPENGLES3 over all 283 rooms exit 0, no reports.
+Latest (2026-10-15 night, 293 rooms, after the CNA Diagnostics exit-order fix): `tools/tour.sh -f 3 -p` exits 0 with 0 exhibit errors on FNA3D (53 s), WEBGPU (125 s) and SDL_GPU (307 s). HEADLESS reaches final stats in 29 s with the four known cube-data exceptions; STUB has no 3D pipeline and is now reported as an incomplete tour (exit 4) rather than a pass. The OPENGLES3 nine-step `tools/check_all.sh` battery is green. ASan+UBSan on OPENGLES3 over all 293 rooms exits 0 with no report.
 
 Earlier (2026-10-14, 280 rooms, after the Online Service wing, Exceptions, Vertex Types, Compiled Effects and the other new rooms): `tools/tour.sh -f 3 -p` exits 0 with 0 exhibit errors on FNA3D (76 s), WEBGPU (133 s) and SDL_GPU (274 s) in the multi-renderer tree (renderer chosen with `CNA_GRAPHICS_RENDERER`); the OPENGLES3 battery (`tools/check_all.sh`) is green.
 

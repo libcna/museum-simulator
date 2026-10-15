@@ -5,12 +5,12 @@
 #
 # Environment (all optional):
 #   BUILD_DIR            build tree, relative to the repository root (default: build)
-#   MUSEUM_RENDERERS     semicolon list for CNA_GRAPHICS_RENDERERS, e.g. "OPENGLES3;OPENGL33;VULKAN;SOFTWARE";
+#   MUSEUM_RENDERERS     semicolon list for CNA_GRAPHICS_RENDERERS, e.g. "OPENGLES3;OPENGL33;SOFTWARE";
 #                        the first entry becomes the default renderer. Empty: CNA's platform default.
-#   MUSEUM_CMAKE_ARGS    extra arguments for the configure step
+#   MUSEUM_CMAKE_ARGS    shell-quoted extra arguments for the configure step
 #   RECONFIGURE=1        run cmake again even if the tree is already configured
 #   VERBOSE=1            stream the full build output instead of only diagnostics
-#   JOBS=N               parallel jobs (default: 3, the most this project compiles with; lower it for sanitizer builds when RAM is short)
+#   JOBS=N               parallel jobs (default and maximum: 2)
 #
 # ccache is used when it is on PATH. Cache location and size follow the user's own ccache
 # configuration (CCACHE_DIR, ccache.conf); nothing is overridden here.
@@ -20,6 +20,15 @@ root=$PWD
 build_dir=${BUILD_DIR:-build}
 targets=("$@")
 [ ${#targets[@]} -gt 0 ] || targets=(cna-3d-museum)
+
+jobs=${JOBS:-2}
+case $jobs in
+  ''|*[!0-9]*) echo "error: JOBS must be 1 or 2" >&2; exit 2 ;;
+esac
+if [ "$jobs" -lt 1 ] || [ "$jobs" -gt 2 ]; then
+  echo "error: JOBS must be 1 or 2 (this project is limited to two compile jobs)" >&2
+  exit 2
+fi
 
 mkdir -p "$build_dir"
 
@@ -39,18 +48,27 @@ if [ -n "${MUSEUM_RENDERERS:-}" ]; then
   renderer_args=("-DCNA_GRAPHICS_RENDERERS=${MUSEUM_RENDERERS}" "-DCNA_GRAPHICS_RENDERER=${default_renderer}")
 fi
 
+cmake_args=()
+if [ -n "${MUSEUM_CMAKE_ARGS:-}" ]; then
+  command -v python3 >/dev/null 2>&1 || {
+    echo "error: python3 is required to parse MUSEUM_CMAKE_ARGS safely" >&2
+    exit 2
+  }
+  parsed_args=$(python3 -c $'import shlex, sys\ntry:\n    args = shlex.split(sys.stdin.read())\nexcept ValueError as error:\n    print(f"invalid MUSEUM_CMAKE_ARGS: {error}", file=sys.stderr)\n    raise SystemExit(2)\nsys.stdout.write("\\n".join(args))' <<< "$MUSEUM_CMAKE_ARGS") || exit $?
+  mapfile -t cmake_args <<< "$parsed_args"
+fi
+
 if [ ! -f "$build_dir/CMakeCache.txt" ] || [ "${RECONFIGURE:-0}" = 1 ]; then
   echo "configuring $build_dir ..."
-  # shellcheck disable=SC2086
-  cmake -S . -B "$build_dir" "${generator[@]}" "${launchers[@]}" "${renderer_args[@]}" ${MUSEUM_CMAKE_ARGS:-} \
+  cmake -S . -B "$build_dir" "${generator[@]}" "${launchers[@]}" "${renderer_args[@]}" "${cmake_args[@]}" \
     > "$build_dir/configure.log" 2>&1 || { tail -30 "$build_dir/configure.log"; echo "configure FAILED"; exit 1; }
 fi
 
 if [ "${VERBOSE:-0}" = 1 ]; then
-  cmake --build "$build_dir" --target "${targets[@]}" --parallel "${JOBS:-3}"
+  cmake --build "$build_dir" --target "${targets[@]}" --parallel "$jobs"
   status=$?
 else
-  cmake --build "$build_dir" --target "${targets[@]}" --parallel "${JOBS:-3}" \
+  cmake --build "$build_dir" --target "${targets[@]}" --parallel "$jobs" \
     > "$build_dir/build.log" 2>&1
   status=$?
   # Errors always; warnings only from this project's own sources (CNA's third_party code is noisy).
