@@ -52,7 +52,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1141 distinct API names are claimed by at least one room.
+1149 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -655,8 +655,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | LaunchParameters | `app-lifecycle` |
 | LaunchingEventArgs | `pl-window` |
 | LeaderboardEntry | `gs-leaderboards` |
+| LeaderboardEntry.Columns | `gs-leaderboards` |
 | LeaderboardIdentity | `gs-leaderboards` |
 | LeaderboardKey | `gs-leaderboards` |
+| LeaderboardOutcome | `gs-leaderboards` |
 | LeaderboardReader | `gs-leaderboards` |
 | LeaderboardWriter | `gs-leaderboards` |
 | LocalNetworkGamer.ReceiveData | `net-session` |
@@ -890,6 +892,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | PrimitiveType | `geo-primitives` |
 | PrimitiveType.LineList | `rf-weather` |
 | PrimitiveType.PointListEXT | `cx-points`, `pf-particles` |
+| PropertyDictionary | `gs-leaderboards` |
+| PropertyDictionary.ContainsKey | `gs-leaderboards` |
+| PropertyDictionary.Count | `gs-leaderboards` |
+| PropertyDictionary.GetValueInt32 | `gs-leaderboards` |
+| PropertyDictionary.GetValueOutcome | `gs-leaderboards` |
+| PropertyDictionary.SetValue | `gs-leaderboards` |
 | PunctualLightEXT | `be-punctual`, `light-types`, `light-many` |
 | PunctualLightEXT.DiffuseColor | `light-coloured` |
 | PunctualLightEXT.OuterAngle | `light-flashlight` |

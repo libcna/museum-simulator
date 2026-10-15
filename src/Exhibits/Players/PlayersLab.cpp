@@ -25,6 +25,7 @@
 #include "Microsoft/Xna/Framework/GamerServices/LeaderboardEntry.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/LeaderboardIdentity.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/LeaderboardKey.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/LeaderboardOutcome.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/LeaderboardReader.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/LeaderboardWriter.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/MessageBoxIcon.hpp"
@@ -376,6 +377,7 @@ private:
                 return;
             }
             LeaderboardEntry* entry = g->getLeaderboardWriterProperty().GetLeaderboard(BoardId());
+            SetMuseumColumns(*entry, delta);
             entry->setRatingProperty(delta == std::numeric_limits<long long>::min() ? 0 : entry->getRatingProperty() + delta);
             dirty_ = true;
         } catch (const std::exception& e) {
@@ -398,7 +400,9 @@ private:
         for (int i = 0; i < session->getLocalGamersProperty().getCountProperty(); ++i) session->getLocalGamersProperty()[i]->setIsReadyProperty(true);
         session->StartGame();
         for (int i = 0; i < 3; ++i) session->Update();   // the state changes to Playing on an update
-        g->getLeaderboardWriterProperty().GetLeaderboard(BoardId())->setRatingProperty(delta == std::numeric_limits<long long>::min() ? 0 : current + delta);
+        LeaderboardEntry* entry = g->getLeaderboardWriterProperty().GetLeaderboard(BoardId());
+        SetMuseumColumns(*entry, delta);
+        entry->setRatingProperty(delta == std::numeric_limits<long long>::min() ? 0 : current + delta);
         session->EndGame();
         session->Update();
         boardError_ = "round played in a LocalWithLeaderboards session; EndGame sent the rating to the service";
@@ -427,7 +431,7 @@ private:
             const auto entries = reader_->getEntriesProperty();
             for (int i = 0; i < entries.getCountProperty(); ++i) {
                 const LeaderboardEntry& e = entries[i];
-                rows_.push_back({e.getRankingEXTProperty(), e.getGamerProperty() != nullptr ? e.getGamerProperty()->getGamertagProperty() : std::string("?"), e.getRatingProperty()});
+                rows_.push_back({e.getRankingEXTProperty(), e.getGamerProperty() != nullptr ? e.getGamerProperty()->getGamertagProperty() : std::string("?"), e.getRatingProperty(), DescribeColumns(e)});
             }
             pageStart_ = reader_->getPageStartProperty();
             total_ = reader_->getTotalLeaderboardSizeProperty();
@@ -437,6 +441,31 @@ private:
         } catch (const std::exception& e) {
             boardError_ = std::string(e.what()).substr(0, 60);
         }
+    }
+
+    static void SetMuseumColumns(LeaderboardEntry& entry, long long delta)
+    {
+        auto& columns = entry.getColumnsProperty();
+        const int runs = columns.ContainsKey("MuseumRuns") ? columns.GetValueInt32("MuseumRuns") : 0;
+        columns.SetValue("MuseumRuns", runs + 1);
+        columns.SetValue("Outcome", delta == std::numeric_limits<long long>::min()
+            ? LeaderboardOutcome::None : (delta >= 100 ? LeaderboardOutcome::Win : LeaderboardOutcome::Tie));
+        columns.SetValue("Exhibit", std::string("cna-3d-museum"));
+    }
+
+    [[nodiscard]] static std::string DescribeColumns(const LeaderboardEntry& entry)
+    {
+        const auto& columns = entry.getColumnsProperty();
+        if (columns.getCountProperty() == 0) return "Columns: none";
+        std::string result = "Columns (" + std::to_string(columns.getCountProperty()) + "): ";
+        if (columns.ContainsKey("MuseumRuns"))
+            result += "MuseumRuns=" + std::to_string(columns.GetValueInt32("MuseumRuns"));
+        if (columns.ContainsKey("Outcome")) {
+            const LeaderboardOutcome outcome = columns.GetValueOutcome("Outcome");
+            result += std::string(result.back() == ' ' ? "" : ", ") + "Outcome="
+                + (outcome == LeaderboardOutcome::Win ? "Win" : outcome == LeaderboardOutcome::Loss ? "Loss" : outcome == LeaderboardOutcome::Tie ? "Tie" : "None");
+        }
+        return result;
     }
 
     void Award(int index)
@@ -565,6 +594,7 @@ private:
             text("#" + std::to_string(r.rank), 36, y + 10, r.rank == 1 ? Kit::kGold : Kit::kText, 0.85f);
             text(r.tag, 110, y + 10, Kit::kText, 0.85f);
             text("Rating " + std::to_string(r.rating), 300, y + 8, Kit::kDim, 0.55f);
+            text(r.columns, 610, y + 8, Kit::kDim, 0.48f);
         }
         if (rows_.empty()) text("This page has no entries: ranked gamers are those with a rating above zero.", 24, 120, Kit::kDim, 0.6f);
     }
@@ -585,6 +615,7 @@ private:
         int rank;
         std::string tag;
         long long rating;
+        std::string columns;
     };
     std::unique_ptr<LeaderboardReader> reader_;
     std::vector<Row> rows_;
