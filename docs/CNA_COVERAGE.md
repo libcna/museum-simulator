@@ -51,7 +51,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-952 distinct API names are claimed by at least one room.
+954 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -999,7 +999,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | VideoPlayer.Stop | `au-video` |
 | VideoPlayer.Volume | `au-video` |
 | Viewport | `app-viewport`, `cam-split` |
-| Viewport.Project | `mat-screen`, `text-labels` |
+| Viewport.MaxDepth | `app-viewport` |
+| Viewport.MinDepth | `app-viewport` |
+| Viewport.Project | `app-viewport`, `mat-screen`, `text-labels` |
 | Viewport.Unproject | `mat-screen` |
 | VisualizationData | `au-music` |
 | WaveBank | `au-xact` |

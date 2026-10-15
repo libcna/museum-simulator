@@ -245,7 +245,7 @@ WingSpec AppWing()
         Lab("app-device", "Device and Renderer Report", "The live GraphicsDevice, adapter, GraphicsCapability list and renderer capability profile", "applab", "device",
             {"GraphicsDevice", "GraphicsAdapter", "GraphicsCapability", "RendererCapabilityProfile", "PresentationParameters"}),
         Lab("app-viewport", "Back Buffer, Viewport and Fullscreen", "GraphicsDeviceManager.ApplyChanges: resolution, fullscreen and vertical sync at run time", "applab", "viewport",
-            {"GraphicsDeviceManager", "PresentationParameters", "PresentInterval", "GraphicsDeviceStatus", "GraphicsDeviceManager.DeviceReset", "GraphicsDeviceManager.DeviceResetting", "GraphicsDeviceManager.PreparingDeviceSettings", "Viewport", "GameWindow.ClientBounds"}),
+            {"GraphicsDeviceManager", "PresentationParameters", "PresentInterval", "GraphicsDeviceStatus", "GraphicsDeviceManager.DeviceReset", "GraphicsDeviceManager.DeviceResetting", "GraphicsDeviceManager.PreparingDeviceSettings", "Viewport", "Viewport.MinDepth", "Viewport.MaxDepth", "Viewport.Project", "GameWindow.ClientBounds"}),
         Lab("app-content", "Content Lifetime", "ContentManager.Load, caching, Unload and ContentLoadException with your own manager", "applab", "content",
             {"ContentManager", "ContentManager.Load", "ContentManager.Unload", "ContentLoadException", "Texture2D"}),
         Lab("app-components", "Game Components", "GameComponent and DrawableGameComponent with UpdateOrder, DrawOrder, Enabled and Visible", "applab", "components",

@@ -188,6 +188,10 @@ public:
                     return std::to_string(r.Width) + " x " + std::to_string(r.Height);
                 });
                 p.AddReadout("Aspect ratio", [this] { return Fmt(S().device->getViewportProperty().getAspectRatioProperty()); });
+                // The depth range a Viewport maps clip-space depth into: Project returns Z between MinDepth and MaxDepth.
+                p.AddSlider("Viewport.MinDepth", 0.0f, 0.9f, minDepth_, [this](float v) { minDepth_ = v; if (maxDepth_ < minDepth_ + 0.05f) maxDepth_ = minDepth_ + 0.05f; }, "%.2f");
+                p.AddSlider("Viewport.MaxDepth", 0.1f, 1.0f, maxDepth_, [this](float v) { maxDepth_ = std::max(v, minDepth_ + 0.05f); }, "%.2f");
+                p.AddReadout("Project() of a point on the near / far plane", [this] { return DepthRangeText(); });
                 break;
             }
             case Mode::Content:
@@ -443,6 +447,17 @@ private:
         });
     }
 
+    [[nodiscard]] std::string DepthRangeText() const
+    {
+        Viewport v = S().device->getViewportProperty();
+        v.setMinDepthProperty(minDepth_);
+        v.setMaxDepthProperty(maxDepth_);
+        const Matrix view = Matrix::CreateLookAt(Vector3(0, 0, 0), Vector3(0, 0, -1), Vector3::Up);
+        const Matrix proj = Matrix::CreatePerspectiveFieldOfView(1.0f, v.getAspectRatioProperty(), 1.0f, 100.0f);
+        const Vector3 nearPoint = v.Project(Vector3(0, 0, -1.0f), proj, view, Matrix::getIdentityProperty());
+        const Vector3 farPoint = v.Project(Vector3(0, 0, -100.0f), proj, view, Matrix::getIdentityProperty());
+        return "Z " + Fmt(nearPoint.Z) + " / " + Fmt(farPoint.Z) + "  (range " + Fmt(minDepth_) + " to " + Fmt(maxDepth_) + ")";
+    }
     [[nodiscard]] std::string ViewportText() const
     {
         const Viewport v = S().device->getViewportProperty();
@@ -560,6 +575,7 @@ private:
     int preparingCount_ = 0;
     std::string preparingNote_;
     std::size_t resetToken_ = 0, resettingToken_ = 0, addedToken_ = 0, removedToken_ = 0;
+    float minDepth_ = 0.0f, maxDepth_ = 1.0f;
     int resetCount_ = 0, resettingCount_ = 0, addedCount_ = 0, removedCount_ = 0;
     Gizmos gizmos_;
     float time_ = 0.0f, delay_ = 0.0f, timeBall_ = 0.0f, frameBall_ = 0.0f;
