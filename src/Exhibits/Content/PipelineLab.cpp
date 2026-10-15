@@ -4,7 +4,10 @@
 // ContentManager's story (the Content Compiler room shows the other half, the finished .xnb).
 // Without CNA's pipeline library (-DMUSEUM_PIPELINE=OFF) the room says so.
 #include <cstdio>
+#include <cstdint>
 #include <exception>
+#include <filesystem>
+#include <fstream>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -12,6 +15,7 @@
 #include <vector>
 
 #include "Exhibits/ExhibitFactories.hpp"
+#include "Exhibits/Content/PipelineSupport.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
 
 #ifdef MUSEUM_PIPELINE
@@ -19,6 +23,7 @@
 #include "Microsoft/Xna/Framework/Content/Pipeline/ContentItem.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/InvalidContentException.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/Serialization/Intermediate/IntermediateSerializer.hpp"
+#include "Microsoft/Xna/Framework/Content/Pipeline/XmlImporter.hpp"
 #include "Microsoft/Xna/Framework/Vector3.hpp"
 #include "System/Xml/XmlReader.hpp"
 #include "System/Xml/XmlWriter.hpp"
@@ -150,6 +155,8 @@ public:
         p.AddReadout("Ignored member in the file", [this] { return secretInFile_; });
         p.AddChoice("Damage the document", {"none", "unknown element", "number that is not a number", "missing end tag", "wrong type name"}, 0, [this](int v) { damage_ = v; Rebuild(); });
         p.AddReadout("IntermediateSerializer.Serialize", [this] { return std::to_string(xml_.size()) + " bytes"; });
+        p.AddReadout("XmlImporter.Attribute", [this] { return importerAttribute_; });
+        p.AddReadout("XmlImporter.Import", [this] { return imported_; });
         p.AddReadout("Deserialize", [this] { return verdict_; });
         p.AddReadout("Round trip", [this] { return roundTrip_; });
 #else
@@ -157,13 +164,18 @@ public:
 #endif
         AddInfoSign(b, "The Pipeline in the Game",
                     {"XNA games author content as XML (or import files), and the content pipeline turns it into the .xnb that ContentManager loads. The IntermediateSerializer is the XML half:",
-                     "a type says which members it has (DescribeContent), and CNA writes and reads the very format XNA's did. Describe the members with options (the [ContentSerializer...] attributes of XNA) or damage the document to see what it refuses; set Tags to 0 with the options on: an Optional element is omitted, and reading it back restores the default."});
+                     "a type says which members it has (DescribeContent), and CNA writes and reads the very format XNA's did. XmlImporter consumes that authored .xml file and returns the type named by its Asset element; unlike most importers it declares no default processor.",
+                     "Describe the members with options (the [ContentSerializer...] attributes of XNA) or damage the document to see what both reading paths refuse; set Tags to 0 with the options on: an Optional element is omitted, and reading it back restores the default."});
     }
 
     void OnScreenLoaded() override
     {
 #ifdef MUSEUM_PIPELINE
         item_ = std::make_shared<Plaque>();
+        const Xna::ContentImporterAttribute attribute = Xna::XmlImporter::Attribute();
+        importerAttribute_ = attribute.getFileExtensionsProperty()[0] + ", \"" +
+                             attribute.getDisplayNameProperty() + "\", default processor: " +
+                             (attribute.getDefaultProcessorProperty().empty() ? "none" : attribute.getDefaultProcessorProperty());
         Rebuild();
 #endif
     }
@@ -188,6 +200,15 @@ protected:
         rect(604, 56, 332, 460, Color(22, 30, 46, 235));
         text("Reading it back", 618, 66, Kit::kGold, 0.75f);
         float ry = 104.0f;
+        text("XmlImporter.Import", 618, ry, Kit::kGold, 0.58f);
+        ry += 28.0f;
+        for (const std::string& line : Kit::Wrap(*S().font, imported_, 300.0f, 0.5f)) {
+            text(line, 618, ry, imported_.starts_with("refused") ? Kit::Rgba(255, 180, 150) : Kit::Rgba(150, 255, 190), 0.5f);
+            ry += 20.0f;
+        }
+        ry += 8.0f;
+        text("Deserialize directly", 618, ry, Kit::kGold, 0.58f);
+        ry += 28.0f;
         for (const std::string& line : Kit::Wrap(*S().font, verdict_, 300.0f, 0.55f)) {
             text(line, 618, ry, ok_ ? Kit::Rgba(150, 255, 190) : Kit::Rgba(255, 180, 150), 0.55f);
             ry += 22.0f;
@@ -226,6 +247,32 @@ private:
     }
 
     template <typename T>
+    std::shared_ptr<T> ImportDocument(const std::string& document)
+    {
+        const std::filesystem::path directory = std::filesystem::temp_directory_path() / "cna-museum-pipeline";
+        std::error_code ignored;
+        std::filesystem::create_directories(directory, ignored);
+        const std::filesystem::path source = directory /
+            ("plaque-" + std::to_string(reinterpret_cast<std::uintptr_t>(this)) + ".xml");
+        {
+            std::ofstream out(source, std::ios::binary | std::ios::trunc);
+            if (!out) throw std::runtime_error("could not create the temporary .xml source");
+            out.write(document.data(), static_cast<std::streamsize>(document.size()));
+            if (!out) throw std::runtime_error("could not write the temporary .xml source");
+        }
+        try {
+            PipelineSupport::ImporterContext context;
+            Xna::XmlImporter importer;
+            const Xna::ContentObject value = importer.Import(source.string(), context);
+            std::filesystem::remove(source, ignored);
+            return Xna::Unbox<std::shared_ptr<T>>(value);
+        } catch (...) {
+            std::filesystem::remove(source, ignored);
+            throw;
+        }
+    }
+
+    template <typename T>
     void Document(const std::shared_ptr<T>& item)
     {
         const bool annotated = std::is_same_v<T, AnnotatedPlaque>;
@@ -252,6 +299,13 @@ private:
             shownLines_ = Lines(doc);
             secretInFile_ = doc.find("never reach") != std::string::npos ? "yes" : "no: [ContentSerializerIgnore]";
             try {
+                const std::shared_ptr<T> imported = ImportDocument<T>(doc);
+                imported_ = std::string("returned ") + (annotated ? "AnnotatedPlaque" : "Plaque") +
+                            ": \"" + imported->text + "\", level " + std::to_string(imported->level);
+            } catch (const std::exception& e) {
+                imported_ = std::string("refused: ") + e.what();
+            }
+            try {
                 const std::shared_ptr<T> back = FromXml<T>(doc);
                 ok_ = true;
                 verdict_ = std::string("Deserialize returned a ") + (annotated ? "AnnotatedPlaque" : "Plaque") + ": \"" + back->text + "\", level " + std::to_string(back->level) + ", " + std::to_string(back->tags.size()) + " tags";
@@ -270,7 +324,7 @@ private:
     std::shared_ptr<Plaque> item_;
     std::string xml_;
     std::vector<std::string> shownLines_;
-    std::string verdict_ = "-", roundTrip_ = "-";
+    std::string verdict_ = "-", roundTrip_ = "-", imported_ = "-", importerAttribute_ = "-";
     bool ok_ = true, annotated_ = false;
     int damage_ = 0;
     std::string secretInFile_ = "-";
