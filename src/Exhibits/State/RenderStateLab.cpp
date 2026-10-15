@@ -429,7 +429,9 @@ private:
             const float cx[4] = {-1.5f, -0.5f, 0.45f, 1.4f}, cy[4] = {0.3f, -0.3f, 0.35f, -0.25f}, r[4] = {1.0f, 1.05f, 0.95f, 1.0f};
             for (int i = 0; i < 4; ++i) FlatDisc(ctx, frame, cx[i], cy[i], r[i], Color::White);
         } else {
-            BasicEffect& fx = ctx.fx.Flat();
+            // The solids carry normals and texture coordinates, not vertex colours, so they go through the lit effect (the colour is masked in
+            // this pass anyway); the flat effect reads a colour from every vertex and CNA now refuses a draw whose vertices lack one.
+            BasicEffect& fx = ctx.fx.BeginLit();
             fx.setViewProperty(ctx.view.view);
             fx.setProjectionProperty(ctx.view.projection);
             const auto shape = [&](const LitMesh& m, const Matrix& w) { fx.setWorldProperty(w); EffectBank::Apply(fx); m.Draw(d); };

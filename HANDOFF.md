@@ -1,7 +1,62 @@
 # HANDOFF
 
 Working notes for whoever continues this project (human or agent). Everything marked *checked* was run on the date
-given; anything unverified says so. Counts are not repeated here: run `build/bin/cna-3d-museum --validate`.
+given; anything unverified says so. Counts are not repeated below the first section: run `build/bin/cna-3d-museum --validate`.
+
+## START HERE (written 2026-10-15 at the end of a long autonomous session; read this section first)
+
+**What the project is.** `cna-3d-museum`: a walkable 3D museum, written in C++ on top of the sibling CNA library (`../cna`, an XNA 4.0 reimplementation),
+where every room demonstrates real CNA/XNA API with live controls. Branch `develop` of this repository. Related repositories (separate git repos, all under
+`/rv/data/development/github.com/libcna/`): `cna`, `sharp-runtime`, `xna4-decomp` (XNA docs XML), `xna4-spec`. Never create a second engine above CNA; CNA defects are fixed in CNA.
+
+**Numbers now** (run `build/bin/cna-3d-museum --validate`; generated docs carry them): 10 floors, 293 exhibit rooms, 1,141 API names, `museum_tests` 7,808 checks.
+
+**Rules that bind every session** (from `../CLAUDE.md` and the user): 
+- compile with **at most 3 CPU cores** (`JOBS=3`, `--parallel 3`; `LP_NUM_THREADS=3` for any museum run under Mesa); do not run two heavy jobs together;
+- exactly one ccache (`CCACHE_DIR=/rv/cnaccache`, `CCACHE_BASEDIR=/rv` are already exported; never set `CCACHE_MAXSIZE`);
+- build directories are a closed list: `build/` (default; OPENGLES3;OPENGL33;SOFTWARE), `build-probe/` (OPENGLES3;FNA3D;WEBGPU;SDL_GPU;HEADLESS;STUB; needs
+  `VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json` for WEBGPU/SDL_GPU; keep `CNA_BUILD_TESTS=OFF` except while building CNA test targets, then reconfigure OFF),
+  `build-consumer/` (MinGW DIRECTX9;SOFTWARE, run under Wine), `build-asan/` only while sanitising (delete after). Never build or clone in `/tmp` or the session scratchpad;
+- no attribution lines in commit messages; never fabricate screenshots or results; only Xvfb for runs (never the live desktop); no foreground `sleep` chains (use `until`/`for` loops with a timeout);
+- other sessions edit `../cna` concurrently (graphics, renderers, directx9): before committing there, `git status` and add only your own pathspecs; a transient "non-production SDL audit failed" at configure time is retried after ~45 s; a half-edited header from another session can break a build for a minute (wait and retry).
+
+**Fast orientation.** `README.md` (generated counts and screenshots), `docs/ARCHITECTURE.md` (room frames: rooms entered from the north are turned, write exhibit code in room-local
+coordinates), `docs/CNA_COVERAGE.md` (generated per-API table plus the "not demonstrated" list), `docs/KNOWN_ISSUES.md`, `docs/RENDERER_TESTING.md`, `docs/MUSEUM_MAP.md`.
+Rooms are data: `src/Catalogue/FloorN.cpp` (RoomSpec with an `apis` list; list only members a room really uses, `tools/gen_docs.sh` turns the lists into coverage docs), an exhibit class
+in `src/Exhibits/...` registered in `ExhibitFactories.hpp` + `ExhibitRegistry.cpp`. Script ops for `tools/run.sh "goto:KEY;wait:N;press:LABEL=V;at:x,z,yaw,pitch;e;shot:PATH;quit"`.
+
+**What this last stretch added** (each has a bullet with measurements further down): rooms `ct-meshbuilder` (MeshBuilder + ModelProcessor), `tex-volshader` (Texture3D in a sampler3D, AddressW),
+`pl-inspector` (CNA Inspector agent + client over loopback; CMake `MUSEUM_INSPECTOR`), `in-phone` (Microsoft.Devices sensors, VibrateController, keyboard-driven accelerometer),
+`pl-diagnostics` (CNA::Diagnostics handles, zones, resources, recorded trace; the museum is now built at `CNA_DIAGNOSTICS=FULL` and starts at runtime level Stats),
+`ct-modelimport` (XImporter/FbxImporter, `tools/gen_models.py`), `ct-compiler` (ContentCompiler writes an .xnb, loaded back from memory), `ct-audiopipeline` (WavImporter, SoundEffectProcessor, SongProcessor, compile + play);
+extensions to `in-touch` (simulated fingers are now real touch points), `gs-guide`, `pl-window` (PhoneApplicationService), `model-load` (CopyBoneTransformsFrom), `ct-fontbuild` (.spritefont via FontDescriptionImporter),
+`pl-exceptions`, `app-viewport`; `src/Exhibits/Content/PipelineSupport.hpp` is the shared pipeline plumbing. README gained real screenshots of several of them (`tools/readme_shots.sh`).
+
+**CNA fixes made in this stretch** (all committed in `../cna`): ContentCompiler writers for `Texture2DContent` (c17178806) and `SoundEffectContent`/`SongContent` (3453776b7) with tests (`CnaContentPipelineTests` 492 pass, 1 skipped);
+`AvatarRenderer` vertex buffers now carry declarations (1897c32a4: another session's new stock-effect input check had made `gs-avatar` throw on every renderer); the same check no longer applies to custom `ShaderEffect`
+draws (757924d35: it broke `cx-shadow`). Earlier in the campaign: DirectX9 layout gate (d3f1a9e51), `~Video`, TypeConverter messages in sharp-runtime (f2aecfef), and others listed below.
+
+**Verification state at the end** (all with the code as committed, except the last bullet):
+- `tools/check_all.sh` all nine steps green (OPENGLES3) after the CNA fixes; multi-renderer `tools/tour.sh -f 3 -p` (script `multi_tours.sh` pattern: `BUILD_DIR=build-probe CNA_GRAPHICS_RENDERER=R`): FNA3D, WEBGPU, SDL_GPU, STUB 0 exhibit errors;
+  HEADLESS 4 (cube maps: `tex-cube`, `model-ibl`, a documented limitation); Wine DIRECTX9 0 exhibit errors (133 s).
+- Fuzz seeds 12 and 13 (`tools/tour.sh -f 3 -z 30 -s N`) each found one museum bug: `rs-stencilcount` two-sided scene drew lit meshes through the flat (vertex-colour) effect, which CNA now correctly refuses
+  ("Color0 is missing"). Fixed in `RenderStateLab.cpp` (uses `BeginLit`); the room was checked afterwards but **the two seeds were not re-run**. Re-run seeds 12 and 13 first.
+- Not re-run after the last few commits: ASan/UBSan tours (the new rooms use threads: Inspector agent, diagnostics zones, sensors; run an ASan tour: configure `build-asan` with plain cmake, RelWithDebInfo + `-fsanitize=address,undefined`, ~35 min at 3 cores, delete afterwards),
+  `room_diff.sh` for OPENGL33/SOFTWARE, Wine SOFTWARE tour, `tools/online_check.sh`.
+- Unverified code: `ReflectLab.cpp` (`be-model`) now has branches for array parameters and transposed matrices (`GetValueMatrixArray`, `GetValueMatrixTransposeArray`, `GetValueMatrixTranspose`, `Single`/`Vector*Array`); it compiles and the room runs, but no screen showing those branches was looked at, so the catalogue does not claim them. Check the SkinnedEffect page (Bones array), then add the names to the `be-model` list in `Floor4.cpp`.
+
+**Open items and next steps, in priority order**
+1. Re-run fuzz seeds 12 and 13, then more seeds (14 and up) on OPENGLES3; fix any museum bug they find; keep seed 8's unexplained Release heap abort in `docs/KNOWN_ISSUES.md` in mind (not reproducible under ASan).
+2. ASan+UBSan tour over all rooms (see above) because of the new threaded rooms; then optionally TSan on `pl-inspector`, `pl-diagnostics`, `in-phone`.
+3. Remaining unused XNA-4 members (from a doc diff): `BlendState.ColorWriteChannels2/3` (needs a 4-target MRT shader in `rt-mrt`), `GraphicsDevice.Present/VertexSamplerStates` (needs a vertex-texture shader), `StorageDevice.DeviceChanged`,
+   `NetworkSession.AddLocalGamer/Write*Leaderboard`, `Keys` extras, `LeaderboardEntry.Columns` (`PropertyDictionary`). A fresh public-header audit (class names in `../cna/modules/*/include` not mentioned in `src/` or the coverage doc)
+   shows mostly internals now; remaining public gaps: media library classes (deliberately not shown), `NetworkMachine`, a few exceptions that cannot be provoked here (`NoAudioHardwareException`, `InstancePlayLimitException`, `DeviceLostException`; `Microphone.Default` does not throw here).
+4. Pipeline gaps in CNA worth closing the same way as the Texture2DContent/SoundEffect ones: `ContentCompiler` has no writers for `SpriteFontContent`, `TextureCubeContent`/`Texture3DContent`, `EffectContent`; `EffectImporter`/`EffectProcessor`, `XmlImporter`, `FbxImporter` binary FBX, `Mp3Importer`, video importers are not demonstrated.
+5. CNA renderer gaps (see Open findings below and `docs/KNOWN_ISSUES.md`): DIRECTX9 supports only a few texture formats (`ClassifySurfaceFormatEXT` is not overridden, so `tex-formats` shows only Color there), FNA3D and DIRECTX9 ignore `PunctualLightEXT`, SOFTWARE PbrEffect is flat, WebGPU/SDL_GPU/FNA3D refuse Single/Vector4 Texture3D, HEADLESS has no cube data.
+6. Mesa llvmpipe quirk worth knowing: a textured draw whose vertices all share one texture coordinate is black with a mip-mapped sampler on OPENGLES3/OPENGL33 (see KNOWN_ISSUES); rooms drawing models without UVs use `LinearClamp`.
+7. Never stop at "nothing left": run another audit (headers, CNA examples/tests/docs), another multi-renderer tour after any CNA change by other sessions (they changed stock-effect validation twice this stretch), and the full `tools/check_all.sh`.
+
+**Final-report numbers for the campaign** (approximate, refresh before reporting): floors 10, rooms 293, API names 1,141, museum_tests 7,808 checks; renderers exercised: OPENGLES3, OPENGL33, SOFTWARE, FNA3D, WEBGPU, SDL_GPU, HEADLESS, STUB (natively), DIRECTX9 and SOFTWARE under Wine.
 
 ## State (checked 2026-10-13, extended 2026-10-14 and 2026-10-15)
 

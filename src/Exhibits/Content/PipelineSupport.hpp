@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <filesystem>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -66,11 +67,15 @@ private:
 // with the material it was given and counts the request.
 class ProcessorContext final : public Xna::ContentProcessorContext {
 public:
+    // A processor may write a file (SongProcessor writes its converted song): that goes to a folder of its own under the system's
+    // temporary directory, never into the folder the museum was started from.
+    ProcessorContext() { std::error_code ignored; std::filesystem::create_directories(OutputFolder(), ignored); }
+    [[nodiscard]] static std::string OutputFolder() { return (std::filesystem::temp_directory_path() / "cna-museum-pipeline").string(); }
     [[nodiscard]] std::string getBuildConfigurationProperty() const override { return "Release"; }
-    [[nodiscard]] std::string getIntermediateDirectoryProperty() const override { return "obj"; }
+    [[nodiscard]] std::string getIntermediateDirectoryProperty() const override { return OutputFolder(); }
     [[nodiscard]] Xna::ContentBuildLogger& getLoggerProperty() const override { return const_cast<QuietLogger&>(logger_); }
-    [[nodiscard]] std::string getOutputDirectoryProperty() const override { return "bin"; }
-    [[nodiscard]] std::string getOutputFilenameProperty() const override { return "bin/asset.xnb"; }
+    [[nodiscard]] std::string getOutputDirectoryProperty() const override { return OutputFolder(); }
+    [[nodiscard]] std::string getOutputFilenameProperty() const override { return OutputFolder() + "/asset.xnb"; }
     [[nodiscard]] const Xna::OpaqueDataDictionary& getParametersProperty() const override { return parameters_; }
     [[nodiscard]] Xna::TargetPlatform getTargetPlatformProperty() const override { return Xna::TargetPlatform::Windows; }
     [[nodiscard]] Microsoft::Xna::Framework::Graphics::GraphicsProfile getTargetProfileProperty() const override { return Microsoft::Xna::Framework::Graphics::GraphicsProfile::HiDef; }

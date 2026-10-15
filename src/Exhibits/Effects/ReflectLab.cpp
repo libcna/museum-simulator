@@ -151,6 +151,19 @@ private:
         char b[96];
         try {
             const int rows = p.getRowCountProperty(), cols = p.getColumnCountProperty();
+            // An array parameter has its own getters, one per element type (and a transposed form for matrices).
+            const int elementCount = p.getElementsProperty().getCountProperty();
+            if (elementCount > 0 && p.getParameterTypeProperty() == EffectParameterType::Single) {
+                if (p.getParameterClassProperty() == EffectParameterClass::Matrix && rows == 4 && cols == 4) {
+                    const Matrix first = p.GetValueMatrixArray(elementCount)[0], transposed = p.GetValueMatrixTransposeArray(elementCount)[0];
+                    std::snprintf(b, sizeof b, "Matrix[%d]: [0].M41 %.2f, transposed M14 %.2f", elementCount, static_cast<double>(first.M41), static_cast<double>(transposed.M14));
+                    return b;
+                }
+                if (p.getParameterClassProperty() == EffectParameterClass::Scalar) { std::snprintf(b, sizeof b, "float[%d]: [0] = %.2f", elementCount, static_cast<double>(p.GetValueSingleArray(elementCount)[0])); return b; }
+                if (p.getParameterClassProperty() == EffectParameterClass::Vector && cols == 2) { const Vector2 v = p.GetValueVector2Array(elementCount)[0]; std::snprintf(b, sizeof b, "Vector2[%d]: [0] = (%.2f, %.2f)", elementCount, static_cast<double>(v.X), static_cast<double>(v.Y)); return b; }
+                if (p.getParameterClassProperty() == EffectParameterClass::Vector && cols == 3) { const Vector3 v = p.GetValueVector3Array(elementCount)[0]; std::snprintf(b, sizeof b, "Vector3[%d]: [0] = (%.2f, %.2f, %.2f)", elementCount, static_cast<double>(v.X), static_cast<double>(v.Y), static_cast<double>(v.Z)); return b; }
+                if (p.getParameterClassProperty() == EffectParameterClass::Vector && cols == 4) { const Vector4 v = p.GetValueVector4Array(elementCount)[0]; std::snprintf(b, sizeof b, "Vector4[%d]: [0] = (%.2f, %.2f, %.2f, %.2f)", elementCount, static_cast<double>(v.X), static_cast<double>(v.Y), static_cast<double>(v.Z), static_cast<double>(v.W)); return b; }
+            }
             switch (p.getParameterTypeProperty()) {
                 case EffectParameterType::Bool: return p.GetValueBoolean() ? "true" : "false";
                 case EffectParameterType::Int32: return std::to_string(p.GetValueInt32());
@@ -159,7 +172,8 @@ private:
                     if (p.getParameterClassProperty() == EffectParameterClass::Scalar) { std::snprintf(b, sizeof b, "%.2f", static_cast<double>(p.GetValueSingle())); return b; }
                     if (p.getParameterClassProperty() == EffectParameterClass::Matrix && rows == 4 && cols == 4) {
                         const Matrix m = p.GetValueMatrix();
-                        std::snprintf(b, sizeof b, "Matrix, M11 %.2f M44 %.2f", static_cast<double>(m.M11), static_cast<double>(m.M44));
+                        const Matrix t = p.GetValueMatrixTranspose();
+                        std::snprintf(b, sizeof b, "Matrix, M11 %.2f M44 %.2f, transposed M41 %.2f", static_cast<double>(m.M11), static_cast<double>(m.M44), static_cast<double>(t.M41));
                         return b;
                     }
                     if (p.getParameterClassProperty() == EffectParameterClass::Vector && cols == 2) { const Vector2 v = p.GetValueVector2(); std::snprintf(b, sizeof b, "(%.2f, %.2f)", static_cast<double>(v.X), static_cast<double>(v.Y)); return b; }
