@@ -5,7 +5,7 @@ given; anything unverified says so. Counts are not repeated here: run `build/bin
 
 ## State (checked 2026-10-13, extended 2026-10-14 and 2026-10-15)
 
-- **2026-10-15 full battery (`tools/check_all.sh`, OPENGLES3): all nine steps green**, 284 rooms, `museum_tests` 7,327 checks. Also run on 2026-10-14/15:
+- **2026-10-15 (evening) full battery (`tools/check_all.sh`, OPENGLES3): all nine steps green** with 289 exhibit rooms, 1,064 API names, `museum_tests` 7,645 checks, after the rooms `ct-meshbuilder`, `tex-volshader`, `pl-inspector`, `in-phone` and the touch/guide/window/model additions below. The runs listed next were made earlier the same day with 284-286 rooms. Also run on 2026-10-14/15:
   multi-renderer `tours -p` (FNA3D, WEBGPU, SDL_GPU) 0 exhibit errors; ASan+UBSan tour over 283 rooms and fuzz seed 8 clean; Wine SOFTWARE 286 rooms
   and, after the CNA fix `d3f1a9e51`, Wine DIRECTX9 286 rooms with 0 exhibit errors; `room_diff` over 284 rooms (OPENGL33 and SOFTWARE).
   One unexplained heap abort in a Release fuzz run (seed 8, see KNOWN_ISSUES) did not reproduce under ASan or malloc checking.
