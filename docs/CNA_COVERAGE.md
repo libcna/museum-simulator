@@ -51,7 +51,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-937 distinct API names are claimed by at least one room.
+940 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -493,6 +493,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GuideAlreadyVisibleException | `pl-exceptions` |
 | HalfVector2 | `vt-packed` |
 | HalfVector4 | `vt-packed` |
+| Haptics.GetHapticsEXT | `in-devices` |
+| Haptics.IsJoystickHapticEXT | `in-devices` |
+| Haptics.IsMouseHapticEXT | `in-devices` |
 | HostChangedEventArgs | `net-session` |
 | IAvatarAnimation | `gs-avatar` |
 | IDrawable | `app-components` |

@@ -393,7 +393,8 @@ protected:
                     "Sensors.GetSensorsEXT(): " + std::to_string(sensorCount_) + " sensor(s)" + (sensorCount_ > 0 ? "" : "   (typical for a desktop)"),
                     accel_ ? "Accelerometer: " + Fmt(accelV_.X) + ", " + Fmt(accelV_.Y) + ", " + Fmt(accelV_.Z) : std::string("Accelerometer: not available here"),
                     gyro_ ? "Gyroscope: " + Fmt(gyroV_.X) + ", " + Fmt(gyroV_.Y) + ", " + Fmt(gyroV_.Z) : std::string("Gyroscope: not available here"),
-                    "Haptics.GetHapticsEXT(): " + std::to_string(hapticCount_) + " haptic device(s)",
+                    "Haptics.GetHapticsEXT(): " + std::to_string(hapticCount_) + " haptic device(s);  IsMouseHapticEXT: " + mouseHaptic_ +
+                        (joysticks_.empty() ? std::string() : std::string(";  IsJoystickHapticEXT(first pad): ") + joystickHaptic_),
                     "Power.GetInfoEXT(): " + powerNote_,
                     padNote_,
                     "Mouse.GetGlobalPositionEXT: " + globalMouse_,
@@ -810,6 +811,8 @@ private:
             keyboards_ = static_cast<int>(CNA::Input::InputDevices::GetKeyboardsEXT().size());
             touchDevices_ = static_cast<int>(CNA::Input::InputDevices::GetTouchDevicesEXT().size());
             hapticCount_ = static_cast<int>(CNA::Input::Haptics::GetHapticsEXT().size());
+            mouseHaptic_ = CNA::Input::Haptics::IsMouseHapticEXT() ? "yes" : "no";
+            if (!joysticks_.empty()) joystickHaptic_ = CNA::Input::Haptics::IsJoystickHapticEXT(joysticks_[0].id) ? "yes" : "no";
         } catch (const std::exception&) {}
     }
     void UpdateJoystick(float)
@@ -997,6 +1000,7 @@ private:
     std::vector<Vector2> points_;
     std::vector<std::string> gestureLog_;
     int hapticCount_ = 0;
+    std::string mouseHaptic_ = "?", joystickHaptic_ = "?";
     int mice_ = 0, keyboards_ = 0, touchDevices_ = 0, touches_ = 0, touchMax_ = 0, sensorCount_ = 0;
     bool touchConnected_ = false, accel_ = false, gyro_ = false;
     Vector3 accelV_, gyroV_;

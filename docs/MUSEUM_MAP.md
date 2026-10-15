@@ -421,7 +421,7 @@ Sound, music, keyboards, mice and game pads
 | 7.2.06 | `in-text` | Text Input and Clipboard | CNA extension | TextInputEXT.TextInput, TextInputEXT.StartTextInput, Clipboard.SetTextEXT, Clipboard.GetTextEXT, Clipboard.SetDataEXT, Clipboard.GetMimeTypesEXT, TextInputEXT.StartTextInputWithTypeEXT, TextInputTypeEXT, Clipboard.SetPrimarySelectionTextEXT, Clipboard.GetPrimarySelectionTextEXT, Clipboard.HasPrimarySelectionTextEXT |
 | 7.2.07 | `in-joystick` | Raw Joysticks | CNA extension | Joysticks.GetJoysticksEXT, Joysticks.GetCapabilitiesEXT, Joysticks.GetStateEXT |
 | 7.2.08 | `in-touch` | Touch and Gestures | XNA 4.0 | TouchPanel.GetState, TouchPanel.ReadGesture, TouchPanel.EnabledGestures, GestureType, GestureSample.Position2, GestureSample.Delta2, TouchPanel.MouseTouchEmulationEnabledEXT |
-| 7.2.09 | `in-devices` | Other Input Devices | CNA extension | InputDevices.GetMiceEXT, TouchPanel.GetState, TouchPanel.MouseTouchEmulationEnabledEXT, Sensors.GetSensorsEXT, Power.GetInfoEXT, GamePad.GetConnectionStateEXT, GamePad.GetPowerInfoEXT, GamePad.GetTouchpadCountEXT, GamePad.GetFirmwareVersionEXT, GamePad.GetSerialEXT, Mouse.GetGlobalPositionEXT |
+| 7.2.09 | `in-devices` | Other Input Devices | CNA extension | InputDevices.GetMiceEXT, TouchPanel.GetState, TouchPanel.MouseTouchEmulationEnabledEXT, Sensors.GetSensorsEXT, Power.GetInfoEXT, GamePad.GetConnectionStateEXT, GamePad.GetPowerInfoEXT, GamePad.GetTouchpadCountEXT, GamePad.GetFirmwareVersionEXT, GamePad.GetSerialEXT, Mouse.GetGlobalPositionEXT, Haptics.GetHapticsEXT, Haptics.IsMouseHapticEXT, Haptics.IsJoystickHapticEXT |
 
 ### Floor 8: Content, Platform and CNA
 
