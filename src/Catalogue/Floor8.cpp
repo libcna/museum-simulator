@@ -71,7 +71,7 @@ WingSpec ContentWing()
             r.depth = 13;
             r.height = 5.0f;
             r.theme = "workshop";
-            r.apis = {"FontDescription", "FontDescriptionProcessor", "FontDescriptionStyle", "SpriteFontContent", "FontDescription.Characters", "FontDescription.DefaultCharacter", "ContentIdentity", "SpriteFont", "SpriteFont.MeasureString", "SpriteBatch.DrawString"};
+            r.apis = {"FontDescription", "FontDescriptionImporter", "FontDescription.FontName", "FontDescription.Size", "FontDescription.Style", "FontDescriptionProcessor", "FontDescriptionStyle", "SpriteFontContent", "FontDescription.Characters", "FontDescription.DefaultCharacter", "ContentIdentity", "SpriteFont", "SpriteFont.MeasureString", "SpriteBatch.DrawString"};
             r.origin = ApiOrigin::Xna;
             return r;
         }(),

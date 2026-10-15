@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A SpriteFont description as XNA Game Studio writes it: the typeface, the size and the characters wanted.
+     The Building a Font room reads it with FontDescriptionImporter. The typeface file DejaVuSans.ttf sits beside it. -->
+<XnaContent xmlns:Graphics="Microsoft.Xna.Framework.Content.Pipeline.Graphics">
+  <Asset Type="Graphics:FontDescription">
+    <FontName>DejaVuSans</FontName>
+    <Size>30</Size>
+    <Spacing>1</Spacing>
+    <UseKerning>true</UseKerning>
+    <Style>Italic</Style>
+    <DefaultCharacter>?</DefaultCharacter>
+    <CharacterRegions>
+      <CharacterRegion>
+        <Start>&#32;</Start>
+        <End>&#126;</End>
+      </CharacterRegion>
+      <CharacterRegion>
+        <Start>&#160;</Start>
+        <End>&#255;</End>
+      </CharacterRegion>
+    </CharacterRegions>
+  </Asset>
+</XnaContent>

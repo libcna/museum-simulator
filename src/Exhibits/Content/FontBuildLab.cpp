@@ -19,6 +19,7 @@
 #include "Microsoft/Xna/Framework/Content/Pipeline/ContentBuildLogger.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/ContentIdentity.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/ContentProcessorContext.hpp"
+#include "Microsoft/Xna/Framework/Content/Pipeline/FontDescriptionImporter.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/Graphics/FontDescription.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/Processors/FontProcessors.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/Processors/SpriteFontContent.hpp"
@@ -49,12 +50,14 @@ public:
         ControlPanel& p = AddPanel("FontDescription", -4.8f, 1.5f, 1.8f, MathHelper::PiOver2, 2.1f);
 #ifdef MUSEUM_PIPELINE
         p.AddSlider("Size (points at 96 dpi)", 10.0f, 64.0f, size_, [this](float v) { size_ = v; Build(); }, "%.0f", 2.0f);
+        p.AddChoice("Description from", {"these controls", "Museum.spritefont (FontDescriptionImporter)"}, 0, [this](int v) { fromFile_ = v == 1; Build(); });
         p.AddChoice("Style", {"Regular", "Bold (synthesised)", "Italic (synthesised)"}, 0, [this](int v) { style_ = v; Build(); });
         p.AddSlider("Spacing (extra pixels between glyphs)", -2.0f, 8.0f, spacing_, [this](float v) { spacing_ = v; Build(); }, "%.1f", 0.5f);
         p.AddToggle("UseKerning", true, [this](bool v) { kerning_ = v; Build(); });
         p.AddChoice("Characters", {"Basic Latin (32 to 126)", "Basic Latin and Latin-1", "Latin, Greek and Cyrillic", "Digits only"}, 0, [this](int v) { regions_ = v; Build(); });
         p.AddToggle("DefaultCharacter '?'", true, [this](bool v) { defaultChar_ = v; Build(); });
         p.AddChoice("Sample text", {"The quick brown fox jumps over the lazy dog", "Grüße aus Köln: 1234 € Ωμέγα Привет", "0123456789 +-*/"}, 0, [this](int v) { sample_ = v; DrawCheck(); });
+        p.AddReadout("FontDescription", [this] { return imported_; });
         p.AddReadout("FontDescriptionProcessor", [this] { return status_; });
         p.AddReadout("Glyphs / atlas", [this] { return shape_; });
         p.AddReadout("LineSpacing", [this] { return lineSpacing_; });
@@ -138,20 +141,35 @@ private:
                 return;
             }
             const auto t0 = std::chrono::steady_clock::now();
-            auto description = std::make_shared<PipeGfx::FontDescription>("DejaVuSans", size_, spacing_,
-                                                                          style_ == 1 ? PipeGfx::FontDescriptionStyle::Bold : (style_ == 2 ? PipeGfx::FontDescriptionStyle::Italic : PipeGfx::FontDescriptionStyle::Regular), kerning_);
-            // The processor looks for DejaVuSans.ttf beside the description's own file.
-            description->setIdentityProperty(Xna::ContentIdentity(S().contentRoot + "/Fonts/title.spritefont"));
-            std::vector<std::pair<char32_t, char32_t>> ranges;
-            switch (regions_) {
-                case 0: ranges = {{32, 126}}; break;
-                case 1: ranges = {{32, 126}, {160, 255}, {0x20AC, 0x20AC}}; break;
-                case 2: ranges = {{32, 126}, {160, 255}, {0x20AC, 0x20AC}, {0x391, 0x3C9}, {0x410, 0x44F}}; break;
-                default: ranges = {{'0', '9'}, {' ', ' '}}; break;
+            std::shared_ptr<PipeGfx::FontDescription> description;
+            if (fromFile_) {
+                // The description comes from an XNA .spritefont file; the controls above are ignored. The importer records the file as the
+                // description's identity, which is where the processor looks for the typeface.
+                PipelineSupport::ImporterContext importerContext;
+                Xna::FontDescriptionImporter importer;
+                description = importer.Import(S().contentRoot + "/Fonts/Museum.spritefont", importerContext);
+                static const char* const styleNames[] = {"Regular", "Bold", "Italic"};
+                imported_ = description->getFontNameProperty() + ", " + std::to_string(static_cast<int>(description->getSizeProperty())) + " pt, " + styleNames[std::clamp(static_cast<int>(description->getStyleProperty()), 0, 2)] +
+                            ", spacing " + std::to_string(static_cast<int>(description->getSpacingProperty())) + ", " + std::to_string(description->getCharactersProperty().size()) + " characters";
+            } else {
+                imported_ = "built from the controls";
+                description = std::make_shared<PipeGfx::FontDescription>("DejaVuSans", size_, spacing_,
+                                                                         style_ == 1 ? PipeGfx::FontDescriptionStyle::Bold : (style_ == 2 ? PipeGfx::FontDescriptionStyle::Italic : PipeGfx::FontDescriptionStyle::Regular), kerning_);
+                // The processor looks for DejaVuSans.ttf beside the description's own file.
+                description->setIdentityProperty(Xna::ContentIdentity(S().contentRoot + "/Fonts/title.spritefont"));
             }
-            for (const auto& [first, last] : ranges)
-                for (char32_t c = first; c <= last; ++c) description->getCharactersProperty().insert(static_cast<SharpRuntime::charcs>(c));
-            if (defaultChar_) description->setDefaultCharacterProperty(static_cast<SharpRuntime::charcs>('?'));
+            if (!fromFile_) {
+                std::vector<std::pair<char32_t, char32_t>> ranges;
+                switch (regions_) {
+                    case 0: ranges = {{32, 126}}; break;
+                    case 1: ranges = {{32, 126}, {160, 255}, {0x20AC, 0x20AC}}; break;
+                    case 2: ranges = {{32, 126}, {160, 255}, {0x20AC, 0x20AC}, {0x391, 0x3C9}, {0x410, 0x44F}}; break;
+                    default: ranges = {{'0', '9'}, {' ', ' '}}; break;
+                }
+                for (const auto& [first, last] : ranges)
+                    for (char32_t c = first; c <= last; ++c) description->getCharactersProperty().insert(static_cast<SharpRuntime::charcs>(c));
+                if (defaultChar_) description->setDefaultCharacterProperty(static_cast<SharpRuntime::charcs>('?'));
+            }
             ProcessorContext context;
             Processors::FontDescriptionProcessor processor;
             const std::shared_ptr<Processors::SpriteFontContent> output = processor.Process(description, context);
@@ -174,7 +192,7 @@ private:
             shape_ = std::to_string(data.characters.size()) + " glyphs, " + std::to_string(w) + " x " + std::to_string(h);
             lineSpacing_ = std::to_string(data.lineSpacing) + " px";
             status_ = std::string("built from DejaVuSans.ttf: ") + std::to_string(data.characters.size()) + " glyphs";
-            if (style_ != 0) warnings_ = "the file holds only the regular face, so the style is synthesised from it";
+            if (!fromFile_ && style_ != 0) warnings_ = "the file holds only the regular face, so the style is synthesised from it";
         } catch (const std::exception& e) {
             status_ = std::string("could not build: ") + std::string(e.what()).substr(0, 110);
             buildTime_ = "-";
@@ -187,8 +205,8 @@ private:
     std::unique_ptr<Texture2D> atlas_;
     float size_ = 28.0f, spacing_ = 0.0f;
     int style_ = 0, regions_ = 0, sample_ = 0;
-    bool kerning_ = true, defaultChar_ = true;
-    std::string drawError_, measured_ = "-", warnings_;
+    bool kerning_ = true, defaultChar_ = true, fromFile_ = false;
+    std::string drawError_, measured_ = "-", warnings_, imported_ = "-";
 #endif
     std::string status_ = "-", shape_ = "-", lineSpacing_ = "-", buildTime_ = "-";
 };

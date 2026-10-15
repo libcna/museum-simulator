@@ -52,7 +52,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1135 distinct API names are claimed by at least one room.
+1139 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -423,6 +423,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | FontDescription | `ct-fontbuild` |
 | FontDescription.Characters | `ct-fontbuild` |
 | FontDescription.DefaultCharacter | `ct-fontbuild` |
+| FontDescription.FontName | `ct-fontbuild` |
+| FontDescription.Size | `ct-fontbuild` |
+| FontDescription.Style | `ct-fontbuild` |
+| FontDescriptionImporter | `ct-fontbuild` |
 | FontDescriptionProcessor | `ct-fontbuild` |
 | FontDescriptionStyle | `ct-fontbuild` |
 | FriendCollection | `on-friends` |
