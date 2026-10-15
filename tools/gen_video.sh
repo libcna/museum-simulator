@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Writes Content/Video/zoom.webm: a six-second clip for the Video room, made by FFmpeg's own Mandelbrot source
-# (a zoom into the set) with the museum's arpeggio as its soundtrack. VP8 and Vorbis, both free formats, about 130 KB.
+# Writes Content/Video/zoom.webm and zoom.wmv: a six-second clip for the Video room, made by FFmpeg's own Mandelbrot source
+# (a zoom into the set) with the museum's arpeggio as its soundtrack. WebM is the loose runtime asset; WMV exercises XNA's WmvImporter.
 #
 #     tools/gen_video.sh        # needs ffmpeg with libvpx and libvorbis, and Content/Audio/arpeggio.wav (tools/gen_assets.py)
 set -euo pipefail
@@ -12,4 +12,7 @@ ffmpeg -hide_banner -loglevel error -y \
     -i "$here/Content/Audio/arpeggio.wav" \
     -t 6 -map 0:v -map 1:a -c:v libvpx -b:v 150k -crf 30 -c:a libvorbis -ac 1 -b:a 32k -bitexact -fflags +bitexact \
     "$out/zoom.webm"
-ls -l "$out/zoom.webm"
+ffmpeg -hide_banner -loglevel error -y -i "$out/zoom.webm" -map 0:v:0 -map 0:a:0 \
+    -c:v wmv2 -b:v 300k -c:a wmav2 -b:a 64k -map_metadata -1 -fflags +bitexact \
+    -flags:v +bitexact -flags:a +bitexact "$out/zoom.wmv"
+ls -l "$out/zoom.webm" "$out/zoom.wmv"

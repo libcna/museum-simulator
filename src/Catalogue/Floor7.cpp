@@ -37,13 +37,14 @@ WingSpec AudioWing()
             RoomSpec r;
             r.key = "au-video";
             r.title = "Video";
-            r.subtitle = "VideoPlayer decodes a WebM clip with FFmpeg: every frame is a Texture2D, the soundtrack plays through CNA's mixer";
+            r.subtitle = "Loose WebM playback or WmvImporter -> VideoProcessor -> XNB -> VideoReader: every decoded frame is a Texture2D";
             r.exhibit = "video-lab";
             r.width = 13;
             r.depth = 13;
             r.height = 5.2f;
             r.theme = "audio-hall";
-            r.apis = {"Video", "VideoPlayer", "VideoPlayer.Play", "VideoPlayer.Pause", "VideoPlayer.Resume", "VideoPlayer.Stop", "VideoPlayer.GetTexture", "VideoPlayer.IsLooped", "VideoPlayer.IsMuted", "VideoPlayer.Volume", "VideoPlayer.PlayPosition", "VideoPlayer.State"};
+            r.apis = {"Video", "VideoPlayer", "VideoPlayer.Play", "VideoPlayer.Pause", "VideoPlayer.Resume", "VideoPlayer.Stop", "VideoPlayer.GetTexture", "VideoPlayer.IsLooped", "VideoPlayer.IsMuted", "VideoPlayer.Volume", "VideoPlayer.PlayPosition", "VideoPlayer.State",
+                      "WmvImporter", "WmvImporter.Import", "VideoContent", "VideoProcessor", "VideoProcessor.Process", "VideoProcessor.VideoSoundtrackType", "VideoSoundtrackType", "ContentCompiler.Compile(VideoContent)", "VideoReader"};
             return r;
         }(),
         au("au-mic", "The Microphone", "Capturing 16-bit PCM and a level meter; reports cleanly when there is no microphone", "microphone", {"Microphone", "Microphone.GetData", "Microphone.SampleRate", "Microphone.BufferDuration", "Microphone.GetSampleSizeInBytes", "Microphone.IsHeadset"}),

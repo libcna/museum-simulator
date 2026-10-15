@@ -11,6 +11,12 @@
 #include "Diagnostics/Log.hpp"
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
+#if defined(CNA_VIDEO_AVAILABLE) && defined(MUSEUM_PIPELINE)
+#include "Exhibits/Content/PipelineSupport.hpp"
+#include "Microsoft/Xna/Framework/Content/Pipeline/Processors/VideoProcessor.hpp"
+#include "Microsoft/Xna/Framework/Content/Pipeline/Serialization/Compiler/ContentCompiler.hpp"
+#include "Microsoft/Xna/Framework/Content/Pipeline/VideoImporter.hpp"
+#endif
 
 #ifdef CNA_VIDEO_AVAILABLE
 #include "Microsoft/Xna/Framework/Media/MediaState.hpp"
@@ -31,6 +37,10 @@ public:
     {
         ControlPanel& p = AddPanel("Video", -4.8f, 1.5f, 1.8f, MathHelper::PiOver2, 2.1f);
 #ifdef CNA_VIDEO_AVAILABLE
+#ifdef MUSEUM_PIPELINE
+        p.AddChoice("Video source", {"loose zoom.webm", "WmvImporter -> VideoProcessor -> XNB"}, 0, [this](int v) { pipeline_ = v == 1; LoadVideo(); });
+        p.AddChoice("VideoProcessor soundtrack", {"Music", "Dialog", "MusicAndDialog"}, 0, [this](int v) { soundtrack_ = v; if (pipeline_) LoadVideo(); });
+#endif
         p.AddButton("VideoPlayer.Play(video)", [this] { Start(); });
         p.AddButton("VideoPlayer.Pause", [this] { if (player_) player_->Pause(); });
         p.AddButton("VideoPlayer.Resume", [this] { if (player_) player_->Resume(); });
@@ -41,13 +51,16 @@ public:
         p.AddReadout("State", [this] { return state_; });
         p.AddReadout("PlayPosition / Duration", [this] { return position_; });
         p.AddReadout("Video", [this] { return info_; });
+#ifdef MUSEUM_PIPELINE
+        p.AddReadout("Content pipeline", [this] { return pipelineStatus_; });
+#endif
         p.AddReadout("Frames delivered", [this] { return std::to_string(frames_); });
 #else
         p.AddReadout("Video playback", [] { return std::string("needs FFmpeg: not built in"); });
 #endif
         AddInfoSign(b, "Video",
                     {"VideoPlayer.Play starts decoding; every frame arrives as a Texture2D from GetTexture, and the soundtrack plays through CNA's mixer. The game decides how the frame is drawn:",
-                     "on a quad, in a menu, as a texture on a model. Here it is a plain sprite. The clip is a zoom into the Mandelbrot set written by FFmpeg (tools/gen_video.sh)."});
+                     "on a quad, in a menu, as a texture on a model. Here it is a plain sprite. The loose path uses WebM; the pipeline path imports WMV, records its soundtrack type, writes VideoReader metadata to XNB, and loads that back. Both clips come from tools/gen_video.sh."});
     }
 
     void OnScreenLoaded() override
@@ -55,9 +68,9 @@ public:
 #ifdef CNA_VIDEO_AVAILABLE
         try {
             player_ = std::make_unique<Media::VideoPlayer>();
-            video_ = std::make_unique<Media::Video>(S().contentRoot + "/Video/zoom.webm", S().device);
             player_->setIsLoopedProperty(true);
             player_->setVolumeProperty(volume_);
+            LoadVideo();
         } catch (const std::exception& e) {
             error_ = e.what();
             Museum::Log("video", "%s", e.what());
@@ -138,6 +151,56 @@ protected:
 
 private:
 #ifdef CNA_VIDEO_AVAILABLE
+    void LoadVideo()
+    {
+        if (player_) player_->Stop();
+        frame_ = nullptr;
+        video_.reset();
+        error_.clear();
+        try {
+#ifdef MUSEUM_PIPELINE
+            if (pipeline_) {
+                PipelineSupport::ImporterContext importerContext;
+                Microsoft::Xna::Framework::Content::Pipeline::WmvImporter importer;
+                const auto imported = importer.Import(S().contentRoot + "/Video/zoom.wmv", importerContext);
+                Microsoft::Xna::Framework::Content::Pipeline::Processors::VideoProcessor processor;
+                processor.setVideoSoundtrackTypeProperty(
+                    soundtrack_ == 0 ? Media::VideoSoundtrackType::Music :
+                    soundtrack_ == 1 ? Media::VideoSoundtrackType::Dialog : Media::VideoSoundtrackType::MusicAndDialog);
+                PipelineSupport::ProcessorContext processorContext;
+                const auto processed = processor.Process(imported, processorContext);
+                Microsoft::Xna::Framework::Content::Pipeline::Serialization::Compiler::ContentCompiler compiler;
+                Microsoft::Xna::Framework::Content::Pipeline::Serialization::Compiler::CompileOptions options;
+                options.assetName = "zoom";
+                const auto result = compiler.Compile<Microsoft::Xna::Framework::Content::Pipeline::VideoContent>(processed, options);
+                if (!manager_) {
+                    manager_ = std::make_unique<PipelineSupport::MemoryContentManager>(&S().game->getServicesProperty());
+                    manager_->setRootDirectoryProperty(S().contentRoot + "/Video");
+                }
+                manager_->Unload();
+                manager_->bytes = result.bytes;
+                video_ = std::make_unique<Media::Video>(manager_->Load<Media::Video>("zoom"));
+                pipelineStatus_ = "WMV " + std::to_string(imported->getWidthProperty()) + " x " +
+                                  std::to_string(imported->getHeightProperty()) + " -> " +
+                                  std::to_string(result.bytes.size()) + " byte XNB -> VideoReader";
+            } else
+#endif
+            {
+                video_ = std::make_unique<Media::Video>(S().contentRoot + "/Video/zoom.webm", S().device);
+#ifdef MUSEUM_PIPELINE
+                pipelineStatus_ = "loose WebM (pipeline bypassed)";
+#endif
+            }
+            if (player_) {
+                player_->setIsLoopedProperty(looped_);
+                player_->setVolumeProperty(volume_);
+            }
+        } catch (const std::exception& e) {
+            error_ = e.what();
+            Museum::Log("video", "%s", e.what());
+        }
+    }
+
     void Start()
     {
         try {
@@ -147,7 +210,10 @@ private:
         }
     }
 
-    // The player goes first: it points at the video it is playing.
+    // The player goes first: it points at the video it is playing. The manager outlives both.
+#ifdef MUSEUM_PIPELINE
+    std::unique_ptr<PipelineSupport::MemoryContentManager> manager_;
+#endif
     std::unique_ptr<Media::Video> video_;
     std::unique_ptr<Media::VideoPlayer> player_;
     Texture2D* frame_ = nullptr;
@@ -155,6 +221,11 @@ private:
     long long frames_ = 0;
     float volume_ = 0.6f;
     bool looped_ = true, started_ = false, pausedByLeaving_ = false;
+#ifdef MUSEUM_PIPELINE
+    bool pipeline_ = false;
+    int soundtrack_ = 0;
+    std::string pipelineStatus_ = "-";
+#endif
 #endif
 };
 
