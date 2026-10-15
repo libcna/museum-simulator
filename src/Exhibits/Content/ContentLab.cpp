@@ -229,6 +229,8 @@ public:
                 p.AddButton("Read a title file (OpenStream)", [this] { ReadTitleFile(); });
                 p.AddButton("StorageDevice.DeleteContainer(\"MuseumLab\")", [this] { DeleteWholeContainer(); });
                 p.AddReadout("Container", [this] { return container_ ? container_->getDisplayNameProperty() : std::string("not open"); });
+                p.AddReadout("StorageDevice.IsConnected", [this] { return device_ ? (device_->getIsConnectedProperty() ? std::string("true") : std::string("false")) : std::string("open the device first"); });
+                p.AddReadout("StorageDevice.DeviceChanged events", [this] { return std::to_string(storageChanged_) + " since this room loaded"; });
                 break;
             case Mode::Custom:
                 p.AddButton("Load Custom/soup (a .recipe file)", [this] { CustomLoad(0); });
@@ -273,6 +275,8 @@ public:
             destroyedToken_ = S().device->ResourceDestroyed.Add([this](System::Object*, const ResourceDestroyedEventArgs&) { ++deviceDestroyed_; });
             subscribed_ = true;
         }
+        if (mode_ == Mode::Storage)
+            storageChangedToken_ = Storage::StorageDevice::DeviceChanged.Add([this](System::Object*, const System::EventArgs&) { ++storageChanged_; });
         manager_ = NewManager(S().contentRoot);
         compiledPresent_ = fs::exists(fs::path(S().contentRoot) / "Compiled" / "cnb");
         if (mode_ == Mode::Resource) BuildResources();
@@ -458,6 +462,10 @@ private:
                 S().device->ResourceDestroyed.Remove(destroyedToken_);
             } catch (...) {
             }
+        }
+        if (storageChangedToken_ != 0) {
+            try { Storage::StorageDevice::DeviceChanged.Remove(storageChangedToken_); } catch (...) {}
+            storageChangedToken_ = 0;
         }
         if (mode_ == Mode::Reader) (void)ContentTypeReaderManager::RemoveTypeCreatorEXT("Museum.MenuReader");   // the registry is process-wide
         rows_.clear();
@@ -701,7 +709,7 @@ private:
             device_ = Storage::StorageDevice::EndShowSelector(sel.get());
             std::unique_ptr<System::IAsyncResult> open = device_->BeginOpenContainer("MuseumLab", nullptr, nullptr);
             container_ = device_->EndOpenContainer(open.get());
-            row.detail = "root " + Storage::StorageDevice::GetStorageRootEXT() + "  free " + Fmt(static_cast<double>(device_->getFreeSpaceProperty()) / 1.0e9, "%.1f") + " of " + Fmt(static_cast<double>(device_->getTotalSpaceProperty()) / 1.0e9, "%.1f") + " GB";
+            row.detail = "root " + Storage::StorageDevice::GetStorageRootEXT() + "  connected " + (device_->getIsConnectedProperty() ? "yes" : "no") + "  free " + Fmt(static_cast<double>(device_->getFreeSpaceProperty()) / 1.0e9, "%.1f") + " of " + Fmt(static_cast<double>(device_->getTotalSpaceProperty()) / 1.0e9, "%.1f") + " GB";
             row.status = 0;
         } catch (const std::exception& e) {
             row.detail = std::string("storage unavailable: ") + e.what();
@@ -955,8 +963,9 @@ private:
 
     Mode mode_;
     std::size_t createdToken_ = 0, destroyedToken_ = 0;
+    System::EventHandler<System::EventArgs>::Token storageChangedToken_ = 0;
     bool subscribed_ = false;
-    int deviceCreated_ = 0, deviceDestroyed_ = 0;
+    int deviceCreated_ = 0, deviceDestroyed_ = 0, storageChanged_ = 0;
     std::unique_ptr<ContentManager> manager_, other_;
     std::unique_ptr<System::Resources::ResourceManager> resourceManager_;
     std::map<std::string, std::string> resources_;

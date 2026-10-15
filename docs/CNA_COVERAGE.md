@@ -52,7 +52,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1149 distinct API names are claimed by at least one room.
+1151 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -1078,8 +1078,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | StorageContainer.GetFileNames | `ct-storage` |
 | StorageDevice | `ct-storage` |
 | StorageDevice.DeleteContainer | `ct-storage` |
+| StorageDevice.DeviceChanged | `ct-storage` |
 | StorageDevice.FreeSpace | `ct-storage` |
 | StorageDevice.GetStorageRootEXT | `ct-storage` |
+| StorageDevice.IsConnected | `ct-storage` |
 | StorageDevice.TotalSpace | `ct-storage` |
 | StringBuilder | `text-hud` |
 | SurfaceFormat | `tex-formats`, `rt-formats`, `rv-formats` |
