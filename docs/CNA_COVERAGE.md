@@ -52,10 +52,19 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1025 distinct API names are claimed by at least one room.
+1053 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
+| Accelerometer | `in-phone` |
+| Accelerometer.CurrentValue | `in-phone` |
+| Accelerometer.CurrentValueChanged | `in-phone` |
+| Accelerometer.IsSupported | `in-phone` |
+| Accelerometer.KeyboardEmulationEnabledEXT | `in-phone` |
+| Accelerometer.Start | `in-phone` |
+| Accelerometer.State | `in-phone` |
+| Accelerometer.Stop | `in-phone` |
+| AccelerometerReading.Acceleration | `in-phone` |
 | Achievement | `gs-achievements` |
 | AchievementCollection | `gs-achievements` |
 | Agent.GetAuthenticationToken | `pl-inspector` |
@@ -71,6 +80,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ApiOrigin | `hist-compare` |
 | ApplyClipToBonesEXT | `model-rigid` |
 | AsciiQuantizeMode | `cx-ascii` |
+| AttitudeReading | `in-phone` |
 | AudioCategory.Pause | `au-xact` |
 | AudioCategory.SetVolume | `au-xact` |
 | AudioChannels | `au-synth`, `au-generate` |
@@ -238,6 +248,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ColorWriteChannels | `rs-portal`, `rs-colorwrite`, `rv-blend` |
 | CompareFunction | `tex-alpha`, `rs-depthfunc`, `rv-depth` |
 | CompareFunction.NotEqual | `rs-outline` |
+| Compass | `in-phone` |
+| Compass.IsSupported | `in-phone` |
+| CompassReading.MagneticHeading | `in-phone` |
 | ContainmentType | `col-box-box` |
 | ContentIdentity | `ct-fontbuild` |
 | ContentItem | `ct-intermediate` |
@@ -310,6 +323,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | DepthStencilState.StencilPass | `rs-outline`, `rs-shadow`, `rs-stencilcount` |
 | DepthStencilState.StencilWriteMask | `rs-stencilcount` |
 | DepthStencilState.TwoSidedStencilMode | `rs-stencilcount` |
+| DeviceType | `in-phone` |
 | DirectionalLight | `lighting`, `be-lights`, `light-types` |
 | DisplayMode | `pl-adapter` |
 | DitherMode | `cx-depth` |
@@ -530,6 +544,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Guide.ShowSignIn | `on-account` |
 | Guide.SimulateTrialMode | `gs-guide` |
 | GuideAlreadyVisibleException | `pl-exceptions` |
+| Gyroscope | `in-phone` |
+| Gyroscope.IsSupported | `in-phone` |
+| GyroscopeReading.RotationRate | `in-phone` |
 | HalfVector2 | `vt-packed` |
 | HalfVector4 | `vt-packed` |
 | Haptics.GetHapticsEXT | `in-devices` |
@@ -657,6 +674,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Microphone.GetSampleSizeInBytes | `au-mic` |
 | Microphone.IsHeadset | `au-mic` |
 | Microphone.SampleRate | `au-mic` |
+| Microsoft.Devices.Environment.DeviceType | `in-phone` |
 | MipmapChain | `ct-processor` |
 | Model | `models`, `animation`, `model-load` |
 | Model.BoundingSphereEXT | `model-load`, `model-instances`, `model-bounds` |
@@ -695,6 +713,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ModelProcessor.Scale | `ct-meshbuilder` |
 | ModelProcessor.SwapWindingOrder | `ct-meshbuilder` |
 | MorphTargetDataEXT | `model-morph` |
+| Motion | `in-phone` |
+| Motion.IsSupported | `in-phone` |
+| MotionReading.Attitude | `in-phone` |
+| MotionReading.Gravity | `in-phone` |
 | Mouse.GetGlobalPositionEXT | `in-devices` |
 | Mouse.GetState | `in-mouse` |
 | Mouse.IsRelativeMouseModeEXT | `in-mouse` |
@@ -866,6 +888,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SamplerState.PointClamp | `sprite-sheet`, `tex-filter`, `rt-lowres`, `rv-sprites` |
 | SamplerStateCollection | `materials` |
 | SendDataOptions | `net-session` |
+| SensorReadingEventArgs | `in-phone` |
+| SensorState | `in-phone` |
 | Sensors.GetSensorsEXT | `in-devices` |
 | SetDataOptions | `geo-dynamic` |
 | SetDataOptions.Discard | `geo-dynindex`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `pf-buffers`, `rf-weather` |
@@ -1058,6 +1082,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | VertexPositionNormalTexture | `geo-vertextypes`, `geo-dynamic`, `geo-terrain` |
 | VertexPositionNormalTextureSkinned | `model-skinfx`, `model-skinext` |
 | VertexPositionTexture | `geo-vertextypes` |
+| VibrateController | `in-phone` |
+| VibrateController.Default | `in-phone` |
+| VibrateController.IsSupported | `in-phone` |
+| VibrateController.Start | `in-phone` |
 | Video | `au-video` |
 | VideoPlayer | `au-video` |
 | VideoPlayer.GetTexture | `au-video` |

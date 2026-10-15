@@ -88,6 +88,23 @@ WingSpec InputWing()
         in("in-joystick", "Raw Joysticks", "Axes, buttons and hats of any connected joystick", "joystick", {"Joysticks.GetJoysticksEXT", "Joysticks.GetCapabilitiesEXT", "Joysticks.GetStateEXT"}, ApiOrigin::CnaExtension),
         in("in-touch", "Touch and Gestures", "TouchPanel points and gestures: tap, hold, drags, flick and pinch, with simulated fingers", "touch", {"TouchPanel.GetState", "TouchPanel.ReadGesture", "TouchPanel.EnabledGestures", "GestureType", "GestureSample.Position2", "GestureSample.Delta2", "GestureSample.Timestamp", "TouchLocation.Id", "TouchLocation.State", "TouchLocation.TryGetPreviousLocation", "TouchPanel.MouseTouchEmulationEnabledEXT"}, ApiOrigin::Xna),
         in("in-devices", "Other Input Devices", "Mice, keyboards, touch, sensors and power as the machine reports them", "devices", {"InputDevices.GetMiceEXT", "TouchPanel.GetState", "TouchPanel.MouseTouchEmulationEnabledEXT", "Sensors.GetSensorsEXT", "Power.GetInfoEXT", "GamePad.GetConnectionStateEXT", "GamePad.GetPowerInfoEXT", "GamePad.GetTouchpadCountEXT", "GamePad.GetFirmwareVersionEXT", "GamePad.GetSerialEXT", "Mouse.GetGlobalPositionEXT", "Haptics.GetHapticsEXT", "Haptics.IsMouseHapticEXT", "Haptics.IsJoystickHapticEXT"}, ApiOrigin::CnaExtension),
+        [] {
+            RoomSpec r;
+            r.key = "in-phone";
+            r.title = "Phone Sensors";
+            r.subtitle = "Microsoft.Devices: Accelerometer, Gyroscope, Compass, Motion and VibrateController, with arrow keys that can tilt the accelerometer";
+            r.exhibit = "phonesensor-lab";
+            r.width = 13;
+            r.depth = 13;
+            r.height = 5.0f;
+            r.theme = "control-room";
+            r.apis = {"Accelerometer", "Accelerometer.IsSupported", "Accelerometer.Start", "Accelerometer.Stop", "Accelerometer.State", "Accelerometer.CurrentValue", "Accelerometer.CurrentValueChanged", "Accelerometer.KeyboardEmulationEnabledEXT",
+                      "AccelerometerReading.Acceleration", "Gyroscope", "Gyroscope.IsSupported", "GyroscopeReading.RotationRate", "Compass", "Compass.IsSupported", "CompassReading.MagneticHeading", "Motion", "Motion.IsSupported",
+                      "MotionReading.Attitude", "MotionReading.Gravity", "AttitudeReading", "SensorState", "SensorReadingEventArgs", "VibrateController", "VibrateController.Default", "VibrateController.Start", "VibrateController.IsSupported",
+                      "Microsoft.Devices.Environment.DeviceType", "DeviceType"};
+            r.origin = ApiOrigin::Xna;
+            return r;
+        }(),
     };
     return w;
 }

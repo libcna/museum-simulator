@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 36 wings, 288 exhibit rooms (5 open to the sky), 354 walkable cells in all.
+10 floors, 36 wings, 289 exhibit rooms (5 open to the sky), 355 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -423,6 +423,7 @@ Sound, music, keyboards, mice and game pads
 | 7.2.07 | `in-joystick` | Raw Joysticks | CNA extension | Joysticks.GetJoysticksEXT, Joysticks.GetCapabilitiesEXT, Joysticks.GetStateEXT |
 | 7.2.08 | `in-touch` | Touch and Gestures | XNA 4.0 | TouchPanel.GetState, TouchPanel.ReadGesture, TouchPanel.EnabledGestures, GestureType, GestureSample.Position2, GestureSample.Delta2, GestureSample.Timestamp, TouchLocation.Id, TouchLocation.State, TouchLocation.TryGetPreviousLocation, TouchPanel.MouseTouchEmulationEnabledEXT |
 | 7.2.09 | `in-devices` | Other Input Devices | CNA extension | InputDevices.GetMiceEXT, TouchPanel.GetState, TouchPanel.MouseTouchEmulationEnabledEXT, Sensors.GetSensorsEXT, Power.GetInfoEXT, GamePad.GetConnectionStateEXT, GamePad.GetPowerInfoEXT, GamePad.GetTouchpadCountEXT, GamePad.GetFirmwareVersionEXT, GamePad.GetSerialEXT, Mouse.GetGlobalPositionEXT, Haptics.GetHapticsEXT, Haptics.IsMouseHapticEXT, Haptics.IsJoystickHapticEXT |
+| 7.2.10 | `in-phone` | Phone Sensors | XNA 4.0 | Accelerometer, Accelerometer.IsSupported, Accelerometer.Start, Accelerometer.Stop, Accelerometer.State, Accelerometer.CurrentValue, Accelerometer.CurrentValueChanged, Accelerometer.KeyboardEmulationEnabledEXT, AccelerometerReading.Acceleration, Gyroscope, Gyroscope.IsSupported, GyroscopeReading.RotationRate, Compass, Compass.IsSupported, CompassReading.MagneticHeading, Motion, Motion.IsSupported, MotionReading.Attitude, MotionReading.Gravity, AttitudeReading, SensorState, SensorReadingEventArgs, VibrateController, VibrateController.Default, VibrateController.Start, VibrateController.IsSupported, Microsoft.Devices.Environment.DeviceType, DeviceType |
 
 ### Floor 8: Content, Platform and CNA
 
