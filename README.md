@@ -17,6 +17,10 @@ code above CNA is application structure (rooms, portals, a floor map, an exhibit
 | Floor 6: a glTF model with PbrEffect | Floor 6: a particle fire | Floor 8: CNA's DebugDraw |
 | ![formats](docs/images/formats.jpg) | ![validation](docs/images/validation.jpg) | ![deck](docs/images/deck.jpg) |
 | Floor 8: image formats decoded by ContentManager | Floor 9: renderer self-checks | Floor 9: the observation deck |
+| ![sampler](docs/images/sampler.jpg) | ![colours](docs/images/colours.jpg) | ![fontbuild](docs/images/fontbuild.jpg) |
+| Floor 6: glTF sampler states (repeat, clamp, mirror) | Floor 1: the 141 named colours | Floor 8: a font built at run time |
+| ![shadererrors](docs/images/shadererrors.jpg) | | |
+| Floor 4: what a shader compile error looks like to CNA | | |
 
 All images are real frames from the running museum (`tools/readme_shots.sh`), not mock-ups.
 
