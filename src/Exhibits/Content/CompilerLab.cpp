@@ -22,6 +22,8 @@
 #include "Microsoft/Xna/Framework/Content/Pipeline/Serialization/Compiler/ContentCompiler.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/TextureImporter.hpp"
 #include "Microsoft/Xna/Framework/Graphics/Texture2D.hpp"
+#include "Microsoft/Xna/Framework/Graphics/Texture3D.hpp"
+#include "Microsoft/Xna/Framework/Graphics/TextureCube.hpp"
 #include "System/IO/MemoryStream.hpp"
 #endif
 
@@ -56,6 +58,7 @@ public:
         ControlPanel& p = AddPanel("Writing an .xnb", -4.8f, 1.5f, 1.8f, MathHelper::PiOver2, 2.1f);
 #ifdef MUSEUM_PIPELINE
         p.AddChoice("Picture", {"coin.png", "brick.png"}, 0, [this](int v) { source_ = v; dirty_ = true; });
+        p.AddChoice("TextureContent type", {"Texture2DContent", "TextureCubeContent", "Texture3DContent"}, 0, [this](int v) { shape_ = v; dirty_ = true; });
         p.AddToggle("TextureProcessor.GenerateMipmaps", false, [this](bool v) { mipmaps_ = v; dirty_ = true; });
         p.AddChoice("CompileOptions.compressContent", {"none", "LZ4", "LZX"}, 0, [this](int v) { compression_ = v; dirty_ = true; });
         p.AddChoice("CompileOptions.targetProfile", {"Reach", "HiDef"}, 0, [this](int v) { hidef_ = v == 1; dirty_ = true; });
@@ -70,13 +73,15 @@ public:
 #endif
         AddInfoSign(b, "From asset to .xnb",
                     {"The last stage of a content build is the compiler: it writes the processed object with the type writers into an .xnb file whose header says which platform and profile it is for and whether the body is compressed.",
-                     "Here that runs in the game. The bytes are handed to a ContentManager that reads them from memory, which proves the file is a real .xnb: it loads as a Texture2D and is drawn."});
+                     "Here that runs in the game. The processed picture can be written as a Texture2D, repeated over six cube faces, or stacked into a four-slice volume. The bytes are handed to the matching runtime reader through a ContentManager; the 2D result is also drawn."});
     }
 
     ~CompilerLab() override
     {
 #ifdef MUSEUM_PIPELINE
         loadedTexture_.reset();
+        loadedCube_.reset();
+        loadedVolume_.reset();
         manager_.reset();
 #endif
     }
@@ -89,7 +94,7 @@ protected:
         if (dirty_) { dirty_ = false; Compile(); }
 #endif
         sb.Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::LinearClamp, nullptr, nullptr);
-        Text(sb, "A texture, compiled and loaded back", 24, 6, 0.8f, Kit::kGold);
+        Text(sb, "TextureContent, compiled and loaded back", 24, 6, 0.8f, Kit::kGold);
 #ifdef MUSEUM_PIPELINE
         if (loadedTexture_) sb.Draw(*loadedTexture_, Rectangle(34, 70, 256, 256), Color::White);
         Text(sb, "this picture was read out of the compiled bytes", 34, 336, 0.46f, Kit::kDim);
@@ -130,6 +135,8 @@ private:
     {
         error_.clear();
         loadedTexture_.reset();
+        loadedCube_.reset();
+        loadedVolume_.reset();
         try {
             ImporterContext importerContext;
             Xna::TextureImporter importer;
@@ -143,7 +150,8 @@ private:
             const auto& chain = *static_cast<const System::Collections::ObjectModel::Collection<std::shared_ptr<PipeGfx::MipmapChain>>&>(texture->getFacesProperty())[0];
             std::size_t raw = 0;
             for (int level = 0; level < chain.getCountProperty(); ++level) raw += chain[level]->GetPixelData().size();
-            processed_ = std::to_string(chain[0]->getWidthProperty()) + " x " + std::to_string(chain[0]->getHeightProperty()) + ", " + std::to_string(chain.getCountProperty()) + " level(s), " + Kb(raw);
+            const std::size_t oneFaceRaw = raw;
+            processed_ = std::to_string(chain[0]->getWidthProperty()) + " x " + std::to_string(chain[0]->getHeightProperty()) + ", " + std::to_string(chain.getCountProperty()) + " level(s), ";
 
             Compiler::ContentCompiler compiler;
             Compiler::CompileOptions options;
@@ -154,7 +162,36 @@ private:
             options.container.graphicsProfile = hidef_ ? CNA::Internal::Xnb::XnbGraphicsProfile::HiDef : CNA::Internal::Xnb::XnbGraphicsProfile::Reach;
             options.container.compression = compression_ == 0 ? CNA::Internal::Xnb::XnbOutputCompression::None : compression_ == 1 ? CNA::Internal::Xnb::XnbOutputCompression::Lz4 : CNA::Internal::Xnb::XnbOutputCompression::Lzx;
             options.compressContent = compression_ != 0;
-            const CNA::Internal::Xnb::XnbAssetWriteResult result = compiler.Compile<PipeGfx::Texture2DContent>(texture, options);
+            CNA::Internal::Xnb::XnbAssetWriteResult result;
+            if (shape_ == 0) {
+                processed_ += "one face, " + Kb(raw);
+                result = compiler.Compile<PipeGfx::Texture2DContent>(texture, options);
+            } else if (shape_ == 1) {
+                auto cube = std::make_shared<PipeGfx::TextureCubeContent>();
+                for (int face = 0; face < 6; ++face)
+                    for (int level = 0; level < chain.getCountProperty(); ++level)
+                        std::as_const(cube->getFacesProperty())[face]->Add(chain[level]);
+                cube->Validate(options.targetProfile);
+                raw = oneFaceRaw * 6u;
+                processed_ += "six faces, " + Kb(raw);
+                result = compiler.Compile<PipeGfx::TextureCubeContent>(cube, options);
+            } else {
+                auto volume = std::make_shared<PipeGfx::Texture3DContent>();
+                constexpr int depth = 4;
+                raw = 0;
+                for (int slice = 0; slice < depth; ++slice) {
+                    auto sliceChain = std::make_shared<PipeGfx::MipmapChain>();
+                    for (int level = 0; level < chain.getCountProperty(); ++level) {
+                        if (slice >= std::max(1, depth >> level)) break;
+                        sliceChain->Add(chain[level]);
+                        raw += chain[level]->GetPixelData().size();
+                    }
+                    volume->getFacesProperty().Add(sliceChain);
+                }
+                volume->Validate(options.targetProfile);
+                processed_ += "four slices, " + Kb(raw);
+                result = compiler.Compile<PipeGfx::Texture3DContent>(volume, options);
+            }
             bytes_ = result.bytes;
             reader_ = result.rootReaderName.substr(0, result.rootReaderName.find(','));
             char ratio[64];
@@ -172,9 +209,17 @@ private:
             if (!manager_) manager_ = std::make_unique<MemoryContentManager>(&S().game->getServicesProperty());
             manager_->bytes = bytes_;
             manager_->Unload();
-            loadedTexture_ = std::make_unique<Texture2D>(manager_->Load<Texture2D>("compiled"));
-            const Texture2D& t = *loadedTexture_;
-            loaded_ = "loaded as Texture2D " + std::to_string(t.getWidthProperty()) + " x " + std::to_string(t.getHeightProperty()) + ", " + std::to_string(t.getLevelCountProperty()) + " level(s)";
+            if (shape_ == 0) {
+                loadedTexture_ = std::make_unique<Texture2D>(manager_->Load<Texture2D>("compiled"));
+                const Texture2D& t = *loadedTexture_;
+                loaded_ = "loaded as Texture2D " + std::to_string(t.getWidthProperty()) + " x " + std::to_string(t.getHeightProperty()) + ", " + std::to_string(t.getLevelCountProperty()) + " level(s)";
+            } else if (shape_ == 1) {
+                loadedCube_ = std::make_unique<TextureCube>(manager_->Load<TextureCube>("compiled"));
+                loaded_ = "loaded as TextureCube, size " + std::to_string(loadedCube_->getSizeProperty()) + ", " + std::to_string(loadedCube_->getLevelCountProperty()) + " level(s)";
+            } else {
+                loadedVolume_ = manager_->Load<std::shared_ptr<Texture3D>>("compiled");
+                loaded_ = "loaded as Texture3D " + std::to_string(loadedVolume_->getWidthProperty()) + " x " + std::to_string(loadedVolume_->getHeightProperty()) + " x " + std::to_string(loadedVolume_->getDepthProperty()) + ", " + std::to_string(loadedVolume_->getLevelCountProperty()) + " level(s)";
+            }
         } catch (const std::exception& e) {
             error_ = std::string("failed: ") + std::string(e.what()).substr(0, 80);
             loaded_ = "not loaded";
@@ -184,9 +229,11 @@ private:
 
     std::unique_ptr<MemoryContentManager> manager_;
     std::unique_ptr<Texture2D> loadedTexture_;
+    std::unique_ptr<TextureCube> loadedCube_;
+    std::shared_ptr<Texture3D> loadedVolume_;
     std::vector<std::uint8_t> bytes_;
     std::string processed_ = "-", size_ = "-", reader_ = "-", header_ = "-", flags_ = "-", loaded_ = "-", error_;
-    int source_ = 0, compression_ = 0, platform_ = 0;
+    int source_ = 0, shape_ = 0, compression_ = 0, platform_ = 0;
     bool mipmaps_ = false, hidef_ = false, dirty_ = true;
 #endif
 };
