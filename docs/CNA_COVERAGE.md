@@ -52,7 +52,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1089 distinct API names are claimed by at least one room.
+1102 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -134,6 +134,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BasicEffect.VertexColorEnabled | `geo-vertextypes`, `be-combos`, `rv-shading` |
 | BasicEffect.World | `rv-camera` |
 | BasicEffect.setPunctualLightEXT | `be-punctual` |
+| BasicMaterialContent | `ct-modelimport` |
+| BasicMaterialContent.DiffuseColor | `ct-modelimport` |
 | Bgr565 | `vt-packed` |
 | Bgra4444 | `vt-packed` |
 | Bgra5551 | `vt-packed` |
@@ -275,6 +277,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CompassReading.MagneticHeading | `in-phone` |
 | ContainmentType | `col-box-box` |
 | ContentIdentity | `ct-fontbuild` |
+| ContentImporter | `ct-modelimport` |
+| ContentImporterAttribute | `ct-modelimport` |
+| ContentImporterContext | `ct-modelimport` |
 | ContentItem | `ct-intermediate` |
 | ContentLoadException | `app-content`, `ct-failure`, `ct-custom`, `ct-resource`, `pl-exceptions` |
 | ContentManager | `models`, `app-content` |
@@ -287,6 +292,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ContentManager.RegisterTypeReader | `ct-custom` |
 | ContentManager.RootDirectory | `ct-load` |
 | ContentManager.Unload | `app-content`, `ct-cache`, `ct-lifetime` |
+| ContentProcessorContext.Convert | `ct-modelimport` |
 | ContentReader | `ct-reader` |
 | ContentReader.AssetName | `ct-reader` |
 | ContentReader.ReadColor | `ct-reader` |
@@ -391,6 +397,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | EnvironmentMapEffect.EnvironmentMap | `rt-cube` |
 | EvaluateMorphWeightsEXT | `model-morph` |
 | EventsResponse | `pl-inspector` |
+| FbxImporter | `ct-modelimport` |
 | FontDescription | `ct-fontbuild` |
 | FontDescription.Characters | `ct-fontbuild` |
 | FontDescription.DefaultCharacter | `ct-fontbuild` |
@@ -477,6 +484,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GamerProfile.Reputation | `on-account` |
 | GamerProfile.TotalAchievements | `on-account` |
 | GamerServicesNotAvailableException | `pl-exceptions` |
+| GeometryContent | `ct-modelimport` |
 | GestureSample.Delta2 | `in-touch` |
 | GestureSample.Position2 | `in-touch` |
 | GestureSample.Timestamp | `in-touch` |
@@ -633,6 +641,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Logger.SetSink | `pl-log` |
 | Logger.WarnIf | `pl-log` |
 | LooseFileContentTypeReader | `ct-custom` |
+| MaterialContent | `ct-modelimport` |
 | MathHelper | `an-pendulum`, `sim-integrators`, `rf-deck` |
 | MathHelper.CatmullRom | `curve-easing` |
 | MathHelper.Hermite | `curve-easing` |
@@ -692,7 +701,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | MeshBuilder.SetVertexChannelData | `ct-meshbuilder` |
 | MeshBuilder.StartMesh | `ct-meshbuilder` |
 | MeshBuilder.SwapWindingOrder | `ct-meshbuilder` |
-| MeshContent | `ct-meshbuilder` |
+| MeshContent | `ct-meshbuilder`, `ct-modelimport` |
 | MessageBoxIcon | `gs-guide` |
 | Microphone | `au-mic` |
 | Microphone.BufferDuration | `au-mic` |
@@ -716,24 +725,24 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ModelAnimationsEXT | `model-rigid` |
 | ModelBone | `model-rigid` |
 | ModelBone.Children | `model-load` |
-| ModelBoneContent | `ct-meshbuilder` |
+| ModelBoneContent | `ct-meshbuilder`, `ct-modelimport` |
 | ModelCameraEXT | `model-cameras` |
 | ModelCameraEXT.IsPerspective | `model-cameras` |
 | ModelCameraEXT.Projection | `model-cameras` |
 | ModelCameraEXT.WorldTransform | `model-cameras` |
-| ModelContent | `ct-meshbuilder` |
+| ModelContent | `ct-meshbuilder`, `ct-modelimport` |
 | ModelMesh | `models`, `model-load` |
 | ModelMesh.BoundingSphere | `model-bounds` |
 | ModelMesh.Draw | `model-sampler` |
-| ModelMeshContent | `ct-meshbuilder` |
+| ModelMeshContent | `ct-meshbuilder`, `ct-modelimport` |
 | ModelMeshPart | `model-load` |
 | ModelMeshPart.Effect | `model-effects` |
 | ModelMeshPart.PrimitiveTypeEXT | `model-load` |
 | ModelMeshPart.SamplerStatesEXT | `model-load`, `model-sampler` |
 | ModelMeshPart.SetSamplerStateEXT | `model-sampler` |
 | ModelMeshPart.Tag | `model-morph` |
-| ModelMeshPartContent | `ct-meshbuilder` |
-| ModelProcessor | `ct-meshbuilder` |
+| ModelMeshPartContent | `ct-meshbuilder`, `ct-modelimport` |
+| ModelProcessor | `ct-meshbuilder`, `ct-modelimport` |
 | ModelProcessor.GenerateTangentFrames | `ct-meshbuilder` |
 | ModelProcessor.RotationY | `ct-meshbuilder` |
 | ModelProcessor.Scale | `ct-meshbuilder` |
@@ -796,6 +805,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | NetworkSessionJoinException | `net-session` |
 | NetworkSessionProperties | `net-session` |
 | NetworkSessionType.PlayerMatch | `net-session` |
+| NodeContent | `ct-modelimport` |
+| NodeContent.Children | `ct-modelimport` |
+| NodeContent.Transform | `ct-modelimport` |
 | NormalizedByte2 | `vt-packed` |
 | NormalizedByte4 | `vt-packed` |
 | NormalizedShort2 | `vt-packed` |
@@ -1142,6 +1154,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | VisualizationData | `au-music` |
 | WaveBank | `au-xact` |
 | WaveBank.IsInUse | `au-xact` |
+| XImporter | `ct-modelimport` |
 | XNA 4.0 | `hist-xna`, `hist-compare` |
 | cna-content | `ct-pipeline` |
 | layerDepth | `sprite-sort` |

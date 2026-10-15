@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 36 wings, 290 exhibit rooms (5 open to the sky), 356 walkable cells in all.
+10 floors, 36 wings, 291 exhibit rooms (5 open to the sky), 357 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -442,11 +442,12 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 | 8.1.07 | `ct-processor` | Processing a Texture | XNA 4.0 | TextureImporter, TextureProcessor, TextureProcessor.ColorKeyEnabled, TextureProcessor.PremultiplyAlpha, TextureProcessor.GenerateMipmaps, TextureProcessor.ResizeToPowerOfTwo, TextureProcessor.TextureFormat, TextureProcessorOutputFormat, Texture2DContent, MipmapChain, BitmapContent, PixelBitmapContent |
 | 8.1.08 | `ct-fontbuild` | Building a Font | XNA 4.0 | FontDescription, FontDescriptionProcessor, FontDescriptionStyle, SpriteFontContent, FontDescription.Characters, FontDescription.DefaultCharacter, ContentIdentity, SpriteFont, SpriteFont.MeasureString, SpriteBatch.DrawString |
 | 8.1.09 | `ct-meshbuilder` | Building a Model | XNA 4.0 | MeshBuilder, MeshBuilder.StartMesh, MeshBuilder.CreatePosition, MeshBuilder.CreateVertexChannel, MeshBuilder.SetVertexChannelData, MeshBuilder.AddTriangleVertex, MeshBuilder.FinishMesh, MeshBuilder.MergeDuplicatePositions, MeshBuilder.SwapWindingOrder, MeshContent, VertexChannelNames, ModelProcessor, ModelProcessor.Scale, ModelProcessor.RotationY, ModelProcessor.GenerateTangentFrames, ModelProcessor.SwapWindingOrder, ModelContent, ModelMeshContent, ModelMeshPartContent, ModelBoneContent, VertexBufferContent, VertexDeclarationContent |
-| 8.1.10 | `ct-storage` | Title Files and Saved Data | XNA 4.0 | TitleContainer.OpenStream, StorageDevice, StorageContainer, StorageContainer.CreateDirectory, StorageContainer.DeleteDirectory, StorageContainer.DirectoryExists, StorageContainer.GetFileNames, StorageContainer.GetDirectoryNames, StorageDevice.GetStorageRootEXT, StorageDevice.DeleteContainer, StorageDevice.TotalSpace, StorageDevice.FreeSpace |
-| 8.1.11 | `ct-custom` | Teaching ContentManager a New Type | CNA extension | ContentManager.RegisterTypeReader, LooseFileContentTypeReader, ContentManager.RegisterCnjLoader, ContentLoadException |
-| 8.1.12 | `ct-reader` | Content Readers | XNA 4.0 | ContentTypeReader, ContentTypeReaderManager.AddTypeCreator, ContentReader, ContentReader.ReadColor, ContentReader.ReadVector2, ContentReader.ReadVector4, ContentReader.AssetName, ContentManager.Load |
-| 8.1.13 | `ct-lifetime` | Resource Lifetime | XNA 4.0 | GraphicsResource.Dispose, GraphicsResource.IsDisposed, GraphicsResource.Disposing, GraphicsDevice.ResourceCreated, GraphicsDevice.ResourceDestroyed, ResourceCreatedEventArgs, ResourceDestroyedEventArgs, ContentManager.Unload |
-| 8.1.14 | `ct-resource` | Content from Memory | XNA 4.0 | ResourceContentManager, System.Resources.ResourceManager, ContentManager.Load, ContentLoadException |
+| 8.1.10 | `ct-modelimport` | Importing a Model File | XNA 4.0 | XImporter, FbxImporter, ContentImporter, ContentImporterAttribute, ContentImporterContext, NodeContent, NodeContent.Children, NodeContent.Transform, MeshContent, GeometryContent, MaterialContent, BasicMaterialContent, BasicMaterialContent.DiffuseColor, ModelProcessor, ModelContent, ModelMeshContent, ModelMeshPartContent, ModelBoneContent, ContentProcessorContext.Convert |
+| 8.1.11 | `ct-storage` | Title Files and Saved Data | XNA 4.0 | TitleContainer.OpenStream, StorageDevice, StorageContainer, StorageContainer.CreateDirectory, StorageContainer.DeleteDirectory, StorageContainer.DirectoryExists, StorageContainer.GetFileNames, StorageContainer.GetDirectoryNames, StorageDevice.GetStorageRootEXT, StorageDevice.DeleteContainer, StorageDevice.TotalSpace, StorageDevice.FreeSpace |
+| 8.1.12 | `ct-custom` | Teaching ContentManager a New Type | CNA extension | ContentManager.RegisterTypeReader, LooseFileContentTypeReader, ContentManager.RegisterCnjLoader, ContentLoadException |
+| 8.1.13 | `ct-reader` | Content Readers | XNA 4.0 | ContentTypeReader, ContentTypeReaderManager.AddTypeCreator, ContentReader, ContentReader.ReadColor, ContentReader.ReadVector2, ContentReader.ReadVector4, ContentReader.AssetName, ContentManager.Load |
+| 8.1.14 | `ct-lifetime` | Resource Lifetime | XNA 4.0 | GraphicsResource.Dispose, GraphicsResource.IsDisposed, GraphicsResource.Disposing, GraphicsDevice.ResourceCreated, GraphicsDevice.ResourceDestroyed, ResourceCreatedEventArgs, ResourceDestroyedEventArgs, ContentManager.Unload |
+| 8.1.15 | `ct-resource` | Content from Memory | XNA 4.0 | ResourceContentManager, System.Resources.ResourceManager, ContentManager.Load, ContentLoadException |
 
 **CNA Extensions** - What CNA adds to XNA 4.0: DebugDraw, post-process effects, engine statistics, point lists and device queries
 

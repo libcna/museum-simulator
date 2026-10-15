@@ -1,0 +1,170 @@
+; FBX 6.1.0 project file
+; Written by tools/gen_models.py for the CNA 3D Museum.
+; ----------------------------------------------------
+
+FBXHeaderExtension:  {
+	FBXHeaderVersion: 1003
+	FBXVersion: 6100
+	Creator: "CNA"
+}
+
+Definitions:  {
+	Version: 100
+	Count: 5
+	ObjectType: "Model" {
+		Count: 2
+	}
+	ObjectType: "Material" {
+		Count: 3
+	}
+	ObjectType: "Deformer" {
+		Count: 0
+	}
+}
+
+Objects:  {
+	Model: "Model::Cottage", "Mesh" {
+		Version: 232
+		Properties60:  {
+			Property: "Lcl Translation", "Lcl Translation", "A+",0,0,0
+			Property: "Lcl Rotation", "Lcl Rotation", "A+",0,0,0
+			Property: "Lcl Scaling", "Lcl Scaling", "A+",1,1,1
+		}
+		MultiLayer: 0
+		MultiTake: 1
+		Shading: Y
+		Culling: "CullingOff"
+		Vertices: -1,0,-0.8,1,0,-0.8,1,1,-0.8,-1,1,-0.8,-1,0,0.8,1,0,0.8,1,1,0.8,-1,1,0.8,-1.15,1,-0.95,1.15,1,-0.95,1.15,1,0.95,-1.15,1,0.95,-1.15,1.65,0,1.15,1.65,0
+		PolygonVertexIndex: 4,5,6,-8,1,0,3,-3,5,1,2,-7,0,4,7,-4,3,7,6,-3,0,1,5,-5,11,10,13,-13,9,8,12,-14,8,11,-13,10,9,-14
+		GeometryVersion: 124
+		LayerElementNormal: 0 {
+			Version: 101
+			Name: ""
+			MappingInformationType: "ByPolygonVertex"
+			ReferenceInformationType: "Direct"
+			Normals: 0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,-0,0.825307,0.564684,-0,0.825307,0.564684,-0,0.825307,0.564684,-0,0.825307,0.564684,0,0.825307,-0.564684,0,0.825307,-0.564684,0,0.825307,-0.564684,0,0.825307,-0.564684,-1,0,0,-1,0,0,-1,0,0,1,0,0,1,0,0,1,0,0
+		}
+		LayerElementMaterial: 0 {
+			Version: 101
+			Name: ""
+			MappingInformationType: "ByPolygon"
+			ReferenceInformationType: "IndexToDirect"
+			Materials: 0,0,0,0,0,0,1,1,1,1
+		}
+		Layer: 0 {
+			Version: 100
+			LayerElement:  {
+				Type: "LayerElementNormal"
+				TypedIndex: 0
+			}
+			LayerElement:  {
+				Type: "LayerElementMaterial"
+				TypedIndex: 0
+			}
+		}
+	}
+	Model: "Model::Chimney", "Mesh" {
+		Version: 232
+		Properties60:  {
+			Property: "Lcl Translation", "Lcl Translation", "A+",0.55,1.35,-0.25
+			Property: "Lcl Rotation", "Lcl Rotation", "A+",0,0,0
+			Property: "Lcl Scaling", "Lcl Scaling", "A+",1,1,1
+		}
+		MultiLayer: 0
+		MultiTake: 1
+		Shading: Y
+		Culling: "CullingOff"
+		Vertices: -0.15,0,-0.15,0.15,0,-0.15,0.15,0.7,-0.15,-0.15,0.7,-0.15,-0.15,0,0.15,0.15,0,0.15,0.15,0.7,0.15,-0.15,0.7,0.15
+		PolygonVertexIndex: 4,5,6,-8,1,0,3,-3,5,1,2,-7,0,4,7,-4,3,7,6,-3,0,1,5,-5
+		GeometryVersion: 124
+		LayerElementNormal: 0 {
+			Version: 101
+			Name: ""
+			MappingInformationType: "ByPolygonVertex"
+			ReferenceInformationType: "Direct"
+			Normals: 0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0
+		}
+		LayerElementMaterial: 0 {
+			Version: 101
+			Name: ""
+			MappingInformationType: "ByPolygon"
+			ReferenceInformationType: "IndexToDirect"
+			Materials: 0,0,0,0,0,0
+		}
+		Layer: 0 {
+			Version: 100
+			LayerElement:  {
+				Type: "LayerElementNormal"
+				TypedIndex: 0
+			}
+			LayerElement:  {
+				Type: "LayerElementMaterial"
+				TypedIndex: 0
+			}
+		}
+	}
+	Material: "Material::Walls", "" {
+		Version: 102
+		ShadingModel: "phong"
+		MultiLayer: 0
+		Properties60:  {
+			Property: "ShadingModel", "KString", "", "phong"
+			Property: "DiffuseColor", "Color", "A+",0.93,0.86,0.7
+			Property: "SpecularColor", "Color", "A+",0.2,0.2,0.2
+			Property: "EmissiveColor", "Color", "A+",0,0,0
+			Property: "Opacity", "double", "",1
+			Property: "Shininess", "double", "",8
+		}
+	}
+	Material: "Material::Roof", "" {
+		Version: 102
+		ShadingModel: "phong"
+		MultiLayer: 0
+		Properties60:  {
+			Property: "ShadingModel", "KString", "", "phong"
+			Property: "DiffuseColor", "Color", "A+",0.66,0.26,0.18
+			Property: "SpecularColor", "Color", "A+",0.2,0.2,0.2
+			Property: "EmissiveColor", "Color", "A+",0,0,0
+			Property: "Opacity", "double", "",1
+			Property: "Shininess", "double", "",6
+		}
+	}
+	Material: "Material::Brick", "" {
+		Version: 102
+		ShadingModel: "phong"
+		MultiLayer: 0
+		Properties60:  {
+			Property: "ShadingModel", "KString", "", "phong"
+			Property: "DiffuseColor", "Color", "A+",0.55,0.3,0.25
+			Property: "SpecularColor", "Color", "A+",0.2,0.2,0.2
+			Property: "EmissiveColor", "Color", "A+",0,0,0
+			Property: "Opacity", "double", "",1
+			Property: "Shininess", "double", "",4
+		}
+	}
+}
+
+Relations:  {
+	Model: "Model::Cottage", "Mesh" {
+	}
+	Model: "Model::Chimney", "Mesh" {
+	}
+	Material: "Material::Walls", "" {
+	}
+	Material: "Material::Roof", "" {
+	}
+	Material: "Material::Brick", "" {
+	}
+}
+
+Connections:  {
+	Connect: "OO", "Model::Cottage", "Model::Scene"
+	Connect: "OO", "Model::Chimney", "Model::Cottage"
+	Connect: "OO", "Material::Walls", "Model::Cottage"
+	Connect: "OO", "Material::Roof", "Model::Cottage"
+	Connect: "OO", "Material::Brick", "Model::Chimney"
+}
+
+Takes:  {
+	Current: ""
+}

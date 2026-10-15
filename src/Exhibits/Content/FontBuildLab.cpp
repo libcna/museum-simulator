@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "Exhibits/ExhibitFactories.hpp"
+#include "Exhibits/Content/PipelineSupport.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
 
 #ifdef MUSEUM_PIPELINE
@@ -35,45 +36,8 @@ namespace {
 namespace Xna = Microsoft::Xna::Framework::Content::Pipeline;
 namespace PipeGfx = Microsoft::Xna::Framework::Content::Pipeline::Graphics;
 namespace Processors = Microsoft::Xna::Framework::Content::Pipeline::Processors;
+using PipelineSupport::ProcessorContext;
 
-class QuietLogger final : public Xna::ContentBuildLogger {
-protected:
-    void LogMessage(const std::string&) override {}
-    void LogImportantMessage(const std::string&) override {}
-    void LogWarning(const std::string&, const Xna::ContentIdentity&, const std::string&) override {}
-};
-
-class ProcessorContext final : public Xna::ContentProcessorContext {
-public:
-    [[nodiscard]] std::string getBuildConfigurationProperty() const override { return "Release"; }
-    [[nodiscard]] std::string getIntermediateDirectoryProperty() const override { return "obj"; }
-    [[nodiscard]] Xna::ContentBuildLogger& getLoggerProperty() const override { return const_cast<QuietLogger&>(logger_); }
-    [[nodiscard]] std::string getOutputDirectoryProperty() const override { return "bin"; }
-    [[nodiscard]] std::string getOutputFilenameProperty() const override { return "bin/asset.xnb"; }
-    [[nodiscard]] const Xna::OpaqueDataDictionary& getParametersProperty() const override { return parameters_; }
-    [[nodiscard]] Xna::TargetPlatform getTargetPlatformProperty() const override { return Xna::TargetPlatform::Windows; }
-    [[nodiscard]] GraphicsProfile getTargetProfileProperty() const override { return GraphicsProfile::HiDef; }
-    void AddDependency(const std::string&) override {}
-    void AddOutputFile(const std::string&) override {}
-    [[nodiscard]] Xna::ContentObject BuildAndLoadAssetCore(const std::string&, const Xna::ContentIdentity&, const std::string&, const Xna::OpaqueDataDictionary&, const std::string&,
-                                                           const std::string&, const std::string&) override
-    {
-        throw System::NotSupportedException("BuildAndLoadAsset");
-    }
-    [[nodiscard]] std::string BuildAssetCore(const std::string&, const Xna::ContentIdentity&, const std::string&, const Xna::OpaqueDataDictionary&, const std::string&, const std::string&,
-                                             const std::string&, const std::string&) override
-    {
-        throw System::NotSupportedException("BuildAsset");
-    }
-    [[nodiscard]] Xna::ContentObject ConvertCore(const Xna::ContentObject&, const std::string&, const Xna::OpaqueDataDictionary&, const std::string&, const std::string&) override
-    {
-        throw System::NotSupportedException("Convert");
-    }
-
-private:
-    QuietLogger logger_;
-    Xna::OpaqueDataDictionary parameters_;
-};
 #endif
 
 class FontBuildLab final : public ScreenExhibit {

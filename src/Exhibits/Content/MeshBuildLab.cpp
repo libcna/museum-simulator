@@ -20,8 +20,7 @@
 #include "Rendering/RenderStates.hpp"
 
 #ifdef MUSEUM_PIPELINE
-#include "Microsoft/Xna/Framework/Content/Pipeline/ContentBuildLogger.hpp"
-#include "Microsoft/Xna/Framework/Content/Pipeline/ContentProcessorContext.hpp"
+#include "Exhibits/Content/PipelineSupport.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/Graphics/MeshBuilder.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/Graphics/NodeContent.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/Graphics/VertexChannelNames.hpp"
@@ -42,66 +41,8 @@ namespace {
 namespace Xna = Microsoft::Xna::Framework::Content::Pipeline;
 namespace PipeGfx = Microsoft::Xna::Framework::Content::Pipeline::Graphics;
 namespace Processors = Microsoft::Xna::Framework::Content::Pipeline::Processors;
+using PipelineSupport::ProcessorContext;
 
-class QuietLogger final : public Xna::ContentBuildLogger {
-protected:
-    void LogMessage(const std::string&) override {}
-    void LogImportantMessage(const std::string&) override {}
-    void LogWarning(const std::string&, const Xna::ContentIdentity&, const std::string&) override {}
-};
-
-class ProcessorContext final : public Xna::ContentProcessorContext {
-public:
-    [[nodiscard]] std::string getBuildConfigurationProperty() const override { return "Release"; }
-    [[nodiscard]] std::string getIntermediateDirectoryProperty() const override { return "obj"; }
-    [[nodiscard]] Xna::ContentBuildLogger& getLoggerProperty() const override { return const_cast<QuietLogger&>(logger_); }
-    [[nodiscard]] std::string getOutputDirectoryProperty() const override { return "bin"; }
-    [[nodiscard]] std::string getOutputFilenameProperty() const override { return "bin/asset.xnb"; }
-    [[nodiscard]] const Xna::OpaqueDataDictionary& getParametersProperty() const override { return parameters_; }
-    [[nodiscard]] Xna::TargetPlatform getTargetPlatformProperty() const override { return Xna::TargetPlatform::Windows; }
-    [[nodiscard]] GraphicsProfile getTargetProfileProperty() const override { return GraphicsProfile::HiDef; }
-    void AddDependency(const std::string&) override {}
-    void AddOutputFile(const std::string&) override {}
-    [[nodiscard]] Xna::ContentObject BuildAndLoadAssetCore(const std::string&, const Xna::ContentIdentity&, const std::string&, const Xna::OpaqueDataDictionary&, const std::string&,
-                                                           const std::string&, const std::string&) override
-    {
-        throw System::NotSupportedException("BuildAndLoadAsset");
-    }
-    [[nodiscard]] std::string BuildAssetCore(const std::string&, const Xna::ContentIdentity&, const std::string&, const Xna::OpaqueDataDictionary&, const std::string&, const std::string&,
-                                             const std::string&, const std::string&) override
-    {
-        throw System::NotSupportedException("BuildAsset");
-    }
-    // ModelProcessor converts every material through Convert (MaterialProcessor in XNA). The museum draws with BasicEffect and keeps the
-    // vertices, so it answers with the material it was given and counts the requests.
-    [[nodiscard]] Xna::ContentObject ConvertCore(const Xna::ContentObject& input, const std::string& processor, const Xna::OpaqueDataDictionary&, const std::string&, const std::string&) override
-    {
-        ++conversions;
-        lastProcessor = processor;
-        return input;
-    }
-
-public:
-    mutable int conversions = 0;
-    mutable std::string lastProcessor;
-
-private:
-    QuietLogger logger_;
-    Xna::OpaqueDataDictionary parameters_;
-};
-
-const char* UsageName(VertexElementUsage u)
-{
-    switch (u) {
-        case VertexElementUsage::Position: return "Position";
-        case VertexElementUsage::Normal: return "Normal";
-        case VertexElementUsage::TextureCoordinate: return "TexCoord";
-        case VertexElementUsage::Tangent: return "Tangent";
-        case VertexElementUsage::Binormal: return "Binormal";
-        case VertexElementUsage::Color: return "Color";
-        default: return "other";
-    }
-}
 #endif
 
 class MeshBuildLab final : public Exhibit {
@@ -226,40 +167,14 @@ private:
             for (const auto& m : model->getMeshesProperty()) parts += static_cast<int>(m->getMeshPartsProperty().size());
             converted_ = std::to_string(context.conversions) + (context.conversions > 0 ? " (" + context.lastProcessor + ")" : std::string());
             shape_ = std::to_string(model->getBonesProperty().size()) + " / " + std::to_string(model->getMeshesProperty().size()) + " / " + std::to_string(parts);
-            if (model->getMeshesProperty().empty() || model->getMeshesProperty()[0]->getMeshPartsProperty().empty()) throw std::runtime_error("the processor produced no mesh part");
-            const auto& mesh0 = model->getMeshesProperty()[0];
-            const auto& part = mesh0->getMeshPartsProperty()[0];
-            const auto& buffer = *part->getVertexBufferProperty();
-            const auto& declaration = *buffer.getVertexDeclarationProperty();
-            const int stride = declaration.getVertexStrideProperty().value_or(0);
-            part_ = std::to_string(part->getNumVerticesProperty()) + " vertices, " + std::to_string(part->getPrimitiveCountProperty()) + " triangles, stride " + std::to_string(stride) + " bytes";
-            elements_.clear();
-            int positionAt = -1, normalAt = -1, coordAt = -1;
-            for (const VertexElement& e : declaration.getVertexElementsProperty()) {
-                elements_ += (elements_.empty() ? "" : ", ") + std::string(UsageName(e.getVertexElementUsageProperty())) + "@" + std::to_string(e.getOffsetProperty());
-                if (e.getUsageIndexProperty() != 0) continue;
-                if (e.getVertexElementUsageProperty() == VertexElementUsage::Position) positionAt = e.getOffsetProperty();
-                if (e.getVertexElementUsageProperty() == VertexElementUsage::Normal) normalAt = e.getOffsetProperty();
-                if (e.getVertexElementUsageProperty() == VertexElementUsage::TextureCoordinate) coordAt = e.getOffsetProperty();
-            }
+            const PipelineSupport::ProcessedGeometry geometry = PipelineSupport::ReadFirstPart(*model);
+            part_ = std::to_string(geometry.vertices.size()) + " vertices, " + std::to_string(geometry.triangles) + " triangles, stride " + std::to_string(geometry.stride) + " bytes";
+            elements_ = geometry.elements;
             char radius[32];
-            std::snprintf(radius, sizeof radius, "%.3f", static_cast<double>(mesh0->getBoundingSphereProperty().Radius));
+            std::snprintf(radius, sizeof radius, "%.3f", static_cast<double>(geometry.radius));
             sphere_ = radius;
-            if (positionAt < 0 || normalAt < 0 || coordAt < 0 || stride <= 0) throw std::runtime_error("the vertex layout has no Position, Normal and TextureCoordinate");
-            // Copy the processor's vertices into the museum's vertex type, element by element at the offsets the declaration gives.
-            const std::vector<SharpRuntime::bytecs>& bytes = buffer.getVertexDataProperty();
-            const int first = part->getVertexOffsetProperty(), count = part->getNumVerticesProperty();
-            for (int v = 0; v < count; ++v) {
-                const std::size_t base = static_cast<std::size_t>(first + v) * static_cast<std::size_t>(stride);
-                if (base + static_cast<std::size_t>(stride) > bytes.size()) throw std::runtime_error("the vertex data is shorter than its declaration says");
-                float f[8] = {};
-                std::memcpy(f, bytes.data() + base + static_cast<std::size_t>(positionAt), 12);
-                std::memcpy(f + 3, bytes.data() + base + static_cast<std::size_t>(normalAt), 12);
-                std::memcpy(f + 6, bytes.data() + base + static_cast<std::size_t>(coordAt), 8);
-                vertices_.emplace_back(Vector3(f[0], f[1], f[2]), Vector3(f[3], f[4], f[5]), Vector2(f[6], f[7]));
-            }
-            const auto& index = *part->getIndexBufferProperty();
-            for (int i = part->getStartIndexProperty(); i < part->getStartIndexProperty() + part->getPrimitiveCountProperty() * 3; ++i) indices_.push_back(static_cast<std::uint16_t>(index[i]));
+            vertices_ = geometry.vertices;
+            indices_ = geometry.indices;
             status_ = "drawn from ModelContent";
         } catch (const std::exception& e) {
             vertices_.clear();

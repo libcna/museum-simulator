@@ -91,6 +91,21 @@ WingSpec ContentWing()
             r.origin = ApiOrigin::Xna;
             return r;
         }(),
+        []{
+            RoomSpec r;
+            r.key = "ct-modelimport";
+            r.title = "Importing a Model File";
+            r.subtitle = "XImporter (.x) and FbxImporter (.fbx) read the same cottage; ModelProcessor builds it and every part is drawn with its material and frame transform";
+            r.exhibit = "modelimport-lab";
+            r.width = 13;
+            r.depth = 13;
+            r.height = 5.0f;
+            r.theme = "workshop";
+            r.apis = {"XImporter", "FbxImporter", "ContentImporter", "ContentImporterAttribute", "ContentImporterContext", "NodeContent", "NodeContent.Children", "NodeContent.Transform", "MeshContent", "GeometryContent", "MaterialContent", "BasicMaterialContent",
+                      "BasicMaterialContent.DiffuseColor", "ModelProcessor", "ModelContent", "ModelMeshContent", "ModelMeshPartContent", "ModelBoneContent", "ContentProcessorContext.Convert"};
+            r.origin = ApiOrigin::Xna;
+            return r;
+        }(),
         ct("ct-storage", "Title Files and Saved Data", "TitleContainer.OpenStream, StorageDevice and StorageContainer", "storage", {"TitleContainer.OpenStream", "StorageDevice", "StorageContainer", "StorageContainer.CreateDirectory", "StorageContainer.DeleteDirectory", "StorageContainer.DirectoryExists", "StorageContainer.GetFileNames", "StorageContainer.GetDirectoryNames", "StorageDevice.GetStorageRootEXT", "StorageDevice.DeleteContainer", "StorageDevice.TotalSpace", "StorageDevice.FreeSpace"}),
         ct("ct-custom", "Teaching ContentManager a New Type", "Your own types loaded through ContentManager: a loose-file reader and a named .cnj loader", "custom", {"ContentManager.RegisterTypeReader", "LooseFileContentTypeReader", "ContentManager.RegisterCnjLoader", "ContentLoadException"}, ApiOrigin::CnaExtension),
         ct("ct-reader", "Content Readers", "An .xnb file with your own type: a ContentTypeReader registered under the name the file records", "reader",
