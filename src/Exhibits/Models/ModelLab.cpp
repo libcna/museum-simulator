@@ -71,6 +71,8 @@ public:
                 p.AddReadout("Triangles", [this] { return Triangles(); });
                 p.AddReadout("Root bone / its children", [this] { return RootBone(); });
                 p.AddReadout("CopyBoneTransformsTo", [this] { return BoneCopy(); });
+                p.AddButton("CopyBoneTransformsFrom: move a bone", [this] { BoneRoundTrip(); });
+                p.AddReadout("Moved, then restored", [this] { return roundTrip_; });
                 p.AddReadout("Part effect class", [this] { return EffectName(); });
                 p.AddReadout("Part topology / base-colour sampler (CNA ext.)", [this] { return PartState(); });
                 p.AddReadout("BoundingSphere (CNA ext.)", [this] { return Bounds(); });
@@ -551,6 +553,24 @@ private:
         model_->CopyBoneTransformsTo(bones);
         return std::to_string(bones.size()) + " matrices copied";
     }
+    // Copies the bones out, moves the first bone's transform up a metre, writes the set back with CopyBoneTransformsFrom, reads it again
+    // to see that the model took it, then writes the original back so the exhibit is left as it was.
+    void BoneRoundTrip()
+    {
+        if (!model_ || model_->getBonesProperty().getCountProperty() == 0) { roundTrip_ = "no model"; return; }
+        std::vector<Matrix> original(static_cast<std::size_t>(model_->getBonesProperty().getCountProperty()));
+        model_->CopyBoneTransformsTo(original);
+        std::vector<Matrix> changed = original;
+        changed[0] = changed[0] * Matrix::CreateTranslation(0.0f, 1.0f, 0.0f);
+        model_->CopyBoneTransformsFrom(changed);
+        std::vector<Matrix> after(original.size());
+        model_->CopyBoneTransformsTo(after);
+        const float moved = after[0].M42 - original[0].M42;
+        model_->CopyBoneTransformsFrom(original);
+        std::vector<Matrix> restored(original.size());
+        model_->CopyBoneTransformsTo(restored);
+        roundTrip_ = Fmt(moved) + " m, then " + Fmt(restored[0].M42 - original[0].M42) + " m";
+    }
     [[nodiscard]] std::string Triangles() const
     {
         if (!model_) return "-";
@@ -683,7 +703,7 @@ private:
             bindPoseText_ = std::string(e.what()).substr(0, 60);
         }
     }
-    std::string bindPoseText_ = "-";
+    std::string bindPoseText_ = "-", roundTrip_ = "press the button";
     std::unique_ptr<AnimationPlayer> player_;
     std::vector<Effect*> originals_;
     std::vector<std::unique_ptr<BasicEffect>> overrides_;

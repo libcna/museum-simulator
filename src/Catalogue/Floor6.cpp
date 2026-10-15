@@ -67,7 +67,7 @@ WingSpec ModelWing()
         return r;
     };
     w.rooms = {
-        mo("model-load", "Loading Models", "ContentManager.Load<Model>: meshes, parts, bones, effects and bounds of nine glTF files", "info", {"ContentManager.Load<Model>", "Model", "ModelMesh", "ModelMeshPart", "Model.BoundingSphereEXT", "Model.Root", "ModelBone.Children", "Model.CopyBoneTransformsTo", "ModelMeshPart.PrimitiveTypeEXT", "ModelMeshPart.SamplerStatesEXT"}),
+        mo("model-load", "Loading Models", "ContentManager.Load<Model>: meshes, parts, bones, effects and bounds of nine glTF files", "info", {"ContentManager.Load<Model>", "Model", "ModelMesh", "ModelMeshPart", "Model.BoundingSphereEXT", "Model.Root", "ModelBone.Children", "Model.CopyBoneTransformsTo", "Model.CopyBoneTransformsFrom", "ModelMeshPart.PrimitiveTypeEXT", "ModelMeshPart.SamplerStatesEXT"}),
         mo("model-pbr", "Metallic and Rough", "PbrEffect factors edited live on a private copy of a model", "pbr", {"PbrEffect", "PbrEffect.MetallicFactor", "PbrEffect.RoughnessFactor", "PbrEffect.EmissiveFactor"}),
         mo("model-rigid", "Rigid Animation", "A glTF node animation applied with ApplyClipToBonesEXT on a robot arm", "rigid", {"ModelAnimationsEXT", "ApplyClipToBonesEXT", "Model.CopyAbsoluteBoneTransformsTo", "ModelBone"}),
         mo("model-skinned", "Skinned Animation", "A tentacle bending through AnimationPlayer and SkinnedPbrEffect", "skinned", {"AnimationPlayer.ApplyBindPoseBoneTransformsEXT", "SkinningData", "AnimationPlayer", "SkinnedPbrEffect.SetBoneTransforms"}),

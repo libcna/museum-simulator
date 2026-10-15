@@ -51,7 +51,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1004 distinct API names are claimed by at least one room.
+1007 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -495,7 +495,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsResource.IsDisposed | `ct-cache`, `ct-lifetime` |
 | Guide.BeginShowKeyboardInput | `gs-guide` |
 | Guide.BeginShowMessageBox | `gs-guide` |
+| Guide.DelayNotifications | `gs-guide` |
 | Guide.EndShowMessageBox | `gs-guide` |
+| Guide.IsScreenSaverEnabled | `gs-guide` |
 | Guide.IsTrialMode | `gs-guide` |
 | Guide.IsVisible | `gs-guide` |
 | Guide.NotificationPosition | `gs-guide` |
@@ -644,6 +646,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Model.BoundingSphereEXT | `model-load`, `model-instances`, `model-bounds` |
 | Model.CamerasEXT | `model-cameras` |
 | Model.CopyAbsoluteBoneTransformsTo | `model-rigid`, `model-sampler` |
+| Model.CopyBoneTransformsFrom | `model-load` |
 | Model.CopyBoneTransformsTo | `model-load` |
 | Model.CreateInfinitePerspectiveFieldOfViewEXT | `model-cameras` |
 | Model.Draw | `model-instances` |

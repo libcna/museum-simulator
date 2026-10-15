@@ -139,9 +139,13 @@ public:
                 p.AddToggle("Guide.SimulateTrialMode", false, [](bool v) { Guide::setSimulateTrialModeProperty(v); });
                 p.AddChoice("Guide.NotificationPosition", {"TopLeft", "TopCenter", "TopRight", "CenterLeft", "Center", "CenterRight", "BottomLeft", "BottomCenter", "BottomRight"}, 2,
                             [](int v) { Guide::setNotificationPositionProperty(static_cast<NotificationPosition>(v)); });
+                screenSaverStart_ = Guide::getIsScreenSaverEnabledProperty();
+                p.AddToggle("Guide.IsScreenSaverEnabled", screenSaverStart_, [](bool v) { Guide::setIsScreenSaverEnabledProperty(v); });
+                p.AddButton("Guide.DelayNotifications(30 s)", [this] { Guide::DelayNotifications(System::TimeSpan::FromSeconds(30.0)); answer_ = "invitation prompts held back for 30 s"; });
                 p.AddButton("Guide.BeginShowMessageBox", [this] { ShowMessageBox(); });
                 p.AddButton("Guide.BeginShowKeyboardInput", [this] { ShowKeyboard(); });
                 p.AddReadout("Guide.IsTrialMode", [] { return std::string(Guide::getIsTrialModeProperty() ? "true" : "false"); });
+                p.AddReadout("Guide.IsScreenSaverEnabled", [] { return std::string(Guide::getIsScreenSaverEnabledProperty() ? "true (the desktop may blank)" : "false"); });
                 p.AddReadout("Guide.IsVisible", [] { return std::string(Guide::getIsVisibleProperty() ? "true (it owns the keyboard)" : "false"); });
                 p.AddReadout("Answer", [this] { return answer_; });
                 break;
@@ -204,6 +208,7 @@ public:
         if (Guide::getHasPendingMessageBoxEXTProperty()) Guide::ResetPendingMessageBoxForTestingEXT();
         if (Guide::getHasPendingKeyboardInputEXTProperty()) Guide::SimulateKeyboardInputCancelEXT();
         Guide::setSimulateTrialModeProperty(false);
+        if (mode_ == Mode::Guide) Guide::setIsScreenSaverEnabledProperty(screenSaverStart_);
 #endif
     }
 
@@ -601,6 +606,7 @@ private:
     void Unsubscribe() {}
 #endif
     Mode mode_;
+    bool screenSaverStart_ = false;
 };
 
 }  // namespace
