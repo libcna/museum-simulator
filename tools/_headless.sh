@@ -27,7 +27,7 @@ museum_headless() {
   env ${audio:+SDL_AUDIODRIVER=$audio} LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS="${LP_NUM_THREADS:-${MUSEUM_RENDER_THREADS:-3}}" \
     CNA_GAMER_SERVICES_PROFILES_DIR="${CNA_GAMER_SERVICES_PROFILES_DIR:-$root/${BUILD_DIR:-build}/gamer-profiles}" \
     timeout "${MUSEUM_TIMEOUT:-300}" \
-    xvfb-run -a -s "-screen 0 ${MUSEUM_SCREEN:-1920x1080x24}" "$bin" "$@" > "$log" 2>&1
+    xvfb-run -a -e "$log.xvfb" -s "-screen 0 ${MUSEUM_SCREEN:-1920x1080x24}" "$bin" "$@" > "$log" 2>&1
   local status=$?
   grep -v '^\[INFO\]' "$log"
   return $status
