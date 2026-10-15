@@ -9,6 +9,7 @@
 
 #include "CNA/GraphicsCapability.hpp"
 #include "CNA/RendererCapabilityProfile.hpp"
+#include "Diagnostics/Log.hpp"
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Microsoft/Xna/Framework/IUpdateable.hpp"
 #include "Microsoft/Xna/Framework/IGameComponent.hpp"
@@ -170,11 +171,13 @@ public:
                 });
                 p.AddToggle("Fullscreen", g != nullptr && g->getIsFullScreenProperty(), [this](bool) { pendingToggleFull_ = true; });
                 p.AddToggle("Vertical sync", true, [this](bool v) { pendingVsync_ = v ? 1 : 0; });
+                p.AddButton("GraphicsDevice.Present() now", [this] { pendingPresent_ = true; });
                 p.AddHeading("Presentation parameters (live)");
                 p.AddReadout("Back buffer", [this] { return BackBufferText(); });
                 p.AddReadout("Depth / stencil", [this] { return std::to_string(static_cast<int>(S().device->getPresentationParametersProperty().getDepthStencilFormatProperty())) + " (DepthFormat)"; });
                 p.AddReadout("DeviceResetting / DeviceReset events", [this] { return std::to_string(resettingCount_) + " / " + std::to_string(resetCount_); });
                 p.AddReadout("DeviceLost events", [this] { return std::to_string(lostCount_) + " (never here)"; });
+                p.AddReadout("Manual Present()", [this] { return presentStatus_; });
                 p.AddReadout("Texture slots bound: pixel (16) / vertex (4)", [this] {
                     const auto bound = [](TextureCollection& slots, int count) {
                         int n = 0;
@@ -329,6 +332,17 @@ public:
                 pendingToggleFull_ = false;
                 g.ToggleFullScreen();
             }
+            if (pendingPresent_) {
+                pendingPresent_ = false;
+                try {
+                    S().device->Present();
+                    presentStatus_ = "succeeded " + std::to_string(++manualPresentCount_) + " time(s)";
+                    Museum::Log("app", "manual GraphicsDevice.Present: %s", presentStatus_.c_str());
+                } catch (const std::exception& e) {
+                    presentStatus_ = std::string("refused: ") + std::string(e.what()).substr(0, 48);
+                    Museum::Log("app", "manual GraphicsDevice.Present: %s", presentStatus_.c_str());
+                }
+            }
         }
         if (mode_ == Mode::Components) {
             for (std::size_t i = 0; i < components_.size(); ++i) visible_[i] = visible_[i];
@@ -417,7 +431,7 @@ private:
             case Mode::Lifecycle: return {"The museum itself is a CNA Game subclass: Initialize and LoadContent run once, then the loop calls", "Update and Draw. With a fixed time step Update may run several times per Draw to catch up (and", "IsRunningSlowly turns on); a variable step calls each once per frame. Try the hitch button."};
             case Mode::GameTimeLab: return {"Movement should depend on elapsed time, not on how many frames ran. The green ball moves by", "2 m/s * dt and always takes four seconds; the red one moves a fixed step per Update, so a slow machine", "(add delay) drags it. The graph shows ElapsedGameTime for every recent Update."};
             case Mode::Device: return {"These panels are generated from the live GraphicsDevice: the renderer in use, the adapter, what the", "device supports (GraphicsCapability) and the detailed renderer capability profile. They differ", "between renderers: compare screenshots of this room across renderers."};
-            case Mode::Viewport: return {"GraphicsDeviceManager holds the preferred back buffer size and fullscreen state; ApplyChanges()", "recreates the back buffer. The Viewport is the part of it that is drawn into. Change the size and watch the museum re-lay out."};
+            case Mode::Viewport: return {"GraphicsDeviceManager holds the preferred back buffer size and fullscreen state; ApplyChanges()", "recreates the back buffer. The Viewport is the part drawn into; the Present button explicitly sends the completed previous frame to the display."};
             case Mode::Content: return {"A ContentManager loads assets by name and caches them until Unload(). This room owns its own manager:", "load a dozen textures, load them again (a cache hit is much faster), unload, or ask for a file that is", "missing: the failure is a ContentLoadException, shown here instead of crashing."};
             default: return {"GameComponents let a Game be built from parts: each has its own Update and (if drawable) Draw, ordered by", "UpdateOrder and DrawOrder. Three badge components are registered with Game.Components while you are here;", "change their DrawOrder to reorder the overlapping badges, hide one, or disable updates."};
         }
@@ -601,7 +615,9 @@ private:
     std::array<bool, 3> visible_{true, true, true};
     bool inRoom_ = false;
     int pendingW_ = 0, pendingH_ = 0, pendingVsync_ = -1;
-    bool pendingToggleFull_ = false;
+    int manualPresentCount_ = 0;
+    bool pendingToggleFull_ = false, pendingPresent_ = false;
+    std::string presentStatus_ = "not called manually";
 };
 
 }  // namespace

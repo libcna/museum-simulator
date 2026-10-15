@@ -52,7 +52,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1163 distinct API names are claimed by at least one room.
+1165 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -558,6 +558,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.GetTrackedResourceCount | `pl-renderer` |
 | GraphicsDevice.GetVertexBuffers | `geo-instancing` |
 | GraphicsDevice.GraphicsProfile | `pl-adapter` |
+| GraphicsDevice.Present | `app-viewport` |
 | GraphicsDevice.ResourceCreated | `ct-lifetime` |
 | GraphicsDevice.ResourceDestroyed | `ct-lifetime` |
 | GraphicsDevice.SamplerStates | `model-sampler` |
@@ -571,7 +572,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDevice.SupportsImageBasedLightingEXT | `model-ibl`, `pl-renderer` |
 | GraphicsDevice.SupportsShaderLanguageEXT | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix` |
 | GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT | `rt-formats` |
-| GraphicsDevice.VertexTextures | `app-viewport` |
+| GraphicsDevice.VertexSamplerStates | `fx-compiled` |
+| GraphicsDevice.VertexTextures | `app-viewport`, `fx-compiled` |
 | GraphicsDevice.Viewport | `cam-split`, `rv-geometry` |
 | GraphicsDeviceManager | `app-viewport` |
 | GraphicsDeviceManager.DeviceReset | `app-viewport` |

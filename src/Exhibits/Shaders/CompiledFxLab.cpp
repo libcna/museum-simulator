@@ -17,6 +17,9 @@
 #include "Microsoft/Xna/Framework/Graphics/EffectParameter.hpp"
 #include "Microsoft/Xna/Framework/Graphics/EffectPass.hpp"
 #include "Microsoft/Xna/Framework/Graphics/EffectTechnique.hpp"
+#include "Microsoft/Xna/Framework/Graphics/Texture2D.hpp"
+#include "Microsoft/Xna/Framework/Graphics/VertexDeclaration.hpp"
+#include "Microsoft/Xna/Framework/Graphics/VertexElement.hpp"
 
 using namespace Microsoft::Xna::Framework;
 using namespace Microsoft::Xna::Framework::Graphics;
@@ -57,20 +60,25 @@ public:
         p.AddSlider("Offset.X (parameter, texels)", -24.0f, 24.0f, offset_.X, [this](float v) { offset_.X = v; }, "%.1f", 0.5f);
         p.AddSlider("Offset.Y (parameter, texels)", -24.0f, 24.0f, offset_.Y, [this](float v) { offset_.Y = v; }, "%.1f", 0.5f);
         p.AddChoice("Picture", {"logo", "checker", "circuit"}, 0, [this](int v) { picture_ = v; });
+        p.AddChoice("VertexSamplerStates[2]", {"PointClamp", "PointWrap"}, 0, [this](int v) { vertexWrap_ = v == 1; });
+        p.AddSlider("Vertex texture height", 0.1f, 0.5f, vertexAmount_, [this](float v) { vertexAmount_ = v; });
         p.AddReadout("CompiledEffects capability", [this] { return capability_; });
         p.AddReadout("Effect", [this] { return status_; });
+        p.AddReadout("Vertex texture effect", [this] { return vertexStatus_; });
+        p.AddReadout("VertexTextures[2] during draw", [this] { return vertexBinding_; });
         p.AddReadout("Parameters", [this] { return parameters_; });
         p.AddReadout("Techniques", [this] { return techniques_; });
         p.AddReadout("Read back (GetValue*)", [this] { return readBack_; });
         AddInfoSign(b, "Compiled XNA Effects",
-                    {"An XNA project compiles its .fx files into Effect assets. CNA loads that binary (Effect(device, bytes), or a ContentManager reading the Effect from an .xnb) and reflects it like XNA does,",
-                     "but runs it only where the renderer reports CompiledEffects (FNA3D). CNA embeds no HLSL compiler: this one was built with XNA Game Studio 4.0 from Content/Effects/blur2tap.fx."});
+                    {"An XNA project compiles its .fx files into Effect assets. CNA loads that binary (Effect(device, bytes), or a ContentManager reading the Effect from an .xnb) and reflects it like XNA does.",
+                     "The lower graph is genuine vs_3_0 texture sampling: its sampler has no state assignment, so GraphicsDevice.VertexTextures[2] and VertexSamplerStates[2] are authoritative.",
+                     "Switch PointClamp / PointWrap: samples beyond both texture edges clamp or wrap without reapplying the pass (float vertex textures are point-filtered in XNA)."});
     }
 
     void OnScreenLoaded() override
     {
-        const bool supported = S().device->SupportsCapability(CNA::GraphicsCapability::CompiledEffects);
-        capability_ = supported ? "true" : "false: this renderer cannot run compiled effects";
+        compiledSupported_ = S().device->SupportsCapability(CNA::GraphicsCapability::CompiledEffects);
+        capability_ = compiledSupported_ ? "true" : "false: this renderer cannot run compiled effects";
         try {
             std::ifstream in(S().contentRoot + "/Effects/blur2tap.fxb", std::ios::binary);
             const std::vector<char> raw((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
@@ -83,6 +91,18 @@ public:
             status_ = std::string("refused: ") + std::string(e.what()).substr(0, 70);
             Museum::Log("fx", "%s", e.what());
         }
+        try {
+            std::ifstream in(S().contentRoot + "/Effects/vertextexture.fxb", std::ios::binary);
+            const std::vector<char> raw((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+            if (raw.empty()) throw std::runtime_error("Content/Effects/vertextexture.fxb is missing");
+            const std::vector<SharpRuntime::bytecs> bytes(raw.begin(), raw.end());
+            vertexEffect_ = std::make_unique<Effect>(*S().device, bytes);
+            vertexStatus_ = std::to_string(bytes.size()) + " bytes loaded";
+            BuildVertexTexture();
+        } catch (const std::exception& e) {
+            vertexStatus_ = std::string("refused: ") + std::string(e.what()).substr(0, 68);
+            Museum::Log("fx", "vertex texture effect: %s", e.what());
+        }
     }
 
 protected:
@@ -92,8 +112,8 @@ protected:
         Texture2D* tex = S().textures->Get(picture_ == 0 ? "logo" : picture_ == 1 ? "checker" : "circuit");
         sb.Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::LinearClamp, nullptr, nullptr);
         sb.DrawString(*S().font, "Through a compiled XNA effect", Vector2(24, 12), Kit::kGold, 0.0f, Vector2(0, 0), 1.0f, SpriteEffects::None, 0.0f);
-        if (tex != nullptr) sb.Draw(*tex, Rectangle(40, 70, 400, 400), Color::White);
-        sb.DrawString(*S().font, "plain SpriteBatch", Vector2(40, 478), Kit::kDim, 0.0f, Vector2(0, 0), 0.6f, SpriteEffects::None, 0.0f);
+        if (tex != nullptr) sb.Draw(*tex, Rectangle(30, 55, 280, 210), Color::White);
+        sb.DrawString(*S().font, "plain SpriteBatch", Vector2(30, 270), Kit::kDim, 0.0f, Vector2(0, 0), 0.55f, SpriteEffects::None, 0.0f);
         sb.End();
         const bool run = use_ && effect_ != nullptr && !failed_;
         try {
@@ -107,22 +127,100 @@ protected:
                 readBack_ = rb;
             }
             sb.Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::LinearClamp, nullptr, nullptr, run ? effect_.get() : nullptr);
-            if (tex != nullptr) sb.Draw(*tex, Rectangle(500, 70, 400, 400), Color::White);
+            if (tex != nullptr) sb.Draw(*tex, Rectangle(340, 55, 280, 210), Color::White);
             sb.End();
         } catch (const std::exception& e) {
             failed_ = true;
             status_ = std::string("could not run: ") + std::string(e.what()).substr(0, 60);
             if (S().font != nullptr) {
                 sb.Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::LinearClamp, nullptr, nullptr);
-                sb.DrawString(*S().font, status_, Vector2(500, 200), Kit::Rgba(255, 190, 150), 0.0f, Vector2(0, 0), 0.6f, SpriteEffects::None, 0.0f);
+                sb.DrawString(*S().font, status_, Vector2(340, 150), Kit::Rgba(255, 190, 150), 0.0f, Vector2(0, 0), 0.55f, SpriteEffects::None, 0.0f);
+                sb.End();
             }
         }
         sb.Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::LinearClamp, nullptr, nullptr);
-        sb.DrawString(*S().font, run ? "Weight * tex(uv) + Weight * tex(uv + Offset)" : (effect_ ? "effect switched off" : "no effect"), Vector2(500, 478), Kit::kDim, 0.0f, Vector2(0, 0), 0.6f, SpriteEffects::None, 0.0f);
+        sb.DrawString(*S().font, run ? "compiled pixel shader: two texture taps" : (effect_ ? "effect switched off" : "no pixel effect"), Vector2(340, 270), Kit::kDim, 0.0f, Vector2(0, 0), 0.55f, SpriteEffects::None, 0.0f);
+        sb.End();
+        DrawVertexTextureGraph();
+        sb.Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::LinearClamp, nullptr, nullptr);
+        sb.DrawString(*S().font, "compiled vertex shader samples VertexTextures[2]", Vector2(30, 300), Kit::kGold, 0.0f, Vector2(0, 0), 0.62f, SpriteEffects::None, 0.0f);
+        sb.DrawString(*S().font, vertexBinding_, Vector2(30, 505), compiledSupported_ ? Kit::Rgba(170, 230, 180) : Kit::Rgba(255, 190, 150), 0.0f, Vector2(0, 0), 0.5f, SpriteEffects::None, 0.0f);
         sb.End();
     }
 
 private:
+    struct VertexTextureVertex {
+        Vector3 position;
+        Vector2 sample;
+    };
+
+    void BuildVertexTexture()
+    {
+        vertexTexture_ = std::make_unique<Texture2D>(*S().device, 4, 1, false, SurfaceFormat::Vector4);
+        const Vector4 heights[] = {Vector4(0.08f, 0, 0, 1), Vector4(0.94f, 0, 0, 1), Vector4(0.22f, 0, 0, 1), Vector4(0.78f, 0, 0, 1)};
+        vertexTexture_->SetData(heights, 4);
+        constexpr int bars = 48;
+        vertexVertices_.reserve(static_cast<std::size_t>(bars * 6));
+        for (int i = 0; i < bars; ++i) {
+            const float x0 = -0.9f + 1.8f * static_cast<float>(i) / static_cast<float>(bars);
+            const float x1 = -0.9f + 1.8f * static_cast<float>(i + 1) / static_cast<float>(bars);
+            const float u = -0.25f + 1.5f * (static_cast<float>(i) + 0.5f) / static_cast<float>(bars);
+            const VertexTextureVertex a{Vector3(x0, 0, 0), Vector2(u, 0)}, b{Vector3(x1, 0, 0), Vector2(u, 0)};
+            const VertexTextureVertex c{Vector3(x1, 0, 0), Vector2(u, 1)}, d{Vector3(x0, 0, 0), Vector2(u, 1)};
+            vertexVertices_.insert(vertexVertices_.end(), {a, b, c, a, c, d});
+        }
+    }
+
+    void DrawVertexTextureGraph()
+    {
+        if (!compiledSupported_ || !vertexEffect_ || !vertexTexture_ || vertexVertices_.empty()) {
+            vertexBinding_ = compiledSupported_ ? "vertex texture effect unavailable" : "not run: CompiledEffects is false";
+            return;
+        }
+        GraphicsDevice& device = *S().device;
+        TextureCollection& textures = device.getVertexTexturesProperty();
+        SamplerStateCollection& samplers = device.getVertexSamplerStatesProperty();
+        Texture* oldTexture = textures[2];
+        const SamplerState oldSampler = samplers[2];
+        const SamplerState selected = vertexWrap_ ? SamplerState::PointWrap : SamplerState::PointClamp;
+        const auto restore = [&] {
+            textures(2, oldTexture);
+            samplers[2] = oldSampler;
+        };
+        try {
+            vertexEffect_->getParametersProperty()["Amount"]->SetValue(vertexAmount_);
+            device.setRasterizerStateProperty(RasterizerState::CullNone);
+            device.setDepthStencilStateProperty(DepthStencilState::None);
+            device.setBlendStateProperty(BlendState::Opaque);
+            static const VertexDeclaration declaration(sizeof(VertexTextureVertex), {
+                VertexElement(0, VertexElementFormat::Vector3, VertexElementUsage::Position, 0),
+                VertexElement(12, VertexElementFormat::Vector2, VertexElementUsage::TextureCoordinate, 0)});
+            for (auto& pass : vertexEffect_->getCurrentTechniqueProperty()->getPassesProperty()) {
+                pass.Apply();
+                // Deliberately after Apply(): the effect has a plain sampler declaration, so these
+                // public device collections are the authoritative application override.
+                textures(2, vertexTexture_.get());
+                samplers[2] = selected;
+                device.DrawUserPrimitives(PrimitiveType::TriangleList, vertexVertices_.data(), 0,
+                                          static_cast<int>(vertexVertices_.size() / 3), declaration);
+            }
+            const bool textureAsSet = textures[2] == vertexTexture_.get();
+            const bool samplerAsSet = samplers[2].getFilterProperty() == selected.getFilterProperty() &&
+                                      samplers[2].getAddressUProperty() == selected.getAddressUProperty();
+            vertexBinding_ = std::string("slot 2 ") + (textureAsSet ? "Vector4 texture" : "WRONG texture") + ", " +
+                             (vertexWrap_ ? "PointWrap" : "PointClamp") + (samplerAsSet ? ", drawn" : ", WRONG sampler");
+            if (lastLoggedWrap_ != static_cast<int>(vertexWrap_)) {
+                Museum::Log("fx", "vertex sampler draw: %s", vertexBinding_.c_str());
+                lastLoggedWrap_ = static_cast<int>(vertexWrap_);
+            }
+            restore();
+        } catch (const std::exception& e) {
+            restore();
+            vertexBinding_ = std::string("draw failed: ") + std::string(e.what()).substr(0, 58);
+            Museum::Log("fx", "vertex texture draw: %s", e.what());
+        }
+    }
+
     void Describe()
     {
         parameters_.clear();
@@ -142,11 +240,17 @@ private:
     }
 
     std::unique_ptr<Effect> effect_;
+    std::unique_ptr<Effect> vertexEffect_;
+    std::unique_ptr<Texture2D> vertexTexture_;
+    std::vector<VertexTextureVertex> vertexVertices_;
     bool use_ = true, failed_ = false;
+    bool compiledSupported_ = false, vertexWrap_ = false;
     float weight_ = 0.5f;
+    float vertexAmount_ = 0.42f;
     Vector2 offset_{6.0f, 0.0f};
     int picture_ = 0;
-    std::string capability_ = "-", status_ = "-", parameters_ = "-", techniques_ = "-", readBack_ = "-";
+    int lastLoggedWrap_ = -1;
+    std::string capability_ = "-", status_ = "-", vertexStatus_ = "-", vertexBinding_ = "-", parameters_ = "-", techniques_ = "-", readBack_ = "-";
 };
 
 }  // namespace
