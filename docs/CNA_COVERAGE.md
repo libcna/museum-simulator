@@ -52,7 +52,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1053 distinct API names are claimed by at least one room.
+1064 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -67,6 +67,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | AccelerometerReading.Acceleration | `in-phone` |
 | Achievement | `gs-achievements` |
 | AchievementCollection | `gs-achievements` |
+| ActivatedEventArgs | `pl-window` |
 | Agent.GetAuthenticationToken | `pl-inspector` |
 | Agent.GetPort | `pl-inspector` |
 | Agent.Start | `pl-inspector` |
@@ -219,6 +220,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Clipboard.SetDataEXT | `in-text` |
 | Clipboard.SetPrimarySelectionTextEXT | `in-text` |
 | Clipboard.SetTextEXT | `in-text` |
+| ClosingEventArgs | `pl-window` |
 | Color | `vt-color`, `vt-colors`, `sprite-tint` |
 | Color.A | `vt-colors` |
 | Color.AliceBlue | `vt-colors` |
@@ -300,6 +302,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CurveKeyCollection | `curve-class` |
 | CurveLoopType | `curve-class` |
 | CurveTangent | `curve-class` |
+| DeactivatedEventArgs | `pl-window` |
 | DebugDraw.addBox | `cx-debugdraw` |
 | DebugDraw.addFrustum | `cx-debugdraw` |
 | DebugDraw.addSphere | `cx-debugdraw` |
@@ -592,6 +595,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | KeyframeEXT | `model-skinext` |
 | Keys | `in-edges` |
 | LaunchParameters | `app-lifecycle` |
+| LaunchingEventArgs | `pl-window` |
 | LeaderboardEntry | `gs-leaderboards` |
 | LeaderboardIdentity | `gs-leaderboards` |
 | LeaderboardKey | `gs-leaderboards` |
@@ -798,6 +802,13 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | PbrEffect.NormalMap | `model-material` |
 | PbrEffect.RoughnessFactor | `model-pbr`, `model-ibl` |
 | PbrEffect.Texture | `model-sampler` |
+| PhoneApplicationService | `pl-window` |
+| PhoneApplicationService.Activated | `pl-window` |
+| PhoneApplicationService.AttachEXT | `pl-window` |
+| PhoneApplicationService.Closing | `pl-window` |
+| PhoneApplicationService.Deactivated | `pl-window` |
+| PhoneApplicationService.Launching | `pl-window` |
+| PhoneApplicationService.State | `pl-window` |
 | PixelBitmapContent | `ct-processor` |
 | Plane | `vec-reflect`, `col-ray-plane` |
 | Plane.DotCoordinate | `col-plane-box` |

@@ -17,6 +17,9 @@
 #include "Diagnostics/Log.hpp"
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
+#ifdef MUSEUM_PHONE
+#include "Microsoft/Phone/Shell/PhoneApplicationService.hpp"
+#endif
 #include "Microsoft/Xna/Framework/DisplayOrientation.hpp"
 #include "Microsoft/Xna/Framework/GameWindow.hpp"
 #include "Microsoft/Xna/Framework/GraphicsDeviceManager.hpp"
@@ -28,6 +31,17 @@ using namespace Microsoft::Xna::Framework;
 using namespace Microsoft::Xna::Framework::Graphics;
 
 namespace {
+
+#ifdef MUSEUM_PHONE
+// What PhoneApplicationService.State stores: any System::Object, here one that just names itself.
+struct StateEntry final : System::Object {
+    [[nodiscard]] const std::string& GetTypeName() const override
+    {
+        static const std::string name = "Museum.StateEntry";
+        return name;
+    }
+};
+#endif
 
 enum class Mode { Window, Adapter, Renderer, Platform };
 
@@ -103,9 +117,17 @@ public:
                 p.AddChoice("Window title", {"CNA 3D Museum", "Hello from GameWindow", "Title set by the Window room"}, 0, [this](int v) { SetTitle(v); });
                 p.AddToggle("AllowUserResizing", S().game->getWindowProperty().getAllowUserResizingProperty(), [this](bool v) { SetResizable(v); });
                 p.AddReadout("ClientSizeChanged events", [this] { return std::to_string(resizeEvents_); });
-                p.AddReadout("CurrentOrientation / OrientationChanged events", [this] { return OrientationText(); });
+                p.AddReadout("Orientation / events", [this] { return OrientationText(); });
                 p.AddReadout("Activated / Deactivated", [this] { return std::to_string(activated_) + " / " + std::to_string(deactivated_); });
                 p.AddReadout("Files dropped on the window", [this] { return std::to_string(drops_); });
+#ifdef MUSEUM_PHONE
+                p.AddReadout("Shell: Launch/Act/Deact/Close", [this] { return std::to_string(shell_[0]) + " / " + std::to_string(shell_[1]) + " / " + std::to_string(shell_[2]) + " / " + std::to_string(shell_[3]); });
+                p.AddButton("PhoneApplicationService.State: add an entry", [this] {
+                    auto& state = Microsoft::Phone::Shell::PhoneApplicationService::getCurrentProperty().getStateProperty();
+                    state.Add("visit " + std::to_string(state.getCountProperty() + 1), std::make_shared<StateEntry>());
+                });
+                p.AddReadout("PhoneApplicationService.State entries", [] { return std::to_string(Microsoft::Phone::Shell::PhoneApplicationService::getCurrentProperty().getStateProperty().getCountProperty()); });
+#endif
                 break;
             case Mode::Adapter:
                 p.AddReadout("Adapter", [this] { return adapterName_; });
@@ -149,6 +171,16 @@ public:
             activeToken_ = g.Activated.Add([this](System::Object*, const System::EventArgs&) { ++activated_; });
             inactiveToken_ = g.Deactivated.Add([this](System::Object*, const System::EventArgs&) { ++deactivated_; });
             dropToken_ = g.getWindowProperty().FileDropEXT.Add([this](System::Object*, const FileDropEventArgsEXT&) { ++drops_; });
+#ifdef MUSEUM_PHONE
+            // Microsoft.Phone.Shell maps the game's window events onto a phone application's lifetime: subscribe first, then attach, so
+            // Launching (raised by the attach itself) is counted.
+            auto& shell = Microsoft::Phone::Shell::PhoneApplicationService::getCurrentProperty();
+            shellTokens_[0] = shell.Launching.Add([this](System::Object*, const Microsoft::Phone::Shell::LaunchingEventArgs&) { ++shell_[0]; });
+            shellTokens_[1] = shell.Activated.Add([this](System::Object*, const Microsoft::Phone::Shell::ActivatedEventArgs&) { ++shell_[1]; });
+            shellTokens_[2] = shell.Deactivated.Add([this](System::Object*, const Microsoft::Phone::Shell::DeactivatedEventArgs&) { ++shell_[2]; });
+            shellTokens_[3] = shell.Closing.Add([this](System::Object*, const Microsoft::Phone::Shell::ClosingEventArgs&) { ++shell_[3]; });
+            shell.AttachEXT(g);
+#endif
             subscribed_ = true;
         } catch (const std::exception&) {}
         Refresh();
@@ -227,6 +259,14 @@ private:
             g.Activated.Remove(activeToken_);
             g.Deactivated.Remove(inactiveToken_);
             g.getWindowProperty().FileDropEXT.Remove(dropToken_);
+#ifdef MUSEUM_PHONE
+            auto& shell = Microsoft::Phone::Shell::PhoneApplicationService::getCurrentProperty();
+            shell.DetachEXT();
+            shell.Launching.Remove(shellTokens_[0]);
+            shell.Activated.Remove(shellTokens_[1]);
+            shell.Deactivated.Remove(shellTokens_[2]);
+            shell.Closing.Remove(shellTokens_[3]);
+#endif
             g.getWindowProperty().setTitleProperty(originalTitle_);
             g.getWindowProperty().setAllowUserResizingProperty(originalResizable_);
         } catch (const std::exception&) {}
@@ -545,6 +585,8 @@ private:
     float reportScroll_ = 0.0f;
     int orientationEvents_ = 0, resizeEvents_ = 0, activated_ = 0, deactivated_ = 0, drops_ = 0;
     bool subscribed_ = false;
+    int shell_[4] = {0, 0, 0, 0};   // Phone shell events (MUSEUM_PHONE)
+    std::size_t shellTokens_[4] = {0, 0, 0, 0};
     bool originalResizable_ = false;
     std::size_t orientationToken_ = 0, resizeToken_ = 0, activeToken_ = 0, inactiveToken_ = 0, dropToken_ = 0;
 };
