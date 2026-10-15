@@ -461,7 +461,14 @@ private:
                               a.getOpenPublicGamerSlotsProperty(), a.getOpenPrivateGamerSlotsProperty(), mode ? std::to_string(*mode).c_str() : "-",
                               a.getQualityOfServiceProperty().getIsAvailableProperty() ? a.getQualityOfServiceProperty().getAverageRoundtripTimeProperty().getTotalMillisecondsProperty() : -1.0,
                               a.getQualityOfServiceProperty().getIsAvailableProperty() ? "" : " (QualityOfService not available)");
-                foundLines_.push_back(buf);
+                std::string line = buf;
+                const QualityOfService& q = a.getQualityOfServiceProperty();
+                if (q.getIsAvailableProperty()) {
+                    char qos[120];
+                    std::snprintf(qos, sizeof qos, ", min %.0f ms, %d B/s down / %d up", q.getMinimumRoundtripTimeProperty().getTotalMillisecondsProperty(), q.getBytesPerSecondDownstreamProperty(), q.getBytesPerSecondUpstreamProperty());
+                    line += qos;
+                }
+                foundLines_.push_back(line);
             }
         } catch (const std::exception& e) {
             delete find_;

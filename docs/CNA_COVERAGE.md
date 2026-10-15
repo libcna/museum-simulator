@@ -51,7 +51,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-974 distinct API names are claimed by at least one room.
+976 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -763,6 +763,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | PunctualLightEXT.Range | `light-falloff` |
 | PunctualLightKindEXT.Spot | `light-flashlight` |
 | QualityOfService | `net-session` |
+| QualityOfService.BytesPerSecondDownstream | `net-session` |
+| QualityOfService.MinimumRoundtripTime | `net-session` |
 | Quaternion | `animation` |
 | Quaternion.Concatenate | `quat-axis` |
 | Quaternion.Conjugate | `quat-axis` |
