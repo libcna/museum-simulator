@@ -52,7 +52,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1139 distinct API names are claimed by at least one room.
+1141 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -502,6 +502,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Gamer.LeaderboardWriter | `gs-leaderboards` |
 | Gamer.SignedInGamers | `gs-players` |
 | GamerPresenceMode | `gs-players` |
+| GamerPrivilegeException | `pl-exceptions` |
 | GamerProfile | `gs-players` |
 | GamerProfile.GamerScore | `on-account` |
 | GamerProfile.GetGamerPicture | `gs-players` |
@@ -592,7 +593,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Guide.ShowFriendRequest | `on-friends` |
 | Guide.ShowFriends | `on-friends` |
 | Guide.ShowGamerCard | `on-friends` |
-| Guide.ShowMarketplace | `on-account` |
+| Guide.ShowMarketplace | `pl-exceptions`, `on-account` |
 | Guide.ShowMessages | `on-messages` |
 | Guide.ShowParty | `on-party` |
 | Guide.ShowPartySessions | `on-party` |
@@ -985,6 +986,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SignedInGamer.GameDefaults | `gs-players` |
 | SignedInGamer.GetAchievements | `gs-achievements` |
 | SignedInGamer.GetFriends | `on-friends` |
+| SignedInGamer.IsFriend | `pl-exceptions` |
 | SignedInGamer.IsSignedInToLive | `on-account` |
 | SignedInGamer.PartySize | `on-party` |
 | SignedInGamer.Presence | `gs-players` |

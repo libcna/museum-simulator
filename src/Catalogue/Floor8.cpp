@@ -228,8 +228,8 @@ WingSpec PlatformWing()
     };
     w.rooms = {
         [&] {
-            RoomSpec r = pl("pl-exceptions", "Exceptions CNA Throws", "Ten deliberate mistakes and the XNA exception each one raises, with CNA's own message", "", {"System.ObjectDisposedException", "System.ArgumentOutOfRangeException", "System.InvalidOperationException", "ContentLoadException", "System.IO.FileNotFoundException",
-                                                                                                            "GamerServicesNotAvailableException", "GuideAlreadyVisibleException", "StorageContainer", "TitleContainer.OpenStream", "SpriteBatch.Begin", "SpriteBatch.End"}, ApiOrigin::Xna);
+            RoomSpec r = pl("pl-exceptions", "Exceptions CNA Throws", "Deliberate mistakes and the XNA exception each one raises, with CNA's own message", "", {"System.ObjectDisposedException", "System.ArgumentOutOfRangeException", "System.InvalidOperationException", "ContentLoadException", "System.IO.FileNotFoundException",
+                                                                                                            "GamerServicesNotAvailableException", "GamerPrivilegeException", "Guide.ShowMarketplace", "SignedInGamer.IsFriend", "GuideAlreadyVisibleException", "StorageContainer", "TitleContainer.OpenStream", "SpriteBatch.Begin", "SpriteBatch.End"}, ApiOrigin::Xna);
             r.exhibit = "exception-lab";
             r.params = {};
             return r;

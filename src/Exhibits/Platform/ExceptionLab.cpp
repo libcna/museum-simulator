@@ -23,6 +23,9 @@
 #include "Microsoft/Xna/Framework/TitleContainer.hpp"
 #ifdef MUSEUM_NETWORKING
 #include "Microsoft/Xna/Framework/GamerServices/Guide.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/Gamer.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/SignedInGamer.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/SignedInGamerCollection.hpp"
 #include "Microsoft/Xna/Framework/PlayerIndex.hpp"
 #endif
 
@@ -72,13 +75,16 @@ protected:
         Texture2D& white = *S().whiteTexture;
         const auto text = [&](const std::string& t, float x, float y, Color c, float s) { sb.DrawString(*S().font, t, Vector2(x, y), c, 0.0f, Vector2(0, 0), s, SpriteEffects::None, 0.0f); };
         text("Mistakes and what they throw", 24, 12, Kit::kGold, 1.0f);
-        float y = 62.0f;
+        float y = 56.0f;
+        // As many rows as there are cases fit the 540-pixel screen: the row height and the text shrink together.
+        const float pitch = std::min(50.0f, 474.0f / static_cast<float>(std::max<std::size_t>(1, cases_.size())));
+        const float row = pitch - 4.0f, scale = std::min(1.0f, pitch / 50.0f);
         for (const Case& c : cases_) {
-            sb.Draw(white, Rectangle(24, static_cast<int>(y), 912, 46), Color(22, 30, 46, 235));
-            sb.Draw(white, Rectangle(24, static_cast<int>(y), 5, 46), c.status == 1 ? Color(110, 230, 150, 255) : c.status == 2 ? Color(255, 170, 90, 255) : Color(90, 100, 130, 255));
-            text(c.doing, 40, y + 3, Kit::kText, 0.55f);
-            text(c.result, 40, y + 24, c.status == 2 ? Kit::Rgba(255, 190, 150) : Kit::kDim, 0.45f);
-            y += 50.0f;
+            sb.Draw(white, Rectangle(24, static_cast<int>(y), 912, static_cast<int>(row)), Color(22, 30, 46, 235));
+            sb.Draw(white, Rectangle(24, static_cast<int>(y), 5, static_cast<int>(row)), c.status == 1 ? Color(110, 230, 150, 255) : c.status == 2 ? Color(255, 170, 90, 255) : Color(90, 100, 130, 255));
+            text(c.doing, 40, y + 2, Kit::kText, 0.55f * scale);
+            text(c.result, 40, y + 2 + 21.0f * scale, c.status == 2 ? Kit::Rgba(255, 190, 150) : Kit::kDim, 0.45f * scale);
+            y += pitch;
         }
         sb.End();
     }
@@ -138,6 +144,12 @@ private:
 #ifdef MUSEUM_NETWORKING
         using Microsoft::Xna::Framework::GamerServices::Guide;
         cases_.push_back({"Ask for an online page with no account service (Guide.ShowFriends)", [] { Guide::ShowFriends(PlayerIndex::One); }});
+        cases_.push_back({"Open the marketplace for an offline profile (Guide.ShowMarketplace)", [] { Guide::ShowMarketplace(PlayerIndex::One); }});
+        cases_.push_back({"Ask an offline profile who its friends are (SignedInGamer.IsFriend)", [] {
+                              auto* gamers = Microsoft::Xna::Framework::GamerServices::Gamer::getSignedInGamersProperty();
+                              if (gamers == nullptr || gamers->begin() == gamers->end()) throw std::runtime_error("no profile is signed in");
+                              (*gamers->begin())->IsFriend(*gamers->begin());
+                          }});
         cases_.push_back({"Open the Guide twice (Guide.BeginShowMessageBox, again)", [] {
                               auto* first = Guide::BeginShowMessageBox("Exceptions", "one", {"OK"}, 0, GamerServices::MessageBoxIcon::None, {}, std::any{});
                               (void)first;
