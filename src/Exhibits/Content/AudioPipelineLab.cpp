@@ -23,6 +23,7 @@
 #include "Microsoft/Xna/Framework/Audio/SoundEffect.hpp"
 #include "Microsoft/Xna/Framework/Audio/SoundEffectInstance.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/Audio/AudioContent.hpp"
+#include "Microsoft/Xna/Framework/Content/Pipeline/Mp3Importer.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/Processors/AudioProcessors.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/Serialization/Compiler/ContentCompiler.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/WavImporter.hpp"
@@ -57,7 +58,6 @@ std::string Kb(std::size_t bytes)
     return buffer;
 }
 
-void Put16(std::string& s, std::uint16_t v) { s.push_back(static_cast<char>(v & 0xFF)); s.push_back(static_cast<char>(v >> 8)); }
 void Put32(std::string& s, std::uint32_t v) { for (int i = 0; i < 4; ++i) s.push_back(static_cast<char>((v >> (8 * i)) & 0xFF)); }
 
 // The processed sound as a WAV file in memory: RIFF header, the format the processor chose (its native WAVEFORMATEX bytes), the data.
@@ -106,11 +106,13 @@ public:
     {
         ControlPanel& p = AddPanel("Processing audio", -4.8f, 1.5f, 1.8f, MathHelper::PiOver2, 2.1f);
 #ifdef MUSEUM_PIPELINE
+        p.AddChoice("Audio importer", {"WavImporter (.wav)", "Mp3Importer (arpeggio.mp3)"}, 0, [this](int v) { mp3_ = v == 1; dirty_ = true; });
         p.AddChoice("WAV file (WavImporter)", {kFiles[0], kFiles[1], kFiles[2], kFiles[3], kFiles[4], kFiles[5]}, 1, [this](int v) { file_ = v; dirty_ = true; });
         p.AddChoice("SoundEffectProcessor.Quality", {"Low", "Medium", "Best"}, 2, [this](int v) { quality_ = v; dirty_ = true; });
         p.AddButton("Play the imported sound", [this] { Play(false); });
         p.AddButton("Play the processed sound", [this] { Play(true); });
         p.AddButton("ContentCompiler: write an .xnb, load it back, play", [this] { CompileAndLoad(); });
+        p.AddReadout("Importer attribute", [this] { return importer_; });
         p.AddReadout("Imported", [this] { return imported_; });
         p.AddReadout("Processed", [this] { return processed_; });
         p.AddReadout("Size", [this] { return size_; });
@@ -122,7 +124,7 @@ public:
         p.AddReadout("Content pipeline", [] { return std::string("not built into this museum"); });
 #endif
         AddInfoSign(b, "Importing and processing a sound",
-                    {"WavImporter reads a .wav file into AudioContent: a format, the sample data, a duration and loop points. SoundEffectProcessor converts it for the target: lower qualities resample to a lower rate and",
+                    {"WavImporter and Mp3Importer decode a source file into AudioContent: a format, the sample data, a duration and loop points. Their attributes declare the accepted extension and default processor. SoundEffectProcessor converts it for the target: lower qualities resample to a lower rate and",
                      "may switch to a compressed codec. Here both versions are shown and can be heard; SongProcessor, for music files, keeps only the file name and duration because songs stream from disk."});
     }
 
@@ -178,8 +180,18 @@ private:
         compiled_ = "-";
         try {
             ImporterContext importerContext;
-            Xna::WavImporter importer;
-            const std::shared_ptr<PipeAudio::AudioContent> audio = importer.Import(S().contentRoot + "/Audio/" + kFiles[file_] + ".wav", importerContext);
+            std::shared_ptr<PipeAudio::AudioContent> audio;
+            Xna::ContentImporterAttribute attribute = Xna::WavImporter::Attribute();
+            if (mp3_) {
+                Xna::Mp3Importer importer;
+                audio = importer.Import(S().contentRoot + "/Audio/arpeggio.mp3", importerContext);
+                attribute = Xna::Mp3Importer::Attribute();
+            } else {
+                Xna::WavImporter importer;
+                audio = importer.Import(S().contentRoot + "/Audio/" + kFiles[file_] + ".wav", importerContext);
+            }
+            importer_ = attribute.getFileExtensionsProperty()[0] + ", \"" + attribute.getDisplayNameProperty() +
+                        "\", default " + attribute.getDefaultProcessorProperty();
             imported_ = FormatText(*audio->getFormatProperty());
             const std::vector<SharpRuntime::bytecs> importedData = audio->getDataProperty();
             importedPeaks_ = Peaks(*audio->getFormatProperty(), importedData, 445);
@@ -270,9 +282,9 @@ private:
     std::unique_ptr<Microsoft::Xna::Framework::Audio::SoundEffectInstance> instance_;
     std::string importedWav_, processedWav_;
     std::vector<float> importedPeaks_, processedPeaks_;
-    std::string imported_ = "-", processed_ = "-", size_ = "-", duration_ = "-", song_ = "-", playback_ = "-", compiled_ = "-", error_;
+    std::string importer_ = "-", imported_ = "-", processed_ = "-", size_ = "-", duration_ = "-", song_ = "-", playback_ = "-", compiled_ = "-", error_;
     int file_ = 1, quality_ = 2;
-    bool dirty_ = true;
+    bool mp3_ = false, dirty_ = true;
 #endif
 };
 

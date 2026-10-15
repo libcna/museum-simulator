@@ -125,13 +125,13 @@ WingSpec ContentWing()
             RoomSpec r;
             r.key = "ct-audiopipeline";
             r.title = "Importing and Processing Audio";
-            r.subtitle = "WavImporter reads a sound, SoundEffectProcessor converts it for a quality, SongProcessor keeps a name and a duration; both versions are drawn and can be heard";
+            r.subtitle = "WavImporter or Mp3Importer decodes a sound, SoundEffectProcessor converts it for a quality, SongProcessor keeps a name and a duration; both versions are drawn and can be heard";
             r.exhibit = "audiopipeline-lab";
             r.width = 13;
             r.depth = 13;
             r.height = 5.0f;
             r.theme = "workshop";
-            r.apis = {"WavImporter", "AudioContent", "AudioContent.Format", "AudioContent.Data", "AudioFormat", "AudioFormat.SampleRate", "AudioFormat.ChannelCount", "AudioFormat.BitsPerSample",
+            r.apis = {"WavImporter", "Mp3Importer", "Mp3Importer.Import", "Mp3Importer.Attribute", "ContentImporterAttribute", "AudioContent", "AudioContent.Format", "AudioContent.Data", "AudioFormat", "AudioFormat.SampleRate", "AudioFormat.ChannelCount", "AudioFormat.BitsPerSample",
                       "AudioFormat.NativeWaveFormat", "ConversionQuality", "SoundEffectProcessor", "SoundEffectProcessor.Quality", "SoundEffectContent", "SongProcessor", "SongContent", "SoundEffect.FromStream", "ContentCompiler.Compile(SoundEffectContent)", "ContentCompiler.Compile(SongContent)"};
             r.origin = ApiOrigin::Xna;
             return r;
