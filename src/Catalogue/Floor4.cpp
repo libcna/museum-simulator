@@ -50,7 +50,8 @@ WingSpec ShaderWing()
         fb.exhibit = "fxb-lab";
         fb.params = {};
         fb.apis = {"Effect", "Effect(GraphicsDevice, byte[])", "Effect.Parameters", "Effect.Techniques", "EffectParameter", "EffectParameter.SetValue", "EffectParameter.GetValueSingle", "EffectParameter.GetValueVector2", "EffectTechnique", "EffectPass", "EffectParameterClass", "EffectParameterType",
-                   "GraphicsCapability.CompiledEffects", "GraphicsDevice.VertexTextures", "GraphicsDevice.VertexSamplerStates", "SpriteBatch.Begin"};
+                   "GraphicsCapability.CompiledEffects", "GraphicsDevice.VertexTextures", "GraphicsDevice.VertexSamplerStates", "SpriteBatch.Begin",
+                   "CompiledEffectContent", "ContentCompiler.Compile(CompiledEffectContent)", "EffectReader"};
         fb.origin = ApiOrigin::Xna;
         w.rooms.push_back(fb);
     }

@@ -13,6 +13,11 @@
 #include "Diagnostics/Log.hpp"
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
+#ifdef MUSEUM_PIPELINE
+#include "Exhibits/Content/PipelineSupport.hpp"
+#include "Microsoft/Xna/Framework/Content/Pipeline/Processors/CompiledEffectContent.hpp"
+#include "Microsoft/Xna/Framework/Content/Pipeline/Serialization/Compiler/ContentCompiler.hpp"
+#endif
 #include "Microsoft/Xna/Framework/Graphics/Effect.hpp"
 #include "Microsoft/Xna/Framework/Graphics/EffectParameter.hpp"
 #include "Microsoft/Xna/Framework/Graphics/EffectPass.hpp"
@@ -25,6 +30,11 @@ using namespace Microsoft::Xna::Framework;
 using namespace Microsoft::Xna::Framework::Graphics;
 
 namespace {
+
+#ifdef MUSEUM_PIPELINE
+namespace Compiler = Microsoft::Xna::Framework::Content::Pipeline::Serialization::Compiler;
+namespace Processors = Microsoft::Xna::Framework::Content::Pipeline::Processors;
+#endif
 
 const char* ClassName(EffectParameterClass c)
 {
@@ -84,8 +94,25 @@ public:
             const std::vector<char> raw((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
             if (raw.empty()) throw std::runtime_error("Content/Effects/blur2tap.fxb is missing");
             const std::vector<SharpRuntime::bytecs> bytes(raw.begin(), raw.end());
-            effect_ = std::make_unique<Effect>(*S().device, bytes);
+#ifdef MUSEUM_PIPELINE
+            auto compiled = std::make_shared<Processors::CompiledEffectContent>(bytes);
+            Compiler::ContentCompiler compiler;
+            Compiler::CompileOptions options;
+            options.assetName = "blur2tap";
+            options.targetProfile = GraphicsProfile::HiDef;
+            options.container.graphicsProfile = CNA::Internal::Xnb::XnbGraphicsProfile::HiDef;
+            const CNA::Internal::Xnb::XnbAssetWriteResult result =
+                compiler.Compile<Processors::CompiledEffectContent>(compiled, options);
+            if (!manager_) manager_ = std::make_unique<PipelineSupport::MemoryContentManager>(&S().game->getServicesProperty());
+            manager_->Unload();
+            manager_->bytes = result.bytes;
+            effect_ = manager_->Load<std::shared_ptr<Effect>>("blur2tap");
+            status_ = std::to_string(bytes.size()) + " byte FXB -> " +
+                      std::to_string(result.bytes.size()) + " byte XNB -> EffectReader";
+#else
+            effect_ = std::make_shared<Effect>(*S().device, bytes);
             status_ = std::to_string(bytes.size()) + " bytes loaded";
+#endif
             Describe();
         } catch (const std::exception& e) {
             status_ = std::string("refused: ") + std::string(e.what()).substr(0, 70);
@@ -239,7 +266,10 @@ private:
         }
     }
 
-    std::unique_ptr<Effect> effect_;
+#ifdef MUSEUM_PIPELINE
+    std::unique_ptr<PipelineSupport::MemoryContentManager> manager_;
+#endif
+    std::shared_ptr<Effect> effect_;
     std::unique_ptr<Effect> vertexEffect_;
     std::unique_ptr<Texture2D> vertexTexture_;
     std::vector<VertexTextureVertex> vertexVertices_;
