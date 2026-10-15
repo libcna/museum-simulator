@@ -101,6 +101,7 @@ public:
             if (S().graphics != nullptr && resetToken_ != 0) {
                 S().graphics->DeviceResetting.Remove(resettingToken_);
                 S().graphics->DeviceReset.Remove(resetToken_);
+                if (S().device != nullptr) S().device->DeviceLost.Remove(lostToken_);
                 S().graphics->PreparingDeviceSettings.Remove(preparingToken_);
             }
             if (S().game != nullptr && addedToken_ != 0) {
@@ -173,6 +174,17 @@ public:
                 p.AddReadout("Back buffer", [this] { return BackBufferText(); });
                 p.AddReadout("Depth / stencil", [this] { return std::to_string(static_cast<int>(S().device->getPresentationParametersProperty().getDepthStencilFormatProperty())) + " (DepthFormat)"; });
                 p.AddReadout("DeviceResetting / DeviceReset events", [this] { return std::to_string(resettingCount_) + " / " + std::to_string(resetCount_); });
+                p.AddReadout("DeviceLost events", [this] { return std::to_string(lostCount_) + " (never here)"; });
+                p.AddReadout("Texture slots bound: pixel (16) / vertex (4)", [this] {
+                    const auto bound = [](TextureCollection& slots, int count) {
+                        int n = 0;
+                        for (int i = 0; i < count; ++i) {
+                            try { if (slots[i] != nullptr) ++n; } catch (const std::exception&) { break; }
+                        }
+                        return n;
+                    };
+                    return std::to_string(bound(S().device->getTexturesProperty(), 16)) + " / " + std::to_string(bound(S().device->getVertexTexturesProperty(), 4));
+                });
                 p.AddReadout("PreparingDeviceSettings", [this] { return std::to_string(preparingCount_) + (preparingCount_ > 0 ? ", last asked for " + preparingNote_ : std::string(" (fires on ApplyChanges)")); });
                 p.AddReadout("PresentInterval", [this] {
                     static const char* names[] = {"Default", "One (vsync)", "Two", "Immediate"};
@@ -246,6 +258,7 @@ public:
         if (mode_ == Mode::Viewport && S().graphics != nullptr) {
             resettingToken_ = S().graphics->DeviceResetting.Add([this](System::Object*, const System::EventArgs&) { ++resettingCount_; });
             resetToken_ = S().graphics->DeviceReset.Add([this](System::Object*, const System::EventArgs&) { ++resetCount_; });
+            if (S().device != nullptr) lostToken_ = S().device->DeviceLost.Add([this](System::Object*, const System::EventArgs&) { ++lostCount_; });
             preparingToken_ = S().graphics->PreparingDeviceSettings.Add([this](System::Object*, const PreparingDeviceSettingsEventArgs& e) {
                 ++preparingCount_;
                 const PresentationParameters& pp = e.getGraphicsDeviceInformationProperty().getPresentationParametersProperty();
@@ -574,9 +587,9 @@ private:
     std::size_t preparingToken_ = 0;
     int preparingCount_ = 0;
     std::string preparingNote_;
-    std::size_t resetToken_ = 0, resettingToken_ = 0, addedToken_ = 0, removedToken_ = 0;
+    std::size_t resetToken_ = 0, resettingToken_ = 0, addedToken_ = 0, removedToken_ = 0, lostToken_ = 0;
     float minDepth_ = 0.0f, maxDepth_ = 1.0f;
-    int resetCount_ = 0, resettingCount_ = 0, addedCount_ = 0, removedCount_ = 0;
+    int resetCount_ = 0, resettingCount_ = 0, addedCount_ = 0, removedCount_ = 0, lostCount_ = 0;
     Gizmos gizmos_;
     float time_ = 0.0f, delay_ = 0.0f, timeBall_ = 0.0f, frameBall_ = 0.0f;
     long long frames_ = 0;
