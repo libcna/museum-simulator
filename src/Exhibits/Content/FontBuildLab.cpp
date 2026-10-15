@@ -23,6 +23,7 @@
 #include "Microsoft/Xna/Framework/Content/Pipeline/Graphics/FontDescription.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/Processors/FontProcessors.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/Processors/SpriteFontContent.hpp"
+#include "Microsoft/Xna/Framework/Content/Pipeline/Serialization/Compiler/ContentCompiler.hpp"
 #include "System/NotSupportedException.hpp"
 #include "Microsoft/Xna/Framework/Graphics/SpriteFont.hpp"
 #include "Microsoft/Xna/Framework/Graphics/Texture2D.hpp"
@@ -37,6 +38,7 @@ namespace {
 namespace Xna = Microsoft::Xna::Framework::Content::Pipeline;
 namespace PipeGfx = Microsoft::Xna::Framework::Content::Pipeline::Graphics;
 namespace Processors = Microsoft::Xna::Framework::Content::Pipeline::Processors;
+namespace Compiler = Microsoft::Xna::Framework::Content::Pipeline::Serialization::Compiler;
 using PipelineSupport::ProcessorContext;
 
 #endif
@@ -60,6 +62,7 @@ public:
         p.AddReadout("FontDescription", [this] { return imported_; });
         p.AddReadout("FontDescriptionProcessor", [this] { return status_; });
         p.AddReadout("Glyphs / atlas", [this] { return shape_; });
+        p.AddReadout("ContentCompiler / XNB load", [this] { return compiled_; });
         p.AddReadout("LineSpacing", [this] { return lineSpacing_; });
         p.AddReadout("Build time", [this] { return buildTime_; });
 #else
@@ -116,7 +119,7 @@ protected:
             sb.Draw(*atlas_, Rectangle(static_cast<int>(x), static_cast<int>(y), static_cast<int>(static_cast<float>(atlas_->getWidthProperty()) * scale), static_cast<int>(static_cast<float>(atlas_->getHeightProperty()) * scale)), Color::White);
             text("the atlas (" + shape_ + ")", x, y + size + 4.0f, Kit::kDim, 0.5f);
         }
-        text("Content/Fonts/DejaVuSans.ttf  ->  FontDescription  ->  FontDescriptionProcessor  ->  SpriteFontContent  ->  SpriteFont", 24, 232, Kit::kDim, 0.5f);
+        text("DejaVuSans.ttf -> FontDescriptionProcessor -> SpriteFontContent -> ContentCompiler -> XNB -> SpriteFontReader", 24, 232, Kit::kDim, 0.5f);
         text(status_, 24, 256, status_.rfind("built", 0) == 0 ? Kit::Rgba(150, 255, 190) : Kit::Rgba(255, 170, 140), 0.6f);
         text(warnings_, 24, 284, Kit::kDim, 0.5f);
 #else
@@ -135,6 +138,7 @@ private:
         font_.reset();
         atlas_.reset();
         warnings_.clear();
+        compiled_ = "-";
         try {
             if (!CNA::Content::Pipeline::IsFontRasterizationAvailable()) {
                 status_ = "this CNA build has no font rasteriser (FreeType was not found when it was configured)";
@@ -180,11 +184,19 @@ private:
             if (rgba.size() < static_cast<std::size_t>(w) * static_cast<std::size_t>(h) * 4) throw std::runtime_error("the atlas is not 8 bits per channel RGBA");
             std::vector<Color> pixels(static_cast<std::size_t>(w) * static_cast<std::size_t>(h));
             for (std::size_t i = 0; i < pixels.size(); ++i) pixels[i] = Color(rgba[i * 4], rgba[i * 4 + 1], rgba[i * 4 + 2], rgba[i * 4 + 3]);
-            Texture2D texture(*S().device, w, h);
-            texture.SetData(pixels.data(), static_cast<int>(pixels.size()));
             atlas_ = std::make_unique<Texture2D>(*S().device, w, h);
             atlas_->SetData(pixels.data(), static_cast<int>(pixels.size()));
-            font_ = std::make_unique<SpriteFont>(std::move(texture), data.glyphBounds, data.cropping, data.characters, data.lineSpacing, data.spacing, data.kerning, data.defaultCharacter);
+            Compiler::ContentCompiler compiler;
+            Compiler::CompileOptions options;
+            options.assetName = "runtime-font";
+            options.targetProfile = GraphicsProfile::HiDef;
+            const CNA::Internal::Xnb::XnbAssetWriteResult result =
+                compiler.Compile<Processors::SpriteFontContent>(output, options);
+            if (!manager_) manager_ = std::make_unique<PipelineSupport::MemoryContentManager>(&S().game->getServicesProperty());
+            manager_->Unload();
+            manager_->bytes = result.bytes;
+            font_ = std::make_unique<SpriteFont>(manager_->Load<SpriteFont>("runtime-font"));
+            compiled_ = std::to_string(result.bytes.size()) + " bytes; loaded by SpriteFontReader";
             const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
             char buf[48];
             std::snprintf(buf, sizeof buf, "%.1f ms", ms);
@@ -201,12 +213,13 @@ private:
         }
     }
 
+    std::unique_ptr<PipelineSupport::MemoryContentManager> manager_;
     std::unique_ptr<SpriteFont> font_;
     std::unique_ptr<Texture2D> atlas_;
     float size_ = 28.0f, spacing_ = 0.0f;
     int style_ = 0, regions_ = 0, sample_ = 0;
     bool kerning_ = true, defaultChar_ = true, fromFile_ = false;
-    std::string drawError_, measured_ = "-", warnings_, imported_ = "-";
+    std::string drawError_, measured_ = "-", warnings_, imported_ = "-", compiled_ = "-";
 #endif
     std::string status_ = "-", shape_ = "-", lineSpacing_ = "-", buildTime_ = "-";
 };
