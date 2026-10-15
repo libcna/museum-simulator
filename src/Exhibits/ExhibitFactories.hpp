@@ -67,6 +67,7 @@ std::unique_ptr<Exhibit> MakePhoneSensorLab(const RoomDef& room, Services& servi
 std::unique_ptr<Exhibit> MakeDiagnosticsLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeModelImportLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeCompilerLab(const RoomDef& room, Services& services);
+std::unique_ptr<Exhibit> MakeAudioPipelineLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeSkinExtLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeModelCamerasLab(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeOnlineLab(const RoomDef& room, Services& services);

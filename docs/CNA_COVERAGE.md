@@ -52,7 +52,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1114 distinct API names are claimed by at least one room.
+1133 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -85,6 +85,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | AudioCategory.Pause | `au-xact` |
 | AudioCategory.SetVolume | `au-xact` |
 | AudioChannels | `au-synth`, `au-generate` |
+| AudioContent | `ct-audiopipeline` |
+| AudioContent.Data | `ct-audiopipeline` |
+| AudioContent.Duration | `ct-audiopipeline` |
+| AudioContent.Format | `ct-audiopipeline` |
+| AudioContent.LoopLength | `ct-audiopipeline` |
+| AudioContent.LoopStart | `ct-audiopipeline` |
 | AudioEmitter | `audio`, `au-spatial` |
 | AudioEngine | `au-xact` |
 | AudioEngine.GetCategory | `au-xact` |
@@ -92,6 +98,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | AudioEngine.RendererDetails | `au-xact` |
 | AudioEngine.SetGlobalVariable | `au-xact` |
 | AudioEngine.Update | `au-xact` |
+| AudioFormat | `ct-audiopipeline` |
+| AudioFormat.BitsPerSample | `ct-audiopipeline` |
+| AudioFormat.ChannelCount | `ct-audiopipeline` |
+| AudioFormat.NativeWaveFormat | `ct-audiopipeline` |
+| AudioFormat.SampleRate | `ct-audiopipeline` |
 | AudioListener | `audio`, `au-spatial` |
 | AudioStopOptions | `au-xact` |
 | AvailableNetworkSession | `net-session` |
@@ -312,6 +323,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ContentTypeDescriptor | `ct-intermediate` |
 | ContentTypeReader | `ct-reader` |
 | ContentTypeReaderManager.AddTypeCreator | `ct-reader` |
+| ConversionQuality | `ct-audiopipeline` |
 | CubeMapFace | `tex-cube`, `rt-cube` |
 | Cue.GetVariable | `au-xact` |
 | Cue.IsCreated | `au-xact` |
@@ -995,6 +1007,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Song.Rating | `au-music` |
 | Song.TrackNumber | `au-music` |
 | SongCollection | `au-music` |
+| SongContent | `ct-audiopipeline` |
+| SongProcessor | `ct-audiopipeline` |
 | SoundBank | `au-xact` |
 | SoundBank.GetCue | `au-xact` |
 | SoundBank.IsInUse | `au-xact` |
@@ -1003,15 +1017,19 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SoundEffect(buffer, sampleRate, channels) | `au-generate` |
 | SoundEffect.DistanceScale | `au-spatial`, `au-master` |
 | SoundEffect.DopplerScale | `au-spatial`, `au-master` |
+| SoundEffect.FromStream | `ct-audiopipeline` |
 | SoundEffect.GetSampleDuration | `au-synth` |
 | SoundEffect.MasterVolume | `au-master` |
 | SoundEffect.Play | `au-basics` |
 | SoundEffect.SpeedOfSound | `au-spatial`, `au-master` |
+| SoundEffectContent | `ct-audiopipeline` |
 | SoundEffectInstance | `audio`, `au-layers`, `rf-garden` |
 | SoundEffectInstance.Apply3D | `au-spatial` |
 | SoundEffectInstance.IsLooped | `au-layers` |
 | SoundEffectInstance.Pitch | `au-layers` |
 | SoundEffectInstance.Volume | `au-layers` |
+| SoundEffectProcessor | `ct-audiopipeline` |
+| SoundEffectProcessor.Quality | `ct-audiopipeline` |
 | SoundState | `au-layers` |
 | SpriteBatch | `sprite-stress`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `rf-weather` |
 | SpriteBatch.Begin | `sprite-basics`, `sprite-camera`, `sprite-tilemap`, `fx-compiled`, `rt-bloom`, `pl-exceptions`, `pf-sprites` |
@@ -1161,6 +1179,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Viewport.Project | `app-viewport`, `mat-screen`, `text-labels` |
 | Viewport.Unproject | `mat-screen` |
 | VisualizationData | `au-music` |
+| WavImporter | `ct-audiopipeline` |
 | WaveBank | `au-xact` |
 | WaveBank.IsInUse | `au-xact` |
 | XImporter | `ct-modelimport` |

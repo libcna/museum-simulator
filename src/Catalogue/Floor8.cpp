@@ -121,6 +121,21 @@ WingSpec ContentWing()
             r.origin = ApiOrigin::Xna;
             return r;
         }(),
+        []{
+            RoomSpec r;
+            r.key = "ct-audiopipeline";
+            r.title = "Importing and Processing Audio";
+            r.subtitle = "WavImporter reads a sound, SoundEffectProcessor converts it for a quality, SongProcessor keeps a name and a duration; both versions are drawn and can be heard";
+            r.exhibit = "audiopipeline-lab";
+            r.width = 13;
+            r.depth = 13;
+            r.height = 5.0f;
+            r.theme = "workshop";
+            r.apis = {"WavImporter", "AudioContent", "AudioContent.Format", "AudioContent.Data", "AudioContent.Duration", "AudioContent.LoopStart", "AudioContent.LoopLength", "AudioFormat", "AudioFormat.SampleRate", "AudioFormat.ChannelCount", "AudioFormat.BitsPerSample",
+                      "AudioFormat.NativeWaveFormat", "ConversionQuality", "SoundEffectProcessor", "SoundEffectProcessor.Quality", "SoundEffectContent", "SongProcessor", "SongContent", "SoundEffect.FromStream"};
+            r.origin = ApiOrigin::Xna;
+            return r;
+        }(),
         ct("ct-storage", "Title Files and Saved Data", "TitleContainer.OpenStream, StorageDevice and StorageContainer", "storage", {"TitleContainer.OpenStream", "StorageDevice", "StorageContainer", "StorageContainer.CreateDirectory", "StorageContainer.DeleteDirectory", "StorageContainer.DirectoryExists", "StorageContainer.GetFileNames", "StorageContainer.GetDirectoryNames", "StorageDevice.GetStorageRootEXT", "StorageDevice.DeleteContainer", "StorageDevice.TotalSpace", "StorageDevice.FreeSpace"}),
         ct("ct-custom", "Teaching ContentManager a New Type", "Your own types loaded through ContentManager: a loose-file reader and a named .cnj loader", "custom", {"ContentManager.RegisterTypeReader", "LooseFileContentTypeReader", "ContentManager.RegisterCnjLoader", "ContentLoadException"}, ApiOrigin::CnaExtension),
         ct("ct-reader", "Content Readers", "An .xnb file with your own type: a ContentTypeReader registered under the name the file records", "reader",
