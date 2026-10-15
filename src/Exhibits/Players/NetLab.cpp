@@ -36,6 +36,7 @@
 #include "Microsoft/Xna/Framework/Net/NetworkSessionEndedEventArgs.hpp"
 #include "Microsoft/Xna/Framework/Net/NetworkSessionJoinError.hpp"
 #include "Microsoft/Xna/Framework/Net/NetworkSessionJoinException.hpp"
+#include "Microsoft/Xna/Framework/Net/NetworkMachine.hpp"
 #include "Microsoft/Xna/Framework/Net/PacketReader.hpp"
 #include "Microsoft/Xna/Framework/Net/PacketWriter.hpp"
 #include "Microsoft/Xna/Framework/Net/SendDataOptions.hpp"
@@ -107,6 +108,8 @@ public:
             p.AddReadout("SessionType / MaxGamers / private slots", [this] { return SessionShape(); });
             p.AddReadout("Host / remote / previous gamers", [this] { return GamerRoles(); });
             p.AddReadout("Gamer 0..1: Id, slot, voice, talking, muted, left", [this] { return GamerDetails(); });
+            p.AddReadout("NetworkMachine.Gamers / Session / guest", [this] { return MachineDetails(); });
+            p.AddButton("NetworkMachine.RemoveFromSession (first remote)", [this] { RemoveRemoteMachine(); });
             p.AddButton("NetworkSession.ResetReady", [this] { NetworkSession* n = Primary(); if (n != nullptr) { try { n->ResetReady(); Museum::Log("net", "ResetReady; gamers: %s", GamerDetails().c_str()); } catch (const std::exception&) {} } });
             p.AddButton("Guide.ShowSignIn: an account for PlayerMatch", [this] { try { Microsoft::Xna::Framework::GamerServices::Guide::ShowSignIn(1, true); Museum::Log("online", "ShowSignIn(1, true) opened"); } catch (const std::exception& e) { status_ = std::string(e.what()).substr(0, 50); } });
             p.AddToggle("Deliver packets: a SystemLink session (visible on your network)", false, [this](bool v) { SetTransport(v); });
@@ -135,7 +138,11 @@ public:
         if (mode_ == Mode::Session) {
             OpenLobby();
             // A player who accepts an invitation in the Guide raises InviteAccepted at the next Update; the game then joins with JoinInvited.
-            inviteToken_ = NetworkSession::InviteAccepted.Add([this](System::Object*, const Microsoft::Xna::Framework::GamerServices::InviteAcceptedEventArgs&) { inviteAccepted_ = true; Log("InviteAccepted raised: joining with JoinInvited"); });
+            inviteToken_ = NetworkSession::InviteAccepted.Add([this](System::Object*, const Microsoft::Xna::Framework::GamerServices::InviteAcceptedEventArgs& e) {
+                inviteAccepted_ = true;
+                Log("InviteAccepted: " + (e.getGamerProperty() != nullptr ? e.getGamerProperty()->getGamertagProperty() : std::string("?")) +
+                    (e.getIsCurrentSessionProperty() ? ", current session" : ", joining with JoinInvited"));
+            });
             inviteSubscribed_ = true;
         }
 #endif
@@ -221,6 +228,9 @@ private:
             if (fields_[5]) w.Write(v);
             if (fields_[6]) w.Write(q);
             if (fields_[7]) w.Write(m);
+            const int writerLength = w.getLengthProperty();
+            const int writerPosition = w.getPositionProperty();
+            w.setPositionProperty(writerPosition);
             auto* memory = dynamic_cast<System::IO::MemoryStream*>(w.getBaseStreamProperty());
             bytes_ = memory != nullptr ? memory->ToArray() : std::vector<SharpRuntime::bytecs>{};
             size_ = static_cast<int>(bytes_.size());
@@ -229,6 +239,7 @@ private:
             r.setPositionProperty(0);
             r.getBaseStreamProperty()->Write(bytes_.data(), 0, size_);
             r.setPositionProperty(0);
+            const int readerLength = r.getLengthProperty();
             bool ok = true;
             if (fields_[0]) ok = ok && r.ReadInt32() == seq;
             if (fields_[1]) ok = ok && r.ReadBoolean();
@@ -238,7 +249,7 @@ private:
             if (fields_[5]) { const Vector3 b = r.ReadVector3(); ok = ok && b.X == v.X && b.Y == v.Y && b.Z == v.Z; }
             if (fields_[6]) { const Quaternion b = r.ReadQuaternion(); ok = ok && b.X == q.X && b.W == q.W; }
             if (fields_[7]) { const Matrix b = r.ReadMatrix(); ok = ok && b.M11 == m.M11 && b.M43 == m.M43; }
-            roundTrip_ = ok ? "every field equal, all " + std::to_string(r.getPositionProperty()) + " bytes consumed" : "MISMATCH";
+            roundTrip_ = ok ? "every field equal; writer " + std::to_string(writerLength) + " bytes at " + std::to_string(writerPosition) + ", reader " + std::to_string(readerLength) + " bytes, consumed " + std::to_string(r.getPositionProperty()) : "MISMATCH";
         } catch (const std::exception& e) {
             roundTrip_ = std::string("error: ") + std::string(e.what()).substr(0, 40);
         }
@@ -476,7 +487,7 @@ private:
             const AvailableNetworkSessionCollection& list = owned;
             delete find_;
             find_ = nullptr;
-            found_ = std::to_string(list.getCountProperty()) + " session(s) found" + (list.getCountProperty() == 0 ? (searchMode_ == 0 ? " (nobody on this network hosts a SystemLink session: start a second museum and switch packet delivery on there)" : " (no session matches those search properties)") : "");
+            found_ = std::to_string(list.getCountProperty()) + " session(s) found; collection " + (list.getIsDisposedProperty() ? "disposed" : "live") + (list.getCountProperty() == 0 ? (searchMode_ == 0 ? " (nobody on this network hosts a SystemLink session: start a second museum and switch packet delivery on there)" : " (no session matches those search properties)") : "");
             tried_ = false;   // the room's Local session reopens
             foundLines_.clear();
             available_.clear();
@@ -498,6 +509,7 @@ private:
                 }
                 foundLines_.push_back(line);
             }
+            Museum::Log("net", "%s", found_.c_str());
         } catch (const std::exception& e) {
             delete find_;
             find_ = nullptr;
@@ -536,6 +548,39 @@ private:
         const NetworkGamer* host = n->getHostProperty();
         return std::string(host != nullptr ? host->getGamertagProperty() : std::string("none")) + " / " + std::to_string(n->getRemoteGamersProperty().getCountProperty()) + " / " + std::to_string(n->getPreviousGamersProperty().getCountProperty());
     }
+    [[nodiscard]] std::string MachineDetails()
+    {
+        NetworkSession* n = Primary();
+        if (n == nullptr || n->getAllGamersProperty().getCountProperty() == 0) return "no gamer machine";
+        const NetworkGamer* g = n->getAllGamersProperty()[0];
+        const NetworkMachine& machine = g->getMachineProperty();
+        return std::to_string(machine.getGamersProperty().getCountProperty()) + " gamer(s), session " +
+               (g->getSessionProperty() == n ? "same" : "DIFFERENT") + ", guest " +
+               (g->getIsGuestProperty() ? "yes" : "no");
+    }
+    void RemoveRemoteMachine()
+    {
+        NetworkSession* n = Primary();
+        if (n == nullptr) { Log("RemoveFromSession: no session"); Museum::Log("net", "%s", log_.back().c_str()); return; }
+        try {
+            const auto& all = n->getAllGamersProperty();
+            for (int i = 0; i < all.getCountProperty(); ++i) {
+                NetworkGamer* g = all[i];
+                if (g != nullptr && !g->getIsLocalProperty()) {
+                    const std::string name = g->getGamertagProperty();
+                    g->getMachineProperty().RemoveFromSession();
+                    Log("RemoveFromSession: removed " + name + "'s machine");
+                    Museum::Log("net", "%s", log_.back().c_str());
+                    return;
+                }
+            }
+            Log("RemoveFromSession: no remote machine (join from a second museum first)");
+            Museum::Log("net", "%s", log_.back().c_str());
+        } catch (const std::exception& e) {
+            Log(std::string("RemoveFromSession refused: ") + std::string(e.what()).substr(0, 48));
+            Museum::Log("net", "%s", log_.back().c_str());
+        }
+    }
     [[nodiscard]] bool HasRemoteGamers() const
     {
         if (host_ == nullptr) return false;
@@ -552,6 +597,7 @@ private:
         if (find_ != nullptr || join_ != nullptr) return;
         if (available_.empty()) {
             found_ = "nothing to join: press BeginFind first (and start a second museum with packet delivery on)";
+            Museum::Log("net", "%s", found_.c_str());
             return;
         }
         try {
@@ -654,6 +700,7 @@ private:
             found_ = "joined";
             ApplyImpairment();
             Log("Joined: " + std::to_string(host_->getAllGamersProperty().getCountProperty()) + " gamer(s) in the session");
+            Museum::Log("net", "%s", log_.back().c_str());
             if (wantReady_) SetReady(true);
         } catch (const NetworkSessionJoinException& e) {
             delete join_;

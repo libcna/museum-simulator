@@ -43,7 +43,7 @@ WingSpec AudioWing()
             r.depth = 13;
             r.height = 5.2f;
             r.theme = "audio-hall";
-            r.apis = {"Video", "VideoPlayer", "VideoPlayer.Play", "VideoPlayer.Pause", "VideoPlayer.Resume", "VideoPlayer.Stop", "VideoPlayer.GetTexture", "VideoPlayer.IsLooped", "VideoPlayer.IsMuted", "VideoPlayer.Volume", "VideoPlayer.PlayPosition", "VideoPlayer.State",
+            r.apis = {"Video", "VideoPlayer", "VideoPlayer.Play", "VideoPlayer.Pause", "VideoPlayer.Resume", "VideoPlayer.Stop", "VideoPlayer.GetTexture", "VideoPlayer.IsDisposed", "VideoPlayer.IsLooped", "VideoPlayer.IsMuted", "VideoPlayer.Video", "VideoPlayer.Volume", "VideoPlayer.PlayPosition", "VideoPlayer.State",
                       "WmvImporter", "WmvImporter.Import", "VideoContent", "VideoProcessor", "VideoProcessor.Process", "VideoProcessor.VideoSoundtrackType", "VideoSoundtrackType", "ContentCompiler.Compile(VideoContent)", "VideoReader"};
             return r;
         }(),
@@ -82,7 +82,7 @@ WingSpec InputWing()
     w.rooms = {
         in("in-keyboard", "The Keyboard", "Keyboard.GetState, IsKeyDown, GetPressedKeys and physical/layout-aware key names", "keyboard", {"Keyboard.GetState", "KeyboardState.IsKeyDown", "KeyboardState.GetPressedKeys", "Keyboard.GetKeyNameEXT", "Keyboard.GetModStateEXT", "Keyboard.GetKeyFromNameEXT", "Keyboard.GetScancodeNameEXT", "Keyboard.GetScancodeFromNameEXT", "Keyboard.GetKeyFromScancodeEXT"}),
         in("in-edges", "Pressed, Held, Released", "Finding key edges by comparing this frame's state with the last", "edges", {"KeyboardState", "Keys"}),
-        in("in-mouse", "The Mouse", "Position, five buttons, both wheels, relative mode and cursor shapes", "mouse", {"Mouse.GetState", "MouseState", "ButtonState", "Mouse.IsRelativeMouseModeEXT", "Mouse.SetCursor", "MouseCursor", "MouseCursor.FromTexture2D", "Mouse.SetCaptureEXT"}, ApiOrigin::Xna),
+        in("in-mouse", "The Mouse", "Position, five buttons, both wheels, relative mode and cursor shapes", "mouse", {"Mouse.GetState", "Mouse.SetPosition", "Mouse.WindowHandle", "MouseState", "ButtonState", "Mouse.IsRelativeMouseModeEXT", "Mouse.SetCursor", "MouseCursor", "MouseCursor.FromTexture2D", "Mouse.SetCaptureEXT"}, ApiOrigin::Xna),
         in("in-pad", "The Game Pad", "Sticks, triggers, buttons, D-pad, dead zones, vibration and keyboard emulation", "pad", {"GamePad.GetState", "GamePad.GetCapabilities", "GamePadState", "GamePadCapabilities", "GamePadCapabilities.IsConnected", "GamePadCapabilities.HasAButton", "GamePadCapabilities.HasBButton", "GamePadCapabilities.HasXButton", "GamePadCapabilities.HasYButton", "GamePadCapabilities.HasBackButton", "GamePadCapabilities.HasStartButton", "GamePadCapabilities.HasBigButton", "GamePadCapabilities.HasDPadUpButton", "GamePadCapabilities.HasDPadDownButton", "GamePadCapabilities.HasDPadLeftButton", "GamePadCapabilities.HasDPadRightButton", "GamePadCapabilities.HasLeftShoulderButton", "GamePadCapabilities.HasRightShoulderButton", "GamePadCapabilities.HasLeftStickButton", "GamePadCapabilities.HasRightStickButton", "GamePadCapabilities.HasLeftXThumbStick", "GamePadCapabilities.HasLeftYThumbStick", "GamePadCapabilities.HasRightXThumbStick", "GamePadCapabilities.HasRightYThumbStick", "GamePadCapabilities.HasLeftTrigger", "GamePadCapabilities.HasRightTrigger", "GamePadCapabilities.HasLeftVibrationMotor", "GamePadCapabilities.HasRightVibrationMotor", "GamePadCapabilities.HasVoiceSupport", "GamePadDeadZone", "Buttons", "Buttons.BigButton", "Buttons.LeftThumbstickUp", "Buttons.RightThumbstickLeft", "GamePadState.IsButtonDown", "GamePadState.IsButtonUp", "GamePadState.Equals", "GamePad.SetVibration", "GamePad.KeyboardEmulationEnabledEXT", "GamePad.SetTriggerVibrationEXT", "GamePad.SetLightBarEXT", "GamePad.GetGUIDEXT", "GamePad.GetGyroEXT", "GamePad.GetPlayerIndexEXT", "GamePad.GetButtonLabelEXT", "GamePad.GetTouchpadFingerCountEXT"}),
         in("in-players", "Four Player Slots", "PlayerIndex, IsConnected, packet numbers and capabilities", "players", {"PlayerIndex", "GamePad.GetCapabilities", "GamePadCapabilities", "GamePad.GetNameEXT"}),
         in("in-text", "Text Input and Clipboard", "TextInputEXT characters, Backspace by polling, and copy/paste", "text", {"TextInputEXT.TextInput", "TextInputEXT.StartTextInput", "Clipboard.SetTextEXT", "Clipboard.GetTextEXT", "Clipboard.SetDataEXT", "Clipboard.GetMimeTypesEXT", "TextInputEXT.StartTextInputWithTypeEXT", "TextInputTypeEXT", "Clipboard.SetPrimarySelectionTextEXT", "Clipboard.GetPrimarySelectionTextEXT", "Clipboard.HasPrimarySelectionTextEXT"}, ApiOrigin::CnaExtension),
@@ -107,6 +107,7 @@ WingSpec InputWing()
             return r;
         }(),
     };
+    w.rooms[3].apis.push_back("GamePadCapabilities.GamePadType");
     return w;
 }
 

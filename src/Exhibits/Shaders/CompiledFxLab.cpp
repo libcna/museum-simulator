@@ -73,6 +73,14 @@ public:
             sourceEffect_ = v == 1;
             LoadPixelEffect();
         });
+        p.AddChoice("EffectProcessor.DebugMode", {"Auto", "Debug", "Optimize"}, 0, [this](int v) {
+            debugMode_ = v;
+            if (sourceEffect_) LoadPixelEffect();
+        });
+        p.AddToggle("EffectProcessor.Defines MUSEUM_EFFECT=1", false, [this](bool v) {
+            useDefine_ = v;
+            if (sourceEffect_) LoadPixelEffect();
+        });
 #endif
         p.AddToggle("Draw through the effect", true, [this](bool v) { use_ = v; });
         p.AddSlider("Weight (parameter)", 0.0f, 1.0f, weight_, [this](float v) { weight_ = v; }, "%.2f");
@@ -178,10 +186,14 @@ private:
                     importer.Import(S().contentRoot + "/Effects/blur2tap.fx", importerContext);
                 if (!source->getEffectCodeProperty().has_value()) throw std::runtime_error("EffectImporter returned no source");
                 Processors::EffectProcessor processor;
+                processor.setDebugModeProperty(static_cast<Processors::EffectProcessorDebugMode>(debugMode_));
+                processor.setDefinesProperty(useDefine_ ? "MUSEUM_EFFECT=1" : "");
                 PipelineSupport::ProcessorContext processorContext;
                 compiled = processor.Process(source, processorContext);
                 input = std::to_string(source->getEffectCodeProperty()->size()) + " byte FX source -> " +
-                        std::to_string(compiled->GetEffectCode().size()) + " byte FXB";
+                        std::to_string(compiled->GetEffectCode().size()) + " byte FXB; DebugMode " +
+                        std::to_string(static_cast<int>(processor.getDebugModeProperty())) + ", Defines " +
+                        (processor.getDefinesProperty().empty() ? "(empty)" : processor.getDefinesProperty());
             } else {
                 std::ifstream in(S().contentRoot + "/Effects/blur2tap.fxb", std::ios::binary);
                 const std::vector<char> raw((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
@@ -313,6 +325,8 @@ private:
     bool compiledSupported_ = false, vertexWrap_ = false;
 #ifdef MUSEUM_PIPELINE
     bool sourceEffect_ = false;
+    int debugMode_ = 0;
+    bool useDefine_ = false;
 #endif
     float weight_ = 0.5f;
     float vertexAmount_ = 0.42f;

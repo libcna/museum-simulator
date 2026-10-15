@@ -51,8 +51,9 @@ WingSpec ShaderWing()
         fb.params = {};
         fb.apis = {"Effect", "Effect(GraphicsDevice, byte[])", "Effect.Parameters", "Effect.Techniques", "EffectParameter", "EffectParameter.SetValue", "EffectParameter.GetValueSingle", "EffectParameter.GetValueVector2", "EffectTechnique", "EffectPass", "EffectParameterClass", "EffectParameterType",
                    "GraphicsCapability.CompiledEffects", "GraphicsDevice.VertexTextures", "GraphicsDevice.VertexSamplerStates", "SpriteBatch.Begin",
-                   "EffectContent", "EffectImporter", "EffectImporter.Import", "EffectProcessor", "EffectProcessor.Process",
-                   "CompiledEffectContent", "ContentCompiler.Compile(CompiledEffectContent)", "EffectReader"};
+                   "SamplerStateCollection.Item",
+                   "EffectContent", "EffectContent.EffectCode", "EffectImporter", "EffectImporter.Import", "EffectProcessor", "EffectProcessor.DebugMode", "EffectProcessor.Defines", "EffectProcessor.Process",
+                   "CompiledEffectContent", "CompiledEffectContent.GetEffectCode", "ContentCompiler.Compile(CompiledEffectContent)", "EffectReader"};
         fb.origin = ApiOrigin::Xna;
         w.rooms.push_back(fb);
     }

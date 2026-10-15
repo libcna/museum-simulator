@@ -24,6 +24,7 @@
 #include "Microsoft/Xna/Framework/Content/Pipeline/InvalidContentException.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/Serialization/Intermediate/IntermediateSerializer.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/XmlImporter.hpp"
+#include "Microsoft/Xna/Framework/Content/ContentSerializerCollectionItemNameAttribute.hpp"
 #include "Microsoft/Xna/Framework/Vector3.hpp"
 #include "System/Xml/XmlReader.hpp"
 #include "System/Xml/XmlWriter.hpp"
@@ -97,6 +98,44 @@ public:
     }
 };
 
+// XNA exposes IntermediateSerializer.GetTypeSerializer to custom ContentTypeSerializer classes:
+// the framework owns the serializer instance and hands it to their IntermediateReader/Writer.
+class SerializerProbe final : public Xna::ContentItem {
+public:
+    static constexpr std::string_view XnaTypeName = "Museum.SerializerProbe";
+    std::int32_t value = 42;
+
+    [[nodiscard]] const std::string& GetTypeName() const override
+    {
+        static const std::string name{XnaTypeName};
+        return name;
+    }
+};
+
+std::string serializerProbeResult = "-";
+
+class SerializerProbeSerializer final : public Intermediate::ContentTypeSerializer<SerializerProbe> {
+protected:
+    void Serialize(Intermediate::IntermediateWriter& output, const std::shared_ptr<SerializerProbe>& value,
+                   const Content::ContentSerializerAttribute& format) override
+    {
+        (void)output.getSerializerProperty().GetTypeSerializer(System::Type::From<std::int32_t>());
+        serializerProbeResult = "writer resolved Int32";
+        output.WriteRawObject<std::int32_t>(value->value, format);
+    }
+
+    [[nodiscard]] std::shared_ptr<SerializerProbe> Deserialize(
+        Intermediate::IntermediateReader& input, const Content::ContentSerializerAttribute& format,
+        std::shared_ptr<SerializerProbe> existing) override
+    {
+        (void)input.getSerializerProperty().GetTypeSerializer(System::Type::From<std::int32_t>());
+        if (!existing) existing = std::make_shared<SerializerProbe>();
+        existing->value = input.ReadRawObject<std::int32_t>(format);
+        serializerProbeResult += "; reader resolved Int32";
+        return existing;
+    }
+};
+
 template <typename T>
 std::string ToXml(const std::shared_ptr<T>& value)
 {
@@ -155,6 +194,7 @@ public:
         p.AddReadout("Ignored member in the file", [this] { return secretInFile_; });
         p.AddChoice("Damage the document", {"none", "unknown element", "number that is not a number", "missing end tag", "wrong type name"}, 0, [this](int v) { damage_ = v; Rebuild(); });
         p.AddReadout("IntermediateSerializer.Serialize", [this] { return std::to_string(xml_.size()) + " bytes"; });
+        p.AddReadout("GetTypeSerializer / collection item attribute", [this] { return serializer_; });
         p.AddReadout("XmlImporter.Attribute", [this] { return importerAttribute_; });
         p.AddReadout("XmlImporter.Import", [this] { return imported_; });
         p.AddReadout("Deserialize", [this] { return verdict_; });
@@ -172,6 +212,17 @@ public:
     {
 #ifdef MUSEUM_PIPELINE
         item_ = std::make_shared<Plaque>();
+        static const bool probeRegistered = [] {
+            (void)Intermediate::IntermediateSerializer::AddTypeSerializer<SerializerProbeSerializer>();
+            return true;
+        }();
+        (void)probeRegistered;
+        serializerProbeResult = "-";
+        const std::shared_ptr<SerializerProbe> probe = std::make_shared<SerializerProbe>();
+        const std::shared_ptr<SerializerProbe> probeBack = FromXml<SerializerProbe>(ToXml(probe));
+        serializer_ = serializerProbeResult + "; value " + std::to_string(probeBack->value);
+        const Content::ContentSerializerCollectionItemNameAttribute itemName("Tag");
+        serializer_ += "; CollectionItemName = " + itemName.getCollectionItemNameProperty();
         const Xna::ContentImporterAttribute attribute = Xna::XmlImporter::Attribute();
         importerAttribute_ = attribute.getFileExtensionsProperty()[0] + ", \"" +
                              attribute.getDisplayNameProperty() + "\", default processor: " +
@@ -324,7 +375,7 @@ private:
     std::shared_ptr<Plaque> item_;
     std::string xml_;
     std::vector<std::string> shownLines_;
-    std::string verdict_ = "-", roundTrip_ = "-", imported_ = "-", importerAttribute_ = "-";
+    std::string verdict_ = "-", roundTrip_ = "-", imported_ = "-", importerAttribute_ = "-", serializer_ = "-";
     bool ok_ = true, annotated_ = false;
     int damage_ = 0;
     std::string secretInFile_ = "-";

@@ -114,6 +114,12 @@ public:
     explicit MemoryContentManager(System::IServiceProvider* services) : ContentManager(services) { RouteLoadsThroughOpenStreamEXT(true); }
     std::vector<std::uint8_t> bytes;
 
+    template<typename T>
+    [[nodiscard]] T ReadFresh(const std::string& assetName)
+    {
+        return ReadAsset<T>(assetName, {});
+    }
+
 protected:
     [[nodiscard]] std::unique_ptr<System::IO::Stream> OpenStream(const std::string&) override
     {

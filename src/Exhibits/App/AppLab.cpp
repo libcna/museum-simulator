@@ -59,6 +59,11 @@ public:
         : DrawableGameComponent(game), s_(s), name_(std::move(name)), color_(color), x_(x), y_(y)
     {
     }
+    void Initialize() override
+    {
+        DrawableGameComponent::Initialize();
+        initialized = true;
+    }
     void Update(GameTime& gameTime) override
     {
         GameComponent::Update(gameTime);
@@ -83,6 +88,7 @@ public:
     }
     int updates = 0;
     int lastUpdateOrder = 0;
+    bool initialized = false;
     inline static int updateSerial = 0;
 
 private:
@@ -220,7 +226,7 @@ public:
                 p.AddReadout("Failure message", [this] { return lastError_; });
                 break;
             case Mode::Components:
-                p.AddReadout("Game.Components added / removed", [this] { return std::to_string(addedCount_) + " / " + std::to_string(removedCount_); });
+                p.AddReadout("Game.Components added / removed", [this] { return std::to_string(addedCount_) + " / " + std::to_string(removedCount_) + ", event component " + (lastComponentEventHadComponent_ ? "non-null" : "-"); });
                 p.AddToggle("Red component: Visible", true, [this](bool v) { SetVisible(0, v); });
                 p.AddToggle("Green component: Visible", true, [this](bool v) { SetVisible(1, v); });
                 p.AddToggle("Blue component: Visible", true, [this](bool v) { SetVisible(2, v); });
@@ -230,6 +236,9 @@ public:
                 p.AddToggle("Green component: Enabled (Update)", true, [this](bool v) { if (components_.size() > 1) components_[1]->setEnabledProperty(v); });
                 p.AddHeading("Game.Components and Game.Services");
                 p.AddReadout("Components registered", [this] { return std::to_string(S().game != nullptr ? S().game->getComponentsProperty().getCountProperty() : 0); });
+                p.AddReadout("IGameComponent.Initialize", [this] {
+                    return std::to_string(std::count_if(components_.begin(), components_.end(), [](const auto& c) { return c->initialized; })) + " of " + std::to_string(components_.size());
+                });
                 p.AddReadout("IGameComponent: also IUpdateable / IDrawable", [this] {
                     if (S().game == nullptr) return std::string("-");
                     int updateable = 0, drawable = 0, total = 0;
@@ -269,8 +278,14 @@ public:
             });
         }
         if (mode_ == Mode::Components && S().game != nullptr) {
-            addedToken_ = S().game->getComponentsProperty().ComponentAdded.Add([this](System::Object*, const GameComponentCollectionEventArgs&) { ++addedCount_; });
-            removedToken_ = S().game->getComponentsProperty().ComponentRemoved.Add([this](System::Object*, const GameComponentCollectionEventArgs&) { ++removedCount_; });
+            addedToken_ = S().game->getComponentsProperty().ComponentAdded.Add([this](System::Object*, const GameComponentCollectionEventArgs& e) {
+                ++addedCount_;
+                lastComponentEventHadComponent_ = e.getGameComponentProperty() != nullptr;
+            });
+            removedToken_ = S().game->getComponentsProperty().ComponentRemoved.Add([this](System::Object*, const GameComponentCollectionEventArgs& e) {
+                ++removedCount_;
+                lastComponentEventHadComponent_ = e.getGameComponentProperty() != nullptr;
+            });
         }
         if (mode_ == Mode::GameTimeLab) graph_ = std::make_unique<LiveScreen>(S(), 640, 320);
         if (mode_ == Mode::Viewport) graph_ = std::make_unique<LiveScreen>(S(), 640, 360);
@@ -604,6 +619,7 @@ private:
     std::size_t resetToken_ = 0, resettingToken_ = 0, addedToken_ = 0, removedToken_ = 0, lostToken_ = 0;
     float minDepth_ = 0.0f, maxDepth_ = 1.0f;
     int resetCount_ = 0, resettingCount_ = 0, addedCount_ = 0, removedCount_ = 0, lostCount_ = 0;
+    bool lastComponentEventHadComponent_ = false;
     Gizmos gizmos_;
     float time_ = 0.0f, delay_ = 0.0f, timeBall_ = 0.0f, frameBall_ = 0.0f;
     long long frames_ = 0;

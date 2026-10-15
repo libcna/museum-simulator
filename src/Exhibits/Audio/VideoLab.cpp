@@ -104,7 +104,7 @@ public:
                 std::snprintf(buf, sizeof buf, "%.1f / %.1f s", player_->getPlayPositionProperty().getTotalSecondsProperty(), video_->getDurationProperty().getTotalSecondsProperty());
                 position_ = buf;
                 std::snprintf(buf, sizeof buf, "%d x %d, %.0f fps", video_->getWidthProperty(), video_->getHeightProperty(), static_cast<double>(video_->getFramesPerSecondProperty()));
-                info_ = buf;
+                info_ = std::string(buf) + ", player video " + (player_->getVideoProperty() == video_.get() ? "same" : "none") + ", disposed " + (player_->getIsDisposedProperty() ? "yes" : "no");
             }
             frames_ = static_cast<long long>(player_->GetFrameGenerationEXT());
             frame_ = player_->getStateProperty() == Media::MediaState::Stopped ? nullptr : player_->GetTexture();

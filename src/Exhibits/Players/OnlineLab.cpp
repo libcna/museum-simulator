@@ -68,6 +68,7 @@ public:
                 p.AddButton("Guide.ShowPlayerReview(first friend)", [this] { WithFriend("ShowPlayerReview", [](FriendGamer* f) { Guide::ShowPlayerReview(PlayerIndex::One, f); }); });
                 p.AddButton("Guide.ShowFriendRequest(first friend)", [this] { WithFriend("ShowFriendRequest", [](FriendGamer* f) { Guide::ShowFriendRequest(PlayerIndex::One, f); }); });
                 p.AddReadout("GetFriends().Count", [this] { return std::to_string(friends_.size()); });
+                p.AddReadout("FriendCollection.IsDisposed", [this] { return friendCollectionState_; });
                 break;
             case Mode::Messages:
                 p.AddButton("Guide.ShowMessages", [this] { Open("ShowMessages", [] { Guide::ShowMessages(PlayerIndex::One); }); });
@@ -217,6 +218,11 @@ private:
             auto* gamers = Gamer::getSignedInGamersProperty();
             signedIn_ = std::to_string(gamers != nullptr ? gamers->getCountProperty() : 0);
             partySize_ = "-";
+            friendCollectionState_ = "no signed-in gamer";
+            if (gamers != nullptr && gamers->getCountProperty() > 0) {
+                FriendCollection list = (*gamers)[0]->GetFriends();
+                friendCollectionState_ = list.getIsDisposedProperty() ? "true" : "false (live)";
+            }
             for (int i = 0; gamers != nullptr && i < gamers->getCountProperty(); ++i) {
                 SignedInGamer* g = (*gamers)[i];
                 Card c;
@@ -292,6 +298,7 @@ private:
 
     std::vector<Card> cards_;
     std::vector<Friend> friends_;
+    std::string friendCollectionState_ = "-";
     std::string service_ = "-", signedIn_ = "0", partySize_ = "-", note_ = "-";
     bool configured_ = false;
     float refresh_ = 0.0f;

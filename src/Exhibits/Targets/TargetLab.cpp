@@ -137,6 +137,7 @@ public:
                 p.AddToggle("Mip chain on the cube", false, [this](bool v) { cubeMips_ = v; dirty_ = true; });
                 p.AddReadout("RenderTargetCube", [this] { return cube_ ? std::to_string(cube_->getWidthProperty()) + " px per face, 6 faces, " + std::to_string(cube_->getLevelCountProperty()) + " level(s)" : cubeStatus_; });
                 p.AddReadout("Faces drawn per refresh", [] { return std::string("6 (+X -X +Y -Y +Z -Z)"); });
+                p.AddReadout("RenderTargetBinding target / CubeMapFace", [this] { return cubeBinding_; });
                 break;
             case Mode::Bloom:
                 p.AddSlider("Threshold (ReverseSubtract colour)", 0.2f, 0.95f, bloomThreshold_, [this](float v) { bloomThreshold_ = v; });
@@ -474,6 +475,9 @@ private:
             const DrawContext sub{d, ctx.fx, sceneView, ctx.time, true};
             ctx.fx.SetCamera(view, proj);
             d.SetRenderTarget(cube_.get(), f.face);
+            const std::vector<RenderTargetBinding> bound = d.GetRenderTargets();
+            cubeBinding_ = bound.size() == 1 && bound[0].getRenderTargetProperty() == cube_.get() && bound[0].getCubeMapFaceProperty() == f.face
+                ? "matches the bound face" : "MISMATCH";
             d.Clear(Color(120, 170, 225, 255), 1.0f);
             RenderStates::SetOpaque3D(d);
             scene(sub);
@@ -684,6 +688,7 @@ private:
     std::unique_ptr<RenderTargetCube> cube_;
     std::unique_ptr<EnvironmentMapEffect> env_;
     std::string cubeStatus_ = "-";
+    std::string cubeBinding_ = "waiting for a refresh";
     int cubeSize_ = 64, cubeEvery_ = 1, frame_ = 0;
     float cubeAmount_ = 1.0f, cubeFresnel_ = 0.0f;
     bool cubeMips_ = false;

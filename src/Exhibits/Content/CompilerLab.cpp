@@ -66,6 +66,7 @@ public:
         p.AddReadout("Processed texture", [this] { return processed_; });
         p.AddReadout("Compiled .xnb", [this] { return size_; });
         p.AddReadout("Root reader", [this] { return reader_; });
+        p.AddReadout("ContentCompiler.GetTypeWriter", [this] { return writer_; });
         p.AddReadout("Header", [this] { return header_; });
         p.AddReadout("Loaded back", [this] { return loaded_; });
 #else
@@ -154,6 +155,7 @@ private:
             processed_ = std::to_string(chain[0]->getWidthProperty()) + " x " + std::to_string(chain[0]->getHeightProperty()) + ", " + std::to_string(chain.getCountProperty()) + " level(s), ";
 
             Compiler::ContentCompiler compiler;
+            writer_ = compiler.GetTypeWriter(System::Type::From<std::int32_t>()) != nullptr ? "Int32 writer resolved" : "no Int32 writer";
             Compiler::CompileOptions options;
             options.targetPlatform = platform_ == 0 ? Xna::TargetPlatform::Windows : platform_ == 1 ? Xna::TargetPlatform::WindowsPhone : Xna::TargetPlatform::Xbox360;
             options.targetProfile = hidef_ ? GraphicsProfile::HiDef : GraphicsProfile::Reach;
@@ -210,14 +212,14 @@ private:
             manager_->bytes = bytes_;
             manager_->Unload();
             if (shape_ == 0) {
-                loadedTexture_ = std::make_unique<Texture2D>(manager_->Load<Texture2D>("compiled"));
+                loadedTexture_ = std::make_unique<Texture2D>(manager_->ReadFresh<Texture2D>("compiled"));
                 const Texture2D& t = *loadedTexture_;
                 loaded_ = "loaded as Texture2D " + std::to_string(t.getWidthProperty()) + " x " + std::to_string(t.getHeightProperty()) + ", " + std::to_string(t.getLevelCountProperty()) + " level(s)";
             } else if (shape_ == 1) {
-                loadedCube_ = std::make_unique<TextureCube>(manager_->Load<TextureCube>("compiled"));
+                loadedCube_ = std::make_unique<TextureCube>(manager_->ReadFresh<TextureCube>("compiled"));
                 loaded_ = "loaded as TextureCube, size " + std::to_string(loadedCube_->getSizeProperty()) + ", " + std::to_string(loadedCube_->getLevelCountProperty()) + " level(s)";
             } else {
-                loadedVolume_ = manager_->Load<std::shared_ptr<Texture3D>>("compiled");
+                loadedVolume_ = manager_->ReadFresh<std::shared_ptr<Texture3D>>("compiled");
                 loaded_ = "loaded as Texture3D " + std::to_string(loadedVolume_->getWidthProperty()) + " x " + std::to_string(loadedVolume_->getHeightProperty()) + " x " + std::to_string(loadedVolume_->getDepthProperty()) + ", " + std::to_string(loadedVolume_->getLevelCountProperty()) + " level(s)";
             }
         } catch (const std::exception& e) {
@@ -232,7 +234,7 @@ private:
     std::unique_ptr<TextureCube> loadedCube_;
     std::shared_ptr<Texture3D> loadedVolume_;
     std::vector<std::uint8_t> bytes_;
-    std::string processed_ = "-", size_ = "-", reader_ = "-", header_ = "-", flags_ = "-", loaded_ = "-", error_;
+    std::string processed_ = "-", size_ = "-", reader_ = "-", writer_ = "-", header_ = "-", flags_ = "-", loaded_ = "-", error_;
     int source_ = 0, shape_ = 0, compression_ = 0, platform_ = 0;
     bool mipmaps_ = false, hidef_ = false, dirty_ = true;
 #endif

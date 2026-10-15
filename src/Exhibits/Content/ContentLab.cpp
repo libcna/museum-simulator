@@ -20,6 +20,7 @@
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
 #include "Microsoft/Xna/Framework/Audio/SoundEffect.hpp"
+#include "Microsoft/Xna/Framework/BoundingSphere.hpp"
 #include "Microsoft/Xna/Framework/Content/ContentLoadException.hpp"
 #include "Microsoft/Xna/Framework/Content/ContentReader.hpp"
 #include "Microsoft/Xna/Framework/Content/ContentTypeReader.hpp"
@@ -30,6 +31,7 @@
 #include "Microsoft/Xna/Framework/Graphics/Model.hpp"
 #include "Microsoft/Xna/Framework/Graphics/RenderTarget2D.hpp"
 #include "Microsoft/Xna/Framework/Graphics/Texture2D.hpp"
+#include "Microsoft/Xna/Framework/Quaternion.hpp"
 #include "Microsoft/Xna/Framework/Storage/StorageContainer.hpp"
 #include "Microsoft/Xna/Framework/Storage/StorageDevice.hpp"
 #include "Microsoft/Xna/Framework/TitleContainer.hpp"
@@ -145,7 +147,14 @@ struct Menu {
     Color accent;          // ReadColor
     Vector2 plate;         // ReadVector2: the plate's size in centimetres
     Vector4 nutrition;     // ReadVector4: protein, fat, carbohydrate, fibre in grams
+    Vector3 offset;        // ReadVector3
+    Quaternion rotation;   // ReadQuaternion
+    Matrix transform;      // ReadMatrix
+    BoundingSphere bounds; // ReadBoundingSphere
     std::string assetName; // ContentReader.AssetName: the name the asset was loaded under
+    bool hasManager = false;
+    int version = 0;
+    char platform = '?';
 };
 
 class MenuReader final : public ContentTypeReader<Menu> {
@@ -164,7 +173,14 @@ protected:
         m.accent = input.ReadColor();
         m.plate = input.ReadVector2();
         m.nutrition = input.ReadVector4();
+        m.offset = input.ReadVector3();
+        m.rotation = input.ReadQuaternion();
+        m.transform = input.ReadMatrix();
+        m.bounds = input.ReadBoundingSphere();
         m.assetName = input.getAssetNameProperty();
+        m.hasManager = input.getContentManagerProperty() != nullptr;
+        m.version = input.getVersionProperty();
+        m.platform = input.getPlatformProperty();
         return m;
     }
 };
@@ -193,6 +209,7 @@ public:
                 p.AddButton("Load all of them again", [this] { rows_.clear(); LoadTexture("Textures/brick"); LoadTexture("Textures/marble"); LoadSound("Audio/chirp"); LoadModel("Models/torus"); LoadModel("Models/robot"); });
                 p.AddButton("Clear", [this] { rows_.clear(); });
                 p.AddReadout("Content root", [this] { return S().contentRoot; });
+                p.AddReadout("ContentManager.ServiceProvider", [this] { return manager_ != nullptr && manager_->getServiceProviderProperty() != nullptr ? std::string("present") : std::string("null"); });
                 break;
             case Mode::Cache:
                 p.AddButton("Load brick (this manager)", [this] { CacheLoad(false); });
@@ -243,7 +260,11 @@ public:
                 p.AddButton("Load Custom/menu (reader not registered yet)", [this] { ReaderLoad(false); });
                 p.AddButton("Register MenuReader, then load Custom/menu", [this] { ReaderLoad(true); });
                 p.AddButton("Remove the reader again", [this] { ReaderRemove(); });
-                p.AddReadout("MenuReader registered", [this] { return std::string(ContentTypeReaderManager::IsRegistered("Museum.MenuReader") ? "yes" : "no"); });
+                p.AddReadout("MenuReader registered / GetTypeReader", [this] {
+                    const bool registered = ContentTypeReaderManager::IsRegistered("Museum.MenuReader");
+                    const bool resolved = ContentTypeReaderManager{}.GetTypeReader(System::Type::From<Menu>()) != nullptr;
+                    return std::string(registered ? "yes" : "no") + " / " + (resolved ? "Menu resolved" : "not associated yet");
+                });
                 p.AddReadout("The file records", [] { return std::string("reader \"Museum.MenuReader\", version 0"); });
                 break;
             case Mode::Resource:
@@ -261,6 +282,7 @@ public:
                 p.AddButton("Dispose them all", [this] { DisposeAll(); });
                 p.AddButton("Content: Load then Unload()", [this] { UnloadDemo(); });
                 p.AddReadout("Device events: ResourceCreated / ResourceDestroyed", [this] { return std::to_string(deviceCreated_) + " / " + std::to_string(deviceDestroyed_); });
+                p.AddReadout("Last event Resource / Name / Tag", [this] { return lastResourceEvent_; });
                 p.AddReadout("Created / disposed / alive", [this] { return std::to_string(created_) + " / " + std::to_string(disposedEvents_) + " / " + std::to_string(Alive()); });
                 p.AddReadout("Texture memory alive", [this] { return Kb(static_cast<std::uintmax_t>(Alive()) * kTexDim * kTexDim * 4); });
                 break;
@@ -271,8 +293,14 @@ public:
     void OnScreenLoaded() override
     {
         if (mode_ == Mode::Lifetime) {
-            createdToken_ = S().device->ResourceCreated.Add([this](System::Object*, const ResourceCreatedEventArgs&) { ++deviceCreated_; });
-            destroyedToken_ = S().device->ResourceDestroyed.Add([this](System::Object*, const ResourceDestroyedEventArgs&) { ++deviceDestroyed_; });
+            createdToken_ = S().device->ResourceCreated.Add([this](System::Object*, const ResourceCreatedEventArgs& e) {
+                ++deviceCreated_;
+                lastResourceEvent_ = std::string(e.getResourceProperty() != nullptr ? "non-null" : "null") + " / - / -";
+            });
+            destroyedToken_ = S().device->ResourceDestroyed.Add([this](System::Object*, const ResourceDestroyedEventArgs& e) {
+                ++deviceDestroyed_;
+                lastResourceEvent_ = "- / " + (e.getNameProperty().empty() ? std::string("(empty)") : e.getNameProperty()) + " / " + (e.getTagProperty() != nullptr ? "non-null" : "null");
+            });
             subscribed_ = true;
         }
         if (mode_ == Mode::Storage)
@@ -902,10 +930,14 @@ private:
         }, !registerFirst && !ContentTypeReaderManager::IsRegistered("Museum.MenuReader"));
         if (ContentTypeReaderManager::IsRegistered("Museum.MenuReader")) {
             // The rest of what the reader pulled out of the same file, through the other ContentReader calls.
-            Attempt("ReadColor, ReadVector2, ReadVector4, AssetName", [&](Row&) {
+            Attempt("ReadColor, ReadVector2/3/4, Quaternion", [&](Row&) {
                 const Menu menu = m->Load<Menu>("Custom/menu");
                 return "colour " + std::to_string(menu.accent.getRProperty()) + "," + std::to_string(menu.accent.getGProperty()) + "," + std::to_string(menu.accent.getBProperty()) + "  Vector2 " + Fmt(menu.plate.X, "%.0f") + "x" + Fmt(menu.plate.Y, "%.0f") + "  Vector4 " + Fmt(menu.nutrition.X, "%.0f") + "/" +
-                       Fmt(menu.nutrition.Y, "%.0f") + "/" + Fmt(menu.nutrition.Z, "%.0f") + "/" + Fmt(menu.nutrition.W, "%.0f") + "  name " + menu.assetName;
+                       Fmt(menu.nutrition.Y, "%.0f") + "/" + Fmt(menu.nutrition.Z, "%.0f") + "/" + Fmt(menu.nutrition.W, "%.0f") + "  Vector3 " + Fmt(menu.offset.X, "%.0f") + "," + Fmt(menu.offset.Y, "%.0f") + "," + Fmt(menu.offset.Z, "%.0f") + "  Quaternion.W " + Fmt(menu.rotation.W);
+            });
+            Attempt("ReadMatrix, ReadBoundingSphere, reader context", [&](Row&) {
+                const Menu menu = m->Load<Menu>("Custom/menu");
+                return "translation " + Fmt(menu.transform.M41, "%.0f") + "," + Fmt(menu.transform.M42, "%.0f") + "," + Fmt(menu.transform.M43, "%.0f") + "  sphere r " + Fmt(menu.bounds.Radius) + "  asset " + menu.assetName + "  manager " + (menu.hasManager ? "yes" : "no") + "  XNB v" + std::to_string(menu.version) + " platform '" + std::string(1, menu.platform) + "'";
             });
         }
         if (rows_.size() > 6) rows_.erase(rows_.begin());
@@ -927,6 +959,7 @@ private:
             Tracked t;
             t.texture = std::make_unique<Texture2D>(*S().device, kTexDim, kTexDim);
             const std::size_t index = tex_.size();
+            t.texture->setNameProperty("lifetime texture " + std::to_string(index));
             t.texture->Disposing += [this, index](System::Object*, const System::EventArgs&) {
                 if (index < tex_.size()) tex_[index].dead = true;
                 ++disposedEvents_;
@@ -981,6 +1014,7 @@ private:
     int loads_ = 0, created_ = 0, disposedEvents_ = 0, saveCounter_ = 0;
     bool firstLoadDone_ = false, compiledPresent_ = false;
     std::string lifetimeNote_ = "press 'Create 64 textures'";
+    std::string lastResourceEvent_ = "- / - / -";
 };
 
 }  // namespace

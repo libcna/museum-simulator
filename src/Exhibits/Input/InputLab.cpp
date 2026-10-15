@@ -119,6 +119,11 @@ public:
                 p.AddReadout("Position X, Y", [this] { return std::to_string(mx_) + ", " + std::to_string(my_); });
                 p.AddReadout("Wheel (vertical)", [this] { return std::to_string(wheel_); });
                 p.AddReadout("Wheel (horizontal)", [this] { return std::to_string(hwheel_); });
+                p.AddButton("Mouse.SetPosition (window centre)", [this] {
+                    const Viewport vp = S().device->getViewportProperty();
+                    Mouse::SetPosition(vp.getWidthProperty() / 2, vp.getHeightProperty() / 2);
+                });
+                p.AddReadout("Mouse.WindowHandle", [] { return std::to_string(Mouse::getWindowHandleProperty()); });
                 p.AddToggle("Capture the mouse (SetCaptureEXT)", false, [this](bool v) { try { captured_ = Mouse::SetCaptureEXT(v) ? v : false; } catch (const std::exception&) { captured_ = false; } });
                 p.AddReadout("Mouse capture", [this] { return std::string(captured_ ? "on: events keep coming while a button is held outside the window" : "off"); });
                 p.AddReadout("Relative mode", [] { return std::string(Mouse::getIsRelativeMouseModeEXTProperty() ? "on: X, Y are movement" : "off: X, Y are window pixels"); });

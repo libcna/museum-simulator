@@ -39,6 +39,14 @@ def main():
     body += bytes([255, 168, 60, 255])                               # ReadColor: the accent colour (R, G, B, A)
     body += struct.pack("<2f", 26.0, 26.0)                           # ReadVector2: the plate's size in centimetres
     body += struct.pack("<4f", 24.0, 11.0, 62.0, 8.0)                # ReadVector4: protein, fat, carbohydrate, fibre in grams
+    body += struct.pack("<3f", 1.0, 2.0, -3.0)                       # ReadVector3: serving offset
+    body += struct.pack("<4f", 0.0, 0.38268343, 0.0, 0.92387953)     # ReadQuaternion: 45 degrees about Y
+    body += struct.pack("<16f",                                      # ReadMatrix: identity translated by (4, 5, 6)
+                        1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        4.0, 5.0, 6.0, 1.0)
+    body += struct.pack("<4f", 1.0, 2.0, 3.0, 4.5)                  # ReadBoundingSphere: centre and radius
     header = b"XNBw" + bytes([5, 0]) + struct.pack("<i", 10 + len(body))   # platform w, version 5, uncompressed, file size
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "wb") as f:

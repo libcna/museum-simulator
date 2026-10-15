@@ -27,7 +27,7 @@ WingSpec ContentWing()
         return r;
     };
     w.rooms = {
-        ct("ct-load", "Loading Assets", "ContentManager.Load for textures, sounds and models, timed", "load", {"ContentManager.Load<Texture2D>", "ContentManager.Load<SoundEffect>", "ContentManager.Load<Model>", "ContentManager.RootDirectory"}),
+        ct("ct-load", "Loading Assets", "ContentManager.Load for textures, sounds and models, timed", "load", {"ContentManager.Load<Texture2D>", "ContentManager.Load<SoundEffect>", "ContentManager.Load<Model>", "ContentManager.RootDirectory", "ContentManager.ServiceProvider"}),
         ct("ct-cache", "The ContentManager Cache", "Cached loads, Unload and separate managers", "cache", {"ContentManager.Load", "ContentManager.Unload", "GraphicsResource.IsDisposed"}),
         ct("ct-formats", "Loose Image Formats", "PNG, JPEG, BMP, TGA, GIF and QOI decoded without a build step, a DXT1 DDS read from a stream (and TIFF, which is not)", "formats", {"ContentManager.Load<Texture2D>", "Texture2D.GetData", "Texture2D.DDSFromStreamEXT", "SurfaceFormat.Dxt1"}, ApiOrigin::CnaExtension),
         ct("ct-failure", "When Loading Fails", "ContentLoadException for missing, mistyped and corrupt assets", "failure", {"ContentLoadException", "ContentManager.Load"}),
@@ -42,7 +42,7 @@ WingSpec ContentWing()
             r.depth = 13;
             r.height = 5.0f;
             r.theme = "workshop";
-            r.apis = {"IntermediateSerializer", "IntermediateSerializer.Serialize", "IntermediateSerializer.Deserialize", "XmlImporter", "XmlImporter.Import", "XmlImporter.Attribute", "ContentImporterAttribute", "ContentItem", "ContentTypeDescriptor", "InvalidContentException", "ContentSerializerAttribute", "ContentSerializerIgnoreAttribute", "ContentSerializerCollectionItemNameAttribute"};
+            r.apis = {"IntermediateSerializer", "IntermediateSerializer.Serialize", "IntermediateSerializer.Deserialize", "IntermediateSerializer.GetTypeSerializer", "XmlImporter", "XmlImporter.Import", "XmlImporter.Attribute", "ContentImporterAttribute", "ContentItem", "ContentTypeDescriptor", "InvalidContentException", "ContentSerializerAttribute", "ContentSerializerIgnoreAttribute", "ContentSerializerCollectionItemNameAttribute", "ContentSerializerCollectionItemNameAttribute.CollectionItemName"};
             r.origin = ApiOrigin::Xna;
             return r;
         }(),
@@ -56,7 +56,7 @@ WingSpec ContentWing()
             r.depth = 13;
             r.height = 5.0f;
             r.theme = "workshop";
-            r.apis = {"TextureImporter", "TextureProcessor", "TextureProcessor.ColorKeyEnabled", "TextureProcessor.PremultiplyAlpha", "TextureProcessor.GenerateMipmaps", "TextureProcessor.ResizeToPowerOfTwo",
+            r.apis = {"TextureImporter", "TextureImporter.Import", "TextureProcessor", "TextureProcessor.Process", "TextureProcessor.ColorKeyEnabled", "TextureProcessor.ColorKeyColor", "TextureProcessor.PremultiplyAlpha", "TextureProcessor.GenerateMipmaps", "TextureProcessor.ResizeToPowerOfTwo",
                       "TextureProcessor.TextureFormat", "TextureProcessorOutputFormat", "Texture2DContent", "MipmapChain", "BitmapContent", "PixelBitmapContent"};
             r.origin = ApiOrigin::Xna;
             return r;
@@ -71,7 +71,7 @@ WingSpec ContentWing()
             r.depth = 13;
             r.height = 5.0f;
             r.theme = "workshop";
-            r.apis = {"FontDescription", "FontDescriptionImporter", "FontDescription.FontName", "FontDescription.Size", "FontDescription.Style", "FontDescriptionProcessor", "FontDescriptionStyle", "SpriteFontContent", "FontDescription.Characters", "FontDescription.DefaultCharacter", "ContentIdentity", "SpriteFont", "SpriteFont.MeasureString", "SpriteBatch.DrawString"};
+            r.apis = {"FontDescription", "FontDescriptionImporter", "FontDescriptionImporter.Import", "FontDescription.FontName", "FontDescription.Size", "FontDescription.Spacing", "FontDescription.Style", "FontDescription.UseKerning", "FontDescriptionProcessor", "FontDescriptionStyle", "SpriteFontContent", "FontDescription.Characters", "FontDescription.DefaultCharacter", "ContentIdentity", "SpriteFont", "SpriteFont.MeasureString", "SpriteBatch.DrawString"};
             r.origin = ApiOrigin::Xna;
             return r;
         }(),
@@ -116,8 +116,8 @@ WingSpec ContentWing()
             r.depth = 13;
             r.height = 5.0f;
             r.theme = "workshop";
-            r.apis = {"ContentCompiler", "ContentCompiler.Compile", "CompileOptions", "CompileOptions.targetPlatform", "CompileOptions.targetProfile", "CompileOptions.compressContent", "TargetPlatform", "Texture2DContent", "TextureProcessor",
-                      "TextureImporter", "ContentManager.OpenStream", "ContentManager.RouteLoadsThroughOpenStreamEXT", "ContentManager.Load", "XnbFileOptions", "XnbOutputCompression", "XnbAssetWriteResult"};
+            r.apis = {"ContentCompiler", "ContentCompiler.Compile", "ContentCompiler.GetTypeWriter", "CompileOptions", "CompileOptions.targetPlatform", "CompileOptions.targetProfile", "CompileOptions.compressContent", "TargetPlatform", "Texture2DContent", "TextureProcessor",
+                      "TextureImporter", "ContentManager.OpenStream", "ContentManager.ReadAsset", "ContentManager.RouteLoadsThroughOpenStreamEXT", "XnbFileOptions", "XnbOutputCompression", "XnbAssetWriteResult"};
             r.origin = ApiOrigin::Xna;
             return r;
         }(),
@@ -131,7 +131,7 @@ WingSpec ContentWing()
             r.depth = 13;
             r.height = 5.0f;
             r.theme = "workshop";
-            r.apis = {"WavImporter", "Mp3Importer", "Mp3Importer.Import", "Mp3Importer.Attribute", "ContentImporterAttribute", "AudioContent", "AudioContent.Format", "AudioContent.Data", "AudioFormat", "AudioFormat.SampleRate", "AudioFormat.ChannelCount", "AudioFormat.BitsPerSample",
+            r.apis = {"WavImporter", "WavImporter.Import", "Mp3Importer", "Mp3Importer.Import", "Mp3Importer.Attribute", "ContentImporterAttribute", "AudioContent", "AudioContent.Format", "AudioContent.Data", "AudioFormat", "AudioFormat.SampleRate", "AudioFormat.ChannelCount", "AudioFormat.BitsPerSample",
                       "AudioFormat.NativeWaveFormat", "ConversionQuality", "SoundEffectProcessor", "SoundEffectProcessor.Quality", "SoundEffectContent", "SongProcessor", "SongContent", "SoundEffect.FromStream", "ContentCompiler.Compile(SoundEffectContent)", "ContentCompiler.Compile(SongContent)"};
             r.origin = ApiOrigin::Xna;
             return r;
@@ -139,10 +139,10 @@ WingSpec ContentWing()
         ct("ct-storage", "Title Files and Saved Data", "TitleContainer.OpenStream, StorageDevice and StorageContainer", "storage", {"TitleContainer.OpenStream", "StorageDevice", "StorageDevice.BeginShowSelector", "StorageDevice.EndShowSelector", "StorageDevice.BeginOpenContainer", "StorageDevice.EndOpenContainer", "StorageDevice.IsConnected", "StorageDevice.DeviceChanged", "StorageDevice.SetAppNameEXT", "StorageContainer", "StorageContainer.DisplayName", "StorageContainer.CreateFile", "StorageContainer.OpenFile", "StorageContainer.FileExists", "StorageContainer.DeleteFile", "StorageContainer.CreateDirectory", "StorageContainer.DeleteDirectory", "StorageContainer.DirectoryExists", "StorageContainer.GetFileNames", "StorageContainer.GetDirectoryNames", "StorageDevice.GetStorageRootEXT", "StorageDevice.DeleteContainer", "StorageDevice.TotalSpace", "StorageDevice.FreeSpace"}),
         ct("ct-custom", "Teaching ContentManager a New Type", "Your own types loaded through ContentManager: a loose-file reader and a named .cnj loader", "custom", {"ContentManager.RegisterTypeReader", "LooseFileContentTypeReader", "ContentManager.RegisterCnjLoader", "ContentLoadException"}, ApiOrigin::CnaExtension),
         ct("ct-reader", "Content Readers", "An .xnb file with your own type: a ContentTypeReader registered under the name the file records", "reader",
-           {"ContentTypeReader", "ContentTypeReaderManager.AddTypeCreator", "ContentReader", "ContentReader.ReadColor", "ContentReader.ReadVector2", "ContentReader.ReadVector4", "ContentReader.AssetName", "ContentManager.Load"}),
-        ct("ct-lifetime", "Resource Lifetime", "Dispose, IsDisposed, the Disposing event and ContentManager.Unload", "lifetime", {"GraphicsResource.Dispose", "GraphicsResource.IsDisposed", "GraphicsResource.Disposing", "GraphicsDevice.ResourceCreated", "GraphicsDevice.ResourceDestroyed", "ResourceCreatedEventArgs", "ResourceDestroyedEventArgs", "ContentManager.Unload"}),
+           {"ContentTypeReader", "ContentTypeReaderManager.AddTypeCreator", "ContentTypeReaderManager.GetTypeReader", "ContentReader", "ContentReader.ContentManager", "ContentReader.AssetName", "ContentReader.Platform", "ContentReader.Version", "ContentReader.ReadBoundingSphere", "ContentReader.ReadColor", "ContentReader.ReadMatrix", "ContentReader.ReadQuaternion", "ContentReader.ReadVector2", "ContentReader.ReadVector3", "ContentReader.ReadVector4", "ContentManager.Load"}),
+        ct("ct-lifetime", "Resource Lifetime", "Dispose, IsDisposed, the Disposing event and ContentManager.Unload", "lifetime", {"GraphicsResource.Dispose", "GraphicsResource.IsDisposed", "GraphicsResource.Disposing", "GraphicsDevice.ResourceCreated", "GraphicsDevice.ResourceDestroyed", "ResourceCreatedEventArgs", "ResourceCreatedEventArgs.Resource", "ResourceDestroyedEventArgs", "ResourceDestroyedEventArgs.Name", "ResourceDestroyedEventArgs.Tag", "ContentManager.Unload"}),
         ct("ct-resource", "Content from Memory", "ResourceContentManager serving compiled .xnb assets from a System.Resources.ResourceManager instead of the content folder", "resource",
-           {"ResourceContentManager", "System.Resources.ResourceManager", "ContentManager.Load", "ContentLoadException"}),
+           {"ResourceContentManager", "ResourceContentManager.OpenStream", "System.Resources.ResourceManager", "ContentManager.Load", "ContentLoadException"}),
     };
     return w;
 }
@@ -331,16 +331,16 @@ WingSpec PlayersWing()
         room("gs-achievements", "Achievements", "A catalog the title ships, awards kept by the framework: the museum awards them as you explore", "players-lab", "achievements",
              {"SignedInGamer.AwardAchievement", "SignedInGamer.GetAchievements", "Achievement", "AchievementCollection"}),
         room("gs-leaderboards", "Leaderboards", "LeaderboardWriter sets a gamer's rating, LeaderboardReader pages through the ranking or reads around one gamer", "players-lab", "leaderboards",
-             {"LeaderboardWriter", "LeaderboardEntry", "LeaderboardEntry.Columns", "LeaderboardReader", "LeaderboardIdentity", "LeaderboardKey", "LeaderboardOutcome", "PropertyDictionary", "PropertyDictionary.Count", "PropertyDictionary.Keys", "PropertyDictionary.Values", "PropertyDictionary.ContainsKey", "PropertyDictionary.SetValue", "PropertyDictionary.GetValueInt32", "PropertyDictionary.GetValueOutcome", "Gamer.LeaderboardWriter", "NetworkSession.WriteArbitratedLeaderboard", "NetworkSession.WriteUnarbitratedLeaderboard", "NetworkSession.WriteTrueSkill", "WriteLeaderboardsEventArgs.Gamer", "WriteLeaderboardsEventArgs.IsLeaving"}),
+             {"LeaderboardWriter", "LeaderboardWriter.GetLeaderboard", "LeaderboardEntry", "LeaderboardEntry.Gamer", "LeaderboardEntry.Rating", "LeaderboardEntry.Columns", "LeaderboardReader", "LeaderboardIdentity", "LeaderboardKey", "LeaderboardOutcome", "PropertyDictionary", "PropertyDictionary.Count", "PropertyDictionary.Keys", "PropertyDictionary.Values", "PropertyDictionary.ContainsKey", "PropertyDictionary.SetValue", "PropertyDictionary.GetValueInt32", "PropertyDictionary.GetValueOutcome", "Gamer.LeaderboardWriter", "NetworkSession.WriteArbitratedLeaderboard", "NetworkSession.WriteUnarbitratedLeaderboard", "NetworkSession.WriteTrueSkill", "WriteLeaderboardsEventArgs.Gamer", "WriteLeaderboardsEventArgs.IsLeaving"}),
         room("gs-guide", "The Guide", "Message boxes and text input drawn by the platform overlay, trial mode and notification position", "players-lab", "guide",
              {"Guide.BeginShowMessageBox", "Guide.EndShowMessageBox", "Guide.BeginShowKeyboardInput", "Guide.IsTrialMode", "Guide.SimulateTrialMode", "Guide.IsVisible", "Guide.IsScreenSaverEnabled", "Guide.DelayNotifications", "GamerServicesDispatcher.IsInitialized", "GamerServicesDispatcher.WindowHandle", "Guide.NotificationPosition", "MessageBoxIcon"}),
         room("gs-avatar", "Avatars", "AvatarDescription, AvatarAnimation and AvatarRenderer: CNA's original avatars standing in the museum's own scene", "avatar-lab", "avatar",
              {"AvatarDescription", "AvatarDescription.CreateRandom", "AvatarDescription.BeginGetFromGamer", "AvatarRenderer", "AvatarAnimation", "AvatarAnimationPreset", "AvatarExpression", "AvatarBodyType", "AvatarBone", "AvatarEye", "AvatarMouth", "AvatarEyebrow", "AvatarRendererState", "IAvatarAnimation"}),
         room("net-packets", "Packets", "PacketWriter and PacketReader: XNA's types as bytes, in order, with their cost", "net-lab", "packets",
-             {"PacketWriter", "PacketReader", "PacketWriter.Write", "PacketReader.ReadVector3", "PacketReader.ReadQuaternion", "PacketReader.ReadMatrix"}),
+             {"PacketWriter", "PacketWriter.Length", "PacketWriter.Position", "PacketWriter.Write", "PacketReader", "PacketReader.Length", "PacketReader.Position", "PacketReader.ReadVector3", "PacketReader.ReadQuaternion", "PacketReader.ReadMatrix"}),
         room("net-session", "A Network Session", "A Local session between two players: send, receive, simulated latency and loss, start and end", "net-lab", "session",
              {"NetworkSession.AllowHostMigration", "NetworkSession.SessionType", "NetworkSession.MaxGamers", "NetworkSession.PrivateGamerSlots", "NetworkSession.Host", "NetworkSession.RemoteGamers", "NetworkSession.PreviousGamers", "QualityOfService.MinimumRoundtripTime", "QualityOfService.BytesPerSecondDownstream", "NetworkSession.ResetReady", "NetworkSession.AddLocalGamer", "NetworkSession.FindGamerById", "NetworkGamer.Id", "NetworkGamer.IsPrivateSlot", "NetworkGamer.HasVoice", "NetworkGamer.IsTalking", "NetworkGamer.IsMutedByLocalUser", "NetworkGamer.HasLeftSession", "NetworkSession.Create", "NetworkSession.Update", "NetworkSession.StartGame", "NetworkSession.EndGame", "NetworkSession.SimulatedLatency", "NetworkSession.SimulatedPacketLoss", "NetworkSession.SessionState",
-              "LocalNetworkGamer.SendData", "LocalNetworkGamer.ReceiveData", "SendDataOptions", "NetworkGamer.IsReady", "NetworkSession.GamerJoined", "NetworkSession.GameStarted", "NetworkSession.BeginFind", "NetworkSession.EndFind", "AvailableNetworkSession", "AvailableNetworkSessionCollection", "QualityOfService", "NetworkSessionProperties", "NetworkSession.SessionProperties", "NetworkSession.AllowJoinInProgress", "NetworkSession.BeginJoin", "NetworkSession.EndJoin", "NetworkGamer.IsLocal", "NetworkGamer.IsHost", "NetworkGamer.RoundtripTime", "NetworkSession.AllGamers", "NetworkSessionJoinException", "NetworkSessionJoinError", "NetworkSessionEndReason", "NetworkSessionEndedEventArgs", "HostChangedEventArgs", "NetworkSession.HostChanged", "NetworkSession.SessionEnded", "NetworkSession.InviteAccepted", "NetworkSession.JoinInvited", "InviteAcceptedEventArgs", "NetworkSessionType.PlayerMatch"}),
+              "LocalNetworkGamer.SendData", "LocalNetworkGamer.ReceiveData", "SendDataOptions", "NetworkGamer.IsReady", "NetworkSession.GamerJoined", "NetworkSession.GameStarted", "NetworkSession.BeginFind", "NetworkSession.EndFind", "AvailableNetworkSession", "AvailableNetworkSession.CurrentGamerCount", "AvailableNetworkSession.HostGamertag", "AvailableNetworkSession.OpenPrivateGamerSlots", "AvailableNetworkSession.OpenPublicGamerSlots", "AvailableNetworkSession.QualityOfService", "AvailableNetworkSession.SessionProperties", "AvailableNetworkSessionCollection", "AvailableNetworkSessionCollection.IsDisposed", "QualityOfService", "NetworkSessionProperties", "NetworkSession.SessionProperties", "NetworkSession.AllowJoinInProgress", "NetworkSession.BeginJoin", "NetworkSession.EndJoin", "NetworkGamer.IsGuest", "NetworkGamer.IsLocal", "NetworkGamer.IsHost", "NetworkGamer.Machine", "NetworkGamer.RoundtripTime", "NetworkGamer.Session", "NetworkMachine", "NetworkMachine.Gamers", "NetworkMachine.RemoveFromSession", "NetworkSession.AllGamers", "NetworkSessionJoinException", "NetworkSessionJoinError", "NetworkSessionEndReason", "NetworkSessionEndedEventArgs", "NetworkSessionEndedEventArgs.EndReason", "HostChangedEventArgs", "HostChangedEventArgs.NewHost", "HostChangedEventArgs.OldHost", "NetworkSession.HostChanged", "NetworkSession.SessionEnded", "NetworkSession.InviteAccepted", "NetworkSession.JoinInvited", "InviteAcceptedEventArgs", "InviteAcceptedEventArgs.Gamer", "InviteAcceptedEventArgs.IsCurrentSession", "NetworkSessionType.PlayerMatch"}),
     };
     return w;
 }
@@ -372,7 +372,7 @@ WingSpec OnlineWing()
         room("on-account", "Accounts and the Guide", "Guide.ShowSignIn for real accounts, the profile of a signed-in gamer, achievements and the content page", "account",
              {"Guide.ShowSignIn", "Guide.ShowAchievementsEXT", "Guide.ShowMarketplace", "SignedInGamer.IsSignedInToLive", "GamerProfile.GamerScore", "GamerProfile.Reputation", "GamerProfile.TotalAchievements", "CNA::GamerServices::resolveConfiguration"}),
         room("on-friends", "Friends and Presence", "SignedInGamer.GetFriends, FriendGamer presence and flags, the Guide's friends, players and gamer-card pages", "friends",
-             {"SignedInGamer.GetFriends", "FriendCollection", "FriendGamer", "FriendGamer.IsOnline", "FriendGamer.IsAway", "FriendGamer.IsBusy", "FriendGamer.IsPlaying", "FriendGamer.IsJoinable", "FriendGamer.Presence", "Guide.ShowFriends",
+             {"SignedInGamer.GetFriends", "FriendCollection", "FriendCollection.IsDisposed", "FriendGamer", "FriendGamer.IsOnline", "FriendGamer.IsAway", "FriendGamer.IsBusy", "FriendGamer.IsPlaying", "FriendGamer.IsJoinable", "FriendGamer.Presence", "Guide.ShowFriends",
               "Guide.ShowPlayers", "Guide.ShowGamerCard", "Guide.ShowPlayerReview", "Guide.ShowFriendRequest"}),
         room("on-messages", "Messages", "Guide.ShowMessages and ShowComposeMessage: the player's inbox and a message to friends", "messages", {"Guide.ShowMessages", "Guide.ShowComposeMessage"}),
         room("on-party", "Parties", "Guide.ShowParty and ShowPartySessions, and SignedInGamer.PartySize", "party", {"Guide.ShowParty", "Guide.ShowPartySessions", "SignedInGamer.PartySize"}),

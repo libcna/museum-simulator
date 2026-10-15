@@ -154,7 +154,7 @@ private:
                 description = importer.Import(S().contentRoot + "/Fonts/Museum.spritefont", importerContext);
                 static const char* const styleNames[] = {"Regular", "Bold", "Italic"};
                 imported_ = description->getFontNameProperty() + ", " + std::to_string(static_cast<int>(description->getSizeProperty())) + " pt, " + styleNames[std::clamp(static_cast<int>(description->getStyleProperty()), 0, 2)] +
-                            ", spacing " + std::to_string(static_cast<int>(description->getSpacingProperty())) + ", " + std::to_string(description->getCharactersProperty().size()) + " characters";
+                            ", spacing " + std::to_string(static_cast<int>(description->getSpacingProperty())) + ", kerning " + (description->getUseKerningProperty() ? "on" : "off") + ", " + std::to_string(description->getCharactersProperty().size()) + " characters";
             } else {
                 imported_ = "built from the controls";
                 description = std::make_shared<PipeGfx::FontDescription>("DejaVuSans", size_, spacing_,
