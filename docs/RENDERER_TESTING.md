@@ -12,8 +12,7 @@ CNA_GRAPHICS_RENDERER=OPENGL33 build/bin/cna-3d-museum
 Six renderers have run the museum here: OPENGLES3, OPENGL33, SOFTWARE, and (since 2026-10-14) FNA3D, WEBGPU and SDL_GPU
 (the last two on Mesa's llvmpipe software Vulkan driver, `VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json`).
 Direct3D 9 runs only through Wine (below); Metal and WebGL2 are untested (no suitable device). Two non-visual renderers were tried for robustness: **STUB**
-(no 3D pipeline: the museum says so and exits 0 before executing a tour; `tools/tour.sh` therefore returns 4 for the missing final stats) and **HEADLESS** (all 293 rooms run; four exceptions are caught and reported
-because it stores no cube-map data: `tex-cube` and the image-based-lighting model rooms switch themselves off).
+(no 3D pipeline: the museum says so and exits 0 before executing a tour; `tools/tour.sh` therefore returns 4 for the missing final stats) and **HEADLESS** (all 293 rooms run cleanly; plain cube maps retain caller-authored CPU data while rendered pixels remain unavailable).
 VULKAN was retired from CNA on 2026-10-13 and has been removed from the museum's documentation and build lines.
 
 The second group needs CNA's optional dependencies from the shared checkouts (nothing is downloaded):
@@ -78,11 +77,11 @@ Run `tools/renderer_check.sh` for the current figures; they are not copied anywh
 
 Windows build under Wine (MinGW cross build, 2026-10-15, 286 rooms): SOFTWARE `pressall` tour exits 0 with 0 exhibit errors in 1730 s (networking, avatars and video are not built into that tree, so 915 panel controls instead of 998).
 
-Latest (2026-10-15 night, 293 rooms, after the CNA Diagnostics exit-order fix): `tools/tour.sh -f 3 -p` exits 0 with 0 exhibit errors on FNA3D (53 s), WEBGPU (125 s) and SDL_GPU (307 s). HEADLESS reaches final stats in 29 s with the four known cube-data exceptions; STUB has no 3D pipeline and is now reported as an incomplete tour (exit 4) rather than a pass. The OPENGLES3 nine-step `tools/check_all.sh` battery is green. ASan+UBSan on OPENGLES3 over all 293 rooms exits 0 with no report.
+Latest (2026-10-16, 293 rooms): after CNA `d73f1aeab`, `tools/tour.sh -f 3 -p` on HEADLESS reaches final stats in 23 s, exits 0 and reports 0 exhibit errors. The preceding multi-renderer run exited 0 with 0 exhibit errors on FNA3D (53 s), WEBGPU (125 s) and SDL_GPU (307 s). STUB has no 3D pipeline and is reported as an incomplete tour (exit 4) rather than a pass. The OPENGLES3 nine-step `tools/check_all.sh` battery is green. ASan+UBSan on OPENGLES3 over all 293 rooms exits 0 with no report.
 
 Earlier (2026-10-14, 280 rooms, after the Online Service wing, Exceptions, Vertex Types, Compiled Effects and the other new rooms): `tools/tour.sh -f 3 -p` exits 0 with 0 exhibit errors on FNA3D (76 s), WEBGPU (133 s) and SDL_GPU (274 s) in the multi-renderer tree (renderer chosen with `CNA_GRAPHICS_RENDERER`); the OPENGLES3 battery (`tools/check_all.sh`) is green.
 
-Re-checked on 2026-10-14 with 272 rooms (after the Avatars, Leaderboards, Pipeline, Processor, Converters, Video and network-search rooms and the dressed screen rooms): `tools/tour.sh -f 3 -p` exits 0 with 0 exhibit errors on OPENGLES3, OPENGL33 and SOFTWARE (`SLOW=1 tools/check_all.sh`, all steps ok) and, in the multi-renderer tree, on FNA3D (75 s), WEBGPU (94 s) and SDL_GPU (175 s). HEADLESS exits 3 with the known exceptions (no cube data). The Avatars, Video and Processing rooms were also looked at on those three: same picture; FNA3D has no DXT surface formats, and the Processing room says so on the level it cannot upload.
+Re-checked on 2026-10-14 with 272 rooms (after the Avatars, Leaderboards, Pipeline, Processor, Converters, Video and network-search rooms and the dressed screen rooms): `tools/tour.sh -f 3 -p` exits 0 with 0 exhibit errors on OPENGLES3, OPENGL33 and SOFTWARE (`SLOW=1 tools/check_all.sh`, all steps ok) and, in the multi-renderer tree, on FNA3D (75 s), WEBGPU (94 s) and SDL_GPU (175 s). HEADLESS then exited 3 with cube-data exceptions, subsequently fixed by CNA `d73f1aeab`. The Avatars, Video and Processing rooms were also looked at on those three: same picture; FNA3D has no DXT surface formats, and the Processing room says so on the level it cannot upload.
 
 Re-checked on 2026-10-14 with 250 rooms after the room-frame change and the new rooms: `tools/tour.sh -f 3 -p` exits 0 on all three
 renderers (OPENGLES3 65 s, OPENGL33 62 s, SOFTWARE 1,501 s); the stencil, cube-map, SkinnedEffect, terrain and off-centre rooms
