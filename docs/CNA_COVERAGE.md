@@ -51,7 +51,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1000 distinct API names are claimed by at least one room.
+1004 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -427,6 +427,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GamerServicesNotAvailableException | `pl-exceptions` |
 | GestureSample.Delta2 | `in-touch` |
 | GestureSample.Position2 | `in-touch` |
+| GestureSample.Timestamp | `in-touch` |
 | GestureType | `in-touch` |
 | GltfImportDiagnosticEXT | `model-report` |
 | GltfImportReportEXT | `model-report` |
@@ -991,6 +992,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | TextureProcessorOutputFormat | `ct-processor` |
 | TextureTransformEXT | `model-material` |
 | TitleContainer.OpenStream | `ct-storage`, `pl-exceptions` |
+| TouchLocation.Id | `in-touch` |
+| TouchLocation.State | `in-touch` |
+| TouchLocation.TryGetPreviousLocation | `in-touch` |
 | TouchPanel.EnabledGestures | `in-touch` |
 | TouchPanel.GetState | `in-touch`, `in-devices` |
 | TouchPanel.MouseTouchEmulationEnabledEXT | `in-touch`, `in-devices` |

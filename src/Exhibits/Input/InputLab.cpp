@@ -374,9 +374,12 @@ protected:
             case Mode::Touch: {
                 rect(24, 70, 912, 330, Kit::Rgba(18, 24, 38));
                 frame(24, 70, 912, 330, line);
-                for (const Vector2& p : points_) {
-                    const float px = 24.0f + p.X / 960.0f * 912.0f, py = 70.0f + p.Y / 540.0f * 330.0f;
+                for (const TouchPoint& t : points_) {
+                    const float px = 24.0f + t.position.X / 960.0f * 912.0f, py = 70.0f + t.position.Y / 540.0f * 330.0f;
                     rect(px - 14, py - 14, 28, 28, lit);
+                    static const char* const states[] = {"Invalid", "Released", "Pressed", "Moved"};
+                    // TouchLocation.TryGetPreviousLocation: where this finger was one frame earlier (false for a finger that was just pressed).
+                    text("id " + std::to_string(t.id) + " " + states[std::clamp(t.state, 0, 3)] + (t.hasPrevious ? ", before " + Fmt(t.previous.X) + "," + Fmt(t.previous.Y) : std::string(", no previous")), px + 20, py - 10, Kit::kText, 0.5f);
                 }
                 float y = 410.0f;
                 for (const std::string& g : gestureLog_) {
@@ -836,6 +839,11 @@ private:
     {
         simKind_ = kind;
         simFrame_ = 0;
+        // The platform marks a touch device as present on the first touch-down, and the per-frame TouchPanel update (previous locations,
+        // removal of released fingers) only runs once it is. The simulated fingers stand in for a device while they move.
+        if (flushFrames_ == 0) deviceWas_ = TouchPanel::getTouchDeviceExistsProperty();
+        TouchPanel::setTouchDeviceExistsProperty(true);
+        flushFrames_ = 0;
     }
     static const char* GestureName(GestureType t)
     {
@@ -859,7 +867,13 @@ private:
         // (normalised 0..1 positions): a tap, a drag across the panel, or two fingers moving apart.
         if (simFrame_ >= 0) {
             const int frames = simKind_ == 1 ? 4 : (simKind_ == 2 ? 30 : 50);
-            const auto event = [](int id, TouchLocationState st, float x, float y, float dx, float dy) { TouchPanel::INTERNAL_onTouchEvent(id, st, x, y, dx, dy); };
+            // The platform's touch path makes two calls per event: INTERNAL_setTouchState (the point TouchPanel.GetState reports, in pixels) and
+            // INTERNAL_onTouchEvent (the gesture recogniser, normalised); doing both here makes the simulated fingers real touch points too.
+            const auto event = [](int id, TouchLocationState st, float x, float y, float dx, float dy) {
+                const float w = static_cast<float>(TouchPanel::getDisplayWidthProperty()), h = static_cast<float>(TouchPanel::getDisplayHeightProperty());
+                TouchPanel::INTERNAL_setTouchState(id, st, Vector2(std::round(x * w), std::round(y * h)), 1.0f);
+                TouchPanel::INTERNAL_onTouchEvent(id, st, x, y, dx, dy);
+            };
             const float t = static_cast<float>(simFrame_) / static_cast<float>(frames);
             if (simKind_ == 1) {
                 if (simFrame_ == 0) event(101, TouchLocationState::Pressed, 0.5f, 0.5f, 0, 0);
@@ -884,18 +898,31 @@ private:
                 }
             }
             simFrame_ = simFrame_ + 1 >= frames ? -1 : simFrame_ + 1;
+            if (simFrame_ < 0) flushFrames_ = 4;
+        } else if (flushFrames_ > 0 && --flushFrames_ == 0) {
+            // Two frames after the release the panel has dropped the fingers; the museum has no touch device again unless it had one.
+            TouchPanel::setTouchDeviceExistsProperty(deviceWas_);
         }
         try {
             const TouchCollection t = TouchPanel::GetState();
             touches_ = t.getCountProperty();
             if (std::getenv("MUSEUM_DIAG_TOUCH") != nullptr && (touches_ > 0 || simFrame_ >= 0)) Museum::Log("touch", "frame sim=%d touches=%d gesture-available=%d", simFrame_, touches_, TouchPanel::getIsGestureAvailableProperty() ? 1 : 0);
             points_.clear();
-            for (int i = 0; i < t.getCountProperty(); ++i) points_.push_back(t[static_cast<std::size_t>(i)].getPositionProperty());
+            for (int i = 0; i < t.getCountProperty(); ++i) {
+                const TouchLocation& loc = t[static_cast<std::size_t>(i)];
+                TouchPoint point{loc.getPositionProperty(), Vector2(0, 0), false, loc.getIdProperty(), static_cast<int>(loc.getStateProperty())};
+                TouchLocation previous;
+                point.hasPrevious = loc.TryGetPreviousLocation(previous);
+                if (point.hasPrevious) point.previous = previous.getPositionProperty();
+                points_.push_back(point);
+            }
             int guard = 0;
             while (TouchPanel::getIsGestureAvailableProperty() && guard++ < 16) {
                 const GestureSample g = TouchPanel::ReadGesture();
+                // The timestamp counts from an arbitrary start (here the machine's uptime), so show it from the first gesture seen.
+                if (gestureCount_ == 0) gestureEpoch_ = g.getTimestampProperty().getTotalSecondsProperty();
                 ++gestureCount_;
-                gestureLog_.insert(gestureLog_.begin(), std::string(GestureName(g.getGestureTypeProperty())) + "   at " + Fmt(g.getPositionProperty().X) + ", " + Fmt(g.getPositionProperty().Y) + "   delta " + Fmt(g.getDeltaProperty().X) + ", " + Fmt(g.getDeltaProperty().Y) +
+                gestureLog_.insert(gestureLog_.begin(), std::string(GestureName(g.getGestureTypeProperty())) + "   at " + Fmt(g.getPositionProperty().X) + ", " + Fmt(g.getPositionProperty().Y) + "   delta " + Fmt(g.getDeltaProperty().X) + ", " + Fmt(g.getDeltaProperty().Y) + "   Timestamp +" + Fmt(static_cast<float>(g.getTimestampProperty().getTotalSecondsProperty() - gestureEpoch_)) + " s" +
                                           (g.getGestureTypeProperty() == GestureType::Pinch || g.getGestureTypeProperty() == GestureType::PinchComplete
                                                ? "   2nd finger at " + Fmt(g.getPosition2Property().X) + ", " + Fmt(g.getPosition2Property().Y) + " delta " + Fmt(g.getDelta2Property().X) + ", " + Fmt(g.getDelta2Property().Y)
                                                : std::string()));
@@ -997,7 +1024,15 @@ private:
     int simKind_ = 0, simFrame_ = -1, gestureCount_ = 0, savedWidth_ = 0, savedHeight_ = 0;
     GestureType savedGestures_ = GestureType::None;
     bool touchSetup_ = false;
-    std::vector<Vector2> points_;
+    struct TouchPoint {
+        Vector2 position, previous;
+        bool hasPrevious;
+        int id, state;
+    };
+    std::vector<TouchPoint> points_;
+    double gestureEpoch_ = 0.0;
+    int flushFrames_ = 0;
+    bool deviceWas_ = false;
     std::vector<std::string> gestureLog_;
     int hapticCount_ = 0;
     std::string mouseHaptic_ = "?", joystickHaptic_ = "?";
