@@ -24,7 +24,7 @@ museum_headless() {
   [ "${MUSEUM_AUDIO:-dummy}" = real ] && audio=
   # Test runs keep CNA's local gamer profiles and achievements in the build tree, never in the user's own store.
   # Software rendering (Mesa llvmpipe/lavapipe) otherwise spreads one museum over every core: keep it to three (MUSEUM_RENDER_THREADS).
-  env ${audio:+SDL_AUDIODRIVER=$audio} LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS="${LP_NUM_THREADS:-${MUSEUM_RENDER_THREADS:-3}}" \
+  env -u WAYLAND_DISPLAY SDL_VIDEODRIVER=x11 ${audio:+SDL_AUDIODRIVER=$audio} LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS="${LP_NUM_THREADS:-${MUSEUM_RENDER_THREADS:-3}}" \
     CNA_GAMER_SERVICES_PROFILES_DIR="${CNA_GAMER_SERVICES_PROFILES_DIR:-$root/${BUILD_DIR:-build}/gamer-profiles}" \
     timeout "${MUSEUM_TIMEOUT:-300}" \
     xvfb-run -a -e "$log.xvfb" -s "-screen 0 ${MUSEUM_SCREEN:-1920x1080x24}" "$bin" "$@" > "$log" 2>&1

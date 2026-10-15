@@ -52,7 +52,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1165 distinct API names are claimed by at least one room.
+1175 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -647,8 +647,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Joysticks.GetJoysticksEXT | `in-joystick` |
 | Joysticks.GetStateEXT | `in-joystick` |
 | Keyboard.GetKeyFromNameEXT | `in-keyboard` |
+| Keyboard.GetKeyFromScancodeEXT | `in-keyboard` |
 | Keyboard.GetKeyNameEXT | `in-keyboard` |
 | Keyboard.GetModStateEXT | `in-keyboard` |
+| Keyboard.GetScancodeFromNameEXT | `in-keyboard` |
 | Keyboard.GetScancodeNameEXT | `in-keyboard` |
 | Keyboard.GetState | `in-keyboard` |
 | KeyboardState | `in-edges` |
@@ -804,6 +806,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | NetworkGamer.IsReady | `net-session` |
 | NetworkGamer.IsTalking | `net-session` |
 | NetworkGamer.RoundtripTime | `net-session` |
+| NetworkSession.AddLocalGamer | `net-session` |
 | NetworkSession.AllGamers | `net-session` |
 | NetworkSession.AllowHostMigration | `net-session` |
 | NetworkSession.AllowJoinInProgress | `net-session` |
@@ -833,6 +836,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | NetworkSession.SimulatedPacketLoss | `net-session` |
 | NetworkSession.StartGame | `net-session` |
 | NetworkSession.Update | `net-session` |
+| NetworkSession.WriteArbitratedLeaderboard | `gs-leaderboards` |
+| NetworkSession.WriteTrueSkill | `gs-leaderboards` |
+| NetworkSession.WriteUnarbitratedLeaderboard | `gs-leaderboards` |
 | NetworkSessionEndReason | `net-session` |
 | NetworkSessionEndedEventArgs | `net-session` |
 | NetworkSessionJoinError | `net-session` |
@@ -901,7 +907,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | PropertyDictionary.Count | `gs-leaderboards` |
 | PropertyDictionary.GetValueInt32 | `gs-leaderboards` |
 | PropertyDictionary.GetValueOutcome | `gs-leaderboards` |
+| PropertyDictionary.Keys | `gs-leaderboards` |
 | PropertyDictionary.SetValue | `gs-leaderboards` |
+| PropertyDictionary.Values | `gs-leaderboards` |
 | PunctualLightEXT | `be-punctual`, `light-types`, `light-many` |
 | PunctualLightEXT.DiffuseColor | `light-coloured` |
 | PunctualLightEXT.OuterAngle | `light-flashlight` |
@@ -1214,6 +1222,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | WavImporter | `ct-audiopipeline` |
 | WaveBank | `au-xact` |
 | WaveBank.IsInUse | `au-xact` |
+| WriteLeaderboardsEventArgs.Gamer | `gs-leaderboards` |
+| WriteLeaderboardsEventArgs.IsLeaving | `gs-leaderboards` |
 | XImporter | `ct-modelimport` |
 | XNA 4.0 | `hist-xna`, `hist-compare` |
 | XnbAssetWriteResult | `ct-compiler` |

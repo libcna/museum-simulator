@@ -43,7 +43,8 @@ import json, subprocess, sys
 admin, db, title = sys.argv[1] + "/cna-gamer-services-admin", sys.argv[2], sys.argv[3]
 def run(cmd, doc):
     subprocess.run([admin, db, cmd, title], input=json.dumps(doc).encode(), check=True, stdout=subprocess.DEVNULL)
-run("leaderboard", {"key": "BestScoreLifeTime", "mode": 0, "ascending": False, "aggregation": "best", "arbitrated": False, "columns": {}})
+run("leaderboard", {"key": "BestScoreLifeTime", "mode": 0, "ascending": False, "aggregation": "best", "arbitrated": False,
+                    "columns": {"MuseumRuns": "int32", "Outcome": "outcome", "Exhibit": "string"}})
 for tag, rating in (("Curator", 120), ("Archivist", 80)):
     run("seed-leaderboard", {"key": "BestScoreLifeTime", "mode": 0, "gamertag": tag, "rating": rating, "columns": {}})
 PY

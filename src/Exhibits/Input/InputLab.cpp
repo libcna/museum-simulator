@@ -103,7 +103,7 @@ public:
                 p.AddToggle("Label pressed keys by layout name", true, [this](bool v) { names_ = v; });
                 p.AddReadout("Last key pressed", [this] { return lastKey_; });
                 p.AddChoice("Look a key up by name", {"Space", "Return", "Left Shift", "A", "F5", "Escape", "Keypad Enter", "Not a key"}, 0, [this](int v) { LookUp(v); });
-                p.AddReadout("GetKeyFromNameEXT", [this] { return lookup_; });
+                p.AddReadout("Name / scancode lookup", [this] { return lookup_; });
                 p.AddReadout("Scancode name / key name", [this] { return lookupNames_; });
                 break;
             case Mode::Edges:
@@ -725,9 +725,15 @@ private:
     {
         static const char* names[] = {"Space", "Return", "Left Shift", "A", "F5", "Escape", "Keypad Enter", "Not a key"};
         try {
-            const Keys k = Keyboard::GetKeyFromNameEXT(names[which]);
-            lookup_ = std::string("\"") + names[which] + "\" is Keys " + std::to_string(static_cast<int>(k));
-            lookupNames_ = "'" + Keyboard::GetScancodeNameEXT(k) + "' / '" + Keyboard::GetKeyNameEXT(k) + "'";
+            const Keys physical = Keyboard::GetScancodeFromNameEXT(names[which]);
+            const Keys layout = Keyboard::GetKeyFromNameEXT(names[which]);
+            const Keys translated = Keyboard::GetKeyFromScancodeEXT(physical);
+            lookup_ = std::string("\"") + names[which] + "\": physical " +
+                std::to_string(static_cast<int>(physical)) + " -> layout " +
+                std::to_string(static_cast<int>(translated)) + ", named layout " +
+                std::to_string(static_cast<int>(layout));
+            lookupNames_ = "'" + Keyboard::GetScancodeNameEXT(physical) + "' / '" +
+                Keyboard::GetKeyNameEXT(translated) + "'";
         } catch (const std::exception& e) {
             lookup_ = std::string("\"") + names[which] + "\": " + std::string(e.what()).substr(0, 50);
             lookupNames_ = "-";

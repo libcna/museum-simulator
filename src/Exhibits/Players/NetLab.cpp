@@ -98,6 +98,7 @@ public:
         } else {
             p.AddButton("NetworkSession.StartGame", [this] { NetworkSession* n = Primary(); if (n != nullptr && n->getSessionStateProperty() == NetworkSessionState::Lobby) n->StartGame(); });
             p.AddButton("NetworkSession.EndGame", [this] { NetworkSession* n = Primary(); if (n != nullptr && n->getSessionStateProperty() == NetworkSessionState::Playing) n->EndGame(); });
+            p.AddButton("NetworkSession.AddLocalGamer (second profile)", [this] { AddSecondLocalGamer(); });
             p.AddToggle("Both players ready (IsReady)", false, [this](bool v) { SetReady(v); });
             p.AddReadout("SessionState", [this] { NetworkSession* n = Primary(); return n != nullptr ? std::string(StateName(n->getSessionStateProperty())) + (n->getIsHostProperty() ? ", this machine hosts" : "") : std::string("no session"); });
             p.AddReadout("IsEveryoneReady", [this] { NetworkSession* n = Primary(); return n != nullptr ? std::string(n->getIsEveryoneReadyProperty() ? "true" : "false") : std::string("-"); });
@@ -195,7 +196,7 @@ private:
     {
         if (mode_ == Mode::Packets)
             return {"Everything a game sends is bytes. PacketWriter writes XNA's types (Vector3, Quaternion, Matrix, strings...) in a fixed order; PacketReader must read them in", "the same order. The packet below is rebuilt whenever you change a field; its size is what every send costs on the wire, before headers."};
-        return {"A Local session holds both signed-in profiles as gamers and runs the lobby (StartGame, EndGame, IsReady, GamerJoined...) but delivers no packets, as in XNA. A SystemLink session delivers them,",
+        return {"A Local session begins with one signed-in profile; AddLocalGamer admits the second and raises GamerJoined. It runs the lobby (StartGame, EndGame, IsReady...) but delivers no packets, as in XNA. A SystemLink session delivers them,",
                 "and announces itself on your network, so it stays off until you switch it on. Only one session can exist per process; SimulatedLatency and SimulatedPacketLoss act on packets that arrive from another machine: join a second museum (BeginFind, BeginJoin) and raise them to see packets thin out and arrive late."};
     }
 
@@ -286,14 +287,16 @@ private:
                 tried_ = false;
                 return;
             }
-            lobby_ = NetworkSession::Create(NetworkSessionType::Local, 2, 8);
+            lobby_ = NetworkSession::Create(NetworkSessionType::Local,
+                std::vector<GamerServices::SignedInGamer*>{(*signedIn)[0]}, 8, 0,
+                NetworkSessionProperties{});
             started_ = lobby_->GameStarted.Add([this](System::Object*, const GameStartedEventArgs&) { Log("GameStarted"); });
             ended_ = lobby_->GameEnded.Add([this](System::Object*, const GameEndedEventArgs&) { Log("GameEnded"); });
             joined_ = lobby_->GamerJoined.Add([this](System::Object*, const GamerJoinedEventArgs&) { Log("GamerJoined"); });
             left_ = lobby_->GamerLeft.Add([this](System::Object*, const GamerLeftEventArgs&) { Log("GamerLeft"); });
             sessionEnded_ = lobby_->SessionEnded.Add([this](System::Object*, const NetworkSessionEndedEventArgs& e) { Log(std::string("SessionEnded: ") + EndReasonName(e.getEndReasonProperty())); });
             subscribed_ = true;
-            Log("Create(Local, 2 local, 8 max): " + std::to_string(lobby_->getLocalGamersProperty().getCountProperty()) + " local gamer(s)");
+            Log("Create(Local, explicit 1 local, 8 max): " + std::to_string(lobby_->getLocalGamersProperty().getCountProperty()) + " local gamer(s)");
             status_ = "lobby open";
         } catch (const std::exception& e) {
             status_ = std::string("cannot create a session: ") + std::string(e.what()).substr(0, 60);
@@ -390,6 +393,31 @@ private:
     }
 
     [[nodiscard]] NetworkSessionType NetType() const { return online_ ? NetworkSessionType::PlayerMatch : NetworkSessionType::SystemLink; }
+
+    void AddSecondLocalGamer()
+    {
+        NetworkSession* n = Primary();
+        if (n == nullptr) { Log("AddLocalGamer: no session"); return; }
+        try {
+            auto* signedIn = GamerServices::Gamer::getSignedInGamersProperty();
+            for (int candidate = 0; signedIn != nullptr && candidate < signedIn->getCountProperty(); ++candidate) {
+                GamerServices::SignedInGamer* gamer = (*signedIn)[candidate];
+                bool alreadyLocal = false;
+                for (int i = 0; i < n->getLocalGamersProperty().getCountProperty(); ++i)
+                    alreadyLocal = alreadyLocal || n->getLocalGamersProperty()[i]->getSignedInGamerProperty() == gamer;
+                if (alreadyLocal) continue;
+                n->AddLocalGamer(gamer);
+                n->Update();
+                Log("AddLocalGamer: " + gamer->getGamertagProperty() + ", now " +
+                    std::to_string(n->getLocalGamersProperty().getCountProperty()) + " local");
+                Museum::Log("net", "%s", log_.back().c_str());
+                return;
+            }
+            Log("AddLocalGamer: every signed-in profile is already in this session");
+        } catch (const std::exception& e) {
+            Log(std::string("AddLocalGamer refused: ") + std::string(e.what()).substr(0, 48));
+        }
+    }
 
     // The settings a host edits on a live session: its properties (what a search can filter on) and whether players may join once it has started.
     void ApplySessionSettings()

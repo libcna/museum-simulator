@@ -12,7 +12,10 @@ bin=${MUSEUM_BIN:-${BUILD_DIR:-build}/bin/cna-3d-museum}
 tools/online_stack.sh stop > /dev/null
 tools/online_stack.sh start --fresh > /dev/null || { echo "skipped: the service is not built (see tools/online_stack.sh)"; exit 77; }
 eval "$(tools/online_stack.sh env)"
-export CNA_GAMER_SERVICES_PROFILES_DIR=$PWD/$dir/check-profiles CNA_GAMER_SERVICES_CREDENTIALS_DIR=$PWD/$dir/check-credentials SDL_AUDIODRIVER=dummy LIBGL_ALWAYS_SOFTWARE=1
+export CNA_GAMER_SERVICES_PROFILES_DIR=$PWD/$dir/check-profiles CNA_GAMER_SERVICES_CREDENTIALS_DIR=$PWD/$dir/check-credentials SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 LIBGL_ALWAYS_SOFTWARE=1
+# SDL prefers a live Wayland display over DISPLAY when both are inherited. This check must stay on
+# its private Xvfb display so xdotool targets the Guide window it just opened.
+unset WAYLAND_DISPLAY
 rm -rf "$CNA_GAMER_SERVICES_PROFILES_DIR" "$CNA_GAMER_SERVICES_CREDENTIALS_DIR"
 mkdir -m 700 -p "$CNA_GAMER_SERVICES_CREDENTIALS_DIR"
 log=$dir/check.log

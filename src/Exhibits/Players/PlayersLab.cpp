@@ -34,6 +34,7 @@
 #include "Microsoft/Xna/Framework/Net/LocalNetworkGamer.hpp"
 #include "Microsoft/Xna/Framework/Net/NetworkSession.hpp"
 #include "Microsoft/Xna/Framework/Net/NetworkSessionType.hpp"
+#include "Microsoft/Xna/Framework/Net/WriteLeaderboardsEventArgs.hpp"
 #include "Microsoft/Xna/Framework/PlayerIndex.hpp"
 #endif
 
@@ -166,6 +167,7 @@ public:
                 p.AddButton("LeaderboardReader.PageUp", [this] { Page(false); });
                 p.AddReadout("PageStart / TotalLeaderboardSize", [this] { return std::to_string(pageStart_) + " / " + std::to_string(total_); });
                 p.AddReadout("CanPageDown / CanPageUp", [this] { return YesNo(canDown_) + " / " + YesNo(canUp_); });
+                p.AddReadout("Final Write*Leaderboard events", [this] { return leaderboardEvents_; });
                 p.AddReadout("Store", [] { return std::string("CNA's local store, kept between runs"); });
                 break;
         }
@@ -370,6 +372,7 @@ private:
     void AddRating(long long delta)
     {
         try {
+            onlineRoundStage_.clear();
             SignedInGamer* g = Nth(writer_);
             if (g == nullptr) return;
             if (g->getIsSignedInToLiveProperty()) {
@@ -381,14 +384,17 @@ private:
             entry->setRatingProperty(delta == std::numeric_limits<long long>::min() ? 0 : entry->getRatingProperty() + delta);
             dirty_ = true;
         } catch (const std::exception& e) {
-            boardError_ = std::string(e.what()).substr(0, 60);
-            Museum::Log("online", "leaderboard write: %s", e.what());
+            boardError_ = (onlineRoundStage_.empty() ? std::string() : onlineRoundStage_ + ": ") +
+                std::string(e.what()).substr(0, 60);
+            Museum::Log("online", "leaderboard write at %s: %s",
+                        onlineRoundStage_.empty() ? "offline update" : onlineRoundStage_.c_str(), e.what());
         }
     }
     // An account's rating reaches the service only when a game session ends: a LocalWithLeaderboards session is created, started, the
     // gamer's entry is set and EndGame commits it (the writes are transient until then).
     void PlayOnlineRound(SignedInGamer* g, long long delta)
     {
+        onlineRoundStage_ = "reading current service rating";
         long long current = 0;
         {
             LeaderboardReader read = LeaderboardReader::Read(BoardId(), std::vector<Gamer*>{g}, g, 1);
@@ -396,17 +402,46 @@ private:
             for (int i = 0; i < entries.getCountProperty(); ++i)
                 if (entries[i].getGamerProperty() != nullptr && entries[i].getGamerProperty()->getGamertagProperty() == g->getGamertagProperty()) current = entries[i].getRatingProperty();
         }
+        onlineRoundStage_ = "creating LocalWithLeaderboards session";
+        int arbitrated = 0, unarbitrated = 0, trueSkill = 0;
+        std::string finalGamer;
+        bool finalLeaving = false;
+        const auto observe = [&](int& count, const WriteLeaderboardsEventArgs& args) {
+            ++count;
+            finalGamer = args.getGamerProperty() != nullptr
+                ? args.getGamerProperty()->getGamertagProperty() : std::string("?");
+            finalLeaving = args.getIsLeavingProperty();
+        };
+        // Declare the session after the captured state so its destructor cannot outlive anything
+        // the final-write handlers reference if a later service operation throws.
         std::unique_ptr<NetworkSession> session(NetworkSession::Create(NetworkSessionType::LocalWithLeaderboards, 1, 2));
+        onlineRoundStage_ = "subscribing final write events";
+        session->WriteArbitratedLeaderboard.Add(
+            [&](System::Object*, const WriteLeaderboardsEventArgs& args) { observe(arbitrated, args); });
+        session->WriteUnarbitratedLeaderboard.Add(
+            [&](System::Object*, const WriteLeaderboardsEventArgs& args) { observe(unarbitrated, args); });
+        session->WriteTrueSkill.Add(
+            [&](System::Object*, const WriteLeaderboardsEventArgs& args) { observe(trueSkill, args); });
         for (int i = 0; i < session->getLocalGamersProperty().getCountProperty(); ++i) session->getLocalGamersProperty()[i]->setIsReadyProperty(true);
+        onlineRoundStage_ = "starting service round";
         session->StartGame();
         for (int i = 0; i < 3; ++i) session->Update();   // the state changes to Playing on an update
+        onlineRoundStage_ = "writing leaderboard entry";
         LeaderboardEntry* entry = g->getLeaderboardWriterProperty().GetLeaderboard(BoardId());
         SetMuseumColumns(*entry, delta);
         entry->setRatingProperty(delta == std::numeric_limits<long long>::min() ? 0 : current + delta);
+        onlineRoundStage_ = "ending service round";
         session->EndGame();
+        onlineRoundStage_ = "finalizing service round";
         session->Update();
+        leaderboardEvents_ = "arbitrated " + std::to_string(arbitrated) +
+            ", unarbitrated " + std::to_string(unarbitrated) +
+            ", TrueSkill " + std::to_string(trueSkill) + "; gamer " + finalGamer +
+            ", IsLeaving " + (finalLeaving ? "true" : "false");
         boardError_ = "round played in a LocalWithLeaderboards session; EndGame sent the rating to the service";
-        Museum::Log("online", "round played: %s rated %lld", g->getGamertagProperty().c_str(), current + delta);
+        Museum::Log("online", "round played: %s rated %lld; %s", g->getGamertagProperty().c_str(),
+                    current + delta, leaderboardEvents_.c_str());
+        onlineRoundStage_ = "complete";
         dirty_ = true;
     }
     void Page(bool down)
@@ -457,7 +492,10 @@ private:
     {
         const auto& columns = entry.getColumnsProperty();
         if (columns.getCountProperty() == 0) return "Columns: none";
-        std::string result = "Columns (" + std::to_string(columns.getCountProperty()) + "): ";
+        const std::vector<std::string> keys = columns.Keys();
+        const std::vector<std::any> values = columns.Values();
+        std::string result = "Columns (Keys/Values " + std::to_string(keys.size()) + "/" +
+            std::to_string(values.size()) + "): ";
         if (columns.ContainsKey("MuseumRuns"))
             result += "MuseumRuns=" + std::to_string(columns.GetValueInt32("MuseumRuns"));
         if (columns.ContainsKey("Outcome")) {
@@ -618,6 +656,8 @@ private:
         std::string columns;
     };
     std::unique_ptr<LeaderboardReader> reader_;
+    std::string leaderboardEvents_ = "play a service-backed round to raise them";
+    std::string onlineRoundStage_;
     std::vector<Row> rows_;
     int boardKey_ = 0, writer_ = 0, pageSize_ = 1, pageStart_ = 0, total_ = 0;
     bool pivot_ = false, dirty_ = true, canDown_ = false, canUp_ = false;
