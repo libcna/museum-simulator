@@ -246,7 +246,7 @@ WingSpec PlayersWing()
     };
     w.rooms = {
         room("gs-players", "Signed-in Players", "Gamer.SignedInGamers, presence, privileges, game defaults and the profile: two local offline players", "players-lab", "players",
-             {"Gamer.SignedInGamers", "SignedInGamer.Presence", "SignedInGamer.Privileges", "SignedInGamer.GameDefaults", "Gamer.GetProfile", "GamerProfile", "SignedInGamer.SignedIn", "GamerPresenceMode"}),
+             {"Gamer.SignedInGamers", "SignedInGamer.Presence", "SignedInGamer.Privileges", "SignedInGamer.GameDefaults", "Gamer.GetProfile", "GamerProfile", "GamerProfile.Motto", "GamerProfile.Region", "GamerProfile.GetGamerPicture", "GameDefaults.ControllerSensitivity", "GameDefaults.RacingCameraAngle", "GameDefaults.AutoCenter", "GameDefaults.ManualTransmission", "GameDefaults.AccelerateWithButtons", "GameDefaults.PrimaryColor", "SignedInGamer.SignedIn", "GamerPresenceMode"}),
         room("gs-achievements", "Achievements", "A catalog the title ships, awards kept by the framework: the museum awards them as you explore", "players-lab", "achievements",
              {"SignedInGamer.AwardAchievement", "SignedInGamer.GetAchievements", "Achievement", "AchievementCollection"}),
         room("gs-leaderboards", "Leaderboards", "LeaderboardWriter sets a gamer's rating, LeaderboardReader pages through the ranking or reads around one gamer", "players-lab", "leaderboards",

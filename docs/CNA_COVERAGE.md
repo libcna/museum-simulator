@@ -51,7 +51,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-957 distinct API names are claimed by at least one room.
+966 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -369,6 +369,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GameComponent | `app-components` |
 | GameComponentCollection.ComponentAdded | `app-components` |
 | GameComponentCollectionEventArgs | `app-components` |
+| GameDefaults.AccelerateWithButtons | `gs-players` |
+| GameDefaults.AutoCenter | `gs-players` |
+| GameDefaults.ControllerSensitivity | `gs-players` |
+| GameDefaults.ManualTransmission | `gs-players` |
+| GameDefaults.PrimaryColor | `gs-players` |
+| GameDefaults.RacingCameraAngle | `gs-players` |
 | GamePad.GetButtonLabelEXT | `in-pad` |
 | GamePad.GetCapabilities | `in-players` |
 | GamePad.GetConnectionStateEXT | `in-devices` |
@@ -413,6 +419,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GamerPresenceMode | `gs-players` |
 | GamerProfile | `gs-players` |
 | GamerProfile.GamerScore | `on-account` |
+| GamerProfile.GetGamerPicture | `gs-players` |
+| GamerProfile.Motto | `gs-players` |
+| GamerProfile.Region | `gs-players` |
 | GamerProfile.Reputation | `on-account` |
 | GamerProfile.TotalAchievements | `on-account` |
 | GamerServicesNotAvailableException | `pl-exceptions` |

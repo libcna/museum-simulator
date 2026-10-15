@@ -6,6 +6,7 @@
 #include <limits>
 #include <memory>
 #include <exception>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -309,12 +310,19 @@ private:
                 const GamerPrivileges& pr = g->getPrivilegesProperty();
                 c.privileges = std::string("communication ") + PrivilegeName(pr.getAllowCommunicationProperty()) + ", online sessions " + YesNo(pr.getAllowOnlineSessionsProperty()) + ", profile viewing " + PrivilegeName(pr.getAllowProfileViewingProperty());
                 const GameDefaults& d = g->getGameDefaultsProperty();
-                c.defaults = std::string("difficulty ") + std::to_string(static_cast<int>(d.getGameDifficultyProperty())) + ", invert Y " + YesNo(d.getInvertYAxisProperty()) + ", auto-aim " + YesNo(d.getAutoAimProperty());
+                c.defaults = std::string("difficulty ") + std::to_string(static_cast<int>(d.getGameDifficultyProperty())) + ", invert Y " + YesNo(d.getInvertYAxisProperty()) + ", auto-aim " + YesNo(d.getAutoAimProperty()) +
+                             ", sensitivity " + (d.getControllerSensitivityProperty() == ControllerSensitivity::Low ? "low" : d.getControllerSensitivityProperty() == ControllerSensitivity::Medium ? "medium" : "high") +
+                             ", racing: camera " + std::to_string(static_cast<int>(d.getRacingCameraAngleProperty())) + ", auto-centre " + YesNo(d.getAutoCenterProperty()) + ", manual gearbox " + YesNo(d.getManualTransmissionProperty()) +
+                             ", right stick moves " + YesNo(d.getMoveWithRightThumbStickProperty()) + ", accelerate/brake on buttons " + YesNo(d.getAccelerateWithButtonsProperty()) + "/" + YesNo(d.getBrakeWithButtonsProperty()) +
+                             ", colours " + (d.getPrimaryColorProperty() ? "set" : "unset") + "/" + (d.getSecondaryColorProperty() ? "set" : "unset");
                 if (GamerProfile* profile = g->GetProfile()) {
                     char buf[160];
                     std::snprintf(buf, sizeof buf, "score %d, %d achievements, reputation %.1f, zone %s, %d titles", profile->getGamerScoreProperty(), profile->getTotalAchievementsProperty(),
                                   static_cast<double>(profile->getReputationProperty()), ZoneName(profile->getGamerZoneProperty()), profile->getTitlesPlayedProperty());
                     c.profile = buf;
+                    c.profile += ", motto \"" + profile->getMottoProperty() + "\", region " + profile->getRegionProperty().getEnglishNameProperty();
+                    std::unique_ptr<System::IO::Stream> picture(profile->GetGamerPicture());
+                    c.profile += picture ? ", has a picture" : ", no picture";
                     delete profile;
                 }
                 cards_.push_back(std::move(c));
@@ -492,16 +500,24 @@ private:
         }
         for (std::size_t i = 0; i < cards_.size() && i < 4; ++i) {
             const Card& c = cards_[i];
-            const float x = 24.0f + static_cast<float>(i % 2) * 470.0f, y = 62.0f + static_cast<float>(i / 2) * 230.0f;
-            rect(x, y, 450, 215, Color(22, 30, 46, 235));
+            const bool roomy = cards_.size() <= 2;   // one or two gamers: tall cards, so every line can wrap
+            const float x = 24.0f + static_cast<float>(i % 2) * 470.0f, y = 62.0f + (roomy ? 0.0f : static_cast<float>(i / 2) * 230.0f), h = roomy ? 440.0f : 215.0f;
+            rect(x, y, 450, h, Color(22, 30, 46, 235));
             rect(x, y, 450, 4, i == 0 ? Kit::kGold : Kit::Rgba(110, 170, 255));
             text(c.tag, x + 12, y + 8, Kit::kText, 0.95f);
             text(c.display + "   " + c.index, x + 12, y + 44, Kit::kDim, 0.55f);
             text(std::string("IsGuest ") + YesNo(c.guest) + "    IsSignedInToLive " + YesNo(c.live), x + 12, y + 70, Kit::kText, 0.55f);
             text("Presence: " + c.presence, x + 12, y + 96, Kit::Rgba(150, 255, 190), 0.55f);
-            text("Privileges: " + c.privileges, x + 12, y + 122, Kit::kText, 0.5f);
-            text("GameDefaults: " + c.defaults, x + 12, y + 148, Kit::kText, 0.5f);
-            text("Profile: " + c.profile, x + 12, y + 174, Kit::kText, 0.5f);
+            float ty = y + 124.0f;
+            for (const std::string* block : {&c.privileges, &c.defaults, &c.profile}) {
+                const char* head = block == &c.privileges ? "Privileges: " : block == &c.defaults ? "GameDefaults: " : "Profile: ";
+                for (const std::string& line : Kit::Wrap(*S().font, head + *block, 424.0f, 0.5f)) {
+                    if (ty > y + h - 18.0f) break;
+                    text(line, x + 12, ty, Kit::kText, 0.5f);
+                    ty += 19.0f;
+                }
+                ty += 8.0f;
+            }
         }
     }
 

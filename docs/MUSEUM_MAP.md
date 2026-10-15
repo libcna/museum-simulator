@@ -474,7 +474,7 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 
 | Room | Key | Title | Origin | APIs |
 |---|---|---|---|---|
-| 8.4.01 | `gs-players` | Signed-in Players | XNA 4.0 | Gamer.SignedInGamers, SignedInGamer.Presence, SignedInGamer.Privileges, SignedInGamer.GameDefaults, Gamer.GetProfile, GamerProfile, SignedInGamer.SignedIn, GamerPresenceMode |
+| 8.4.01 | `gs-players` | Signed-in Players | XNA 4.0 | Gamer.SignedInGamers, SignedInGamer.Presence, SignedInGamer.Privileges, SignedInGamer.GameDefaults, Gamer.GetProfile, GamerProfile, GamerProfile.Motto, GamerProfile.Region, GamerProfile.GetGamerPicture, GameDefaults.ControllerSensitivity, GameDefaults.RacingCameraAngle, GameDefaults.AutoCenter, GameDefaults.ManualTransmission, GameDefaults.AccelerateWithButtons, GameDefaults.PrimaryColor, SignedInGamer.SignedIn, GamerPresenceMode |
 | 8.4.02 | `gs-achievements` | Achievements | XNA 4.0 | SignedInGamer.AwardAchievement, SignedInGamer.GetAchievements, Achievement, AchievementCollection |
 | 8.4.03 | `gs-leaderboards` | Leaderboards | XNA 4.0 | LeaderboardWriter, LeaderboardEntry, LeaderboardReader, LeaderboardIdentity, LeaderboardKey, Gamer.LeaderboardWriter |
 | 8.4.04 | `gs-guide` | The Guide | XNA 4.0 | Guide.BeginShowMessageBox, Guide.EndShowMessageBox, Guide.BeginShowKeyboardInput, Guide.IsTrialMode, Guide.SimulateTrialMode, Guide.IsVisible, Guide.NotificationPosition, MessageBoxIcon |
