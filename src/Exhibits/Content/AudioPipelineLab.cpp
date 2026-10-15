@@ -24,6 +24,7 @@
 #include "Microsoft/Xna/Framework/Audio/SoundEffectInstance.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/Audio/AudioContent.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/Processors/AudioProcessors.hpp"
+#include "Microsoft/Xna/Framework/Content/Pipeline/Serialization/Compiler/ContentCompiler.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/WavImporter.hpp"
 #endif
 
@@ -36,7 +37,9 @@ namespace {
 namespace Xna = Microsoft::Xna::Framework::Content::Pipeline;
 namespace PipeAudio = Microsoft::Xna::Framework::Content::Pipeline::Audio;
 namespace Processors = Microsoft::Xna::Framework::Content::Pipeline::Processors;
+namespace Compiler = Microsoft::Xna::Framework::Content::Pipeline::Serialization::Compiler;
 using PipelineSupport::ImporterContext;
+using PipelineSupport::MemoryContentManager;
 using PipelineSupport::ProcessorContext;
 
 const char* const kFiles[] = {"ambience", "arpeggio", "chirp", "drums", "tone", "step"};
@@ -107,11 +110,13 @@ public:
         p.AddChoice("SoundEffectProcessor.Quality", {"Low", "Medium", "Best"}, 2, [this](int v) { quality_ = v; dirty_ = true; });
         p.AddButton("Play the imported sound", [this] { Play(false); });
         p.AddButton("Play the processed sound", [this] { Play(true); });
+        p.AddButton("ContentCompiler: write an .xnb, load it back, play", [this] { CompileAndLoad(); });
         p.AddReadout("Imported", [this] { return imported_; });
         p.AddReadout("Processed", [this] { return processed_; });
         p.AddReadout("Size", [this] { return size_; });
         p.AddReadout("Duration / loop", [this] { return duration_; });
         p.AddReadout("SongProcessor", [this] { return song_; });
+        p.AddReadout("Compiled .xnb", [this] { return compiled_; });
         p.AddReadout("Playback", [this] { return playback_; });
 #else
         p.AddReadout("Content pipeline", [] { return std::string("not built into this museum"); });
@@ -168,6 +173,9 @@ private:
         StopAll();
         importedWav_.clear();
         processedWav_.clear();
+        processedContent_.reset();
+        songContent_.reset();
+        compiled_ = "-";
         try {
             ImporterContext importerContext;
             Xna::WavImporter importer;
@@ -181,6 +189,7 @@ private:
             processor.setQualityProperty(quality_ == 0 ? PipeAudio::ConversionQuality::Low : quality_ == 1 ? PipeAudio::ConversionQuality::Medium : PipeAudio::ConversionQuality::Best);
             ProcessorContext context;
             const std::shared_ptr<Processors::SoundEffectContent> sound = processor.Process(audio, context);
+            processedContent_ = sound;
             processed_ = FormatText(*sound->Format());
             processedPeaks_ = Peaks(*sound->Format(), sound->Data(), 445);
             processedWav_ = WavFile(*sound->Format(), sound->Data());
@@ -193,6 +202,7 @@ private:
             Processors::SongProcessor songProcessor;
             songProcessor.setQualityProperty(quality_ == 0 ? PipeAudio::ConversionQuality::Low : quality_ == 1 ? PipeAudio::ConversionQuality::Medium : PipeAudio::ConversionQuality::Best);
             const std::shared_ptr<Processors::SongContent> song = songProcessor.Process(audio, context);
+            songContent_ = song;
             std::snprintf(buffer, sizeof buffer, "file name \"%s\", %.2f s", std::filesystem::path(song->FileName()).filename().string().c_str(), song->Duration().getTotalSecondsProperty());
             song_ = buffer;
         } catch (const std::exception& e) {
@@ -217,6 +227,33 @@ private:
         }
     }
 
+    // The processed sound compiled by ContentCompiler into an .xnb (and the song next to it), loaded back through a ContentManager that reads the
+    // bytes from memory, and played: the whole pipeline in one button.
+    void CompileAndLoad()
+    {
+        StopAll();
+        if (!processedContent_) { compiled_ = "nothing processed"; return; }
+        try {
+            Compiler::ContentCompiler compiler;
+            Compiler::CompileOptions options;
+            options.assetName = "compiled";
+            const CNA::Internal::Xnb::XnbAssetWriteResult sound = compiler.Compile<Processors::SoundEffectContent>(processedContent_, options);
+            const CNA::Internal::Xnb::XnbAssetWriteResult song = compiler.Compile<Processors::SongContent>(songContent_, options);
+            if (!manager_) manager_ = std::make_unique<MemoryContentManager>(&S().game->getServicesProperty());
+            manager_->bytes = sound.bytes;
+            manager_->Unload();
+            effect_ = std::make_unique<Microsoft::Xna::Framework::Audio::SoundEffect>(manager_->Load<Microsoft::Xna::Framework::Audio::SoundEffect>("compiled"));
+            instance_ = std::make_unique<Microsoft::Xna::Framework::Audio::SoundEffectInstance>(effect_->CreateInstance());
+            instance_->Play();
+            char buffer[160];
+            std::snprintf(buffer, sizeof buffer, "sound %s, song %zu bytes (a name and a duration)", Kb(sound.bytes.size()).c_str(), song.bytes.size());
+            compiled_ = buffer;
+            playback_ = "the sound loaded from the compiled bytes is playing";
+        } catch (const std::exception& e) {
+            compiled_ = std::string("failed: ") + std::string(e.what()).substr(0, 70);
+        }
+    }
+
     void StopAll()
     {
         try {
@@ -226,11 +263,14 @@ private:
         effect_.reset();
     }
 
+    std::unique_ptr<MemoryContentManager> manager_;
+    std::shared_ptr<Processors::SoundEffectContent> processedContent_;
+    std::shared_ptr<Processors::SongContent> songContent_;
     std::unique_ptr<Microsoft::Xna::Framework::Audio::SoundEffect> effect_;
     std::unique_ptr<Microsoft::Xna::Framework::Audio::SoundEffectInstance> instance_;
     std::string importedWav_, processedWav_;
     std::vector<float> importedPeaks_, processedPeaks_;
-    std::string imported_ = "-", processed_ = "-", size_ = "-", duration_ = "-", song_ = "-", playback_ = "-", error_;
+    std::string imported_ = "-", processed_ = "-", size_ = "-", duration_ = "-", song_ = "-", playback_ = "-", compiled_ = "-", error_;
     int file_ = 1, quality_ = 2;
     bool dirty_ = true;
 #endif

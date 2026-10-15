@@ -36,20 +36,8 @@ namespace PipeGfx = Microsoft::Xna::Framework::Content::Pipeline::Graphics;
 namespace Compiler = Microsoft::Xna::Framework::Content::Pipeline::Serialization::Compiler;
 namespace Processors = Microsoft::Xna::Framework::Content::Pipeline::Processors;
 using PipelineSupport::ImporterContext;
+using PipelineSupport::MemoryContentManager;
 using PipelineSupport::ProcessorContext;
-
-// A ContentManager whose one asset, "compiled", lives in a byte vector instead of a file: the OpenStream seam every XNA manager reads through.
-class MemoryContentManager final : public Microsoft::Xna::Framework::Content::ContentManager {
-public:
-    explicit MemoryContentManager(System::IServiceProvider* services) : ContentManager(services) { RouteLoadsThroughOpenStreamEXT(true); }
-    std::vector<std::uint8_t> bytes;
-
-protected:
-    [[nodiscard]] std::unique_ptr<System::IO::Stream> OpenStream(const std::string&) override
-    {
-        return std::make_unique<System::IO::MemoryStream>(reinterpret_cast<const SharpRuntime::bytecs*>(bytes.data()), static_cast<SharpRuntime::intcs>(bytes.size()), false);
-    }
-};
 
 std::string Kb(std::size_t bytes)
 {

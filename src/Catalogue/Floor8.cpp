@@ -132,7 +132,7 @@ WingSpec ContentWing()
             r.height = 5.0f;
             r.theme = "workshop";
             r.apis = {"WavImporter", "AudioContent", "AudioContent.Format", "AudioContent.Data", "AudioContent.Duration", "AudioContent.LoopStart", "AudioContent.LoopLength", "AudioFormat", "AudioFormat.SampleRate", "AudioFormat.ChannelCount", "AudioFormat.BitsPerSample",
-                      "AudioFormat.NativeWaveFormat", "ConversionQuality", "SoundEffectProcessor", "SoundEffectProcessor.Quality", "SoundEffectContent", "SongProcessor", "SongContent", "SoundEffect.FromStream"};
+                      "AudioFormat.NativeWaveFormat", "ConversionQuality", "SoundEffectProcessor", "SoundEffectProcessor.Quality", "SoundEffectContent", "SongProcessor", "SongContent", "SoundEffect.FromStream", "ContentCompiler.Compile(SoundEffectContent)", "ContentCompiler.Compile(SongContent)"};
             r.origin = ApiOrigin::Xna;
             return r;
         }(),

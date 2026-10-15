@@ -52,7 +52,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1133 distinct API names are claimed by at least one room.
+1135 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -293,6 +293,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ContainmentType | `col-box-box` |
 | ContentCompiler | `ct-compiler` |
 | ContentCompiler.Compile | `ct-compiler` |
+| ContentCompiler.Compile(SongContent) | `ct-audiopipeline` |
+| ContentCompiler.Compile(SoundEffectContent) | `ct-audiopipeline` |
 | ContentIdentity | `ct-fontbuild` |
 | ContentImporter | `ct-modelimport` |
 | ContentImporterAttribute | `ct-modelimport` |

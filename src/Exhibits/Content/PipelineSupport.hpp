@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "Microsoft/Xna/Framework/Content/ContentManager.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/ContentBuildLogger.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/ContentImporterContext.hpp"
 #include "Microsoft/Xna/Framework/Content/Pipeline/ContentProcessorContext.hpp"
@@ -24,6 +25,7 @@
 #include "Microsoft/Xna/Framework/Matrix.hpp"
 #include "Microsoft/Xna/Framework/Graphics/VertexElement.hpp"
 #include "Microsoft/Xna/Framework/Graphics/VertexPositionNormalTexture.hpp"
+#include "System/IO/MemoryStream.hpp"
 #include "System/NotSupportedException.hpp"
 
 namespace PipelineSupport {
@@ -98,6 +100,20 @@ public:
 private:
     QuietLogger logger_;
     Xna::OpaqueDataDictionary parameters_;
+};
+
+// A ContentManager whose one asset lives in a byte vector instead of a file: the OpenStream seam every XNA manager reads through, so compiled
+// bytes can be loaded back without touching the disk.
+class MemoryContentManager final : public Microsoft::Xna::Framework::Content::ContentManager {
+public:
+    explicit MemoryContentManager(System::IServiceProvider* services) : ContentManager(services) { RouteLoadsThroughOpenStreamEXT(true); }
+    std::vector<std::uint8_t> bytes;
+
+protected:
+    [[nodiscard]] std::unique_ptr<System::IO::Stream> OpenStream(const std::string&) override
+    {
+        return std::make_unique<System::IO::MemoryStream>(reinterpret_cast<const SharpRuntime::bytecs*>(bytes.data()), static_cast<SharpRuntime::intcs>(bytes.size()), false);
+    }
 };
 
 inline const char* UsageName(Microsoft::Xna::Framework::Graphics::VertexElementUsage u)
