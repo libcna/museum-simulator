@@ -51,7 +51,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-976 distinct API names are claimed by at least one room.
+997 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -621,7 +621,16 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | MediaPlayer.Volume | `au-music` |
 | MediaQueue | `au-music` |
 | MediaState | `au-music` |
-| MeshBuilder | `an-gears` |
+| MeshBuilder | `an-gears`, `ct-meshbuilder` |
+| MeshBuilder.AddTriangleVertex | `ct-meshbuilder` |
+| MeshBuilder.CreatePosition | `ct-meshbuilder` |
+| MeshBuilder.CreateVertexChannel | `ct-meshbuilder` |
+| MeshBuilder.FinishMesh | `ct-meshbuilder` |
+| MeshBuilder.MergeDuplicatePositions | `ct-meshbuilder` |
+| MeshBuilder.SetVertexChannelData | `ct-meshbuilder` |
+| MeshBuilder.StartMesh | `ct-meshbuilder` |
+| MeshBuilder.SwapWindingOrder | `ct-meshbuilder` |
+| MeshContent | `ct-meshbuilder` |
 | MessageBoxIcon | `gs-guide` |
 | Microphone | `au-mic` |
 | Microphone.BufferDuration | `au-mic` |
@@ -643,19 +652,28 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | ModelAnimationsEXT | `model-rigid` |
 | ModelBone | `model-rigid` |
 | ModelBone.Children | `model-load` |
+| ModelBoneContent | `ct-meshbuilder` |
 | ModelCameraEXT | `model-cameras` |
 | ModelCameraEXT.IsPerspective | `model-cameras` |
 | ModelCameraEXT.Projection | `model-cameras` |
 | ModelCameraEXT.WorldTransform | `model-cameras` |
+| ModelContent | `ct-meshbuilder` |
 | ModelMesh | `models`, `model-load` |
 | ModelMesh.BoundingSphere | `model-bounds` |
 | ModelMesh.Draw | `model-sampler` |
+| ModelMeshContent | `ct-meshbuilder` |
 | ModelMeshPart | `model-load` |
 | ModelMeshPart.Effect | `model-effects` |
 | ModelMeshPart.PrimitiveTypeEXT | `model-load` |
 | ModelMeshPart.SamplerStatesEXT | `model-load`, `model-sampler` |
 | ModelMeshPart.SetSamplerStateEXT | `model-sampler` |
 | ModelMeshPart.Tag | `model-morph` |
+| ModelMeshPartContent | `ct-meshbuilder` |
+| ModelProcessor | `ct-meshbuilder` |
+| ModelProcessor.GenerateTangentFrames | `ct-meshbuilder` |
+| ModelProcessor.RotationY | `ct-meshbuilder` |
+| ModelProcessor.Scale | `ct-meshbuilder` |
+| ModelProcessor.SwapWindingOrder | `ct-meshbuilder` |
 | MorphTargetDataEXT | `model-morph` |
 | Mouse.GetGlobalPositionEXT | `in-devices` |
 | Mouse.GetState | `in-mouse` |
@@ -997,9 +1015,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Vector4Converter | `vt-converters` |
 | VertexBuffer | `geo-vertextypes`, `geo-indexed`, `geo-procedural`, `geo-manybuffers`, `geo-terrain`, `model-skinfx`, `pf-buffers` |
 | VertexBufferBinding | `geo-instancing`, `pf-objects` |
+| VertexBufferContent | `ct-meshbuilder` |
+| VertexChannelNames | `ct-meshbuilder` |
 | VertexDeclaration | `geo-vertextypes` |
 | VertexDeclaration.GetVertexElements | `geo-vertextypes` |
 | VertexDeclaration.VertexStride | `geo-vertextypes` |
+| VertexDeclarationContent | `ct-meshbuilder` |
 | VertexElement | `geo-vertextypes` |
 | VertexElementFormat | `geo-vertextypes` |
 | VertexElementUsage | `geo-vertextypes` |

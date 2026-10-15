@@ -19,8 +19,8 @@ code above CNA is application structure (rooms, portals, a floor map, an exhibit
 | Floor 8: image formats decoded by ContentManager | Floor 9: renderer self-checks | Floor 9: the observation deck |
 | ![sampler](docs/images/sampler.jpg) | ![colours](docs/images/colours.jpg) | ![fontbuild](docs/images/fontbuild.jpg) |
 | Floor 6: glTF sampler states (repeat, clamp, mirror) | Floor 1: the 141 named colours | Floor 8: a font built at run time |
-| ![shadererrors](docs/images/shadererrors.jpg) | | |
-| Floor 4: what a shader compile error looks like to CNA | | |
+| ![shadererrors](docs/images/shadererrors.jpg) | ![meshbuilder](docs/images/meshbuilder.jpg) | |
+| Floor 4: what a shader compile error looks like to CNA | Floor 8: a model built with MeshBuilder and ModelProcessor | |
 
 All images are real frames from the running museum (`tools/readme_shots.sh`), not mock-ups.
 
@@ -30,11 +30,11 @@ All images are real frames from the running museum (`tools/readme_shots.sh`), no
 ```
 floors:          10
 wings:           36
-exhibit rooms:   285  (5 outdoors)
-walkable cells:  351  (rooms, galleries, concourses, halls, elevators)
-exhibit kinds:   64
-origin:          226 XNA 4.0, 59 CNA extension, 0 application
-API names:       976
+exhibit rooms:   286  (5 outdoors)
+walkable cells:  352  (rooms, galleries, concourses, halls, elevators)
+exhibit kinds:   65
+origin:          227 XNA 4.0, 59 CNA extension, 0 application
+API names:       997
   floor 0  10 rooms  Lobby and Introductory Tour
   floor 1  54 rooms  Fundamentals
   floor 2  23 rooms  Two-Dimensional Rendering
@@ -43,7 +43,7 @@ API names:       976
   floor 5  24 rooms  Render State and Render Targets
   floor 6  39 rooms  Models, Animation and Particles
   floor 7  19 rooms  Audio and Input
-  floor 8  42 rooms  Content, Platform and CNA
+  floor 8  43 rooms  Content, Platform and CNA
   floor 9  23 rooms  Performance and Validation
 ```
 <!-- END COUNTS -->
