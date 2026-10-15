@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""Writes the two model files the Model Import room reads: Content/Models/Import/cottage.x (DirectX text format) and cottage.fbx (FBX 6.1 ASCII).
+"""Writes/copies the three model files the Model Import room reads: Content/Models/Import/cottage.x (DirectX text format), cottage.fbx (FBX 6.1 ASCII), and binary-modern.fbx (FBX 7.5 binary).
 
 Both describe the same cottage: a mesh with two materials (cream walls, a rust roof) and a child frame that holds the chimney, a second
 mesh with a third material, so the importers' node trees, per-polygon materials and hierarchy transforms all have something to show.
 Nothing is downloaded: the geometry is generated here. Run from the repository root:  python3 tools/gen_models.py
 """
 import os
+import shutil
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "Content", "Models", "Import")
+ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
 # Right-handed, Y up, faces listed counter-clockwise seen from outside.
 def box(x0, y0, z0, x1, y1, z1):
@@ -137,5 +139,9 @@ if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     write_x()
     write_fbx()
-    for n in ("cottage.x", "cottage.fbx"):
+    binary_fixture = os.path.join(ROOT, "..", "cna", "tests", "assets", "xna40", "model", "fbx_binary_modern.fbx")
+    if not os.path.isfile(binary_fixture):
+        raise FileNotFoundError("binary FBX fixture not found in sibling CNA repository: " + binary_fixture)
+    shutil.copyfile(binary_fixture, os.path.join(OUT, "binary-modern.fbx"))
+    for n in ("cottage.x", "cottage.fbx", "binary-modern.fbx"):
         print(n, os.path.getsize(os.path.join(OUT, n)), "bytes")

@@ -95,7 +95,7 @@ WingSpec ContentWing()
             RoomSpec r;
             r.key = "ct-modelimport";
             r.title = "Importing a Model File";
-            r.subtitle = "XImporter (.x) and FbxImporter (.fbx) read the same cottage; ModelProcessor builds it and every part is drawn with its material and frame transform";
+            r.subtitle = "XImporter and FbxImporter read DirectX .x, ASCII FBX 6.1, and modern binary FBX 7.5; ModelProcessor builds and draws the processed parts";
             r.exhibit = "modelimport-lab";
             r.width = 13;
             r.depth = 13;

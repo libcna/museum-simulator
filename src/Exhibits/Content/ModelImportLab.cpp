@@ -1,5 +1,5 @@
-// Model import laboratory: the XNA content pipeline's XImporter (DirectX text .x) and FbxImporter (ASCII FBX 6.1) reading real files in
-// the game. The same cottage is written in both formats (tools/gen_models.py); each importer returns a NodeContent tree (frames, meshes,
+// Model import laboratory: the XNA content pipeline's XImporter (DirectX text .x) and FbxImporter (ASCII FBX 6.1 or modern binary FBX 7.5) reading real files in
+// the game. A cottage is written in the first two formats and a two-material quad exercises the binary record stream; each importer returns a NodeContent tree (frames, meshes,
 // materials), ModelProcessor turns that into a ModelContent, and the museum draws every part with the colour of its material and the
 // transform of its frame. Seeing the two files give the same model is the point: they are different formats of one scene.
 // Without CNA's pipeline library (-DMUSEUM_PIPELINE=OFF) the room says so.
@@ -57,7 +57,7 @@ public:
     {
         ControlPanel& p = AddPanel("Importing a model file", -4.8f, 1.5f, 1.8f, MathHelper::PiOver2, 2.1f);
 #ifdef MUSEUM_PIPELINE
-        p.AddChoice("File", {"cottage.x (XImporter)", "cottage.fbx (FbxImporter)"}, 0, [this](int v) { file_ = v; Build(); });
+        p.AddChoice("File", {"cottage.x (XImporter)", "cottage.fbx (FbxImporter, ASCII 6.1)", "binary-modern.fbx (FbxImporter, binary 7.5)"}, 0, [this](int v) { file_ = v; Build(); });
         p.AddSlider("ModelProcessor.Scale", 0.5f, 2.0f, scale_, [this](float v) { scale_ = v; Build(); }, "%.2f", 0.05f);
         p.AddToggle("ModelProcessor.SwapWindingOrder", false, [this](bool v) { swap_ = v; Build(); });
         p.AddToggle("Spin", true, [this](bool v) { spin_ = v; });
@@ -74,7 +74,7 @@ public:
         MathKit::BuildStagePlinth(b, 0.0f, 0.0f, 0.4f);
         SignSpec what = Kit::Plate("Importing a 3D Model File",
                                    {"An importer reads a file format and returns a tree of nodes: frames, meshes, materials. XNA shipped XImporter (the DirectX .x text and binary format) and FbxImporter; here both read",
-                                    "a cottage written in each format, ModelProcessor builds vertex buffers from the tree, and every part is drawn with its own material colour and the transform of its frame."});
+                                    "a cottage written as .x and ASCII FBX. The third choice is a modern binary FBX 7.5 with compressed arrays: XNA's old FBX SDK refused it, while CNA reads it. ModelProcessor builds and draws every result."});
         what.leftAlign = true;
         what.pixelWidth = 900;
         b.AddWallSign(Wall::East, 0.0f, 2.4f, 4.4f, 2.0f, what);
@@ -133,7 +133,9 @@ private:
         tree_.clear();
         try {
             ImporterContext importerContext;
-            const std::string path = S().contentRoot + (file_ == 0 ? "/Models/Import/cottage.x" : "/Models/Import/cottage.fbx");
+            const std::string path = S().contentRoot + (file_ == 0 ? "/Models/Import/cottage.x" :
+                                                        file_ == 1 ? "/Models/Import/cottage.fbx" :
+                                                                     "/Models/Import/binary-modern.fbx");
             std::shared_ptr<Xna::Graphics::NodeContent> root;
             if (file_ == 0) {
                 Xna::XImporter importer;
