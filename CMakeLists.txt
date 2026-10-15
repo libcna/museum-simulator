@@ -58,6 +58,10 @@ set(CNA_ENABLE_VIDEO "${MUSEUM_VIDEO}" CACHE STRING "Enable FFmpeg video playbac
 set(CNA_CNAEXT      ON    CACHE BOOL   "Build CNA's graphics extensions")
 set(CNA_DEVICES     ON    CACHE BOOL   "Build CNA's device extensions")
 set(CNA_DIAGNOSTICS STATS CACHE STRING "CNA diagnostics level (OFF|STATS|FULL)")
+# CNA's optional Inspector (an agent that serves the diagnostics over an authenticated loopback socket, and a client) is a separate module that is
+# off in CNA's own default build. The museum links it for the Inspector room; the agent is never started until a visitor presses its button.
+option(MUSEUM_INSPECTOR "Link CNA's optional Inspector agent and client for the Inspector room" ON)
+set(CNA_BUILD_INSPECTOR ${MUSEUM_INSPECTOR} CACHE BOOL "Build CNA's Inspector agent" FORCE)
 set(EASYGL_BUILD_TESTS    OFF CACHE BOOL "Build easy-gl tests")
 set(EASYGL_BUILD_EXAMPLES OFF CACHE BOOL "Build easy-gl examples")
 set(METAGL_BUILD_TESTS    OFF CACHE BOOL "Build meta-gl tests")
@@ -97,6 +101,10 @@ endif()
 if(TARGET cna_design)
     target_link_libraries(museum_core PUBLIC cna_design)
     target_compile_definitions(museum_core PUBLIC MUSEUM_DESIGN=1)
+endif()
+if(MUSEUM_INSPECTOR AND TARGET cna_inspector)
+    target_link_libraries(museum_core PUBLIC cna_inspector)
+    target_compile_definitions(museum_core PUBLIC MUSEUM_INSPECTOR=1)
 endif()
 # CNA's content pipeline (IntermediateSerializer and the importers) is a build-time library; the Content Pipeline wing runs it in the game.
 option(MUSEUM_PIPELINE "Link CNA's content pipeline library for the Pipeline in the Game room" ON)

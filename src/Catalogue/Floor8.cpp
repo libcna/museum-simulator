@@ -195,6 +195,15 @@ WingSpec PlatformWing()
             r.params = {};
             return r;
         }(),
+        [&] {
+            RoomSpec r = pl("pl-inspector", "The Inspector", "CNA's optional Inspector: an agent serves diagnostics over an authenticated loopback socket and a client reads snapshots and events", "",
+                            {"CNA::Inspector::Agent", "Agent.Start", "Agent.Stop", "Agent.GetPort", "Agent.GetAuthenticationToken", "AgentConfiguration", "CNA::Inspector::Client", "Client.Connect", "Client.Ping", "Client.CaptureSnapshot", "Client.ReadEvents",
+                             "Client.RequestPreview", "HelloResponse", "SnapshotResponse", "EventsResponse", "PreviewResponse", "Capability", "SnapshotPart"},
+                            ApiOrigin::CnaExtension);
+            r.exhibit = "inspector-lab";
+            r.params = {};
+            return r;
+        }(),
         pl("pl-window", "The Game Window", "GameWindow title, client bounds, resizing, activation and file drops", "window", {"GameWindow.GetNativeWindowHandleEXT", "GameWindow.CurrentOrientation", "GameWindow.OrientationChanged", "GraphicsDeviceManager.SupportedOrientations", "CNA::Platform::NativeWindowHandle", "GameWindow.Title", "GameWindow.ClientBounds", "GameWindow.AllowUserResizing", "GameWindow.ClientSizeChanged", "Game.Activated", "GameWindow.FileDropEXT"}, ApiOrigin::Xna),
         pl("pl-adapter", "Adapter and Back Buffer", "GraphicsAdapter, display modes, GraphicsProfile and PresentationParameters", "adapter", {"GraphicsAdapter", "GraphicsAdapter.UseNullDevice", "GraphicsAdapter.UseReferenceDevice", "GraphicsAdapter.GetCurrentDeviceTypeEXT", "GraphicsAdapter.GetRequiredRendererEXT", "DisplayMode", "GraphicsDevice.GraphicsProfile", "PresentationParameters", "GraphicsAdapter.IsProfileSupported", "GraphicsAdapter.QueryRenderTargetFormat", "GraphicsAdapter.QueryBackBufferFormat", "GraphicsAdapter.Adapters", "GraphicsAdapter.IsWideScreenAspectRatioEXT"}, ApiOrigin::Xna),
         pl("pl-renderer", "The Active Renderer", "Renderer identity, maturity, features, limits, surface formats and the device's own colour-space and support queries", "renderer", {"GraphicsDevice.GetRendererCapabilityProfileEXT", "GraphicsDevice.GetRendererCapabilityReportEXT", "RendererFeature", "RendererLimit", "RendererFormatUsage", "GraphicsDevice.GetGraphicsRendererName", "GraphicsDevice.GetDisplayColorSpaceEXT", "GraphicsDevice.SupportsDisplayColorSpaceEXT", "GraphicsDevice.SetDisplayColorSpaceEXT", "GraphicsDevice.SupportsImageBasedLightingEXT", "GraphicsDevice.GetTrackedResourceCount", "GraphicsDevice.GetLogicalSizeEXT"}, ApiOrigin::CnaExtension),

@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 36 wings, 287 exhibit rooms (5 open to the sky), 353 walkable cells in all.
+10 floors, 36 wings, 288 exhibit rooms (5 open to the sky), 354 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -467,10 +467,11 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 |---|---|---|---|---|
 | 8.3.01 | `pl-exceptions` | Exceptions CNA Throws | XNA 4.0 | System.ObjectDisposedException, System.ArgumentOutOfRangeException, System.InvalidOperationException, ContentLoadException, System.IO.FileNotFoundException, GamerServicesNotAvailableException, GuideAlreadyVisibleException, StorageContainer, TitleContainer.OpenStream, SpriteBatch.Begin, SpriteBatch.End |
 | 8.3.02 | `pl-log` | CNA's Log | CNA extension | CNA::Logger, Logger.Log, Logger.InfoIf, Logger.WarnIf, Logger.SetMinimumLevel, Logger.GetMinimumLevel, Logger.SetSink, Logger.ResetSink, CNA::LogLevel, CNA::LogCategory |
-| 8.3.03 | `pl-window` | The Game Window | XNA 4.0 | GameWindow.GetNativeWindowHandleEXT, GameWindow.CurrentOrientation, GameWindow.OrientationChanged, GraphicsDeviceManager.SupportedOrientations, CNA::Platform::NativeWindowHandle, GameWindow.Title, GameWindow.ClientBounds, GameWindow.AllowUserResizing, GameWindow.ClientSizeChanged, Game.Activated, GameWindow.FileDropEXT |
-| 8.3.04 | `pl-adapter` | Adapter and Back Buffer | XNA 4.0 | GraphicsAdapter, GraphicsAdapter.UseNullDevice, GraphicsAdapter.UseReferenceDevice, GraphicsAdapter.GetCurrentDeviceTypeEXT, GraphicsAdapter.GetRequiredRendererEXT, DisplayMode, GraphicsDevice.GraphicsProfile, PresentationParameters, GraphicsAdapter.IsProfileSupported, GraphicsAdapter.QueryRenderTargetFormat, GraphicsAdapter.QueryBackBufferFormat, GraphicsAdapter.Adapters, GraphicsAdapter.IsWideScreenAspectRatioEXT |
-| 8.3.05 | `pl-renderer` | The Active Renderer | CNA extension | GraphicsDevice.GetRendererCapabilityProfileEXT, GraphicsDevice.GetRendererCapabilityReportEXT, RendererFeature, RendererLimit, RendererFormatUsage, GraphicsDevice.GetGraphicsRendererName, GraphicsDevice.GetDisplayColorSpaceEXT, GraphicsDevice.SupportsDisplayColorSpaceEXT, GraphicsDevice.SetDisplayColorSpaceEXT, GraphicsDevice.SupportsImageBasedLightingEXT, GraphicsDevice.GetTrackedResourceCount, GraphicsDevice.GetLogicalSizeEXT |
-| 8.3.06 | `pl-platform` | Platform Capabilities | CNA extension | Game.GetPlatformCapabilitiesEXT, PlatformCapabilities, Game.GetPlatformEXT, CNA::Platform::IPlatform, IPlatform.GetName, IPlatform.IsSubsystemInitialized, IPlatform.GetPerformanceFrequency, IPlatform.GetTicksMilliseconds, IPlatform.GetKeyboard |
+| 8.3.03 | `pl-inspector` | The Inspector | CNA extension | CNA::Inspector::Agent, Agent.Start, Agent.Stop, Agent.GetPort, Agent.GetAuthenticationToken, AgentConfiguration, CNA::Inspector::Client, Client.Connect, Client.Ping, Client.CaptureSnapshot, Client.ReadEvents, Client.RequestPreview, HelloResponse, SnapshotResponse, EventsResponse, PreviewResponse, Capability, SnapshotPart |
+| 8.3.04 | `pl-window` | The Game Window | XNA 4.0 | GameWindow.GetNativeWindowHandleEXT, GameWindow.CurrentOrientation, GameWindow.OrientationChanged, GraphicsDeviceManager.SupportedOrientations, CNA::Platform::NativeWindowHandle, GameWindow.Title, GameWindow.ClientBounds, GameWindow.AllowUserResizing, GameWindow.ClientSizeChanged, Game.Activated, GameWindow.FileDropEXT |
+| 8.3.05 | `pl-adapter` | Adapter and Back Buffer | XNA 4.0 | GraphicsAdapter, GraphicsAdapter.UseNullDevice, GraphicsAdapter.UseReferenceDevice, GraphicsAdapter.GetCurrentDeviceTypeEXT, GraphicsAdapter.GetRequiredRendererEXT, DisplayMode, GraphicsDevice.GraphicsProfile, PresentationParameters, GraphicsAdapter.IsProfileSupported, GraphicsAdapter.QueryRenderTargetFormat, GraphicsAdapter.QueryBackBufferFormat, GraphicsAdapter.Adapters, GraphicsAdapter.IsWideScreenAspectRatioEXT |
+| 8.3.06 | `pl-renderer` | The Active Renderer | CNA extension | GraphicsDevice.GetRendererCapabilityProfileEXT, GraphicsDevice.GetRendererCapabilityReportEXT, RendererFeature, RendererLimit, RendererFormatUsage, GraphicsDevice.GetGraphicsRendererName, GraphicsDevice.GetDisplayColorSpaceEXT, GraphicsDevice.SupportsDisplayColorSpaceEXT, GraphicsDevice.SetDisplayColorSpaceEXT, GraphicsDevice.SupportsImageBasedLightingEXT, GraphicsDevice.GetTrackedResourceCount, GraphicsDevice.GetLogicalSizeEXT |
+| 8.3.07 | `pl-platform` | Platform Capabilities | CNA extension | Game.GetPlatformCapabilitiesEXT, PlatformCapabilities, Game.GetPlatformEXT, CNA::Platform::IPlatform, IPlatform.GetName, IPlatform.IsSubsystemInitialized, IPlatform.GetPerformanceFrequency, IPlatform.GetTicksMilliseconds, IPlatform.GetKeyboard |
 
 **Players and Networking** - GamerServices and Net: signed-in players, achievements, the Guide, packets and a session between two local players
 

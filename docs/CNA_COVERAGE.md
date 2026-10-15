@@ -44,19 +44,25 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | `MediaLibrary`, albums, playlists, pictures (`Microsoft.Xna.Framework.Media`) | deliberately not demonstrated: CNA builds them by scanning the visitor's own Music and Pictures folders, and the museum does not read personal files (the only way to point it elsewhere is a test-only hook inside CNA) |
 | GamerServices voice chat, a shared party between three or more accounts, host migration | not demonstrated: the *Online Service* wing needs the sibling CNA gamer-services server (`tools/online_stack.sh`); it demonstrates accounts, friends, presence, messages, parties, online leaderboards, PlayerMatch sessions with find, join and invitations between two accounts. Voice needs a microphone and a second machine |
 | `FileDialog`, `MessageBox`, `SystemTray`, `UrlLauncher`, `Camera` (CNA_DEVICES) | not implemented: they open real dialogs or hardware; the room reports whether each is supported |
-| C API, Inspector | not implemented: disabled in CNA's default build |
+| C API | not implemented: disabled in CNA's default build, and the museum is a C++ program |
+| Inspector (`CNA::Inspector::Agent`, `Client`) | `pl-inspector`: the museum builds CNA's optional Inspector module (`MUSEUM_INSPECTOR`, default ON) and the room starts the agent on a button press and plays the client in the same process. The separate `cna-inspector` bridge and browser page are not exercised |
 | Compiled XNA effects (`.fxb`) | demonstrated in *Compiled XNA Effects*, which runs a real XNA-compiled effect on FNA3D (the only renderer with `CompiledEffects`) and says so elsewhere |
 | Retired renderers and removed CNA features (for example VULKAN, the post-process chain) | deliberately not demonstrated |
 
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1007 distinct API names are claimed by at least one room.
+1025 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
 | Achievement | `gs-achievements` |
 | AchievementCollection | `gs-achievements` |
+| Agent.GetAuthenticationToken | `pl-inspector` |
+| Agent.GetPort | `pl-inspector` |
+| Agent.Start | `pl-inspector` |
+| Agent.Stop | `pl-inspector` |
+| AgentConfiguration | `pl-inspector` |
 | AlphaModeEXT | `model-material` |
 | AlphaTestEffect | `tex-alpha`, `rv-effects` |
 | AnimationClipEXT | `model-skinext` |
@@ -177,6 +183,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CNA::GraphicsRendererSelection.GetFallbackHistory | `hist-cna` |
 | CNA::GraphicsRendererSelection.GetSelected | `hist-cna` |
 | CNA::GraphicsRendererSelection.IsFallbackEnabled | `hist-cna` |
+| CNA::Inspector::Agent | `pl-inspector` |
+| CNA::Inspector::Client | `pl-inspector` |
 | CNA::LogCategory | `pl-log` |
 | CNA::LogLevel | `pl-log` |
 | CNA::Logger | `pl-log` |
@@ -188,6 +196,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CNA::getGraphicsRendererName | `hist-cna` |
 | CNAEXT | `hist-compare` |
 | CRTMaskType | `cx-crt` |
+| Capability | `pl-inspector` |
+| Client.CaptureSnapshot | `pl-inspector` |
+| Client.Connect | `pl-inspector` |
+| Client.Ping | `pl-inspector` |
+| Client.ReadEvents | `pl-inspector` |
+| Client.RequestPreview | `pl-inspector` |
 | Clipboard.GetMimeTypesEXT | `in-text` |
 | Clipboard.GetPrimarySelectionTextEXT | `in-text` |
 | Clipboard.GetTextEXT | `in-text` |
@@ -339,6 +353,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | EnvironmentMapEffect | `tex-cube`, `rt-cube` |
 | EnvironmentMapEffect.EnvironmentMap | `rt-cube` |
 | EvaluateMorphWeightsEXT | `model-morph` |
+| EventsResponse | `pl-inspector` |
 | FontDescription | `ct-fontbuild` |
 | FontDescription.Characters | `ct-fontbuild` |
 | FontDescription.DefaultCharacter | `ct-fontbuild` |
@@ -520,6 +535,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Haptics.GetHapticsEXT | `in-devices` |
 | Haptics.IsJoystickHapticEXT | `in-devices` |
 | Haptics.IsMouseHapticEXT | `in-devices` |
+| HelloResponse | `pl-inspector` |
 | HostChangedEventArgs | `net-session` |
 | IAvatarAnimation | `gs-avatar` |
 | IDrawable | `app-components` |
@@ -776,6 +792,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | PreferPerPixelLighting | `lighting` |
 | PresentInterval | `app-viewport` |
 | PresentationParameters | `app-device`, `app-viewport`, `pl-adapter` |
+| PreviewResponse | `pl-inspector` |
 | PrimitiveType | `geo-primitives` |
 | PrimitiveType.LineList | `rf-weather` |
 | PrimitiveType.PointListEXT | `cx-points`, `pf-particles` |
@@ -890,6 +907,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SkinningData | `model-skinned` |
 | Snapshot.metrics | `cx-stats` |
 | Snapshot.resources | `cx-stats` |
+| SnapshotPart | `pl-inspector` |
+| SnapshotResponse | `pl-inspector` |
 | Song | `au-music` |
 | Song.Artist | `au-music` |
 | Song.Duration | `au-music` |
