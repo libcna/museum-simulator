@@ -10,6 +10,7 @@
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ExhibitKit.hpp"
 #include "Exhibits/Math/MathKit.hpp"
+#include "Microsoft/Xna/Framework/Graphics/ColorWriteChannels.hpp"
 #include "Microsoft/Xna/Framework/Graphics/CubeMapFace.hpp"
 #include "Microsoft/Xna/Framework/Graphics/DepthFormat.hpp"
 #include "Microsoft/Xna/Framework/Graphics/EnvironmentMapEffect.hpp"
@@ -113,6 +114,7 @@ public:
                 break;
             case Mode::Mrt:
                 p.AddReadout("MultipleRenderTargets", [this] { return std::string(S().device->SupportsCapability(CNA::GraphicsCapability::MultipleRenderTargets) ? "supported" : "NOT supported here"); });
+                p.AddToggle("Write the second target (BlendState.ColorWriteChannels1)", true, [this](bool v) { writeSecond_ = v; mrtFrames_ = 0; secondTarget_ = "checking..."; });
                 p.AddReadout("Second target (edges)", [this] { return secondTarget_; });
                 p.AddReadout("GetRenderTargets() while bound", [this] { return boundTargets_; });
                 p.AddReadout("ShaderEffect source", [this] { return effect_ && effect_->IsEffectValid() ? "compiled (" + dialect_ + ")" : std::string("unavailable"); });
@@ -587,7 +589,10 @@ private:
         effect_->Apply();
         if (packedUniforms_) effect_->SetUniformVec4("color", 1.0f / 480.0f, 1.0f / 270.0f, 0.0f, 0.0f);   // SDL_GPU: one fixed uniform block, names ignored
         else effect_->SetUniformVec2("uTexel", 1.0f / 480.0f, 1.0f / 270.0f);
-        S().sprites->Begin(SpriteSortMode::Deferred, &BlendState::Opaque, &SamplerState::LinearClamp, nullptr, nullptr, effect_.get());
+        // Per-target write masks: ColorWriteChannels is attachment 0's, ColorWriteChannels1 is the second target's.
+        BlendState mrtBlend = BlendState::Opaque;
+        mrtBlend.setColorWriteChannels1Property(writeSecond_ ? ColorWriteChannels::All : ColorWriteChannels::None);
+        S().sprites->Begin(SpriteSortMode::Deferred, &mrtBlend, &SamplerState::LinearClamp, nullptr, nullptr, effect_.get());
         S().sprites->Draw(*source_->Texture(), Rectangle(0, 0, 480, 270), Color::White);
         S().sprites->End();
         d.SetRenderTarget(nullptr);
@@ -653,6 +658,7 @@ private:
     std::unique_ptr<ShaderEffect> effect_;
     std::string dialect_ = "GLSL", secondTarget_ = "-", boundTargets_ = "-";
     int mrtFrames_ = 0;
+    bool writeSecond_ = true;
     bool packedUniforms_ = false;
     std::array<std::string, 6> formatStatus_{"-", "-", "-", "-", "-", "-"};
     Matrix mirrorView_, mirrorProj_;
