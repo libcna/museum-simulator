@@ -131,6 +131,7 @@ public:
                 p.AddButton("SetTriggerVibrationEXT / SetLightBarEXT", [this] { TriggerAndLight(); });
                 p.AddReadout("Trigger motors and light bar", [this] { return triggerNote_; });
                 p.AddReadout("Identity (GUID, gyro, touchpad, label of A)", [this] { return identityNote_; });
+                p.AddReadout("GamePadCapabilities (present / possible)", [] { return CapabilitySummary(); });
                 p.AddReadout("IsConnected", [this] { return std::string(pad_.getIsConnectedProperty() ? "yes" : "no"); });
                 p.AddReadout("Packet number", [this] { return std::to_string(pad_.getPacketNumberProperty()); });
                 p.AddReadout("IsButtonDown(Buttons.*)", [this] { return PressedButtons(); });
@@ -598,6 +599,36 @@ private:
     }
 
     // --- game pad ----------------------------------------------------------------------------------
+    [[nodiscard]] static std::string CapabilitySummary()
+    {
+        const GamePadCapabilities c = GamePad::GetCapabilities(PlayerIndex::One);
+        const int buttons = static_cast<int>(c.getHasAButtonProperty()) +
+            static_cast<int>(c.getHasBButtonProperty()) + static_cast<int>(c.getHasXButtonProperty()) +
+            static_cast<int>(c.getHasYButtonProperty()) + static_cast<int>(c.getHasBackButtonProperty()) +
+            static_cast<int>(c.getHasStartButtonProperty()) + static_cast<int>(c.getHasBigButtonProperty()) +
+            static_cast<int>(c.getHasLeftShoulderButtonProperty()) +
+            static_cast<int>(c.getHasRightShoulderButtonProperty()) +
+            static_cast<int>(c.getHasLeftStickButtonProperty()) +
+            static_cast<int>(c.getHasRightStickButtonProperty());
+        const int dpad = static_cast<int>(c.getHasDPadUpButtonProperty()) +
+            static_cast<int>(c.getHasDPadDownButtonProperty()) +
+            static_cast<int>(c.getHasDPadLeftButtonProperty()) +
+            static_cast<int>(c.getHasDPadRightButtonProperty());
+        const int axes = static_cast<int>(c.getHasLeftXThumbStickProperty()) +
+            static_cast<int>(c.getHasLeftYThumbStickProperty()) +
+            static_cast<int>(c.getHasRightXThumbStickProperty()) +
+            static_cast<int>(c.getHasRightYThumbStickProperty());
+        const int triggers = static_cast<int>(c.getHasLeftTriggerProperty()) +
+            static_cast<int>(c.getHasRightTriggerProperty());
+        const int motors = static_cast<int>(c.getHasLeftVibrationMotorProperty()) +
+            static_cast<int>(c.getHasRightVibrationMotorProperty());
+        return std::string(c.getIsConnectedProperty() ? "connected; " : "disconnected; ") +
+            "buttons " + std::to_string(buttons) + "/11, d-pad " + std::to_string(dpad) +
+            "/4, axes " + std::to_string(axes) + "/4, triggers " +
+            std::to_string(triggers) + "/2, motors " + std::to_string(motors) +
+            "/2, voice " + (c.getHasVoiceSupportProperty() ? "yes" : "no");
+    }
+
     // Every Buttons flag the state reports as down: the bit-flag enum is how XNA asks "is this button held" in one call.
     [[nodiscard]] std::string PressedButtons() const
     {

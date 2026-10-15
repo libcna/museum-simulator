@@ -52,7 +52,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1175 distinct API names are claimed by at least one room.
+1200 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -460,7 +460,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GameDefaults.PrimaryColor | `gs-players` |
 | GameDefaults.RacingCameraAngle | `gs-players` |
 | GamePad.GetButtonLabelEXT | `in-pad` |
-| GamePad.GetCapabilities | `in-players` |
+| GamePad.GetCapabilities | `in-pad`, `in-players` |
 | GamePad.GetConnectionStateEXT | `in-devices` |
 | GamePad.GetFirmwareVersionEXT | `in-devices` |
 | GamePad.GetGUIDEXT | `in-pad` |
@@ -476,7 +476,32 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GamePad.SetLightBarEXT | `in-pad` |
 | GamePad.SetTriggerVibrationEXT | `in-pad` |
 | GamePad.SetVibration | `in-pad` |
-| GamePadCapabilities | `in-players` |
+| GamePadCapabilities | `in-pad`, `in-players` |
+| GamePadCapabilities.HasAButton | `in-pad` |
+| GamePadCapabilities.HasBButton | `in-pad` |
+| GamePadCapabilities.HasBackButton | `in-pad` |
+| GamePadCapabilities.HasBigButton | `in-pad` |
+| GamePadCapabilities.HasDPadDownButton | `in-pad` |
+| GamePadCapabilities.HasDPadLeftButton | `in-pad` |
+| GamePadCapabilities.HasDPadRightButton | `in-pad` |
+| GamePadCapabilities.HasDPadUpButton | `in-pad` |
+| GamePadCapabilities.HasLeftShoulderButton | `in-pad` |
+| GamePadCapabilities.HasLeftStickButton | `in-pad` |
+| GamePadCapabilities.HasLeftTrigger | `in-pad` |
+| GamePadCapabilities.HasLeftVibrationMotor | `in-pad` |
+| GamePadCapabilities.HasLeftXThumbStick | `in-pad` |
+| GamePadCapabilities.HasLeftYThumbStick | `in-pad` |
+| GamePadCapabilities.HasRightShoulderButton | `in-pad` |
+| GamePadCapabilities.HasRightStickButton | `in-pad` |
+| GamePadCapabilities.HasRightTrigger | `in-pad` |
+| GamePadCapabilities.HasRightVibrationMotor | `in-pad` |
+| GamePadCapabilities.HasRightXThumbStick | `in-pad` |
+| GamePadCapabilities.HasRightYThumbStick | `in-pad` |
+| GamePadCapabilities.HasStartButton | `in-pad` |
+| GamePadCapabilities.HasVoiceSupport | `in-pad` |
+| GamePadCapabilities.HasXButton | `in-pad` |
+| GamePadCapabilities.HasYButton | `in-pad` |
+| GamePadCapabilities.IsConnected | `in-pad` |
 | GamePadDeadZone | `in-pad` |
 | GamePadState | `in-pad` |
 | GamePadState.Equals | `in-pad` |
