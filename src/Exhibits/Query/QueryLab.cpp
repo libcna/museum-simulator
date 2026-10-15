@@ -48,6 +48,7 @@ public:
         } else {
             p.AddToggle("Rotate the shapes", true, [this](bool v) { rotate_ = v; });
             p.AddToggle("RasterizerState.MultiSampleAntiAlias", true, [this](bool v) { msaaRaster_ = v; });
+            p.AddChoice("BlendState.MultiSampleMask", {"every sample (0xFFFFFFFF)", "sample 0 only (0x1)", "samples 0 and 2 (0x5)", "no sample (0)"}, 0, [this](int v) { sampleMask_ = v; });
             p.AddSlider("Zoom into the edges", 2.0f, 12.0f, zoom_, [this](float v) { zoom_ = v; }, "%.0f", 1.0f);
             p.AddReadout("MultiSampleAntiAliasing", [this] { return std::string(msaa_ ? "supported" : "NOT supported by this renderer"); });
             for (int i = 0; i < 4; ++i) p.AddReadout(std::string("Samples asked: ") + std::to_string(kCounts[i]), [this, i] { return targets_[static_cast<std::size_t>(i)] ? "got " + std::to_string(targets_[static_cast<std::size_t>(i)]->getMultiSampleCountProperty()) : std::string("-"); });
@@ -215,6 +216,11 @@ private:
             RasterizerState raster = RasterizerState::CullNone;
             raster.setMultiSampleAntiAliasProperty(msaaRaster_);   // off: the multisampled target is rasterised as if it had one sample
             d.setRasterizerStateProperty(raster);
+            // Which samples of a multisampled target a draw may write: bit k of the mask is sample k.
+            BlendState sampleBlend = BlendState::Opaque;
+            static const int masks[] = {-1, 0x1, 0x5, 0x0};
+            sampleBlend.setMultiSampleMaskProperty(masks[sampleMask_]);
+            d.setBlendStateProperty(sampleBlend);
             flat_->setWorldProperty(Matrix::getIdentityProperty());
             flat_->setViewProperty(Matrix::getIdentityProperty());
             flat_->setProjectionProperty(Matrix::getIdentityProperty());
@@ -247,6 +253,7 @@ private:
     std::unique_ptr<RenderTarget2D> targets_[4];
     float time_ = 0.0f, wallX_ = -2.0f, sphereZ_ = 5.0f, zoom_ = 5.0f;
     bool autoSlide_ = true, supported_ = true, inQuery_ = false, complete_ = false, precise_ = false, skipped_ = false, rotate_ = true, msaa_ = true, msaaRaster_ = true;
+    int sampleMask_ = 0;
     int pixels_ = 0;
 };
 

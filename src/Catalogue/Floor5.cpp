@@ -97,7 +97,7 @@ WingSpec TargetWing()
         rt("rt-cube", "A Live Cube Map", "RenderTargetCube: the scene drawn six times from a sphere's centre, then used as its mirror by EnvironmentMapEffect",
            "cube", {"RenderTargetCube", "GraphicsDevice.SetRenderTarget", "CubeMapFace", "EnvironmentMapEffect", "EnvironmentMapEffect.EnvironmentMap"}),
         rt("rt-bloom", "Bloom from Blending", "A bright pass, a chain of smaller targets and an additive composite: no shader at all", "bloom", {"BlendFunction.ReverseSubtract", "BlendState.Additive", "RenderTarget2D", "SpriteBatch.Begin", "SamplerState.LinearClamp"}),
-        QueryRoom("rt-msaa", "Multisampled Targets", "The same edges at 0, 2, 4 and 8 samples, magnified", "msaa", {"RenderTarget2D.MultiSampleCount", "GraphicsCapability.MultiSampleAntiAliasing", "RenderTarget2D", "RasterizerState.MultiSampleAntiAlias"}),
+        QueryRoom("rt-msaa", "Multisampled Targets", "The same edges at 0, 2, 4 and 8 samples, magnified", "msaa", {"RenderTarget2D.MultiSampleCount", "GraphicsCapability.MultiSampleAntiAliasing", "RenderTarget2D", "RasterizerState.MultiSampleAntiAlias", "BlendState.MultiSampleMask"}),
     };
     return w;
 }

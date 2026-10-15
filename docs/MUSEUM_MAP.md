@@ -325,7 +325,7 @@ RasterizerState, DepthStencilState, BlendState and off-screen rendering
 | 5.2.07 | `rt-formats` | Render Target Formats | CNA extension | SurfaceFormat, RenderTarget2D.Format, GraphicsDevice.SupportsSurfaceFormatAsRenderTargetEXT |
 | 5.2.08 | `rt-cube` | A Live Cube Map | XNA 4.0 | RenderTargetCube, GraphicsDevice.SetRenderTarget, CubeMapFace, EnvironmentMapEffect, EnvironmentMapEffect.EnvironmentMap |
 | 5.2.09 | `rt-bloom` | Bloom from Blending | XNA 4.0 | BlendFunction.ReverseSubtract, BlendState.Additive, RenderTarget2D, SpriteBatch.Begin, SamplerState.LinearClamp |
-| 5.2.10 | `rt-msaa` | Multisampled Targets | XNA 4.0 | RenderTarget2D.MultiSampleCount, GraphicsCapability.MultiSampleAntiAliasing, RenderTarget2D, RasterizerState.MultiSampleAntiAlias |
+| 5.2.10 | `rt-msaa` | Multisampled Targets | XNA 4.0 | RenderTarget2D.MultiSampleCount, GraphicsCapability.MultiSampleAntiAliasing, RenderTarget2D, RasterizerState.MultiSampleAntiAlias, BlendState.MultiSampleMask |
 
 ### Floor 6: Models, Animation and Particles
 
