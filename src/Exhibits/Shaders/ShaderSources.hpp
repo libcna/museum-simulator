@@ -24,7 +24,7 @@ extern const char* const kVulkanGlslVertexWave;   // the vertex-stage lab: time 
 extern const char* const kVulkanGlslFragmentHeader;
 
 /**
- * The two-output fragment shader of the multiple-render-target room (grayscale to target 0, an edge map to target 1), for the
+ * The four-output fragment shader of the multiple-render-target room (grayscale, edges, source colour and posterized colour), for the
  * dialects that are not GLSL ES. `kMrtWgslBlock` is the size of the uniform block it declares: one vec2, `uTexel`, at offset 0.
  */
 extern const char* const kMrtWgslFragment;

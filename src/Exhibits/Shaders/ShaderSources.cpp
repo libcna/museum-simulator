@@ -122,15 +122,18 @@ struct U { uTexel: vec2f, pad: vec2f };
 @group(0) @binding(0) var<uniform> u: U;
 @group(0) @binding(1) var texSampler: sampler;
 @group(0) @binding(2) var tex: texture_2d<f32>;
-struct FOut { @location(0) gray: vec4f, @location(1) edge: vec4f };
+struct FOut { @location(0) gray: vec4f, @location(1) edge: vec4f, @location(2) color: vec4f, @location(3) poster: vec4f };
 fn lum(uv: vec2f) -> f32 { return dot(textureSampleLevel(tex, texSampler, uv, 0.0).rgb, vec3f(0.299, 0.587, 0.114)); }
 @fragment fn fs_main(@location(0) uv: vec2f, @location(1) color: vec4f) -> FOut {
     let g = lum(uv);
     let gx = lum(uv + vec2f(u.uTexel.x, 0.0)) - lum(uv - vec2f(u.uTexel.x, 0.0));
     let gy = lum(uv + vec2f(0.0, u.uTexel.y)) - lum(uv - vec2f(0.0, u.uTexel.y));
+    let source = textureSampleLevel(tex, texSampler, uv, 0.0).rgb;
     var o: FOut;
     o.gray = vec4f(vec3f(g), 1.0);                                              // target 0: grayscale
     o.edge = vec4f(vec3f(clamp(length(vec2f(gx, gy)) * 4.0, 0.0, 1.0)), 1.0);   // target 1: edge map
+    o.color = vec4f(source, 1.0);                                                // target 2: source colour
+    o.poster = vec4f(floor(source * 3.0 + 0.5) / 3.0, 1.0);                     // target 3: posterized
     return o;
 }
 )WGSL";
@@ -140,6 +143,8 @@ layout(location = 0) in vec2 vTexCoord;
 layout(location = 1) in vec4 vColor;
 layout(location = 0) out vec4 outGray;
 layout(location = 1) out vec4 outEdge;
+layout(location = 2) out vec4 outColor;
+layout(location = 3) out vec4 outPoster;
 layout(set = 2, binding = 0) uniform sampler2D texture1;
 layout(set = 3, binding = 0) uniform PC {
     vec4 vpSize_pad;
@@ -153,8 +158,11 @@ void main() {
     float g = lum(vTexCoord);
     float gx = lum(vTexCoord + vec2(uTexel.x, 0.0)) - lum(vTexCoord - vec2(uTexel.x, 0.0));
     float gy = lum(vTexCoord + vec2(0.0, uTexel.y)) - lum(vTexCoord - vec2(0.0, uTexel.y));
+    vec3 source = texture(texture1, vTexCoord).rgb;
     outGray = vec4(vec3(g), 1.0);
     outEdge = vec4(vec3(clamp(length(vec2(gx, gy)) * 4.0, 0.0, 1.0)), 1.0);
+    outColor = vec4(source, 1.0);
+    outPoster = vec4(floor(source * 3.0 + 0.5) / 3.0, 1.0);
 }
 )GLSL";
 

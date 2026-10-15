@@ -7,6 +7,7 @@
 #include <string>
 
 #include "CNA/GraphicsCapability.hpp"
+#include "CNA/RendererCapabilityProfile.hpp"
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ExhibitKit.hpp"
 #include "Exhibits/Math/MathKit.hpp"
@@ -58,7 +59,7 @@ uniform mat4 projection;
 out vec2 vTexCoord;
 void main() { gl_Position = projection * vec4(aPos, 0.0, 1.0); vTexCoord = aTexCoord; }
 )";
-// Two outputs from one pass: location 0 receives the grayscale image, location 1 the edge map.
+// Four outputs from one pass: grayscale, edges, source colour and posterized colour.
 const char* kMrtFrag = R"(#version 300 es
 precision highp float;
 in vec2 vTexCoord;
@@ -66,13 +67,18 @@ uniform sampler2D texture1;
 uniform vec2 uTexel;
 layout(location = 0) out vec4 outGray;
 layout(location = 1) out vec4 outEdge;
+layout(location = 2) out vec4 outColor;
+layout(location = 3) out vec4 outPoster;
 float lum(vec2 uv) { return dot(texture(texture1, uv).rgb, vec3(0.299, 0.587, 0.114)); }
 void main() {
     float g = lum(vTexCoord);
     float gx = lum(vTexCoord + vec2(uTexel.x, 0.0)) - lum(vTexCoord - vec2(uTexel.x, 0.0));
     float gy = lum(vTexCoord + vec2(0.0, uTexel.y)) - lum(vTexCoord - vec2(0.0, uTexel.y));
+    vec3 source = texture(texture1, vTexCoord).rgb;
     outGray = vec4(vec3(g), 1.0);
     outEdge = vec4(vec3(clamp(length(vec2(gx, gy)) * 4.0, 0.0, 1.0)), 1.0);
+    outColor = vec4(source, 1.0);
+    outPoster = vec4(floor(source * 3.0 + 0.5) / 3.0, 1.0);
 }
 )";
 
@@ -114,11 +120,14 @@ public:
                 break;
             case Mode::Mrt:
                 p.AddReadout("MultipleRenderTargets", [this] { return std::string(S().device->SupportsCapability(CNA::GraphicsCapability::MultipleRenderTargets) ? "supported" : "NOT supported here"); });
-                p.AddToggle("Write the second target (BlendState.ColorWriteChannels1)", true, [this](bool v) { writeSecond_ = v; mrtFrames_ = 0; secondTarget_ = "checking..."; });
-                p.AddReadout("Second target (edges)", [this] { return secondTarget_; });
+                p.AddToggle("Write target 1 (ColorWriteChannels1)", true, [this](bool v) { writeMrt_[0] = v; ResetMrtProbe(); });
+                p.AddToggle("Write target 2 (ColorWriteChannels2)", true, [this](bool v) { writeMrt_[1] = v; ResetMrtProbe(); });
+                p.AddToggle("Write target 3 (ColorWriteChannels3)", true, [this](bool v) { writeMrt_[2] = v; ResetMrtProbe(); });
+                p.AddReadout("Active targets / renderer limit", [this] { return std::to_string(mrtTargetCount_) + " / " + mrtLimit_; });
+                p.AddReadout("Lit pixels in targets 0 / 1 / 2 / 3", [this] { return mrtTargetPixels_; });
                 p.AddReadout("GetRenderTargets() while bound", [this] { return boundTargets_; });
                 p.AddReadout("ShaderEffect source", [this] { return effect_ && effect_->IsEffectValid() ? "compiled (" + dialect_ + ")" : std::string("unavailable"); });
-                p.AddHeading("One pass, two outputs");
+                p.AddHeading("One pass, four distinct outputs");
                 break;
             case Mode::Cube:
                 p.AddChoice("Face size", {"16 x 16", "32 x 32", "64 x 64", "128 x 128", "256 x 256"}, 2, [this](int v) { cubeSize_ = 16 << v; dirty_ = true; });
@@ -156,8 +165,11 @@ public:
             for (int i = 0; i < 6; ++i) feeds_[static_cast<std::size_t>(i)] = std::make_unique<MiniView>(S(), 256, 144);
         if (mode_ == Mode::Mrt) {
             source_ = std::make_unique<MiniView>(S(), 480, 270);
-            gray_ = std::make_unique<RenderTarget2D>(d, 480, 270, false, SurfaceFormat::Color, DepthFormat::None);
-            edge_ = std::make_unique<RenderTarget2D>(d, 480, 270, false, SurfaceFormat::Color, DepthFormat::None);
+            for (auto& target : mrtTargets_)
+                target = std::make_unique<RenderTarget2D>(d, 480, 270, false, SurfaceFormat::Color, DepthFormat::None);
+            const CNA::RendererLimitValue limit = d.GetRendererCapabilityProfileEXT().GetLimit(CNA::RendererLimit::MaxColorAttachments);
+            mrtLimit_ = limit.known ? std::to_string(limit.value) : "unknown";
+            mrtTargetCount_ = limit.known ? std::clamp(static_cast<int>(limit.value), 1, 4) : 2;
             // Source in the renderer's own dialect: GLSL ES, WGSL, or Vulkan GLSL for the SPIR-V renderer.
             try {
                 if (d.SupportsShaderLanguageEXT(CNA::ShaderLanguageEXT::GlslEs, CNA::ShaderStageEXT::Fragment) || d.SupportsShaderLanguageEXT(CNA::ShaderLanguageEXT::GlslDesktop, CNA::ShaderStageEXT::Fragment)) {
@@ -278,13 +290,16 @@ public:
             case Mode::Mirror: DrawMirrorWall(ctx); break;
             case Mode::Mrt: {
                 float yw = 0.0f;
-                const Vector3 left = FarPoint(-3.4f, h, yw), mid = FarPoint(0.0f, h, yw), right = FarPoint(3.4f, h, yw);   // separate statements: argument order is unspecified
-                if (source_) source_->DrawInRoom(ctx, left, yw, 3.2f);
-                if (gray_) DrawTarget(ctx, gray_.get(), mid, yw, 3.2f, 16.0f / 9.0f, false);
-                if (edge_) DrawTarget(ctx, edge_.get(), right, yw, 3.2f, 16.0f / 9.0f, false);
-                gizmos_.Label(left + Vector3(0, 1.3f, 0), "source", Color(255, 230, 150, 255), 0.5f);
-                gizmos_.Label(mid + Vector3(0, 1.3f, 0), "target 0: gray", Color(255, 230, 150, 255), 0.5f);
-                gizmos_.Label(right + Vector3(0, 1.3f, 0), "target 1: edges", Color(255, 230, 150, 255), 0.5f);
+                static constexpr float xs[] = {-3.8f, -1.9f, 0.0f, 1.9f, 3.8f};
+                static constexpr const char* labels[] = {"source", "target 0: gray", "target 1: edges", "target 2: colour", "target 3: poster"};
+                const Vector3 sourceCentre = FarPoint(xs[0], h, yw);
+                if (source_) source_->DrawInRoom(ctx, sourceCentre, yw, 1.75f);
+                gizmos_.Label(sourceCentre + Vector3(0, 0.8f, 0), labels[0], Color(255, 230, 150, 255), 0.4f);
+                for (int i = 0; i < 4; ++i) {
+                    const Vector3 centre = FarPoint(xs[i + 1], h, yw);
+                    if (mrtTargets_[static_cast<std::size_t>(i)]) DrawTarget(ctx, mrtTargets_[static_cast<std::size_t>(i)].get(), centre, yw, 1.75f, 16.0f / 9.0f, false);
+                    gizmos_.Label(centre + Vector3(0, 0.8f, 0), labels[i + 1], i < mrtTargetCount_ ? Color(255, 230, 150, 255) : Color(140, 140, 140, 255), 0.4f);
+                }
                 break;
             }
             case Mode::Formats: DrawFormatTiles(ctx); break;
@@ -316,7 +331,7 @@ private:
             case Mode::Mirror: return {"A real mirror: a second camera sits where your reflection's eye would be (the reflected eye), draws the room", "into a render target, and the mirror shows it with texture coordinates taken from your own view of the wall."};
             case Mode::Cube: return {"A RenderTargetCube is a cube texture you can draw into, one face at a time: the scene is rendered six times from the", "sphere's centre (SetRenderTarget(cube, face)), then the sphere is drawn with EnvironmentMapEffect using the cube as its mirror."};
             case Mode::Bloom: return {"Bloom needs no shader: subtract a threshold with BlendFunction.ReverseSubtract to keep only the bright part, shrink it through a", "chain of smaller render targets with linear filtering (each step doubles it, so it spreads), then add the chain back over the scene."};
-            case Mode::Mrt: return {"With MultipleRenderTargets a single draw writes several textures at once (SetRenderTargets). A GLSL ShaderEffect", "declares two outputs: grayscale in target 0 and an edge map in target 1."};
+            case Mode::Mrt: return {"With MultipleRenderTargets a single draw writes four textures at once (SetRenderTargets). One ShaderEffect emits grayscale, edges,", "source colour and posterized colour; ColorWriteChannels1/2/3 independently suppress attachments 1, 2 and 3."};
             default: return {"Which surface formats can be rendered into depends on the renderer. Each format is queried, a target is created,", "cleared to a colour and read back: the answer is what the renderer really does, not what a table says."};
         }
     }
@@ -580,35 +595,58 @@ private:
         const Vector3 eye = stage + Off(std::cos(time_ * 0.4f) * 4.5f, 2.4f, std::sin(time_ * 0.4f) * 4.5f);
         source_->Render(ctx, Matrix::CreateLookAt(eye, stage + Vector3(0, 0.4f, 0), Vector3::Up), Matrix::CreatePerspectiveFieldOfView(MathHelper::ToRadians(55.0f), source_->Aspect(), 0.1f, 60.0f), eye, scene);
         if (!effect_ || !effect_->IsEffectValid() || !d.SupportsCapability(CNA::GraphicsCapability::MultipleRenderTargets)) return;
-        const std::vector<RenderTargetBinding> bindings = {RenderTargetBinding(gray_.get()), RenderTargetBinding(edge_.get())};
+        std::vector<RenderTargetBinding> bindings;
+        for (int i = 0; i < mrtTargetCount_; ++i)
+            bindings.emplace_back(mrtTargets_[static_cast<std::size_t>(i)].get());
         d.SetRenderTargets(bindings);
         const std::vector<RenderTargetBinding> bound = d.GetRenderTargets();
-        boundTargets_ = std::to_string(bound.size()) + " bindings, both textures " + (bound.size() == 2 && bound[0].getRenderTargetProperty() == gray_.get() && bound[1].getRenderTargetProperty() == edge_.get() ? "as set" : "NOT as set");
+        bool same = bound.size() == bindings.size();
+        for (std::size_t i = 0; same && i < bound.size(); ++i)
+            same = bound[i].getRenderTargetProperty() == mrtTargets_[i].get();
+        boundTargets_ = std::to_string(bound.size()) + " bindings, textures " + (same ? "as set" : "NOT as set");
         if (mrtFrames_ == 0) Museum::Log("targets", "GetRenderTargets while bound: %s", boundTargets_.c_str());
         d.Clear(Color::Black);
         effect_->Apply();
         if (packedUniforms_) effect_->SetUniformVec4("color", 1.0f / 480.0f, 1.0f / 270.0f, 0.0f, 0.0f);   // SDL_GPU: one fixed uniform block, names ignored
         else effect_->SetUniformVec2("uTexel", 1.0f / 480.0f, 1.0f / 270.0f);
-        // Per-target write masks: ColorWriteChannels is attachment 0's, ColorWriteChannels1 is the second target's.
+        // Per-target write masks: the base property is attachment 0's; suffixes 1, 2 and 3
+        // independently control attachments 1, 2 and 3.
         BlendState mrtBlend = BlendState::Opaque;
-        mrtBlend.setColorWriteChannels1Property(writeSecond_ ? ColorWriteChannels::All : ColorWriteChannels::None);
+        mrtBlend.setColorWriteChannels1Property(writeMrt_[0] ? ColorWriteChannels::All : ColorWriteChannels::None);
+        mrtBlend.setColorWriteChannels2Property(writeMrt_[1] ? ColorWriteChannels::All : ColorWriteChannels::None);
+        mrtBlend.setColorWriteChannels3Property(writeMrt_[2] ? ColorWriteChannels::All : ColorWriteChannels::None);
         S().sprites->Begin(SpriteSortMode::Deferred, &mrtBlend, &SamplerState::LinearClamp, nullptr, nullptr, effect_.get());
         S().sprites->Draw(*source_->Texture(), Rectangle(0, 0, 480, 270), Color::White);
         S().sprites->End();
         d.SetRenderTarget(nullptr);
-        // Once, a while in: did the second target receive anything? (A renderer's SpriteBatch route may write attachment 0 only.)
+        // Once, a while in: read every active target back. This distinguishes an actual four-way
+        // draw and each mask's None path from a renderer that fans out or writes attachment 0 only.
         if (++mrtFrames_ == 20) {
             try {
+                std::array<int, 4> lit{-1, -1, -1, -1};
                 std::vector<Color> px(static_cast<std::size_t>(480 * 270));
-                edge_->GetData(px.data(), static_cast<int>(px.size()));
-                int lit = 0;
-                for (const Color& c : px) lit += c.getRProperty() > 8 ? 1 : 0;
-                secondTarget_ = lit > 200 ? "written" : "stays empty (the SpriteBatch route writes attachment 0 only)";
-                Museum::Log("targets", "MRT second target: %d lit pixels", lit);
+                for (int i = 0; i < mrtTargetCount_; ++i) {
+                    mrtTargets_[static_cast<std::size_t>(i)]->GetData(px.data(), static_cast<int>(px.size()));
+                    lit[static_cast<std::size_t>(i)] = 0;
+                    for (const Color& c : px)
+                        lit[static_cast<std::size_t>(i)] += (c.getRProperty() > 8 || c.getGProperty() > 8 || c.getBProperty() > 8) ? 1 : 0;
+                }
+                mrtTargetPixels_.clear();
+                for (int i = 0; i < 4; ++i) {
+                    if (i != 0) mrtTargetPixels_ += " / ";
+                    mrtTargetPixels_ += lit[static_cast<std::size_t>(i)] < 0 ? "n/a" : std::to_string(lit[static_cast<std::size_t>(i)]);
+                }
+                Museum::Log("targets", "MRT target lit pixels: %s", mrtTargetPixels_.c_str());
             } catch (const std::exception& e) {
-                secondTarget_ = std::string("unreadable: ") + std::string(e.what()).substr(0, 24);
+                mrtTargetPixels_ = std::string("unreadable: ") + std::string(e.what()).substr(0, 36);
             }
         }
+    }
+
+    void ResetMrtProbe()
+    {
+        mrtFrames_ = 0;
+        mrtTargetPixels_ = "checking...";
     }
 
     void ProbeFormats()
@@ -654,11 +692,12 @@ private:
     std::unique_ptr<MiniView> view_, source_;
     std::array<std::unique_ptr<MiniView>, 6> feeds_;
     std::array<bool, 6> live_{true, true, true, true, true, true};
-    std::unique_ptr<RenderTarget2D> fbA_, fbB_, mirror_, gray_, edge_;
+    std::unique_ptr<RenderTarget2D> fbA_, fbB_, mirror_;
+    std::array<std::unique_ptr<RenderTarget2D>, 4> mrtTargets_;
     std::unique_ptr<ShaderEffect> effect_;
-    std::string dialect_ = "GLSL", secondTarget_ = "-", boundTargets_ = "-";
-    int mrtFrames_ = 0;
-    bool writeSecond_ = true;
+    std::string dialect_ = "GLSL", mrtTargetPixels_ = "checking...", boundTargets_ = "-", mrtLimit_ = "unknown";
+    int mrtFrames_ = 0, mrtTargetCount_ = 0;
+    std::array<bool, 3> writeMrt_{true, true, true};
     bool packedUniforms_ = false;
     std::array<std::string, 6> formatStatus_{"-", "-", "-", "-", "-", "-"};
     Matrix mirrorView_, mirrorProj_;
