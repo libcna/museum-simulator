@@ -110,7 +110,7 @@ the narrowest:
 
 `CMakeLists.txt` builds everything except `main()` as the static library `museum_core`, which the executable and
 `museum_tests` both link. CNA is added with `add_subdirectory(../cna)`; the museum sets three CNA options
-(`CNA_CNAEXT`, `CNA_DEVICES`, `CNA_DIAGNOSTICS=STATS`) and compiles `Content/Pipeline` with `cna-content`.
+(`CNA_CNAEXT`, `CNA_DEVICES`, `CNA_DIAGNOSTICS=FULL`) and compiles `Content/Pipeline` with `cna-content`.
 
 Optional CNA libraries, each behind a switch, and what a room does without them (it says so; nothing else changes):
 

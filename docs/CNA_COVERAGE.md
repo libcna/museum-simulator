@@ -52,7 +52,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1064 distinct API names are claimed by at least one room.
+1089 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -181,7 +181,27 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | CNA::Devices::Locale | `cx-devices` |
 | CNA::Devices::PowerInfo | `cx-devices` |
 | CNA::Devices::SystemInfo | `cx-devices` |
-| CNA::Diagnostics::GetProvider | `cx-stats`, `pf-dashboard` |
+| CNA::Diagnostics::CounterHandle | `pl-diagnostics` |
+| CNA::Diagnostics::EventBatch | `pl-diagnostics` |
+| CNA::Diagnostics::EventRecord | `pl-diagnostics` |
+| CNA::Diagnostics::FrameCounterHandle | `pl-diagnostics` |
+| CNA::Diagnostics::FrameStatisticsSink | `pl-diagnostics` |
+| CNA::Diagnostics::GaugeHandle | `pl-diagnostics` |
+| CNA::Diagnostics::GetProvider | `cx-stats`, `pl-diagnostics`, `pf-dashboard` |
+| CNA::Diagnostics::IDiagnosticsSource | `pl-diagnostics` |
+| CNA::Diagnostics::MarkEvent | `pl-diagnostics` |
+| CNA::Diagnostics::MetricKind | `pl-diagnostics` |
+| CNA::Diagnostics::NameHandle | `pl-diagnostics` |
+| CNA::Diagnostics::RegisterSource | `pl-diagnostics` |
+| CNA::Diagnostics::ResourceDescriptor | `pl-diagnostics` |
+| CNA::Diagnostics::ResourceHandle | `pl-diagnostics` |
+| CNA::Diagnostics::ResourceKind | `pl-diagnostics` |
+| CNA::Diagnostics::SetRuntimeMode | `pl-diagnostics` |
+| CNA::Diagnostics::SourceRegistration | `pl-diagnostics` |
+| CNA::Diagnostics::StartRecording | `pl-diagnostics` |
+| CNA::Diagnostics::StopRecording | `pl-diagnostics` |
+| CNA::Diagnostics::Trace | `pl-diagnostics` |
+| CNA::Diagnostics::ZoneScope | `pl-diagnostics` |
 | CNA::GamerServices::resolveConfiguration | `on-account` |
 | CNA::Graphics::AsciiPostProcessEffect | `cx-ascii` |
 | CNA::Graphics::CRTEffect | `cx-crt` |
@@ -558,6 +578,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | HelloResponse | `pl-inspector` |
 | HostChangedEventArgs | `net-session` |
 | IAvatarAnimation | `gs-avatar` |
+| IDiagnosticsProvider.ReadEvents | `pl-diagnostics` |
+| IDiagnosticsProvider.ResolveName | `pl-diagnostics` |
 | IDrawable | `app-components` |
 | IEffectFog | `be-model` |
 | IEffectLights | `be-model` |
@@ -1056,6 +1078,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | TouchPanel.GetState | `in-touch`, `in-devices` |
 | TouchPanel.MouseTouchEmulationEnabledEXT | `in-touch`, `in-devices` |
 | TouchPanel.ReadGesture | `in-touch` |
+| Trace.ReadBinary | `pl-diagnostics` |
+| Trace.WriteBinary | `pl-diagnostics` |
+| Trace.WriteChromeTrace | `pl-diagnostics` |
 | Vector2 | `sprite-origin` |
 | Vector2Converter | `vt-converters` |
 | Vector3 | `an-pendulum`, `sim-flock`, `sim-integrators`, `rf-deck` |

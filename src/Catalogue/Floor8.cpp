@@ -196,6 +196,17 @@ WingSpec PlatformWing()
             return r;
         }(),
         [&] {
+            RoomSpec r = pl("pl-diagnostics", "Measuring Your Own Code", "CNA::Diagnostics for the program's own counters, gauges, zones, markers, a custom resource and a per-frame source, with a recorded trace written as Chrome Trace JSON", "",
+                            {"CNA::Diagnostics::CounterHandle", "CNA::Diagnostics::GaugeHandle", "CNA::Diagnostics::FrameCounterHandle", "CNA::Diagnostics::NameHandle", "CNA::Diagnostics::ZoneScope", "CNA::Diagnostics::MarkEvent",
+                             "CNA::Diagnostics::ResourceHandle", "CNA::Diagnostics::ResourceDescriptor", "CNA::Diagnostics::IDiagnosticsSource", "CNA::Diagnostics::RegisterSource", "CNA::Diagnostics::SourceRegistration", "CNA::Diagnostics::FrameStatisticsSink",
+                             "CNA::Diagnostics::GetProvider", "IDiagnosticsProvider.ReadEvents", "IDiagnosticsProvider.ResolveName", "CNA::Diagnostics::SetRuntimeMode", "CNA::Diagnostics::StartRecording", "CNA::Diagnostics::StopRecording",
+                             "CNA::Diagnostics::Trace", "Trace.WriteChromeTrace", "Trace.WriteBinary", "Trace.ReadBinary", "CNA::Diagnostics::EventRecord", "CNA::Diagnostics::EventBatch", "CNA::Diagnostics::MetricKind", "CNA::Diagnostics::ResourceKind"},
+                            ApiOrigin::CnaExtension);
+            r.exhibit = "diagnostics-lab";
+            r.params = {};
+            return r;
+        }(),
+        [&] {
             RoomSpec r = pl("pl-inspector", "The Inspector", "CNA's optional Inspector: an agent serves diagnostics over an authenticated loopback socket and a client reads snapshots and events", "",
                             {"CNA::Inspector::Agent", "Agent.Start", "Agent.Stop", "Agent.GetPort", "Agent.GetAuthenticationToken", "AgentConfiguration", "CNA::Inspector::Client", "Client.Connect", "Client.Ping", "Client.CaptureSnapshot", "Client.ReadEvents",
                              "Client.RequestPreview", "HelloResponse", "SnapshotResponse", "EventsResponse", "PreviewResponse", "Capability", "SnapshotPart"},

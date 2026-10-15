@@ -57,7 +57,9 @@ set(CNA_ENABLE_VIDEO "${MUSEUM_VIDEO}" CACHE STRING "Enable FFmpeg video playbac
 # the exhibits that need them check for them and say so in the room when they are missing.
 set(CNA_CNAEXT      ON    CACHE BOOL   "Build CNA's graphics extensions")
 set(CNA_DEVICES     ON    CACHE BOOL   "Build CNA's device extensions")
-set(CNA_DIAGNOSTICS STATS CACHE STRING "CNA diagnostics level (OFF|STATS|FULL)")
+# FULL compiles the CPU zones, markers and event timeline in as well as the counters; the museum starts at runtime level STATS (see
+# MuseumGame) so nothing is recorded until a room asks (Instrumenting Your Own Code, The Inspector).
+set(CNA_DIAGNOSTICS FULL CACHE STRING "CNA diagnostics level (OFF|STATS|FULL)" FORCE)
 # CNA's optional Inspector (an agent that serves the diagnostics over an authenticated loopback socket, and a client) is a separate module that is
 # off in CNA's own default build. The museum links it for the Inspector room; the agent is never started until a visitor presses its button.
 option(MUSEUM_INSPECTOR "Link CNA's optional Inspector agent and client for the Inspector room" ON)

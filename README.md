@@ -30,11 +30,11 @@ All images are real frames from the running museum (`tools/readme_shots.sh`), no
 ```
 floors:          10
 wings:           36
-exhibit rooms:   289  (5 outdoors)
-walkable cells:  355  (rooms, galleries, concourses, halls, elevators)
-exhibit kinds:   68
-origin:          228 XNA 4.0, 61 CNA extension, 0 application
-API names:       1064
+exhibit rooms:   290  (5 outdoors)
+walkable cells:  356  (rooms, galleries, concourses, halls, elevators)
+exhibit kinds:   69
+origin:          228 XNA 4.0, 62 CNA extension, 0 application
+API names:       1089
   floor 0  10 rooms  Lobby and Introductory Tour
   floor 1  54 rooms  Fundamentals
   floor 2  23 rooms  Two-Dimensional Rendering
@@ -43,7 +43,7 @@ API names:       1064
   floor 5  24 rooms  Render State and Render Targets
   floor 6  39 rooms  Models, Animation and Particles
   floor 7  20 rooms  Audio and Input
-  floor 8  44 rooms  Content, Platform and CNA
+  floor 8  45 rooms  Content, Platform and CNA
   floor 9  23 rooms  Performance and Validation
 ```
 <!-- END COUNTS -->
@@ -93,7 +93,7 @@ MUSEUM_CMAKE_ARGS="-DCNA_CNAEXT=OFF" RECONFIGURE=1 tools/build.sh    # build wit
 ```
 
 The museum switches on three CNA options in its `CMakeLists.txt`: `CNA_CNAEXT` (DebugDraw and the post-process
-effects), `CNA_DEVICES` (device queries) and `CNA_DIAGNOSTICS=STATS` (engine counters). Each exhibit that needs one
+effects), `CNA_DEVICES` (device queries) and `CNA_DIAGNOSTICS=FULL` (engine counters and the CPU-zone timeline). Each exhibit that needs one
 checks for it and says so in the room when it is missing (a build with all three off was tried: it compiles, every room runs, and those rooms show a notice).
 
 The build also compiles `Content/Pipeline/` with CNA's own content compiler (`cna-content`) into `.cnb` and `.xnb`

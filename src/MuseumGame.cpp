@@ -1,4 +1,5 @@
 #include "MuseumGame.hpp"
+#include "CNA/Diagnostics/Diagnostics.hpp"
 #include "Exhibits/Players/MuseumAchievements.hpp"
 #ifdef MUSEUM_NETWORKING
 #include "Microsoft/Xna/Framework/GamerServices/GamerServicesComponent.hpp"
@@ -43,6 +44,9 @@ constexpr float kFarPlane = 260.0f;
 
 MuseumGame::MuseumGame(const MuseumOptions& options) : options_(options), graphics_(this)
 {
+    // The build compiles the CPU zones and event timeline in (CNA_DIAGNOSTICS=FULL); recording starts at the counters-only level so the
+    // visitor pays for the timeline only in the rooms that switch it on.
+    (void)CNA::Diagnostics::SetRuntimeMode(CNA::Diagnostics::Mode::Stats);
     // HiDef: render-target readback (signs, screenshots), 32-bit indices and larger textures.
     graphics_.setGraphicsProfileProperty(GraphicsProfile::HiDef);
     graphics_.setPreferredBackBufferWidthProperty(options.width);

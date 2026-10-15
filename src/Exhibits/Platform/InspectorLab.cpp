@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 
+#include "CNA/Diagnostics/Diagnostics.hpp"
 #include "Diagnostics/Log.hpp"
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
@@ -61,6 +62,7 @@ public:
     {
         ControlPanel& p = AddPanel("CNA Inspector", -4.8f, 1.5f, 1.8f, MathHelper::PiOver2, 2.1f);
 #ifdef MUSEUM_INSPECTOR
+        p.AddToggle("Diagnostics runtime level Full (events), then reconnect", false, [this](bool v) { fullLevel_ = v; (void)CNA::Diagnostics::SetRuntimeMode(v ? CNA::Diagnostics::Mode::Full : CNA::Diagnostics::Mode::Stats); });
         p.AddButton("Agent::Start (127.0.0.1, port chosen by the OS)", [this] { StartAgent(); });
         p.AddButton("Agent::Stop", [this] { StopAgent(); });
         p.AddButton("Client::Connect with the token", [this] { ConnectClient(true); });
@@ -85,6 +87,14 @@ public:
 #ifdef MUSEUM_INSPECTOR
         client_.Disconnect();
         if (agent_) agent_->Stop();
+        if (fullLevel_) (void)CNA::Diagnostics::SetRuntimeMode(CNA::Diagnostics::Mode::Stats);
+#endif
+    }
+
+    void OnLeave() override
+    {
+#ifdef MUSEUM_INSPECTOR
+        if (fullLevel_) { fullLevel_ = false; (void)CNA::Diagnostics::SetRuntimeMode(CNA::Diagnostics::Mode::Stats); }
 #endif
     }
 
@@ -233,10 +243,10 @@ private:
         const double ms = Timed([&] { ok = client_.ReadEvents(request, response, error); });
         haveEvents_ = true;
         if (!ok) {
-            events_ = "Events: refused (" + error.substr(0, 70) + "); the event timeline needs diagnostics level FULL, this build is STATS";
+            events_ = "Events: refused (" + error.substr(0, 60) + "); the timeline needs the runtime level Full when the client connects: switch it on, then connect again";
         } else {
             events_ = "Events: " + std::to_string(response.events.size()) + " returned (sequences " + std::to_string(response.oldestAvailableSequence) + ".." + std::to_string(response.newestAvailableSequence) + ", " +
-                      std::to_string(response.producerEventsDropped) + " dropped by producers)" + (response.events.empty() ? "; the event timeline needs diagnostics level FULL, this build is STATS" : "");
+                      std::to_string(response.producerEventsDropped) + " dropped by producers)";
         }
         Note("Client::ReadEvents", ok, ok ? std::to_string(response.events.size()) + " events" : error, ms);
     }
@@ -256,7 +266,7 @@ private:
     std::unique_ptr<Insp::Agent> agent_;
     Insp::Client client_;
     Insp::SnapshotResponse snapshot_;
-    bool haveSnapshot_ = false, haveEvents_ = false;
+    bool haveSnapshot_ = false, haveEvents_ = false, fullLevel_ = false;
     std::string events_, last_ = "-";
     std::deque<std::string> log_;
 #endif
