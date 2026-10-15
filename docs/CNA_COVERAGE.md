@@ -51,7 +51,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-966 distinct API names are claimed by at least one room.
+974 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -665,9 +665,15 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | MouseCursor | `in-mouse` |
 | MouseCursor.FromTexture2D | `in-mouse` |
 | MouseState | `in-mouse` |
+| NetworkGamer.HasLeftSession | `net-session` |
+| NetworkGamer.HasVoice | `net-session` |
+| NetworkGamer.Id | `net-session` |
 | NetworkGamer.IsHost | `net-session` |
 | NetworkGamer.IsLocal | `net-session` |
+| NetworkGamer.IsMutedByLocalUser | `net-session` |
+| NetworkGamer.IsPrivateSlot | `net-session` |
 | NetworkGamer.IsReady | `net-session` |
+| NetworkGamer.IsTalking | `net-session` |
 | NetworkGamer.RoundtripTime | `net-session` |
 | NetworkSession.AllGamers | `net-session` |
 | NetworkSession.AllowHostMigration | `net-session` |
@@ -678,6 +684,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | NetworkSession.EndFind | `net-session` |
 | NetworkSession.EndGame | `net-session` |
 | NetworkSession.EndJoin | `net-session` |
+| NetworkSession.FindGamerById | `net-session` |
 | NetworkSession.GameStarted | `net-session` |
 | NetworkSession.GamerJoined | `net-session` |
 | NetworkSession.Host | `net-session` |
@@ -688,6 +695,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | NetworkSession.PreviousGamers | `net-session` |
 | NetworkSession.PrivateGamerSlots | `net-session` |
 | NetworkSession.RemoteGamers | `net-session` |
+| NetworkSession.ResetReady | `net-session` |
 | NetworkSession.SessionEnded | `net-session` |
 | NetworkSession.SessionProperties | `net-session` |
 | NetworkSession.SessionState | `net-session` |

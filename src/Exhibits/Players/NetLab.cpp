@@ -105,6 +105,8 @@ public:
             p.AddToggle("AllowHostMigration", false, [this](bool v) { NetworkSession* n = Primary(); if (n != nullptr) { try { n->setAllowHostMigrationProperty(v); } catch (const std::exception&) {} } });
             p.AddReadout("SessionType / MaxGamers / private slots", [this] { return SessionShape(); });
             p.AddReadout("Host / remote / previous gamers", [this] { return GamerRoles(); });
+            p.AddReadout("Gamer 0..1: Id, slot, voice, talking, muted, left", [this] { return GamerDetails(); });
+            p.AddButton("NetworkSession.ResetReady", [this] { NetworkSession* n = Primary(); if (n != nullptr) { try { n->ResetReady(); Museum::Log("net", "ResetReady; gamers: %s", GamerDetails().c_str()); } catch (const std::exception&) {} } });
             p.AddButton("Guide.ShowSignIn: an account for PlayerMatch", [this] { try { Microsoft::Xna::Framework::GamerServices::Guide::ShowSignIn(1, true); Museum::Log("online", "ShowSignIn(1, true) opened"); } catch (const std::exception& e) { status_ = std::string(e.what()).substr(0, 50); } });
             p.AddToggle("Deliver packets: a SystemLink session (visible on your network)", false, [this](bool v) { SetTransport(v); });
             p.AddSlider("SimulatedLatency (ms, on arriving packets)", 0.0f, 500.0f, 0.0f, [this](float v) { latencyMs_ = v; ApplyImpairment(); }, "%.0f", 10.0f);
@@ -475,6 +477,22 @@ private:
         static const char* const types[] = {"Local", "SystemLink", "PlayerMatch", "Ranked"};
         const int t = static_cast<int>(n->getSessionTypeProperty());
         return std::string(t >= 0 && t < 4 ? types[t] : "?") + " / " + std::to_string(n->getMaxGamersProperty()) + " / " + std::to_string(n->getPrivateGamerSlotsProperty()) + ", migration " + (n->getAllowHostMigrationProperty() ? "allowed" : "off");
+    }
+    // What a NetworkGamer says about itself, looked up with NetworkSession.FindGamerById to show that the Id is the key.
+    [[nodiscard]] std::string GamerDetails()
+    {
+        NetworkSession* n = Primary();
+        if (n == nullptr) return "no session";
+        std::string text;
+        const auto& all = n->getAllGamersProperty();
+        for (int i = 0; i < all.getCountProperty() && i < 2; ++i) {
+            const NetworkGamer* g = all[i];
+            const NetworkGamer* found = n->FindGamerById(g->getIdProperty());
+            if (!text.empty()) text += "  |  ";
+            text += "#" + std::to_string(static_cast<int>(g->getIdProperty())) + (found == g ? " (found by id)" : " (id lookup differs)") + ", " + (g->getIsPrivateSlotProperty() ? "private" : "public") + ", voice " + (g->getHasVoiceProperty() ? "y" : "n") +
+                    ", talking " + (g->getIsTalkingProperty() ? "y" : "n") + ", muted " + (g->getIsMutedByLocalUserProperty() ? "y" : "n") + ", left " + (g->getHasLeftSessionProperty() ? "y" : "n");
+        }
+        return text.empty() ? "no gamers" : text;
     }
     [[nodiscard]] std::string GamerRoles()
     {
