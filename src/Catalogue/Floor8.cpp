@@ -101,7 +101,7 @@ WingSpec ContentWing()
             r.depth = 13;
             r.height = 5.0f;
             r.theme = "workshop";
-            r.apis = {"XImporter", "FbxImporter", "ContentImporter", "ContentImporterAttribute", "ContentImporterContext", "NodeContent", "NodeContent.Children", "NodeContent.Transform", "MeshContent", "GeometryContent", "MaterialContent", "BasicMaterialContent",
+            r.apis = {"XImporter", "FbxImporter", "ContentImporter", "ContentImporterAttribute", "ContentImporterContext", "NodeContent", "NodeContent.Children", "MeshContent", "GeometryContent", "MaterialContent", "BasicMaterialContent",
                       "BasicMaterialContent.DiffuseColor", "ModelProcessor", "ModelContent", "ModelMeshContent", "ModelMeshPartContent", "ModelBoneContent", "ContentProcessorContext.Convert"};
             r.origin = ApiOrigin::Xna;
             return r;
@@ -131,7 +131,7 @@ WingSpec ContentWing()
             r.depth = 13;
             r.height = 5.0f;
             r.theme = "workshop";
-            r.apis = {"WavImporter", "AudioContent", "AudioContent.Format", "AudioContent.Data", "AudioContent.Duration", "AudioContent.LoopStart", "AudioContent.LoopLength", "AudioFormat", "AudioFormat.SampleRate", "AudioFormat.ChannelCount", "AudioFormat.BitsPerSample",
+            r.apis = {"WavImporter", "AudioContent", "AudioContent.Format", "AudioContent.Data", "AudioFormat", "AudioFormat.SampleRate", "AudioFormat.ChannelCount", "AudioFormat.BitsPerSample",
                       "AudioFormat.NativeWaveFormat", "ConversionQuality", "SoundEffectProcessor", "SoundEffectProcessor.Quality", "SoundEffectContent", "SongProcessor", "SongContent", "SoundEffect.FromStream", "ContentCompiler.Compile(SoundEffectContent)", "ContentCompiler.Compile(SongContent)"};
             r.origin = ApiOrigin::Xna;
             return r;

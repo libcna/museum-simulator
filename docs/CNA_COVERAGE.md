@@ -52,7 +52,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1145 distinct API names are claimed by at least one room.
+1141 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -87,10 +87,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | AudioChannels | `au-synth`, `au-generate` |
 | AudioContent | `ct-audiopipeline` |
 | AudioContent.Data | `ct-audiopipeline` |
-| AudioContent.Duration | `ct-audiopipeline` |
 | AudioContent.Format | `ct-audiopipeline` |
-| AudioContent.LoopLength | `ct-audiopipeline` |
-| AudioContent.LoopStart | `ct-audiopipeline` |
 | AudioEmitter | `audio`, `au-spatial` |
 | AudioEngine | `au-xact` |
 | AudioEngine.GetCategory | `au-xact` |
@@ -838,7 +835,6 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | NetworkSessionType.PlayerMatch | `net-session` |
 | NodeContent | `ct-modelimport` |
 | NodeContent.Children | `ct-modelimport` |
-| NodeContent.Transform | `ct-modelimport` |
 | NormalizedByte2 | `vt-packed` |
 | NormalizedByte4 | `vt-packed` |
 | NormalizedShort2 | `vt-packed` |
