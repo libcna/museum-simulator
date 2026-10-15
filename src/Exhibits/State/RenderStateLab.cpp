@@ -97,6 +97,7 @@ public:
                 break;
             case Mode::StencilCount:
                 p.AddChoice("Scene", {"Four overlapping discs", "Closed and open meshes (two-sided)"}, 0, [this](int v) { countScene_ = v; });
+                p.AddChoice("Which operation runs", {"StencilPass (test passes)", "StencilFail (StencilFunction Never)", "StencilDepthBufferFail (depth test fails)"}, 0, [this](int v) { countFail_ = v; });
                 p.AddChoice("StencilPass operation", {"Increment", "IncrementSaturation", "Decrement", "DecrementSaturation", "Invert", "Replace (reference 5)"}, 0, [this](int v) { countOp_ = v; });
                 p.AddSlider("StencilWriteMask", 1.0f, 255.0f, static_cast<float>(writeMask_), [this](float v) { writeMask_ = static_cast<int>(v); }, "%.0f", 1.0f);
                 p.AddSlider("Value the stencil is cleared to", 0.0f, 250.0f, static_cast<float>(clearValue_), [this](float v) { clearValue_ = static_cast<int>(v); }, "%.0f", 1.0f);
@@ -405,6 +406,16 @@ private:
         count.setStencilEnableProperty(true);
         count.setStencilFunctionProperty(CompareFunction::Always);
         count.setStencilPassProperty(two ? StencilOperation::Increment : ops[countOp_]);
+        if (!two && countFail_ == 1) {   // the stencil test itself fails everywhere: StencilFail is the operation that runs
+            count.setStencilFunctionProperty(CompareFunction::Never);
+            count.setStencilPassProperty(StencilOperation::Keep);
+            count.setStencilFailProperty(ops[countOp_]);
+        } else if (!two && countFail_ == 2) {   // the stencil test passes but the depth test fails everywhere
+            count.setDepthBufferEnableProperty(true);
+            count.setDepthBufferFunctionProperty(CompareFunction::Never);
+            count.setStencilPassProperty(StencilOperation::Keep);
+            count.setStencilDepthBufferFailProperty(ops[countOp_]);
+        }
         count.setReferenceStencilProperty(countOp_ == 5 && !two ? 5 : 1);
         count.setStencilWriteMaskProperty(two ? 255 : writeMask_);
         if (two) {
@@ -629,7 +640,7 @@ private:
         d.setDepthStencilStateProperty(DepthStencilState::Default);
     }
 
-    int countScene_ = 0, countOp_ = 0, writeMask_ = 255, clearValue_ = 0;
+    int countScene_ = 0, countOp_ = 0, countFail_ = 0, writeMask_ = 255, clearValue_ = 0;
     Mode mode_;
     Gizmos gizmos_;
     std::unique_ptr<BasicEffect> fx_;

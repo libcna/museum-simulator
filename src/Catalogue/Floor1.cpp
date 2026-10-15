@@ -169,7 +169,7 @@ WingSpec RotationWing()
         Lab("curve-easing", "Easing Functions", "MathHelper.Lerp, SmoothStep, Hermite and CatmullRom graphed side by side", "curves", "easing",
             {"MathHelper.Lerp", "MathHelper.SmoothStep", "MathHelper.Hermite", "MathHelper.CatmullRom"}),
         Lab("curve-spline", "Splines", "Vector3.CatmullRom through four control points with a rider", "curves", "spline", {"Vector3.CatmullRom"}),
-        Lab("curve-class", "The Curve Class", "Curve, CurveKey, tangents, continuity and loop types", "curves", "curve", {"Curve", "CurveKey", "CurveLoopType", "CurveTangent", "CurveContinuity", "CurveKeyCollection", "CurveKey.TangentIn", "CurveKey.TangentOut", "Curve.IsConstant"}),
+        Lab("curve-class", "The Curve Class", "Curve, CurveKey, tangents, continuity and loop types", "curves", "curve", {"Curve", "CurveKey", "CurveLoopType", "CurveTangent", "CurveContinuity", "CurveKeyCollection", "CurveKey.TangentIn", "CurveKey.TangentOut", "Curve.IsConstant", "Curve.PreLoop", "Curve.PostLoop", "Curve.ComputeTangents", "Curve.ComputeTangent"}),
         Lab("curve-barycentric", "Barycentric Coordinates", "Vector3.Barycentric weights inside a triangle", "curves", "barycentric", {"Vector3.Barycentric"}),
     };
     return w;

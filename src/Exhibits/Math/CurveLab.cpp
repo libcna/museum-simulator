@@ -56,6 +56,14 @@ public:
                     static constexpr CurveLoopType kTypes[] = {CurveLoopType::Constant, CurveLoopType::Cycle, CurveLoopType::CycleOffset, CurveLoopType::Oscillate, CurveLoopType::Linear};
                     curve_.setPostLoopProperty(kTypes[v]);
                 });
+                p.AddChoice("Pre-loop type (before the first key)", {"Constant", "Cycle", "CycleOffset", "Oscillate", "Linear"}, 0, [this](int v) {
+                    static constexpr CurveLoopType kTypes[] = {CurveLoopType::Constant, CurveLoopType::Cycle, CurveLoopType::CycleOffset, CurveLoopType::Oscillate, CurveLoopType::Linear};
+                    curve_.setPreLoopProperty(kTypes[v]);
+                });
+                p.AddChoice("Key 2 tangent only (ComputeTangent)", {"Smooth", "Linear", "Flat"}, 0, [this](int v) {
+                    static constexpr CurveTangent kTan[] = {CurveTangent::Smooth, CurveTangent::Linear, CurveTangent::Flat};
+                    curve_.ComputeTangent(2, kTan[v]);
+                });
                 p.AddChoice("Tangents", {"Smooth", "Linear", "Flat"}, 0, [this](int v) {
                     static constexpr CurveTangent kTan[] = {CurveTangent::Smooth, CurveTangent::Linear, CurveTangent::Flat};
                     curve_.ComputeTangents(kTan[v]);

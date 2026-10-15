@@ -51,7 +51,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-941 distinct API names are claimed by at least one room.
+951 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -260,7 +260,11 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Cue.Stop | `au-xact` |
 | CullMode | `rs-cull` |
 | Curve | `curve-class` |
+| Curve.ComputeTangent | `curve-class` |
+| Curve.ComputeTangents | `curve-class` |
 | Curve.IsConstant | `curve-class` |
+| Curve.PostLoop | `curve-class` |
+| Curve.PreLoop | `curve-class` |
 | CurveContinuity | `curve-class` |
 | CurveKey | `curve-class` |
 | CurveKey.TangentIn | `curve-class` |
@@ -279,11 +283,13 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | DepthStencilState.CounterClockwiseStencilFunction | `rs-stencilcount` |
 | DepthStencilState.CounterClockwiseStencilPass | `rs-stencilcount` |
 | DepthStencilState.DepthBufferEnable | `rs-depthfunc` |
-| DepthStencilState.DepthBufferFunction | `light-many`, `rs-depthfunc` |
+| DepthStencilState.DepthBufferFunction | `light-many`, `rs-depthfunc`, `rs-stencilcount` |
 | DepthStencilState.DepthBufferWriteEnable | `rs-depthread` |
 | DepthStencilState.DepthRead | `be-alpha`, `rs-depthread` |
 | DepthStencilState.ReferenceStencil | `rs-outline` |
+| DepthStencilState.StencilDepthBufferFail | `rs-stencilcount` |
 | DepthStencilState.StencilEnable | `rs-portal` |
+| DepthStencilState.StencilFail | `rs-stencilcount` |
 | DepthStencilState.StencilFunction | `rs-portal` |
 | DepthStencilState.StencilMask | `rs-stencilcount` |
 | DepthStencilState.StencilPass | `rs-outline`, `rs-shadow`, `rs-stencilcount` |
@@ -297,6 +303,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | DualTextureEffect.Texture2 | `be-dual` |
 | DynamicIndexBuffer | `geo-dynindex` |
 | DynamicSoundEffectInstance | `au-synth` |
+| DynamicSoundEffectInstance.BufferNeeded | `au-synth` |
 | DynamicSoundEffectInstance.GetSampleSizeInBytes | `au-synth` |
 | DynamicSoundEffectInstance.PendingBufferCount | `au-synth` |
 | DynamicSoundEffectInstance.SubmitBuffer | `au-synth` |
@@ -588,9 +595,12 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Matrix.Translation | `mat-hierarchy` |
 | Matrix.Transpose | `mat-normals` |
 | MatrixConverter | `vt-converters` |
+| MediaPlayer.ActiveSongChanged | `au-music` |
+| MediaPlayer.GameHasControl | `au-music` |
 | MediaPlayer.GetVisualizationData | `au-music` |
 | MediaPlayer.IsShuffled | `au-music` |
 | MediaPlayer.IsVisualizationEnabled | `au-music` |
+| MediaPlayer.MediaStateChanged | `au-music` |
 | MediaPlayer.MoveNext | `au-music` |
 | MediaPlayer.MovePrevious | `au-music` |
 | MediaPlayer.Play | `au-music` |

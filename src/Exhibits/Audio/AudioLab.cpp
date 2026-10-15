@@ -68,7 +68,13 @@ class AudioLab final : public ScreenExhibit {
 public:
     AudioLab(const RoomDef& room, Services& services) : ScreenExhibit(room, services, 960, 540, 7.6f), mode_(ParseMode(room.params.Get("mode"))), rng_(99) {}
 
-    ~AudioLab() override { RestoreGlobals(); }
+    ~AudioLab() override
+    {
+        RestoreGlobals();
+        if (songToken_ != 0) MediaPlayer::ActiveSongChanged.Remove(songToken_);
+        if (stateToken_ != 0) MediaPlayer::MediaStateChanged.Remove(stateToken_);
+        if (synth_ && neededToken_ != 0) synth_->BufferNeeded.Remove(neededToken_);
+    }
 
     void BuildStatic(RoomBuilder& b) override
     {
@@ -103,6 +109,7 @@ public:
                 p.AddToggle("Submit float32 samples (SubmitFloatBufferEXT)", false, [this](bool v) { SetFloatMode(v); });
                 p.AddSlider("Octave", 3.0f, 6.0f, octave_, [this](float v) { octave_ = v; }, "%.0f", 1.0f);
                 for (int i = 0; i < 8; ++i) p.AddButton(std::string("Note ") + kNotes[i], [this, i] { PlayNote(i); });
+                p.AddReadout("BufferNeeded events", [this] { return std::to_string(bufferNeeded_); });
                 p.AddReadout("PendingBufferCount", [this] { return synth_ ? std::to_string(synth_->getPendingBufferCountProperty()) : std::string("-"); });
                 p.AddReadout("Sample size helpers", [this] {
                     if (!synth_) return std::string("-");
@@ -139,6 +146,8 @@ public:
                 p.AddReadout("State", [] { try { const MediaState s = MediaPlayer::getStateProperty(); return std::string(s == MediaState::Playing ? "Playing" : (s == MediaState::Paused ? "Paused" : "Stopped")); } catch (const std::exception&) { return std::string("unavailable"); } });
                 p.AddReadout("Position", [] { try { return Fmt1(static_cast<float>(MediaPlayer::getPlayPositionProperty().getTotalSecondsProperty())) + " s"; } catch (const std::exception&) { return std::string("-"); } });
                 p.AddReadout("Song of the last button", [this] { return SongInfo(); });
+                p.AddReadout("ActiveSongChanged / MediaStateChanged events", [this] { return std::to_string(songEvents_) + " / " + std::to_string(stateEvents_); });
+                p.AddReadout("MediaPlayer.GameHasControl", [] { try { return std::string(MediaPlayer::getGameHasControlProperty() ? "true" : "false"); } catch (const std::exception&) { return std::string("-"); } });
                 break;
             case Mode::Xact:
                 p.AddChoice("Cue", {"Tone", "Click", "Arpeggio", "Drums", "Chirp"}, 0, [this](int v) { xCueIndex_ = v; });
@@ -188,8 +197,12 @@ public:
                 spatial_ = std::make_unique<SoundEffectInstance>(effects_[0]->CreateInstance());
                 spatial_->setIsLoopedProperty(true);
                 spatial_->Play();
+            } else if (mode_ == Mode::Music) {
+                songToken_ = MediaPlayer::ActiveSongChanged.Add([this](System::Object*, const System::EventArgs&) { ++songEvents_; Museum::Log("audio", "MediaPlayer.ActiveSongChanged (%d)", songEvents_); });
+                stateToken_ = MediaPlayer::MediaStateChanged.Add([this](System::Object*, const System::EventArgs&) { ++stateEvents_; Museum::Log("audio", "MediaPlayer.MediaStateChanged (%d)", stateEvents_); });
             } else if (mode_ == Mode::Synth) {
                 synth_ = std::make_unique<DynamicSoundEffectInstance>(22050, AudioChannels::Mono);
+                neededToken_ = synth_->BufferNeeded.Add([this](System::Object*, const System::EventArgs&) { ++bufferNeeded_; if (bufferNeeded_ == 1) Museum::Log("audio", "DynamicSoundEffectInstance.BufferNeeded raised"); });
             } else if (mode_ == Mode::Generate) {
                 Generate();
             } else if (mode_ == Mode::Xact) {
@@ -750,7 +763,8 @@ private:
     std::unique_ptr<SoundEffect> generated_;
     std::map<std::string, std::unique_ptr<SoundEffect>> cache_;
     std::array<std::unique_ptr<Song>, 2> songs_;
-    int lastSong_ = 0;
+    int lastSong_ = 0, songEvents_ = 0, stateEvents_ = 0, bufferNeeded_ = 0;
+    System::EventHandler<System::EventArgs>::Token songToken_ = 0, stateToken_ = 0, neededToken_ = 0;
     std::unique_ptr<SongCollection> queue_;
     bool float32_ = false;
     bool visualize_ = true;

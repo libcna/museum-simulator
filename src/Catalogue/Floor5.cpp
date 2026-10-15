@@ -53,7 +53,7 @@ WingSpec StateWing()
         rs("rs-outline", "Stencil: an Outline", "A rim around objects made with two stencil passes", "outline", {"DepthStencilState.ReferenceStencil", "DepthStencilState.StencilPass", "CompareFunction.NotEqual"}),
         rs("rs-shadow", "Stencil: a Planar Shadow", "Matrix.CreateShadow flattened shadows, darkened once thanks to the stencil test", "shadow", {"Matrix.CreateShadow", "DepthStencilState.StencilPass", "StencilOperation.Increment"}),
         rs("rs-stencilcount", "Stencil: Counting and Masks", "Increment, Decrement, Invert and Replace with StencilWriteMask, and two-sided stencil counting faces up and down", "stencilcount",
-           {"DepthStencilState.StencilPass", "DepthStencilState.StencilWriteMask", "DepthStencilState.StencilMask", "DepthStencilState.TwoSidedStencilMode",
+           {"DepthStencilState.StencilPass", "DepthStencilState.StencilFail", "DepthStencilState.StencilDepthBufferFail", "DepthStencilState.DepthBufferFunction", "DepthStencilState.StencilWriteMask", "DepthStencilState.StencilMask", "DepthStencilState.TwoSidedStencilMode",
             "DepthStencilState.CounterClockwiseStencilPass", "DepthStencilState.CounterClockwiseStencilFunction", "StencilOperation", "GraphicsDevice.Clear"}),
         rs("rs-blend", "BlendState Gallery", "Sixteen blend factor and function combinations on the same sprites", "blendgallery", {"BlendState", "Blend", "BlendFunction"}),
         rs("rs-colorwrite", "Color Write Channels", "Masking red, green, blue and alpha writes", "colorwrite", {"BlendState.ColorWriteChannels", "ColorWriteChannels"}),
