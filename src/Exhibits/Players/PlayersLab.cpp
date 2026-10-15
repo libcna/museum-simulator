@@ -18,6 +18,7 @@
 #ifdef MUSEUM_NETWORKING
 #include "Microsoft/Xna/Framework/GamerServices/AchievementCollection.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/Gamer.hpp"
+#include "Microsoft/Xna/Framework/GamerServices/GamerServicesDispatcher.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/GamerPresence.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/GamerProfile.hpp"
 #include "Microsoft/Xna/Framework/GamerServices/Guide.hpp"
@@ -145,6 +146,8 @@ public:
                 p.AddButton("Guide.BeginShowMessageBox", [this] { ShowMessageBox(); });
                 p.AddButton("Guide.BeginShowKeyboardInput", [this] { ShowKeyboard(); });
                 p.AddReadout("Guide.IsTrialMode", [] { return std::string(Guide::getIsTrialModeProperty() ? "true" : "false"); });
+                p.AddReadout("GamerServicesDispatcher.IsInitialized", [] { return std::string(Microsoft::Xna::Framework::GamerServices::GamerServicesDispatcher::getIsInitializedProperty() ? "true" : "false"); });
+                p.AddReadout("GamerServicesDispatcher.WindowHandle", [] { return std::string(Microsoft::Xna::Framework::GamerServices::GamerServicesDispatcher::getWindowHandleProperty() != 0 ? "set" : "0 (not set)"); });
                 p.AddReadout("Guide.IsScreenSaverEnabled", [] { return std::string(Guide::getIsScreenSaverEnabledProperty() ? "true (the desktop may blank)" : "false"); });
                 p.AddReadout("Guide.IsVisible", [] { return std::string(Guide::getIsVisibleProperty() ? "true (it owns the keyboard)" : "false"); });
                 p.AddReadout("Answer", [this] { return answer_; });

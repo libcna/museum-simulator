@@ -52,7 +52,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1141 distinct API names are claimed by at least one room.
+1143 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -510,6 +510,8 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GamerProfile.Region | `gs-players` |
 | GamerProfile.Reputation | `on-account` |
 | GamerProfile.TotalAchievements | `on-account` |
+| GamerServicesDispatcher.IsInitialized | `gs-guide` |
+| GamerServicesDispatcher.WindowHandle | `gs-guide` |
 | GamerServicesNotAvailableException | `pl-exceptions` |
 | GeometryContent | `ct-modelimport` |
 | GestureSample.Delta2 | `in-touch` |
