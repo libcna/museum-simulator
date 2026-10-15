@@ -17,7 +17,9 @@
 #include "Diagnostics/Log.hpp"
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
+#include "Microsoft/Xna/Framework/DisplayOrientation.hpp"
 #include "Microsoft/Xna/Framework/GameWindow.hpp"
+#include "Microsoft/Xna/Framework/GraphicsDeviceManager.hpp"
 #include "Microsoft/Xna/Framework/Graphics/DisplayMode.hpp"
 #include "Microsoft/Xna/Framework/Graphics/GraphicsAdapter.hpp"
 #include "Microsoft/Xna/Framework/Graphics/PresentationParameters.hpp"
@@ -101,6 +103,7 @@ public:
                 p.AddChoice("Window title", {"CNA 3D Museum", "Hello from GameWindow", "Title set by the Window room"}, 0, [this](int v) { SetTitle(v); });
                 p.AddToggle("AllowUserResizing", S().game->getWindowProperty().getAllowUserResizingProperty(), [this](bool v) { SetResizable(v); });
                 p.AddReadout("ClientSizeChanged events", [this] { return std::to_string(resizeEvents_); });
+                p.AddReadout("CurrentOrientation / OrientationChanged events", [this] { return OrientationText(); });
                 p.AddReadout("Activated / Deactivated", [this] { return std::to_string(activated_) + " / " + std::to_string(deactivated_); });
                 p.AddReadout("Files dropped on the window", [this] { return std::to_string(drops_); });
                 break;
@@ -142,6 +145,7 @@ public:
             originalTitle_ = g.getWindowProperty().getTitleProperty();
             originalResizable_ = g.getWindowProperty().getAllowUserResizingProperty();
             resizeToken_ = g.getWindowProperty().ClientSizeChanged.Add([this](System::Object*, const System::EventArgs&) { ++resizeEvents_; });
+            orientationToken_ = g.getWindowProperty().OrientationChanged.Add([this](System::Object*, const System::EventArgs&) { ++orientationEvents_; });
             activeToken_ = g.Activated.Add([this](System::Object*, const System::EventArgs&) { ++activated_; });
             inactiveToken_ = g.Deactivated.Add([this](System::Object*, const System::EventArgs&) { ++deactivated_; });
             dropToken_ = g.getWindowProperty().FileDropEXT.Add([this](System::Object*, const FileDropEventArgsEXT&) { ++drops_; });
@@ -219,6 +223,7 @@ private:
         try {
             Game& g = *S().game;
             g.getWindowProperty().ClientSizeChanged.Remove(resizeToken_);
+            g.getWindowProperty().OrientationChanged.Remove(orientationToken_);
             g.Activated.Remove(activeToken_);
             g.Deactivated.Remove(inactiveToken_);
             g.getWindowProperty().FileDropEXT.Remove(dropToken_);
@@ -239,6 +244,26 @@ private:
 
     // The operating system's own handle for the window (CNAEXT), the thing a program passes to a native API. Which fields are filled
     // depends on the windowing system: an X11 window is an integer id, a Win32 window a pointer.
+    // The orientation CNA derives from the surface's shape (width over height) and the orientations the game declared it supports.
+    [[nodiscard]] std::string OrientationText() const
+    {
+        try {
+            const DisplayOrientation current = S().game->getWindowProperty().getCurrentOrientationProperty();
+            const DisplayOrientation supported = S().graphics != nullptr ? S().graphics->getSupportedOrientationsProperty() : DisplayOrientation::Default;
+            const auto name = [](DisplayOrientation o) {
+                switch (o) {
+                    case DisplayOrientation::LandscapeLeft: return "LandscapeLeft";
+                    case DisplayOrientation::LandscapeRight: return "LandscapeRight";
+                    case DisplayOrientation::Portrait: return "Portrait";
+                    default: return "Default";
+                }
+            };
+            return std::string(name(current)) + " (supported mask " + std::to_string(static_cast<int>(supported)) + ") / " + std::to_string(orientationEvents_);
+        } catch (const std::exception& e) {
+            return std::string("unavailable: ") + std::string(e.what()).substr(0, 30);
+        }
+    }
+
     [[nodiscard]] static std::string NativeWindowLine(const GameWindow& w)
     {
         try {
@@ -518,10 +543,10 @@ private:
     std::vector<std::pair<std::string, bool>> caps_;
     int supported_ = 0, total_ = 0, page_ = 0, deviceFlags_ = 0;
     float reportScroll_ = 0.0f;
-    int resizeEvents_ = 0, activated_ = 0, deactivated_ = 0, drops_ = 0;
+    int orientationEvents_ = 0, resizeEvents_ = 0, activated_ = 0, deactivated_ = 0, drops_ = 0;
     bool subscribed_ = false;
     bool originalResizable_ = false;
-    std::size_t resizeToken_ = 0, activeToken_ = 0, inactiveToken_ = 0, dropToken_ = 0;
+    std::size_t orientationToken_ = 0, resizeToken_ = 0, activeToken_ = 0, inactiveToken_ = 0, dropToken_ = 0;
 };
 
 }  // namespace

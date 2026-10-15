@@ -51,7 +51,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-954 distinct API names are claimed by at least one room.
+957 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -402,8 +402,10 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GameWindow.AllowUserResizing | `pl-window` |
 | GameWindow.ClientBounds | `app-viewport`, `pl-window` |
 | GameWindow.ClientSizeChanged | `pl-window` |
+| GameWindow.CurrentOrientation | `pl-window` |
 | GameWindow.FileDropEXT | `pl-window` |
 | GameWindow.GetNativeWindowHandleEXT | `pl-window` |
+| GameWindow.OrientationChanged | `pl-window` |
 | GameWindow.Title | `pl-window` |
 | Gamer.GetProfile | `gs-players` |
 | Gamer.LeaderboardWriter | `gs-leaderboards` |
@@ -475,6 +477,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | GraphicsDeviceManager.DeviceReset | `app-viewport` |
 | GraphicsDeviceManager.DeviceResetting | `app-viewport` |
 | GraphicsDeviceManager.PreparingDeviceSettings | `app-viewport` |
+| GraphicsDeviceManager.SupportedOrientations | `pl-window` |
 | GraphicsDeviceStatus | `app-viewport` |
 | GraphicsProfile | `hist-xna` |
 | GraphicsResource.Dispose | `ct-lifetime` |
