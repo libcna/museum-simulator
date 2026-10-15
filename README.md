@@ -19,8 +19,10 @@ code above CNA is application structure (rooms, portals, a floor map, an exhibit
 | Floor 8: image formats decoded by ContentManager | Floor 9: renderer self-checks | Floor 9: the observation deck |
 | ![sampler](docs/images/sampler.jpg) | ![colours](docs/images/colours.jpg) | ![fontbuild](docs/images/fontbuild.jpg) |
 | Floor 6: glTF sampler states (repeat, clamp, mirror) | Floor 1: the 141 named colours | Floor 8: a font built at run time |
-| ![shadererrors](docs/images/shadererrors.jpg) | ![meshbuilder](docs/images/meshbuilder.jpg) | |
-| Floor 4: what a shader compile error looks like to CNA | Floor 8: a model built with MeshBuilder and ModelProcessor | |
+| ![shadererrors](docs/images/shadererrors.jpg) | ![meshbuilder](docs/images/meshbuilder.jpg) | ![modelimport](docs/images/modelimport.jpg) |
+| Floor 4: what a shader compile error looks like to CNA | Floor 8: a model built with MeshBuilder and ModelProcessor | Floor 8: a .x or .fbx file imported and processed |
+| ![compiler](docs/images/compiler.jpg) | ![volshader](docs/images/volshader.jpg) | ![diagnostics](docs/images/diagnostics.jpg) |
+| Floor 8: an .xnb written by ContentCompiler and loaded back | Floor 3: a Texture3D read by a sampler3D (AddressW) | Floor 8: CNA::Diagnostics zones and a recorded trace |
 
 All images are real frames from the running museum (`tools/readme_shots.sh`), not mock-ups.
 
