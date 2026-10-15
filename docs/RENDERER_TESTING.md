@@ -61,7 +61,7 @@ and SDL_GPU renderers; FNA3D can create only `Color` (plus DXT), WEBGPU only `Co
 One expectation worth knowing: for the channels a format does not store, Direct3D 9, XNA and every CNA renderer sample **1**
 (`R16F` gives (r, 1, 1), `G16R16F` gives (r, g, 1)), while `PackedVector`'s own `ToVector4()` says 0.
 
-The separate `tex-volume` room now round-trips Color, Single and Vector4 on FNA3D as well as OPENGLES3, OPENGL33 and SOFTWARE. CNA `b23c9bd19` connected FNA3D's typed `Texture3D` route to its existing format-native volume storage and added the volume classifier; the focused capability executable passed exact Single/Vector4 round-trips under Xvfb/llvmpipe. WEBGPU and SDL_GPU still refuse those two non-Color volume formats.
+The separate `tex-volume` room now round-trips Color, Single and Vector4 on FNA3D and WEBGPU as well as OPENGLES3, OPENGL33 and SOFTWARE. CNA `b23c9bd19` connected FNA3D's typed `Texture3D` route to its existing format-native volume storage and added the volume classifier. CNA `fd2b299c0` gave WebGPU native R32Float/RGBA32Float volume storage and format-sized transfers instead of hard-coded RGBA8. Both focused executables passed exact Single/Vector4 round-trips under Xvfb/llvmpipe; SDL_GPU still refuses those two non-Color formats.
 
 Run `tools/renderer_check.sh` for the current figures; they are not copied anywhere else.
 
