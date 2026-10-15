@@ -52,7 +52,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1151 distinct API names are claimed by at least one room.
+1161 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -1072,16 +1072,26 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | StencilOperation.Increment | `rs-shadow` |
 | StorageContainer | `ct-storage`, `pl-exceptions` |
 | StorageContainer.CreateDirectory | `ct-storage` |
+| StorageContainer.CreateFile | `ct-storage` |
 | StorageContainer.DeleteDirectory | `ct-storage` |
+| StorageContainer.DeleteFile | `ct-storage` |
 | StorageContainer.DirectoryExists | `ct-storage` |
+| StorageContainer.DisplayName | `ct-storage` |
+| StorageContainer.FileExists | `ct-storage` |
 | StorageContainer.GetDirectoryNames | `ct-storage` |
 | StorageContainer.GetFileNames | `ct-storage` |
+| StorageContainer.OpenFile | `ct-storage` |
 | StorageDevice | `ct-storage` |
+| StorageDevice.BeginOpenContainer | `ct-storage` |
+| StorageDevice.BeginShowSelector | `ct-storage` |
 | StorageDevice.DeleteContainer | `ct-storage` |
 | StorageDevice.DeviceChanged | `ct-storage` |
+| StorageDevice.EndOpenContainer | `ct-storage` |
+| StorageDevice.EndShowSelector | `ct-storage` |
 | StorageDevice.FreeSpace | `ct-storage` |
 | StorageDevice.GetStorageRootEXT | `ct-storage` |
 | StorageDevice.IsConnected | `ct-storage` |
+| StorageDevice.SetAppNameEXT | `ct-storage` |
 | StorageDevice.TotalSpace | `ct-storage` |
 | StringBuilder | `text-hud` |
 | SurfaceFormat | `tex-formats`, `rt-formats`, `rv-formats` |
