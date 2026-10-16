@@ -79,7 +79,7 @@ public:
         b.AddWallSign(Wall::North, -kScreenAlong, kScreenY, kScreenW, kScreenH, about);
 
         SignSpec controls = TextPanel("Controls", {
-            "W A S D / arrow keys    walk            Shift    walk faster",
+            "W A S D / arrow keys    move            Shift    toggle walk / run",
             "Mouse                   look around     E / click    interact",
             "Esc                     pause menu      F1 / H       help overlay",
             "M                       museum map      F3           statistics",

@@ -126,8 +126,9 @@ void PlayerController::Update(float dt, FirstPersonCamera& camera, const Collisi
         forward /= len;
         strafe /= len;
     }
-    const bool sprint = !keyboardBlocked_ && (input.Down(Keys::LeftShift) || input.Down(Keys::RightShift));
-    const float speed = settings_.walkSpeed * (sprint ? settings_.sprintMultiplier : 1.0f);
+    if (!keyboardBlocked_ && (input.Pressed(Keys::LeftShift) || input.Pressed(Keys::RightShift)))
+        running_ = !running_;
+    const float speed = settings_.walkSpeed * (running_ ? settings_.sprintMultiplier : 1.0f);
 
     Vector3 position = camera.Position();
     position.Y = baseY_;   // collision uses the visitor's actual vertical span
@@ -155,7 +156,7 @@ void PlayerController::Update(float dt, FirstPersonCamera& camera, const Collisi
         if (onFootstep) onFootstep();
     }
     if (moving_) bobPhase_ += travelled * 4.2f;
-    const float bob = moving_ ? std::sin(bobPhase_) * 0.022f * (sprint ? 1.3f : 1.0f) : 0.0f;
+    const float bob = moving_ ? std::sin(bobPhase_) * 0.022f * (running_ ? 1.3f : 1.0f) : 0.0f;
     baseY_ = position.Y;
     camera.SetPosition(Vector3(position.X, baseY_ + settings_.eyeHeight + bob, position.Z));
 }

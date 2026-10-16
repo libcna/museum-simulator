@@ -109,7 +109,7 @@ files next to the executable; that is what the *Content Compiler* room loads.
 
 | Key | Action |
 |---|---|
-| `W A S D` / `Up Down` | walk (Shift: faster) |
+| `W A S D` / `Up Down` | move (Shift toggles walk/run) |
 | mouse, or `Left Right` and `Page Up/Down` | look around |
 | `E` or left click | interact with what the crosshair is on (buttons, sliders, doors) |
 | `Q` or right click | previous choice on a panel |

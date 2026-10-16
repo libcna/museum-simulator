@@ -9,7 +9,7 @@
 
 /**
  * Turns input into camera motion: WASD / left stick to walk, mouse / right stick to
- * look, Shift to hurry. The visitor is a cylinder that slides along colliders; there is
+ * look, Shift to toggle walking/running. The visitor is a cylinder that slides along colliders; there is
  * one floor level, so no gravity or jumping is simulated.
  */
 class PlayerController {
@@ -74,6 +74,7 @@ private:
     float walked_ = 0.0f;
     float bobPhase_ = 0.0f;
     bool moving_ = false;
+    bool running_ = false;
     float scriptForward_ = 0.0f;
     float scriptStrafe_ = 0.0f;
     float scriptTurn_ = 0.0f;

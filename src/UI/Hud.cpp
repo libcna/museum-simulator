@@ -106,7 +106,7 @@ void Hud::DrawHelp(int w, int h)
         "CONTROLS",
         "W A S D / Up Down   walk            Mouse   look around",
         "Left Right   turn                   Page Up / Down   look up / down",
-        "Shift   walk faster                 E / Left click   interact",
+        "Shift   toggle walk / run            E / Left click   interact",
         "Esc   pause menu                    F1 / H   this help",
         "M / Tab   directory and map            F3   statistics",
         "F11   fullscreen                    R   return to the entrance        N   minimap on/off",
