@@ -149,13 +149,15 @@ Spawn MuseumPlan::SpawnPoint(int cell) const
     s.eye = r.ToWorld(0.0f, 1.65f, 0.0f);
     if (r.doors.empty()) return s;
     const DoorDef& d = r.doors.front();
-    // Stand one and a half metres inside the first door, looking into the room.
+    // Quick travel lands exhibit visitors far enough inside that a far-wall screen is legible;
+    // circulation cells keep the shorter inset so arrivals remain next to their exit door.
+    const float inset = r.kind == CellKind::Room ? kRoomArrivalInset : kCirculationArrivalInset;
     float x = 0.0f, z = 0.0f, dx = 0.0f, dz = 0.0f;
     switch (d.wall) {
-        case Wall::North: x = d.along; z = -r.halfD + 1.6f; dz = 1.0f; break;
-        case Wall::South: x = d.along; z = r.halfD - 1.6f; dz = -1.0f; break;
-        case Wall::West: x = -r.halfW + 1.6f; z = d.along; dx = 1.0f; break;
-        default: x = r.halfW - 1.6f; z = d.along; dx = -1.0f; break;
+        case Wall::North: x = d.along; z = -r.halfD + inset; dz = 1.0f; break;
+        case Wall::South: x = d.along; z = r.halfD - inset; dz = -1.0f; break;
+        case Wall::West: x = -r.halfW + inset; z = d.along; dx = 1.0f; break;
+        default: x = r.halfW - inset; z = d.along; dx = -1.0f; break;
     }
     // Keep the arrival point inside small rooms.
     x = std::clamp(x, -r.halfW + 0.8f, r.halfW - 0.8f);

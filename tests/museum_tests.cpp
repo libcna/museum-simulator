@@ -126,6 +126,9 @@ void TestRoomFrames(const MuseumPlan& m)
         const Vector3 b = r.WorldAt(0, 0, 0) + r.Rotate(Vector3(2.0f, 1.0f, -3.0f));
         Check((a - b).Length() < 1e-4f, r.key + ": ToWorld equals centre + Rotate");
         const Spawn s = m.SpawnPoint(r.index);
+        const Vector3 expectedArrival = r.ToWorld(0.0f, 1.65f, r.halfD - kRoomArrivalInset);
+        Check(Vector3::Distance(s.eye, expectedArrival) < 1e-4f,
+              r.key + ": quick travel lands " + std::to_string(kRoomArrivalInset) + " metres inside the door");
         const Vector3 ahead(-std::sin(s.yaw), 0.0f, -std::cos(s.yaw));
         const Vector3 far = r.ToWorld(0.0f, 0.0f, -r.halfD) - r.ToWorld(0.0f, 0.0f, 0.0f);
         Check(Vector3::Dot(ahead, far) > 0.0f, r.key + ": the arrival view faces the local north (far) wall");

@@ -158,7 +158,7 @@ hardware.
 
 | Tool | What it checks |
 |---|---|
-| `build/bin/museum_tests` (also `ctest --test-dir build`; build it with `tools/build.sh cna-3d-museum museum_tests`) | catalogue validity, unique keys and numbers, door symmetry, graph connectivity of every floor, spawn and cell lookup, exhibit registry, missing assets |
+| `build/bin/museum_tests` (also `ctest --test-dir build`; build it with `tools/build.sh cna-3d-museum museum_tests`) | catalogue validity, unique keys and numbers, door symmetry, whole-museum walking connectivity, exact arrival poses, spawn/cell lookup, exhibit registry, missing assets |
 | `cna-3d-museum --validate` | the same structure checks without a window; the museum also runs them at every start-up and logs any `INVALID:` problem |
 | `tools/online_stack.sh start\|stop\|env` | starts a private CNA gamer-services server (sibling repo, built once) with demo accounts for the *Online Service* rooms; `eval "$(tools/online_stack.sh env)"` points the museum at it |
 | `tools/online_check.sh` | end-to-end check of those rooms: signs in through the Guide with xdotool, plays a scored round and reads the service's database |

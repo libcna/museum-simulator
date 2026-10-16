@@ -85,7 +85,9 @@ their proportions at 640 x 480 and at 2560 x 1080; the directory maps the mouse 
 elevator has been visited), elevator rides (fade, teleport between identical cars, fade), and real switchback stairs
 generated from the catalogue. Stair doors carry an absolute height match across floors; `MuseumPlan::GroundHeightAt`
 is the shared analytic profile for both ramps and the landing, while `PlayerController` keeps the visitor's foot height
-and tests colliders against that storey. Room numbers and navigation signs are also generated from the catalogue.
+and tests colliders against that storey. Quick travel lands 3.6 m inside exhibit rooms so their far-wall subject is
+readable at arrival, but only 1.6 m inside circulation cells so the exit remains obvious. Room numbers and navigation
+signs are also generated from the catalogue.
 
 ## Time and determinism
 

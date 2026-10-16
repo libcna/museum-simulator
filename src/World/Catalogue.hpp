@@ -45,6 +45,8 @@ constexpr float kStairHalfDepth = 4.0f;
 constexpr float kStairLandingDepth = 0.8f;
 constexpr float kStairLaneOffset = 1.6f;
 constexpr float kStairLaneWidth = 2.4f;
+constexpr float kCirculationArrivalInset = 1.6f;
+constexpr float kRoomArrivalInset = 3.6f;
 
 /** Free-form key/value parameters that configure a data-driven exhibit. */
 struct Params {
