@@ -14,3 +14,10 @@ texture or sampler-state assignment, so the application-provided `GraphicsDevice
 `VertexSamplerStates[2]` drive the draw. `vertextexture.fxb` was built from that source with the Microsoft DirectX
 SDK June 2010 `fxc` (`/T fx_2_0`, the legacy Effect Framework profile), is 972 bytes, and has SHA-256
 `79b83e71ec0463bcdedc01222838f7693b67660186082ce8adec1d1fbaa962ca`.
+
+`instancing.fx` is the shared matrix-stream shader used by the *Hardware Instancing* and *Draw Calls and
+Instancing* rooms on renderers that execute compiled XNA effects. Four `BLENDWEIGHT` inputs form each instance's
+world matrix; this is the authentic XNA route for `DrawInstancedPrimitives`, since a stock `BasicEffect` vertex
+shader cannot consume application-defined instance semantics. Its 1,304-byte `instancing.fxb` was built with the
+same June 2010 `fxc` command and has SHA-256
+`3bd98afe1dee365ab89cef5f364365198e8961cf329e0fd7043107862888a892`.

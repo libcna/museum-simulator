@@ -25,6 +25,7 @@
 #include "Microsoft/Xna/Framework/Graphics/VertexElement.hpp"
 #include "Microsoft/Xna/Framework/Graphics/VertexPositionColor.hpp"
 #include "Microsoft/Xna/Framework/Graphics/VertexPositionNormalTexture.hpp"
+#include "Rendering/CompiledInstancing.hpp"
 #include "Rendering/EffectBank.hpp"
 #include "Rendering/RenderStates.hpp"
 
@@ -141,7 +142,7 @@ public:
                 p.AddSlider("First instance (BaseInstanceEXT)", 0.0f, 1000.0f, 0.0f, [this](float v) { firstInstance_ = static_cast<int>(v); }, "%.0f", 50.0f);
                 p.AddReadout("Draw calls per frame", [this] { return naive_ || !instanceRefusal_.empty() ? std::to_string(count_) : std::string("1"); });
                 p.AddReadout("GetVertexBuffers() while drawing", [this] { return boundStreams_; });
-                p.AddReadout("Instancing supported", [this] { if (!instanceRefusal_.empty()) return std::string("reported yes, draw refused (see log)"); return std::string(S().device->SupportsCapability(CNA::GraphicsCapability::Instancing) ? "yes" : "NO on this renderer"); });
+                p.AddReadout("Instancing supported", [this] { if (!instanceRefusal_.empty()) return std::string("reported yes, draw refused (see log)"); if (instancingFx_) return std::string("yes (compiled XNA effect)"); return std::string(S().device->SupportsCapability(CNA::GraphicsCapability::Instancing) ? "yes" : "NO on this renderer"); });
                 p.AddReadout("Frame rate", [this] { return Fmt(S().stats->fps) + " fps"; });
                 break;
         }
@@ -185,6 +186,9 @@ public:
         quad(0, 1, 5, 4);   // -y
         sharedI_ = std::make_unique<IndexBuffer>(d, IndexElementSize::SixteenBits, static_cast<int>(idx.size()), BufferUsage::WriteOnly);
         sharedI_->SetData(idx.data(), static_cast<int>(idx.size()));
+        if (mode_ == Mode::Instancing) {
+            instancingFx_ = CompiledInstancing::Load(d, S().contentRoot);
+        }
         dirty_ = true;
     }
 
@@ -636,7 +640,12 @@ private:
         device.setRasterizerStateProperty(RasterizerState::CullClockwise);
         bool instanced = false;
         if (!naive_ && instanceRefusal_.empty() && device.SupportsCapability(CNA::GraphicsCapability::Instancing)) {
-            EffectBank::Apply(fx);
+            if (instancingFx_) {
+                CompiledInstancing::Apply(*instancingFx_, place * ctx.view.view * ctx.view.projection,
+                                          Vector4(0.45f, 0.8f, 1.0f, 1.0f));
+            } else {
+                EffectBank::Apply(fx);
+            }
             const std::vector<VertexBufferBinding> bindings = {VertexBufferBinding(cubeV_.get(), 0, 0), VertexBufferBinding(instV_.get(), 0, 1)};
             device.setIndicesProperty(cubeI_.get());
             device.SetVertexBuffers(bindings);
@@ -691,6 +700,7 @@ private:
     std::string instanceRefusal_;   // why DrawInstancedPrimitives was refused on this renderer; empty while it works
     int vertexCount_ = 0, triangleCount_ = 0, bigTris_ = 0, bigCount_ = 0;
     std::unique_ptr<VertexBuffer> cubeV_, flatCube_, sharedCube_, procV_, bigV_, mergedV_, instV_;
+    std::unique_ptr<Effect> instancingFx_;
     std::unique_ptr<IndexBuffer> cubeI_, sharedI_, procI_, bigI_, mergedI_, gridIb_;
     std::unique_ptr<DynamicVertexBuffer> dyn_;
     std::vector<Vnt> gridV_;

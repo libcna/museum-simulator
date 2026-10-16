@@ -25,6 +25,7 @@
 #include "Microsoft/Xna/Framework/Graphics/VertexBufferBinding.hpp"
 #include "Microsoft/Xna/Framework/Graphics/VertexDeclaration.hpp"
 #include "Microsoft/Xna/Framework/Graphics/VertexPositionColor.hpp"
+#include "Rendering/CompiledInstancing.hpp"
 #include "Rendering/EffectBank.hpp"
 #include "Rendering/LitMesh.hpp"
 #include "Rendering/RenderStates.hpp"
@@ -86,7 +87,7 @@ public:
                 break;
             case Mode::Objects:
                 p.AddChoice("Method", {"One draw call per cube", "DrawInstancedPrimitives"}, 0, [this](int v) { instanced_ = v == 1; });
-                p.AddReadout("Instancing", [this] { if (!instanceRefusal_.empty()) return std::string("reported yes, draw refused (see log)"); return std::string(S().device->SupportsCapability(CNA::GraphicsCapability::Instancing) ? "supported" : "NOT supported: falls back to one call each"); });
+                p.AddReadout("Instancing", [this] { if (!instanceRefusal_.empty()) return std::string("reported yes, draw refused (see log)"); if (instancingFx_) return std::string("supported (compiled XNA effect)"); return std::string(S().device->SupportsCapability(CNA::GraphicsCapability::Instancing) ? "supported" : "NOT supported: falls back to one call each"); });
                 p.AddReadout("CPU time to submit", [this] { return Fmt(cpuMs_) + " ms"; });
                 break;
             case Mode::Sprites:
@@ -131,6 +132,9 @@ public:
         flat_->setVertexColorEnabledProperty(true);
         flat_->setLightingEnabledProperty(false);
         flat_->setTextureEnabledProperty(false);
+        if (mode_ == Mode::Objects) {
+            instancingFx_ = CompiledInstancing::Load(d, S().contentRoot);
+        }
         if (mode_ == Mode::Targets) {
             for (int i = 0; i < 32; ++i) targets_.push_back(std::make_unique<RenderTarget2D>(d, 128, 128, false, SurfaceFormat::Color, DepthFormat::None));
         }
@@ -348,8 +352,14 @@ private:
                 instV_->SetDataRaw(m.data(), count, 64);
                 instCount_ = count;
             }
-            fx_->setWorldProperty(spin * Matrix::CreateTranslation(origin));
-            EffectBank::Apply(*fx_);
+            const Matrix global = spin * Matrix::CreateTranslation(origin);
+            if (instancingFx_) {
+                CompiledInstancing::Apply(*instancingFx_, global * ctx.view.view * ctx.view.projection,
+                                          Vector4(0.45f, 0.75f, 1.0f, 1.0f));
+            } else {
+                fx_->setWorldProperty(global);
+                EffectBank::Apply(*fx_);
+            }
             const std::vector<VertexBufferBinding> bindings = {VertexBufferBinding(cube.Vertices(), 0, 0), VertexBufferBinding(instV_.get(), 0, 1)};
             device.setIndicesProperty(cube.Indices());
             device.SetVertexBuffers(bindings);
@@ -588,6 +598,7 @@ private:
     int instCount_ = 0;
     std::string instanceRefusal_;   // why DrawInstancedPrimitives was refused on this renderer; empty while it works
     std::unique_ptr<VertexBuffer> instV_;
+    std::unique_ptr<Effect> instancingFx_;
     // sprites / state / buffers
     int sort_ = 0, textureChoice_ = 0, upload_ = 0;
     bool sortByState_ = false, staticBuilt_ = false;
