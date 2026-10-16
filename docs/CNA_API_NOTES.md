@@ -75,7 +75,7 @@ Namespaces: Microsoft::Xna::Framework (math, Game), ::Graphics, ::Audio, ::Media
   - XNA default: no lighting, no texture, no vertex colour.
   - DiffuseColor above 1 is saturated per vertex on the unlit path (docs/basiceffect-support.md section 6).
   - Vulkan refuses some lit vertex layouts; stick to Position+Normal(+Texture) / PositionNormalTexture / PositionColor / PositionColorTexture / PositionTexture.
-  - DIRECTX9 BasicEffect draws only 12 of 32 variants (handoff 5.1 item 3). Do not demo it on DX9.
+  - DIRECTX9 validates the declaration by required semantics rather than exact stride; all 32 stock BasicEffect buckets are reachable. Its SM3 extension variants add point/spot lighting and directional/point/spot shadow reception.
 
 1.2 Other stock effects [XNA] (same file naming: <Name>.hpp)
 - AlphaTestEffect: World/View/Projection, DiffuseColor, Alpha, FogColor/Enabled/Start/End, Texture, VertexColorEnabled, AlphaFunction (CompareFunction), ReferenceAlpha (int). SetOwnedTexture [CNAEXT].
@@ -399,7 +399,7 @@ Namespaces: Microsoft::Xna::Framework (math, Game), ::Graphics, ::Audio, ::Media
 - Known defects / limitations from handoff.md section 5 (affects what to demo):
   1. VULKAN: RasterizerState.DepthBias is passed unscaled; realistic values (about -1e-4) have no visible effect. Do not demo depth bias on Vulkan.
   2. SDL_RENDERER: ignores TextureAddressMode Wrap/Mirror; 2D only.
-  3. DIRECTX9: BasicEffect draws only 12 of 32 variants (others throw).
+  3. DIRECTX9 cannot compile the museum's GLSL `ShaderEffect` caster source. Its stock-effect shadow receivers work, but `cx-shadow` needs a renderer-native caster before it can show live shadows there.
   4. FNA3D: stock effects do not saturate COLOR0 like D3D9 (minor pixel differences).
   5. VULKAN: multi-stream instancing with duplicate usages and OcclusionQuery::IsComplete (no flush) have known bugs; WEBGPU counts only post-Clear draws in an occlusion run. SDL_GPU cannot construct OcclusionQuery.
   6. BoundingFrustum::Intersects(Ray) throws NotImplementedException.
