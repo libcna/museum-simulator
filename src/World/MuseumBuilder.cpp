@@ -141,10 +141,11 @@ void MuseumWorld::BuildCellShell(const RoomDef& r, RoomInstance& inst, MeshSet& 
         // smooth, while the visible boxes below make its two runs read as ordinary treads.
         steps.AddPatch(Vector3(c.X - hw, c.Y + 0.01f, c.Z + hd), Vector3(2 * hw, 0, 0),
                        Vector3(0, 0, -2 * hd), 1.2f, th.floorTint, 0.8f);
-        steps.AddPatch(Vector3(c.X - hw, c.Y + rise, upperZ - laneHalf), Vector3(kStairLandingDepth, 0, 0),
-                       Vector3(0, 0, (lowerZ + laneHalf) - (upperZ - laneHalf)), 1.2f, th.floorTint, 0.7f);
-        steps.AddPatch(Vector3(east, c.Y, lowerZ - laneHalf), Vector3(kStairLandingDepth, 0, 0),
-                       Vector3(0, 0, kStairLaneWidth), 1.2f, th.floorTint, 0.7f);
+        // Horizontal walk surfaces must wind towards +Y: the opaque shell is back-face culled.
+        steps.AddPatch(Vector3(c.X - hw, c.Y + rise, lowerZ + laneHalf), Vector3(kStairLandingDepth, 0, 0),
+                       Vector3(0, 0, (upperZ - laneHalf) - (lowerZ + laneHalf)), 1.2f, th.floorTint, 0.7f);
+        steps.AddPatch(Vector3(east, c.Y, lowerZ + laneHalf), Vector3(kStairLandingDepth, 0, 0),
+                       Vector3(0, 0, -kStairLaneWidth), 1.2f, th.floorTint, 0.7f);
         steps.AddPatch(Vector3(east, c.Y + kFloorPitch, upperZ + laneHalf), Vector3(kStairLandingDepth, 0, 0),
                        Vector3(0, 0, -kStairLaneWidth), 1.2f, th.floorTint, 0.7f);
 
