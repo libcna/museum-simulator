@@ -160,9 +160,9 @@ This pass found two real defects that the 30 stored views and the pixel checks h
    the museum's new check "Cube target sampled as an environment map keeps up as up" failed on exactly the two EasyGL
    renderers. Fixed in CNA (`a6e8104d2`: the stock env-map program mirrors the lookup for a rendered cube; shared example
    test added). CNA `c8722e283` completes the sampling half for the two independent PBR IBL cubes and opt-in source
-   `ShaderEffect`; its eight-check witness passes on both GL profiles and is mutation-verified. Still open below the public
-   sampling paths: the rendered-versus-uploaded internal row-order asymmetry and a one-texel seam where GLES3's seamless
-   cube filtering reads across a face edge.
+   `ShaderEffect`; its eight-check witness passes on both GL profiles and is mutation-verified. The historical W1 upload
+   asymmetry was already closed by CNA `23c5557f7`; the current readback contract confirms same-order 64/64 on both GL
+   profiles. Only the separate one-texel seam where GLES3's seamless cube filtering reads across a face edge remains.
 8. **FNA3D** reports `Instancing` but its stock effects declare no per-instance stream, so `DrawInstancedPrimitives` with a
    stock effect throws; and it has no PBR shading path, so every glTF model (PbrEffect) throws when drawn. The instancing
    rooms fall back to one draw per cube and the model rooms to a lit `BasicEffect`, each saying so on its panel. The
