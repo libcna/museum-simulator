@@ -11,8 +11,10 @@ FloorSpec MakeFloor0()
     f.accent = {0.85f, 0.70f, 0.30f};
     f.hubExhibit = "lobby";
     f.hubParams = {{"glass-wall", "south"}};
-    f.hubHalfW = 10.0f;
-    f.hubHalfD = 8.0f;
+    // Keep the lobby footprint aligned with the halls above it: the west stair shafts
+    // share their door plane through all ten storeys.
+    f.hubHalfW = 11.0f;
+    f.hubHalfD = 9.0f;
     f.hubHeight = 5.6f;
 
     WingSpec first;

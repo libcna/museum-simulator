@@ -14,6 +14,7 @@
 #include "Exhibits/ExhibitRegistry.hpp"
 #include "Exhibits/Shaders/ShaderSources.hpp"
 #include "World/Catalogue.hpp"
+#include "World/CollisionWorld.hpp"
 
 using Microsoft::Xna::Framework::BoundingBox;
 using Microsoft::Xna::Framework::Vector3;
@@ -46,6 +47,12 @@ void TestFloorStructure(const MuseumPlan& m)
         Check(f.hub >= 0 && m.Room(f.hub).kind == CellKind::Hub, "floor " + std::to_string(f.index) + " has a hub");
         Check(f.spine >= 0 && m.Room(f.spine).kind == CellKind::Spine, "floor " + std::to_string(f.index) + " has a concourse");
         Check(f.elevator >= 0 && m.Room(f.elevator).kind == CellKind::Elevator, "floor " + std::to_string(f.index) + " has an elevator");
+        Check((f.index == 0 && f.stairsDown < 0) ||
+                  (f.index > 0 && f.stairsDown >= 0 && m.Room(f.stairsDown).kind == CellKind::Stairs),
+              "floor " + std::to_string(f.index) + " has the expected stairs down");
+        Check((f.index + 1 == static_cast<int>(m.floors.size()) && f.stairsUp < 0) ||
+                  (f.index + 1 < static_cast<int>(m.floors.size()) && f.stairsUp >= 0 && m.Room(f.stairsUp).kind == CellKind::Stairs),
+              "floor " + std::to_string(f.index) + " has the expected stairs up");
         Check(std::fabs(f.baseY - static_cast<float>(f.index) * kFloorPitch) < 1e-3f, "floor " + std::to_string(f.index) + " height");
         // The cars line up vertically so an elevator ride is seamless.
         Check(std::fabs(m.Room(f.elevator).centre.X - m.Room(m.floors.front().elevator).centre.X) < 0.01f ||
@@ -90,7 +97,8 @@ void TestDoorsAreSymmetric(const MuseumPlan& m)
                 // The two openings must line up: the same slot in the double wall.
                 const float dx = std::fabs((a.Min.X + a.Max.X) - (b.Min.X + b.Max.X)) * 0.5f;
                 const float dz = std::fabs((a.Min.Z + a.Max.Z) - (b.Min.Z + b.Max.Z)) * 0.5f;
-                matched = matched || (dx < kCellGap + 0.01f && dz < kCellGap + 0.01f);
+                const float dy = std::fabs(a.Min.Y - b.Min.Y);
+                matched = matched || (dx < kCellGap + 0.01f && dz < kCellGap + 0.01f && dy < 0.01f);
             }
             Check(matched, "door " + r.key + " -> " + other.key + " lines up with its twin");
         }
@@ -166,24 +174,43 @@ void TestInventory(const MuseumPlan& m)
 
 void TestEveryFloorIsConnected(const MuseumPlan& m)
 {
-    // From each floor's hall, walking through doors must reach every cell of that floor (and nothing of another floor).
-    for (const FloorDef& f : m.floors) {
-        int onFloor = 0;
-        for (const RoomDef& r : m.rooms) onFloor += r.floor == f.index ? 1 : 0;
-        std::set<int> seen = {f.hub};
-        std::queue<int> open;
-        open.push(f.hub);
-        while (!open.empty()) {
-            const int c = open.front();
-            open.pop();
-            for (const DoorDef& d : m.Room(c).doors)
-                if (d.to >= 0 && seen.insert(d.to).second) open.push(d.to);
-        }
-        bool crossed = false;
-        for (const int c : seen) crossed = crossed || m.Room(c).floor != f.index;
-        Check(static_cast<int>(seen.size()) == onFloor, "floor " + std::to_string(f.index) + ": every cell is reachable from the hall (" + std::to_string(seen.size()) + " of " + std::to_string(onFloor) + ")");
-        Check(!crossed, "floor " + std::to_string(f.index) + ": doors never lead to another floor");
+    // The entrance now reaches the complete museum through ordinary doors and the stair flights.
+    std::set<int> seen = {m.floors.front().hub};
+    std::queue<int> open;
+    open.push(m.floors.front().hub);
+    while (!open.empty()) {
+        const int c = open.front();
+        open.pop();
+        for (const DoorDef& d : m.Room(c).doors)
+            if (d.to >= 0 && seen.insert(d.to).second) open.push(d.to);
     }
+    Check(seen.size() == m.rooms.size(), "every cell is reachable on foot from the entrance");
+
+    for (std::size_t floor = 0; floor + 1 < m.floors.size(); ++floor) {
+        const RoomDef& stairs = m.Room(m.floors[floor].stairsUp);
+        Check(stairs.floor == static_cast<int>(floor), stairs.key + " begins on its lower floor");
+        Check(m.floors[floor + 1].stairsDown == stairs.index, stairs.key + " ends on the next floor");
+        const float east = stairs.centre.X + stairs.halfW - kStairLandingDepth * 0.5f;
+        const Vector3 lower(east, stairs.centre.Y, stairs.centre.Z + kStairLaneOffset);
+        const Vector3 upper(east, stairs.centre.Y + kFloorPitch, stairs.centre.Z - kStairLaneOffset);
+        const Vector3 middle(stairs.centre.X - stairs.halfW + kStairLandingDepth * 0.5f,
+                             stairs.centre.Y + kFloorPitch * 0.5f, stairs.centre.Z);
+        Check(std::fabs(m.GroundHeightAt(lower) - stairs.centre.Y) < 0.01f, stairs.key + " lower landing height");
+        Check(std::fabs(m.GroundHeightAt(middle) - (stairs.centre.Y + kFloorPitch * 0.5f)) < 0.01f,
+              stairs.key + " half landing height");
+        Check(std::fabs(m.GroundHeightAt(upper) - (stairs.centre.Y + kFloorPitch)) < 0.01f,
+              stairs.key + " upper landing height");
+    }
+}
+
+void TestCollisionUsesFloorHeight()
+{
+    CollisionWorld collision;
+    collision.AddBox(BoundingBox(Vector3(-1.0f, 9.0f, -1.0f), Vector3(1.0f, 11.0f, 1.0f)));
+    Check(!collision.OverlapsCircle(0.0f, 0.0f, 0.3f, 0.0f), "an upper-floor wall does not block the ground floor");
+    Check(collision.OverlapsCircle(0.0f, 0.0f, 0.3f, 9.0f), "an upper-floor wall blocks a visitor on that floor");
+    const Vector3 stopped = collision.Move(Vector3(-1.5f, 9.0f, 0.0f), Vector3(1.0f, 0.0f, 0.0f), 0.3f);
+    Check(stopped.X < -1.4f, "upper-floor movement cannot pass through its wall");
 }
 
 void TestReferenceViews(const MuseumPlan& m)
@@ -247,6 +274,7 @@ int main()
     TestAssetsExist(m);
     TestInventory(m);
     TestEveryFloorIsConnected(m);
+    TestCollisionUsesFloorHeight();
     TestReferenceViews(m);
     TestGeneratedDocumentsMentionEveryRoom(m);
     TestToursPointAtRealRooms(m);

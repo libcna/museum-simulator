@@ -130,7 +130,7 @@ void PlayerController::Update(float dt, FirstPersonCamera& camera, const Collisi
     const float speed = settings_.walkSpeed * (sprint ? settings_.sprintMultiplier : 1.0f);
 
     Vector3 position = camera.Position();
-    position.Y = 0.0f;   // collision works on the floor plane
+    position.Y = baseY_;   // collision uses the visitor's actual vertical span
     const Vector3 wish = camera.GroundForward() * forward + camera.Right() * strafe;
     const Vector3 velocity = wish * speed;
     moving_ = wish.LengthSquared() > 1e-4f;
@@ -140,8 +140,11 @@ void PlayerController::Update(float dt, FirstPersonCamera& camera, const Collisi
     while (remaining > 1e-5f) {
         const float step = std::min(remaining, kMaxStepSeconds);
         const Vector3 next = collision.Move(position, velocity * step, settings_.radius);
-        travelled += Vector3::Distance(position, next);
-        position = next;
+        Vector3 grounded = next;
+        if (groundResolver_) grounded.Y = groundResolver_(grounded);
+        travelled += std::sqrt((grounded.X - position.X) * (grounded.X - position.X) +
+                               (grounded.Z - position.Z) * (grounded.Z - position.Z));
+        position = grounded;
         remaining -= step;
     }
 
@@ -153,5 +156,6 @@ void PlayerController::Update(float dt, FirstPersonCamera& camera, const Collisi
     }
     if (moving_) bobPhase_ += travelled * 4.2f;
     const float bob = moving_ ? std::sin(bobPhase_) * 0.022f * (sprint ? 1.3f : 1.0f) : 0.0f;
+    baseY_ = position.Y;
     camera.SetPosition(Vector3(position.X, baseY_ + settings_.eyeHeight + bob, position.Z));
 }

@@ -15,6 +15,7 @@ constexpr Entry kEntries[] = {
     {"spine", MakeSpine},
     {"gallery", MakeGallery},
     {"elevator", MakeElevator},
+    {"stairs", MakeStairs},
     {"info", MakeInfoHall},
     {"materials", MakeMaterialsRoom},
     {"lighting", MakeLightingRoom},

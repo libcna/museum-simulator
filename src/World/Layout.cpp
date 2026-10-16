@@ -40,6 +40,13 @@ void Join(MuseumPlan& m, int a, Wall wallOfA, float alongA, int b, float alongB,
     m.rooms[static_cast<std::size_t>(b)].doors.push_back({Opposite(wallOfA), alongB, width, a});
 }
 
+void JoinAtHeights(MuseumPlan& m, int a, Wall wallOfA, float alongA, float heightA,
+                   int b, float alongB, float heightB, float width)
+{
+    m.rooms[static_cast<std::size_t>(a)].doors.push_back({wallOfA, alongA, width, b, heightA});
+    m.rooms[static_cast<std::size_t>(b)].doors.push_back({Opposite(wallOfA), alongB, width, a, heightB});
+}
+
 int AddCell(MuseumPlan& m, RoomDef cell)
 {
     cell.index = static_cast<int>(m.rooms.size());
@@ -239,6 +246,47 @@ MuseumPlan LayoutMuseum(const std::vector<FloorSpec>& specs)
 
         m.floors.push_back(floor);
     }
+    // --- stairs ---------------------------------------------------------------------------
+    // Alternate two shafts on the west side of the halls.  A switchback flight spans one
+    // complete storey: the lower and upper doors are both in the east wall, at opposite
+    // lanes.  Alternating shafts keeps the up and down doors distinct on intermediate floors.
+    for (std::size_t lower = 0; lower + 1 < m.floors.size(); ++lower) {
+        FloorDef& a = m.floors[lower];
+        FloorDef& b = m.floors[lower + 1];
+        const RoomDef& lowerHub = m.Room(a.hub);
+        const RoomDef& upperHub = m.Room(b.hub);
+        const float sharedHalfW = std::max(lowerHub.halfW, upperHub.halfW);
+        const float shaftZ = (lower % 2 == 0) ? -4.5f : 4.5f;
+        const float lowerLane = kStairLaneOffset;
+        const float upperLane = -kStairLaneOffset;
+
+        RoomDef stair;
+        stair.key = Format("stairs-%d-%d", static_cast<int>(lower), static_cast<int>(lower + 1));
+        stair.number = Format("%d.T", static_cast<int>(lower));
+        stair.title = "Stairs";
+        stair.subtitle = "Walk between floors " + std::to_string(lower) + " and " + std::to_string(lower + 1);
+        stair.kind = CellKind::Stairs;
+        stair.floor = static_cast<int>(lower);
+        stair.exhibit = "stairs";
+        stair.centre = Vector3(-sharedHalfW - kCellGap - kStairHalfWidth, a.baseY, shaftZ);
+        stair.halfW = kStairHalfWidth;
+        stair.halfD = kStairHalfDepth;
+        stair.height = kFloorPitch + kDoorHeight + 0.4f;
+        stair.theme = FindTheme("elevator");
+        stair.accent = a.accent;
+        stair.params = {{"upper-floor", std::to_string(lower + 1)}};
+        const int stairs = AddCell(m, stair);
+        a.stairsUp = stairs;
+        b.stairsDown = stairs;
+
+        const float lowerWorldZ = shaftZ + lowerLane;
+        const float upperWorldZ = shaftZ + upperLane;
+        JoinAtHeights(m, stairs, Wall::East, lowerLane, 0.0f,
+                      a.hub, lowerWorldZ - lowerHub.centre.Z, 0.0f, kDoorWidth);
+        JoinAtHeights(m, stairs, Wall::East, upperLane, kFloorPitch,
+                      b.hub, upperWorldZ - upperHub.centre.Z, 0.0f, kDoorWidth);
+    }
+
     m.IndexCells();
     // A room entered through its north wall (the south row of a gallery) is turned half a circle, so that
     // exhibits written for "door in the south, screens on the north wall" work on both sides of a gallery.

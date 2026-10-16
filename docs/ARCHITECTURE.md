@@ -8,7 +8,7 @@ renderer, scripting language or editor. Everything that draws calls CNA's `Graph
 
 ```
  src/Main.cpp                     data-only commands (--validate, --list-rooms, --map-markdown ...) or MuseumGame
- src/MuseumGame                   the CNA Game subclass: update/draw loop, elevator rides, directory, scripting, clock
+ src/MuseumGame                   the CNA Game subclass: update/draw loop, stairs/elevator navigation, directory, scripting, clock
    src/World                      MuseumWorld: which rooms exist right now, what is drawn, collision
    src/Catalogue                  the museum as data (floors, wings, rooms, themes, reference views, inventory)
    src/Exhibits                   Exhibit base class, registry, one subject per directory
@@ -25,7 +25,7 @@ r.exhibit = "camera-lab";  r.params = {{"mode", "orbit"}};  r.apis = {"Matrix.Cr
 ```
 
 `World/Layout.cpp` turns the specs into a `MuseumPlan` (`World/Catalogue.hpp`): for every floor a hall, an elevator car, a
-concourse and one gallery per wing, with rooms on both sides, door pairs generated symmetrically and numbers
+concourse and one gallery per wing, with rooms on both sides, plus nine switchback stair cells joining adjacent floors. Door pairs are generated symmetrically and numbers
 `floor.wing.room`. `ValidateMuseum()` checks duplicate keys and numbers, broken or one-way doors, unreachable cells,
 unknown exhibit kinds and missing assets; `tests/museum_tests.cpp` and every start-up run it.
 
@@ -82,8 +82,10 @@ their proportions at 640 x 480 and at 2560 x 1080; the directory maps the mouse 
 ## Navigation
 
 `UI/FloorMap` (plan and minimap), `UI/DirectoryScreen` (search, tabs, quick travel; floors unlock when their hall or
-elevator has been visited), elevator rides (fade, teleport between identical cars, fade), room numbers and signs
-generated from the catalogue.
+elevator has been visited), elevator rides (fade, teleport between identical cars, fade), and real switchback stairs
+generated from the catalogue. Stair doors carry an absolute height match across floors; `MuseumPlan::GroundHeightAt`
+is the shared analytic profile for both ramps and the landing, while `PlayerController` keeps the visitor's foot height
+and tests colliders against that storey. Room numbers and navigation signs are also generated from the catalogue.
 
 ## Time and determinism
 

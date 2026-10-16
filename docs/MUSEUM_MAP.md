@@ -10,7 +10,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
                        wing galleries (one per wing, rooms on both sides)
    west wings  <--------- concourse (spine, runs north) --------->  east wings
                               |
-                         floor hall (hub)  -- elevator car (10 buttons, one per floor)
+ adjacent-floor stairs -- floor hall (hub) -- elevator car (10 buttons, one per floor)
 ```
 
 - Every floor has a **hall** (the hub you arrive in from the elevator), a **concourse** that runs north from it,
@@ -18,8 +18,8 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 - Room numbers read `floor.wing.room`, for example `4.2.07`. They are printed on the door-side plaque of every room,
   on the lintel signs of the gallery, on the floor map and in the directory (`M` or `Tab`).
 - Each floor has its own accent colour (floor numerals, signs, map highlight).
-- Elevators connect all ten floors; the directory can also teleport to any room on a floor you have already visited
-  (floor 0 is always open).
+- Walkable switchback stairs connect every adjacent pair of floors; elevators connect all ten directly. The directory
+  can also teleport to any room on a floor you have already visited (floor 0 is always open).
 
 ## What each floor is for
 
@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 36 wings, 293 exhibit rooms (5 open to the sky), 359 walkable cells in all.
+10 floors, 36 wings, 293 exhibit rooms (5 open to the sky), 368 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 

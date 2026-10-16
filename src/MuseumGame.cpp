@@ -146,6 +146,7 @@ void MuseumGame::LoadContent()
     PlayerController::Settings settings;
     settings.mouseSensitivity = options_.mouseSensitivity;
     player_ = std::make_unique<PlayerController>(settings);
+    player_->SetGroundResolver([this](const Vector3& feet) { return museum_->GroundHeightAt(feet); });
     player_->onFootstep = [this] {
         if (audio_) audio_->PlayUi("step", 0.35f, static_cast<float>((frame_ % 5) - 2) * 0.04f);
     };
@@ -483,7 +484,9 @@ void MuseumGame::Update(GameTime& gameTime)
         world_->Update(dt, time_, camera_.Position(), camera_.Forward());
     } else if (!paused_) {
         time_ += dt;
-        player_->SetBaseY(museum_->floors[static_cast<std::size_t>(museum_->FloorAt(camera_.Position().Y))].baseY);
+        Vector3 feet = camera_.Position();
+        feet.Y -= player_->GetSettings().eyeHeight;
+        player_->SetBaseY(museum_->GroundHeightAt(feet));
         player_->Update(dt, camera_, world_->Collision(), input_, true);
         const Vector3 forward = camera_.Forward();
         world_->Update(dt, time_, camera_.Position(), forward);

@@ -37,7 +37,7 @@ std::string InventoryAsText(const MuseumPlan& m)
     out << "floors:          " << inv.floors << "\n"
         << "wings:           " << inv.wings << "\n"
         << "exhibit rooms:   " << inv.rooms << "  (" << inv.outdoorRooms << " outdoors)\n"
-        << "walkable cells:  " << inv.cells << "  (rooms, galleries, concourses, halls, elevators)\n"
+        << "walkable cells:  " << inv.cells << "  (rooms, galleries, concourses, halls, elevators, stairs)\n"
         << "exhibit kinds:   " << inv.exhibitKinds << "\n"
         << "origin:          " << inv.xnaRooms << " XNA 4.0, " << inv.extensionRooms << " CNA extension, " << inv.applicationRooms << " application\n"
         << "API names:       " << inv.apiCounts.size() << "\n";

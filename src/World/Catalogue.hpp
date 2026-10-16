@@ -29,7 +29,7 @@ constexpr Wall Opposite(Wall w)
 }
 
 /** What kind of space a cell is; exhibits for hubs, spines and galleries come from the catalogue itself. */
-enum class CellKind { Room, Gallery, Spine, Hub, Elevator };
+enum class CellKind { Room, Gallery, Spine, Hub, Elevator, Stairs };
 
 /** Where an exhibit's API comes from; shown as a badge on every information plaque. */
 enum class ApiOrigin { Xna, CnaExtension, Application };
@@ -40,6 +40,11 @@ constexpr float kDoorWidth = 3.2f;
 constexpr float kDoorHeight = 3.4f;
 constexpr float kCorridorHeight = 3.4f;
 constexpr float kCellGap = kWallThickness * 2.0f;   // distance between the interiors of two adjacent cells
+constexpr float kStairHalfWidth = 6.0f;
+constexpr float kStairHalfDepth = 4.0f;
+constexpr float kStairLandingDepth = 0.8f;
+constexpr float kStairLaneOffset = 1.6f;
+constexpr float kStairLaneWidth = 2.4f;
 
 /** Free-form key/value parameters that configure a data-driven exhibit. */
 struct Params {
@@ -71,6 +76,7 @@ struct DoorDef {
     float along = 0.0f;       // offset from the wall's midpoint (x for north/south walls, z for east/west)
     float width = kDoorWidth;
     int to = -1;              // index of the cell on the other side
+    float floorOffset = 0.0f; // height above this cell's base (upper stair landings use kFloorPitch)
 };
 
 struct FloorDef {
@@ -84,6 +90,8 @@ struct FloorDef {
     int hub = -1;             // cell indices
     int spine = -1;
     int elevator = -1;
+    int stairsDown = -1;      // stair flight ending on this floor
+    int stairsUp = -1;        // stair flight beginning on this floor
 };
 
 struct WingDef {
@@ -175,6 +183,8 @@ public:
     /** The cell containing a world position (interior, or a doorway), or -1. */
     [[nodiscard]] int CellAt(const Microsoft::Xna::Framework::Vector3& p, int hint = -1) const;
     [[nodiscard]] int FloorAt(float worldY) const;
+    /** Floor height under a visitor's feet, including the two ramps and landing of a stair flight. */
+    [[nodiscard]] float GroundHeightAt(const Microsoft::Xna::Framework::Vector3& feet) const;
     [[nodiscard]] const std::vector<int>& CellsOnFloor(int floor) const { return byFloor_[static_cast<std::size_t>(floor)]; }
     /** Where a visitor arrives in a cell: just inside its first door, looking into the room. */
     [[nodiscard]] Spawn SpawnPoint(int cell) const;

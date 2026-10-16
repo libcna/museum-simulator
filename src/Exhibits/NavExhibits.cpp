@@ -117,6 +117,20 @@ public:
             floors.lines.push_back({std::to_string(f.index) + "  " + f.name, false, f.index == R().floor ? kGold : kText});
         b.AddWallSign(Wall::East, -hd * 0.5f - 0.2f, 3.0f, std::min(5.2f, hd * 0.85f), 0.5f + 0.34f * static_cast<float>(floors.lines.size()), floors);
 
+        const auto stairSign = [&](int cell, const std::string& direction) {
+            if (cell < 0) return;
+            for (const DoorDef& d : R().doors) {
+                if (d.to != cell) continue;
+                SignSpec sign;
+                sign.lines = {{"Stairs " + direction, true, kGold}};
+                sign.border = Accent(fd.accent);
+                b.AddWallSign(d.wall, d.along, 4.25f, 3.0f, 0.62f, sign);
+                break;
+            }
+        };
+        stairSign(fd.stairsUp, "up  ↑");
+        stairSign(fd.stairsDown, "down  ↓");
+
         // The plan of this floor. The lobby has a glass wall to the south, so its plan hangs on the west wall.
         planTexture_ = FloorPlanTexture(S(), R().floor, R().index, 720, 900);
         if (lobby_) AddTexturedWallPatch(b, Wall::West, 0.0f, 2.35f, 3.0f, 3.75f, planTexture_);
@@ -371,6 +385,29 @@ public:
     }
 };
 
+class StairsExhibit final : public Exhibit {
+public:
+    StairsExhibit(const RoomDef& room, Services& services) : Exhibit(room, services) {}
+
+    void BuildStatic(RoomBuilder& b) override
+    {
+        const int upper = R().params.GetInt("upper-floor", R().floor + 1);
+        SignSpec lower;
+        lower.lines = {{"STAIRS", true, kGold},
+                       {"Floor " + std::to_string(R().floor) + "  →  " + std::to_string(upper), false, kText},
+                       {"Follow the switchback", false, kDim}};
+        lower.border = Accent(R().accent);
+        b.AddWallSign(Wall::West, kStairLaneOffset, 1.7f, 3.0f, 1.15f, lower);
+
+        SignSpec upperSign;
+        upperSign.lines = {{"FLOOR " + std::to_string(upper), true, kGold},
+                           {"Hall through the door", false, kText},
+                           {"Stairs down to " + std::to_string(R().floor), false, kDim}};
+        upperSign.border = Accent(M(S()).floors[static_cast<std::size_t>(upper)].accent);
+        b.AddWallSign(Wall::West, -kStairLaneOffset, kFloorPitch + 1.7f, 3.0f, 1.15f, upperSign);
+    }
+};
+
 }  // namespace
 
 std::unique_ptr<Exhibit> MakeLobby(const RoomDef& room, Services& services)
@@ -392,4 +429,8 @@ std::unique_ptr<Exhibit> MakeGallery(const RoomDef& room, Services& services)
 std::unique_ptr<Exhibit> MakeElevator(const RoomDef& room, Services& services)
 {
     return std::make_unique<ElevatorExhibit>(room, services);
+}
+std::unique_ptr<Exhibit> MakeStairs(const RoomDef& room, Services& services)
+{
+    return std::make_unique<StairsExhibit>(room, services);
 }

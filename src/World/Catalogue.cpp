@@ -44,8 +44,9 @@ BoundingBox RoomDef::Interior() const
 
 bool RoomDef::Contains(const Vector3& p, float margin) const
 {
+    const float top = kind == CellKind::Stairs ? centre.Y + kFloorPitch + kDoorHeight : centre.Y + kFloorPitch;
     return std::abs(p.X - centre.X) <= halfW + margin && std::abs(p.Z - centre.Z) <= halfD + margin &&
-           p.Y >= centre.Y - 0.5f && p.Y <= centre.Y + kFloorPitch;
+           p.Y >= centre.Y - 0.5f && p.Y <= top;
 }
 
 BoundingBox RoomDef::DoorBounds(const DoorDef& door) const
@@ -54,20 +55,20 @@ BoundingBox RoomDef::DoorBounds(const DoorDef& door) const
     Vector3 lo, hi;
     switch (door.wall) {
         case Wall::North:
-            lo = Vector3(centre.X + door.along - hw, centre.Y, centre.Z - halfD - kWallThickness);
-            hi = Vector3(centre.X + door.along + hw, centre.Y + kDoorHeight, centre.Z - halfD);
+            lo = Vector3(centre.X + door.along - hw, centre.Y + door.floorOffset, centre.Z - halfD - kWallThickness);
+            hi = Vector3(centre.X + door.along + hw, centre.Y + door.floorOffset + kDoorHeight, centre.Z - halfD);
             break;
         case Wall::South:
-            lo = Vector3(centre.X + door.along - hw, centre.Y, centre.Z + halfD);
-            hi = Vector3(centre.X + door.along + hw, centre.Y + kDoorHeight, centre.Z + halfD + kWallThickness);
+            lo = Vector3(centre.X + door.along - hw, centre.Y + door.floorOffset, centre.Z + halfD);
+            hi = Vector3(centre.X + door.along + hw, centre.Y + door.floorOffset + kDoorHeight, centre.Z + halfD + kWallThickness);
             break;
         case Wall::West:
-            lo = Vector3(centre.X - halfW - kWallThickness, centre.Y, centre.Z + door.along - hw);
-            hi = Vector3(centre.X - halfW, centre.Y + kDoorHeight, centre.Z + door.along + hw);
+            lo = Vector3(centre.X - halfW - kWallThickness, centre.Y + door.floorOffset, centre.Z + door.along - hw);
+            hi = Vector3(centre.X - halfW, centre.Y + door.floorOffset + kDoorHeight, centre.Z + door.along + hw);
             break;
         default:
-            lo = Vector3(centre.X + halfW, centre.Y, centre.Z + door.along - hw);
-            hi = Vector3(centre.X + halfW + kWallThickness, centre.Y + kDoorHeight, centre.Z + door.along + hw);
+            lo = Vector3(centre.X + halfW, centre.Y + door.floorOffset, centre.Z + door.along - hw);
+            hi = Vector3(centre.X + halfW + kWallThickness, centre.Y + door.floorOffset + kDoorHeight, centre.Z + door.along + hw);
             break;
     }
     return BoundingBox(lo, hi);
@@ -85,6 +86,8 @@ void MuseumPlan::IndexCells()
     byKey_.clear();
     for (const RoomDef& r : rooms) {
         byFloor_[static_cast<std::size_t>(r.floor)].push_back(r.index);
+        if (r.kind == CellKind::Stairs && r.floor + 1 < static_cast<int>(byFloor_.size()))
+            byFloor_[static_cast<std::size_t>(r.floor + 1)].push_back(r.index);
         byKey_[r.key] = r.index;
     }
 }
@@ -93,6 +96,39 @@ int MuseumPlan::FloorAt(float worldY) const
 {
     const int f = static_cast<int>(std::floor((worldY + 0.5f) / kFloorPitch));
     return std::clamp(f, 0, static_cast<int>(floors.size()) - 1);
+}
+
+float MuseumPlan::GroundHeightAt(const Vector3& feet) const
+{
+    for (const RoomDef& r : rooms) {
+        if (r.kind != CellKind::Stairs) continue;
+        if (std::abs(feet.X - r.centre.X) > r.halfW + 0.05f ||
+            std::abs(feet.Z - r.centre.Z) > r.halfD + 0.05f ||
+            feet.Y < r.centre.Y - 0.6f || feet.Y > r.centre.Y + kFloorPitch + 0.6f)
+            continue;
+
+        const float x = feet.X - r.centre.X;
+        const float z = feet.Z - r.centre.Z;
+        const float west = -r.halfW + kStairLandingDepth;
+        const float east = r.halfW - kStairLandingDepth;
+        const float run = east - west;
+        const float halfRise = kFloorPitch * 0.5f;
+        const float laneHalf = kStairLaneWidth * 0.5f;
+
+        if (x <= west && std::abs(z) <= kStairLaneOffset + laneHalf)
+            return r.centre.Y + halfRise;
+        if (std::abs(z - kStairLaneOffset) <= laneHalf) {
+            if (x >= east) return r.centre.Y;
+            const float t = std::clamp((east - x) / run, 0.0f, 1.0f);
+            return r.centre.Y + halfRise * t;
+        }
+        if (std::abs(z + kStairLaneOffset) <= laneHalf) {
+            if (x >= east) return r.centre.Y + kFloorPitch;
+            const float t = std::clamp((x - west) / run, 0.0f, 1.0f);
+            return r.centre.Y + halfRise + halfRise * t;
+        }
+    }
+    return floors[static_cast<std::size_t>(FloorAt(feet.Y))].baseY;
 }
 
 int MuseumPlan::CellAt(const Vector3& p, int hint) const
@@ -146,7 +182,9 @@ std::vector<std::string> ValidateMuseum(const MuseumPlan& m)
         if (r.key.empty()) err("cell " + std::to_string(r.index) + " has no key");
         else if (!keys.insert(r.key).second) err("duplicate room key '" + r.key + "'");
         if (r.halfW < 1.5f || r.halfD < 1.5f) err(r.key + ": room is too small");
-        if (r.height < 3.0f || r.height > kFloorPitch - 0.8f) err(r.key + ": height " + std::to_string(r.height) + " does not fit the floor");
+        if (r.height < 3.0f || (r.kind != CellKind::Stairs && r.height > kFloorPitch - 0.8f) ||
+            (r.kind == CellKind::Stairs && r.height < kFloorPitch + kDoorHeight))
+            err(r.key + ": height " + std::to_string(r.height) + " does not fit its cell");
         if (r.floor < 0 || r.floor >= static_cast<int>(m.floors.size())) err(r.key + ": bad floor");
         if (r.doors.empty() && r.kind != CellKind::Elevator) err(r.key + ": no doors, unreachable");
         for (const DoorDef& d : r.doors) {
@@ -158,9 +196,14 @@ std::vector<std::string> ValidateMuseum(const MuseumPlan& m)
             const float span = (d.wall == Wall::North || d.wall == Wall::South) ? r.halfW : r.halfD;
             if (std::abs(d.along) + d.width * 0.5f > span - 0.2f) err(r.key + ": door does not fit in its wall");
             bool back = false;
-            for (const DoorDef& e : other.doors) back = back || (e.to == r.index && e.wall == Opposite(d.wall));
+            for (const DoorDef& e : other.doors) {
+                if (e.to != r.index || e.wall != Opposite(d.wall)) continue;
+                const BoundingBox a = r.DoorBounds(d), b = other.DoorBounds(e);
+                back = std::abs(a.Min.Y - b.Min.Y) < 0.01f && std::abs(a.Max.Y - b.Max.Y) < 0.01f;
+            }
             if (!back) err(r.key + " -> " + other.key + ": door has no matching door on the other side");
-            if (other.floor != r.floor) err(r.key + " -> " + other.key + ": doors cannot join floors");
+            if (other.floor != r.floor && r.kind != CellKind::Stairs && other.kind != CellKind::Stairs)
+                err(r.key + " -> " + other.key + ": only stairs may join floors");
         }
     }
 
@@ -181,15 +224,13 @@ std::vector<std::string> ValidateMuseum(const MuseumPlan& m)
         if (m.floors[f].elevator < 0 && m.floors.size() > 1) err("floor " + std::to_string(f) + " has no elevator");
     }
 
-    // Everything must be reachable: walk the doors on each floor from its hub; floors join through elevators.
+    // Everything must be reachable on foot from the entrance. Elevators remain a convenience,
+    // but the stair graph is a second, genuinely walkable route through all storeys.
     if (!m.floors.empty() && m.floors.front().hub >= 0) {
         std::vector<char> seen(m.rooms.size(), 0);
         std::queue<int> open;
-        for (const FloorDef& f : m.floors) {
-            if (f.hub < 0) continue;
-            seen[static_cast<std::size_t>(f.hub)] = 1;   // every hub is reachable by elevator from the ground floor
-            open.push(f.hub);
-        }
+        seen[static_cast<std::size_t>(m.floors.front().hub)] = 1;
+        open.push(m.floors.front().hub);
         while (!open.empty()) {
             const int c = open.front();
             open.pop();
@@ -201,7 +242,7 @@ std::vector<std::string> ValidateMuseum(const MuseumPlan& m)
             }
         }
         for (const RoomDef& r : m.rooms)
-            if (!seen[static_cast<std::size_t>(r.index)]) err(r.key + ": not reachable from its floor's hub");
+            if (!seen[static_cast<std::size_t>(r.index)]) err(r.key + ": not reachable on foot from the entrance");
     }
     return errors;
 }

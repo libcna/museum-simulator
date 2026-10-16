@@ -33,7 +33,7 @@ All images are real frames from the running museum (`tools/readme_shots.sh`), no
 floors:          10
 wings:           36
 exhibit rooms:   293  (5 outdoors)
-walkable cells:  359  (rooms, galleries, concourses, halls, elevators)
+walkable cells:  368  (rooms, galleries, concourses, halls, elevators, stairs)
 exhibit kinds:   72
 origin:          231 XNA 4.0, 62 CNA extension, 0 application
 API names:       1292
@@ -132,6 +132,8 @@ hardware.
 
 - Every floor has a hall, a concourse and wings. Room numbers (`4.2.07`) are on each room's door plaque.
 - The **elevator** is east of every hall: ten buttons, one per floor.
+- The **stairs** are west of the halls: each signed switchback is a walkable route to the next floor, with a second
+  shaft carrying the following flight.
 - The **directory** (`M`) lists every room by floor and wing with a map, supports search, and quick-travels
   (Enter, or click twice) to rooms on floors you have visited.
 - The **minimap** (top right) follows you; the floor numeral on the hall rug and the floor accent colour tell you where you are.
@@ -162,7 +164,7 @@ hardware.
 | `tools/online_check.sh` | end-to-end check of those rooms: signs in through the Guide with xdotool, plays a scored round and reads the service's database |
 | `tools/tour.sh [-f FRAMES] [-p] [-z N] [ROOM...]` | visits **every** room (or those named), prints engine statistics, exit status 0 only if nothing threw; `-p` also operates every control of every room through its whole range, `-z N` then makes N random control actions per room (a repeatable fuzz) |
 | `tools/leak_check.sh` | tours every room once and three times: peak memory and registered textures must not grow |
-| `tools/nav_test.sh` | rides the elevator to every floor, opens the directory, and checks the arrival floor |
+| `tools/nav_test.sh` | rides the elevator to every floor, walks all nine stair flights up and one down, and checks every arrival floor |
 | `tools/renderer_check.sh [RENDERER...]` | runs the floor 9 *Renderer Validation* self-checks on each renderer and prints a PASS/FAIL matrix |
 | `tools/reference.sh capture\|compare` | visual regression: renders the named reference views and compares them with stored images |
 | `tools/room_diff.sh RENDERER` | every room's arrival view on RENDERER against OPENGLES3, ranked by differing pixels (needs both in one build) |
@@ -191,8 +193,8 @@ Details, the per-renderer check matrix and what was found are in [docs/RENDERER_
 
 ## Known limitations
 
-See [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md). In short: no stairs or escalators (elevators and the directory move
-you between floors); real audio output was verified to start and
+See [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md). In short: the museum has walkable stairs but no moving escalators;
+real audio output was verified to start and
 stream on a PipeWire machine but audibility cannot be judged by a test; the Windows (MinGW) build leaves out
 networking, GamerServices and avatars and the video player (no libcurl or FFmpeg there); friends, invitations, parties,
 voice and online sessions need an account service and are not demonstrated (see

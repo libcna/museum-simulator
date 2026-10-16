@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <utility>
 
 #include "Camera/FirstPersonCamera.hpp"
 #include "Camera/InputState.hpp"
@@ -27,6 +28,11 @@ public:
 
     /** Height of the floor the visitor stands on; the eye is `eyeHeight` above it. */
     void SetBaseY(float baseY) { baseY_ = baseY; }
+    /** Resolves the walkable surface beneath a foot position (flat floors or a stair ramp). */
+    void SetGroundResolver(std::function<float(const Microsoft::Xna::Framework::Vector3&)> resolver)
+    {
+        groundResolver_ = std::move(resolver);
+    }
 
     Settings& GetSettings() { return settings_; }
     [[nodiscard]] const Settings& GetSettings() const { return settings_; }
@@ -73,4 +79,5 @@ private:
     float scriptTurn_ = 0.0f;
     int scriptFrames_ = 0;
     bool keyboardBlocked_ = false;
+    std::function<float(const Microsoft::Xna::Framework::Vector3&)> groundResolver_;
 };

@@ -97,6 +97,108 @@ void MuseumWorld::BuildCellShell(const RoomDef& r, RoomInstance& inst, MeshSet& 
     const float H = r.height;
     const Theme& th = r.theme;
 
+    if (r.kind == CellKind::Stairs) {
+        // A real two-flight switchback: visitors walk the lower ramp west, cross the
+        // half landing, and return east on the upper ramp. The visible treads follow
+        // the same analytic surfaces used by MuseumPlan::GroundHeightAt.
+        AddWallRun(r, meshes, collision, Wall::North, -hw, hw, 0.0f, H, true, true);
+        AddWallRun(r, meshes, collision, Wall::South, -hw, hw, 0.0f, H, true, true);
+        AddWallRun(r, meshes, collision, Wall::West, -hd, hd, 0.0f, H, true, true);
+
+        std::vector<const DoorDef*> doors;
+        for (const DoorDef& d : r.doors)
+            if (d.wall == Wall::East) doors.push_back(&d);
+        std::sort(doors.begin(), doors.end(), [](const DoorDef* a, const DoorDef* b) { return a->along < b->along; });
+        float cursor = -hd;
+        for (const DoorDef* d : doors) {
+            const float d0 = d->along - d->width * 0.5f;
+            const float d1 = d->along + d->width * 0.5f;
+            if (d0 > cursor) AddWallRun(r, meshes, collision, Wall::East, cursor, d0, 0.0f, H, true, true);
+            if (d->floorOffset > 0.0f)
+                AddWallRun(r, meshes, collision, Wall::East, d0, d1, 0.0f, d->floorOffset, true, false);
+            if (d->floorOffset + kDoorHeight < H)
+                AddWallRun(r, meshes, collision, Wall::East, d0, d1, d->floorOffset + kDoorHeight, H, true, false);
+            meshes.Opaque("carpet").AddPatch(Vector3(c.X + hw, c.Y + d->floorOffset, c.Z + d0),
+                                              Vector3(kT, 0, 0), Vector3(0, 0, d1 - d0), 2.0f,
+                                              Vector3(0.9f, 0.85f, 0.85f), 1.0f);
+            cursor = d1;
+        }
+        if (cursor < hd) AddWallRun(r, meshes, collision, Wall::East, cursor, hd, 0.0f, H, true, true);
+
+        meshes.Opaque(th.ceilTex).AddPatch(Vector3(c.X - hw, c.Y + H, c.Z - hd), Vector3(2 * hw, 0, 0),
+                                           Vector3(0, 0, 2 * hd), 3.0f, Vector3(0.95f, 0.95f, 0.95f), 1.0f);
+
+        const float west = c.X - hw + kStairLandingDepth;
+        const float east = c.X + hw - kStairLandingDepth;
+        const float run = east - west;
+        const float rise = kFloorPitch * 0.5f;
+        const float laneHalf = kStairLaneWidth * 0.5f;
+        const float lowerZ = c.Z + kStairLaneOffset;
+        const float upperZ = c.Z - kStairLaneOffset;
+        MeshBuilder& steps = meshes.Opaque(th.floorTex);
+
+        // A base slab closes the shaft from the exterior lawn. The analytic walk surface is
+        // smooth, while the visible boxes below make its two runs read as ordinary treads.
+        steps.AddPatch(Vector3(c.X - hw, c.Y + 0.01f, c.Z + hd), Vector3(2 * hw, 0, 0),
+                       Vector3(0, 0, -2 * hd), 1.2f, th.floorTint, 0.8f);
+        steps.AddPatch(Vector3(c.X - hw, c.Y + rise, upperZ - laneHalf), Vector3(kStairLandingDepth, 0, 0),
+                       Vector3(0, 0, (lowerZ + laneHalf) - (upperZ - laneHalf)), 1.2f, th.floorTint, 0.7f);
+        steps.AddPatch(Vector3(east, c.Y, lowerZ - laneHalf), Vector3(kStairLandingDepth, 0, 0),
+                       Vector3(0, 0, kStairLaneWidth), 1.2f, th.floorTint, 0.7f);
+        steps.AddPatch(Vector3(east, c.Y + kFloorPitch, upperZ + laneHalf), Vector3(kStairLandingDepth, 0, 0),
+                       Vector3(0, 0, -kStairLaneWidth), 1.2f, th.floorTint, 0.7f);
+
+        constexpr int treadCount = 18;
+        const float tread = run / static_cast<float>(treadCount);
+        const float treadRise = rise / static_cast<float>(treadCount);
+        MeshBuilder& rails = meshes.Opaque("metal");
+        for (int i = 0; i < treadCount; ++i) {
+            const float lx1 = east - static_cast<float>(i) * tread;
+            const float lx0 = lx1 - tread;
+            const float ly = c.Y + static_cast<float>(i + 1) * treadRise;
+            steps.AddBox(Vector3(lx0, c.Y, lowerZ - laneHalf), Vector3(lx1, ly, lowerZ + laneHalf), 1.2f,
+                         th.floorTint, BoxFaces::PosY | BoxFaces::PosX, 0.7f);
+            const float ux0 = west + static_cast<float>(i) * tread;
+            const float ux1 = ux0 + tread;
+            const float uy = c.Y + rise + static_cast<float>(i + 1) * treadRise;
+            steps.AddBox(Vector3(ux0, c.Y + rise, upperZ - laneHalf), Vector3(ux1, uy, upperZ + laneHalf), 1.2f,
+                         th.floorTint, BoxFaces::PosY | BoxFaces::NegX, 0.7f);
+            if (i % 3 == 0) {
+                for (const float z : {lowerZ - laneHalf, lowerZ + laneHalf})
+                    rails.AddBox(Vector3(lx0, ly, z - 0.035f), Vector3(lx0 + 0.07f, ly + 0.92f, z + 0.035f),
+                                 1.0f, Vector3(0.72f, 0.74f, 0.78f), BoxFaces::All, 1.0f);
+                for (const float z : {upperZ - laneHalf, upperZ + laneHalf})
+                    rails.AddBox(Vector3(ux1 - 0.07f, uy, z - 0.035f), Vector3(ux1, uy + 0.92f, z + 0.035f),
+                                 1.0f, Vector3(0.72f, 0.74f, 0.78f), BoxFaces::All, 1.0f);
+            }
+            for (const float z : {lowerZ - laneHalf, lowerZ + laneHalf})
+                rails.AddBox(Vector3(lx0, ly + 0.84f, z - 0.045f), Vector3(lx1, ly + 0.92f, z + 0.045f),
+                             1.0f, Vector3(0.72f, 0.74f, 0.78f), BoxFaces::All, 1.0f);
+            for (const float z : {upperZ - laneHalf, upperZ + laneHalf})
+                rails.AddBox(Vector3(ux0, uy + 0.84f, z - 0.045f), Vector3(ux1, uy + 0.92f, z + 0.045f),
+                             1.0f, Vector3(0.72f, 0.74f, 0.78f), BoxFaces::All, 1.0f);
+        }
+
+        // Invisible lane guards keep the cylinder on a flight while leaving the west landing open for the turn.
+        const float guardStart = west + 1.0f;
+        collision.AddBox(BoundingBox(Vector3(guardStart, c.Y, lowerZ - laneHalf - 0.08f),
+                                     Vector3(east, c.Y + rise + 1.8f, lowerZ - laneHalf + 0.08f)));
+        collision.AddBox(BoundingBox(Vector3(guardStart, c.Y, lowerZ + laneHalf - 0.08f),
+                                     Vector3(east, c.Y + rise + 1.8f, lowerZ + laneHalf + 0.08f)));
+        collision.AddBox(BoundingBox(Vector3(guardStart, c.Y + rise, upperZ - laneHalf - 0.08f),
+                                     Vector3(east, c.Y + kFloorPitch + 1.8f, upperZ - laneHalf + 0.08f)));
+        collision.AddBox(BoundingBox(Vector3(guardStart, c.Y + rise, upperZ + laneHalf - 0.08f),
+                                     Vector3(east, c.Y + kFloorPitch + 1.8f, upperZ + laneHalf + 0.08f)));
+
+        for (const float y : {2.8f, 7.3f, 11.4f}) {
+            meshes.Opaque("white").AddBox(Vector3(c.X - 0.65f, c.Y + y, c.Z - 0.65f),
+                                           Vector3(c.X + 0.65f, c.Y + y + 0.06f, c.Z + 0.65f), 1.0f,
+                                           th.lightColor, BoxFaces::NoTop, 2.0f, 1.0f);
+            lights.push_back({Vector3(c.X, c.Y + y - 0.6f, c.Z), th.lightColor, th.lightIntensity, 8.0f});
+        }
+        return;
+    }
+
     // Floor and ceiling.
     meshes.Opaque(th.floorTex).AddPatch(Vector3(c.X - hw, c.Y, c.Z + hd), Vector3(2 * hw, 0, 0), Vector3(0, 0, -2 * hd), 2.5f,
                                         th.floorTint, 1.0f);

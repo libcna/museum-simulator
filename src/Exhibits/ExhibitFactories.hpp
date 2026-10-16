@@ -10,6 +10,7 @@ std::unique_ptr<Exhibit> MakeHub(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeSpine(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeGallery(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeElevator(const RoomDef& room, Services& services);
+std::unique_ptr<Exhibit> MakeStairs(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeInfoHall(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeMaterialsRoom(const RoomDef& room, Services& services);
 std::unique_ptr<Exhibit> MakeLightingRoom(const RoomDef& room, Services& services);
