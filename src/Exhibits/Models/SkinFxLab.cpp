@@ -46,7 +46,7 @@ public:
         p.AddSlider("Twist per joint", -60.0f, 60.0f, twist_, [this](float v) { twist_ = v; animate_ = false; }, "%.0f deg", 1.0f);
         p.AddToggle("Animate", true, [this](bool v) { animate_ = v; });
         p.AddToggle("Directional lights (EnableDefaultLighting)", true, [this](bool v) { lighting_ = v; });
-        p.AddChoice("Punctual light", {"None", "Point", "Spot"}, 1,
+        p.AddChoice("Punctual light", {"None", "Point", "Spot"}, 0,
                     [this](int v) { punctual_ = v; });
         p.AddToggle("PreferPerPixelLighting", true, [this](bool v) { perPixel_ = v; });
         p.AddToggle("Fog", false, [this](bool v) { fog_ = v; });
@@ -224,7 +224,7 @@ private:
     std::unique_ptr<SkinnedEffect> effect_;
     std::unique_ptr<VertexBuffer> vb_;
     std::unique_ptr<IndexBuffer> ib_;
-    int vertexCount_ = 0, indexCount_ = 0, weights_ = 2, punctual_ = 1;
+    int vertexCount_ = 0, indexCount_ = 0, weights_ = 2, punctual_ = 0;
     float time_ = 0.0f, bend_ = 0.0f, twist_ = 0.0f;
     bool ok_ = false, animate_ = true, lighting_ = true, perPixel_ = true, fog_ = false, joints_ = true;
 };
