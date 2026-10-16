@@ -105,7 +105,8 @@ private:
     std::set<int> discovered_;
     std::unique_ptr<ProgressStore> progress_;
     bool progressDirty_ = false;
-    float sinceSave_ = 0.0f;
+    float progressIdleSeconds_ = 0.0f;
+    void UpdateProgressAutosave(float dt, bool visitorActive);
     struct Ride {
         bool active = false;
         bool swapped = false;

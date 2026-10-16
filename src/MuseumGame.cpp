@@ -40,6 +40,7 @@ constexpr float kMaxFrameSeconds = 0.1f;
 // signs from z-fighting with the wall they hang on, and it improves with the square of the near distance.
 constexpr float kNearPlane = 0.2f;
 constexpr float kFarPlane = 260.0f;
+constexpr float kProgressSaveIdleSeconds = 5.0f;
 }  // namespace
 
 MuseumGame::MuseumGame(const MuseumOptions& options) : options_(options), graphics_(this)
@@ -284,6 +285,26 @@ void MuseumGame::SetPaused(bool paused)
     ApplyMouseMode();
 }
 
+void MuseumGame::UpdateProgressAutosave(float dt, bool visitorActive)
+{
+    if (!progressDirty_) {
+        progressIdleSeconds_ = 0.0f;
+        return;
+    }
+    if (visitorActive) {
+        progressIdleSeconds_ = 0.0f;
+        return;
+    }
+    progressIdleSeconds_ += dt;
+    if (progressIdleSeconds_ >= kProgressSaveIdleSeconds && progress_) {
+        if (progress_->Save(discovered_, *museum_))
+            Museum::Log("progress", "autosaved %zu visited cells at frame %lld after %.1f idle seconds", discovered_.size(), frame_,
+                        static_cast<double>(progressIdleSeconds_));
+        progressDirty_ = false;
+        progressIdleSeconds_ = 0.0f;
+    }
+}
+
 // The pointer is captured for looking around, and free whenever a menu (pause, directory) is up.
 void MuseumGame::ApplyMouseMode()
 {
@@ -447,6 +468,9 @@ void MuseumGame::Update(GameTime& gameTime)
     if (wasActive_ && !active && !paused_ && options_.maxFrames == 0) SetPaused(true);
     wasActive_ = active;
 
+    const Vector3 activityStartPosition = camera_.Position();
+    const float activityStartYaw = camera_.Yaw();
+    const float activityStartPitch = camera_.Pitch();
     RunScript();
 
     if (directory_->IsOpen()) {
@@ -457,19 +481,15 @@ void MuseumGame::Update(GameTime& gameTime)
             ApplyMouseMode();
         }
         if (r.travelTo) TeleportToCell(*r.travelTo);
+        UpdateProgressAutosave(dt, r.travelTo.has_value());
         audio_->Update();
         hud_->Update(dt);
         if (options_.maxFrames > 0 && frame_ >= options_.maxFrames) Exit();
         return;
     }
 
+    bool visitorActive = ride_.active || glide_.active;
     if (ride_.active) UpdateRide(dt);
-    sinceSave_ += dt;
-    if (progressDirty_ && sinceSave_ > 5.0f && progress_) {
-        progress_->Save(discovered_, *museum_);
-        progressDirty_ = false;
-        sinceSave_ = 0.0f;
-    }
     if (timeRuns_ && !paused_) timeOfDay_.Advance(dt * 0.2f);   // 12 museum minutes per second
     if (!paused_ && glide_.active) {
         time_ += dt;
@@ -488,6 +508,10 @@ void MuseumGame::Update(GameTime& gameTime)
         feet.Y -= player_->GetSettings().eyeHeight;
         player_->SetBaseY(museum_->GroundHeightAt(feet));
         player_->Update(dt, camera_, world_->Collision(), input_, true);
+        visitorActive = visitorActive || player_->IsMoving() ||
+                        (camera_.Position() - activityStartPosition).LengthSquared() > 1e-6f ||
+                        std::fabs(camera_.Yaw() - activityStartYaw) > 1e-6f ||
+                        std::fabs(camera_.Pitch() - activityStartPitch) > 1e-6f;
         const Vector3 forward = camera_.Forward();
         world_->Update(dt, time_, camera_.Position(), forward);
 
@@ -498,6 +522,7 @@ void MuseumGame::Update(GameTime& gameTime)
                 bannerAge_ = 0.0f;
                 if (discovered_.insert(cell).second) {
                     progressDirty_ = true;
+                    progressIdleSeconds_ = 0.0f;
                     MuseumAchievements::RoomsDiscovered(*museum_, discovered_);
                 }
             }
@@ -516,6 +541,7 @@ void MuseumGame::Update(GameTime& gameTime)
             event.wheel = input_.WheelDelta();
             event.alternate = (!stats_.typingCapture && input_.Pressed(Keys::Q)) || input_.RightClicked();
             if (event.pressed || event.held || event.wheel != 0.0f || event.alternate) {
+                visitorActive = true;
                 if (interaction->Dispatch(event) && event.pressed) audio_->PlayUi("click", 0.6f);
             }
         } else {
@@ -524,6 +550,7 @@ void MuseumGame::Update(GameTime& gameTime)
         audio_->SetListener(camera_.Position(), forward);
         stats_.activeVoices = audio_->ActiveVoiceCount();
     }
+    UpdateProgressAutosave(dt, visitorActive);
     audio_->Update();
     hud_->Update(dt);
     stats_.roomsDrawn = world_->Stats().cellsDrawn;

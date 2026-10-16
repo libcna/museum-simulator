@@ -37,6 +37,7 @@ grep -aE 'CONSOLE.*MUSEUM_(OUT|ERR|ABORT|EXIT|PAGE_ERROR)' "$log" | \
 
 if grep -aq 'MUSEUM_EXIT 0' "$log" &&
    grep -aq '\[museum\]\[stats\].*exhibit errors 0' "$log" &&
+   grep -aq '\[museum\]\[progress\] autosaved .* after 5\.[01] idle seconds' "$log" &&
    ! grep -aqE 'MUSEUM_(ABORT|PAGE_ERROR)|MUSEUM_EXIT [1-9]|WebGL context.*lost' "$log"; then
   echo "WEBGL2 BROWSER SMOKE: PASS"
 else

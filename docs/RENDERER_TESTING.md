@@ -36,7 +36,9 @@ tools/web_smoke.sh
 
 The 2026-10-16 Chrome/SwiftShader smoke created an OpenGL ES 3.0 / WebGL 2.0 context, rendered 122 frames of the
 lobby at 50 FPS, reported 28,526 triangles, 66 textures and 0 exhibit errors, then exited cleanly. This is a startup
-and rendering check, not yet a complete all-room browser tour or the floor 9 validation matrix.
+and rendering check, not yet a complete all-room browser tour or the floor 9 validation matrix. The smoke also walks
+continuously for six simulated seconds and requires progress persistence to occur only after a subsequent five-second
+idle period; the verified autosave occurred at frame 112 after 5.1 idle seconds.
 
 ## The tools
 
@@ -47,7 +49,7 @@ and rendering check, not yet a complete all-room browser tour or the floor 9 val
 | `tools/room_diff.sh RENDERER [-b BASE]` | the arrival view of every room on two renderers, ranked by differing pixels: the quickest way to find a renderer divergence among all 257 rooms (below) |
 | `tools/reference.sh capture\|compare` | stored images for 30 named views (OPENGLES3 only) (`tests/reference/<R>`) |
 | `tools/roomshots.sh`, `tools/shot.sh` | contact sheets and single screenshots for comparing renderers by eye |
-| `tools/web_smoke.sh` | serves and runs the Emscripten bundle in Chrome, requiring a WebGL 2 context, final statistics and zero exhibit errors |
+| `tools/web_smoke.sh` | serves and runs the Emscripten bundle in Chrome, requiring a WebGL 2 context, idle-deferred autosave, final statistics and zero exhibit errors |
 
 ## The Renderer Validation rooms (floor 9)
 
