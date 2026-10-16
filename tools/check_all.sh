@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # The whole verification battery on the default renderer (a few minutes). Prints one line per step and exits non-zero
-# if any step failed. SLOW=1 also tours every room on OPENGL33 and SOFTWARE (SOFTWARE takes about 20 minutes).
+# if any step failed. SLOW=1 also tours, self-checks and leak-checks OPENGL33 and SOFTWARE (SOFTWARE is slow).
 #   tools/check_all.sh
 set -u
 cd "$(dirname "$0")/.." || exit 2
@@ -25,6 +25,7 @@ if [ "${SLOW:-0}" = 1 ]; then
   for r in OPENGL33 SOFTWARE; do
     step "tour on $r" env CNA_GRAPHICS_RENDERER=$r MUSEUM_TIMEOUT=2400 tools/tour.sh -f 3 -p
     step "self-checks on $r" tools/renderer_check.sh $r
+    step "memory on $r" env MUSEUM_TIMEOUT=2400 tools/leak_check.sh $r
   done
 fi
 exit $failed

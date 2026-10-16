@@ -163,12 +163,12 @@ hardware.
 | `tools/online_stack.sh start\|stop\|env` | starts a private CNA gamer-services server (sibling repo, built once) with demo accounts for the *Online Service* rooms; `eval "$(tools/online_stack.sh env)"` points the museum at it |
 | `tools/online_check.sh` | end-to-end check of those rooms: signs in through the Guide with xdotool, plays a scored round and reads the service's database |
 | `tools/tour.sh [-f FRAMES] [-p] [-z N] [ROOM...]` | visits **every** room (or those named), prints engine statistics, exit status 0 only if nothing threw; `-p` also operates every control of every room through its whole range, `-z N` then makes N random control actions per room (a repeatable fuzz) |
-| `tools/leak_check.sh` | tours every room once and three times: peak memory and registered textures must not grow |
+| `tools/leak_check.sh [RENDERER...]` | tours every room once and three times on the selected renderer(s): peak memory and registered textures must not grow |
 | `tools/nav_test.sh` | rides the elevator to every floor, walks all nine stair flights up and one down, and checks every arrival floor |
 | `tools/renderer_check.sh [RENDERER...]` | runs the floor 9 *Renderer Validation* self-checks on each renderer and prints a PASS/FAIL matrix |
 | `tools/reference.sh capture\|compare` | visual regression: renders the named reference views and compares them with stored images |
 | `tools/room_diff.sh RENDERER` | every room's arrival view on RENDERER against OPENGLES3, ranked by differing pixels (needs both in one build) |
-| `tools/check_all.sh` | the whole battery on the default renderer (build, tests, validation, documentation freshness, tour with every control, navigation, renderer checks, visual regression, memory); `SLOW=1` adds OPENGL33 and SOFTWARE |
+| `tools/check_all.sh` | the whole battery on the default renderer (build, tests, validation, documentation freshness, tour with every control, navigation, renderer checks, visual regression, memory); `SLOW=1` adds tours, self-checks and memory checks on OPENGL33 and SOFTWARE |
 | `tools/run.sh "script"`, `tools/shot.sh OUT.png ...`, `tools/roomshots.sh OUT.png KEY...` | run a script, take a screenshot, or a contact sheet of rooms, on a private virtual display (Xvfb) |
 
 None of the scripts touches your real display. Failures are never swallowed: a crash, a timeout or a missing
