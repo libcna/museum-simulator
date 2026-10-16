@@ -148,7 +148,7 @@ private:
         cases_.push_back({"Ask an offline profile who its friends are (SignedInGamer.IsFriend)", [] {
                               auto* gamers = Microsoft::Xna::Framework::GamerServices::Gamer::getSignedInGamersProperty();
                               if (gamers == nullptr || gamers->begin() == gamers->end()) throw std::runtime_error("no profile is signed in");
-                              (*gamers->begin())->IsFriend(*gamers->begin());
+                              (void)(*gamers->begin())->IsFriend(*gamers->begin());
                           }});
         cases_.push_back({"Open the Guide twice (Guide.BeginShowMessageBox, again)", [] {
                               auto* first = Guide::BeginShowMessageBox("Exceptions", "one", {"OK"}, 0, GamerServices::MessageBoxIcon::None, {}, std::any{});
