@@ -1,5 +1,5 @@
 // Renderer validation laboratory. Each room draws tiny deterministic test images into a render target through
-// stock CNA/XNA calls only, reads the pixels back and compares them with values worked out by hand. The result is
+// public CNA/XNA calls, reads the pixels back and compares them with values worked out by hand. The result is
 // a table of PASS and FAIL for the renderer that is running: the same checks run unchanged on every renderer,
 // and a difference between renderers is a finding, never something to work around here.
 //
@@ -41,12 +41,21 @@
 #include "Microsoft/Xna/Framework/Graphics/CubeMapFace.hpp"
 #include "Microsoft/Xna/Framework/Graphics/DualTextureEffect.hpp"
 #include "Microsoft/Xna/Framework/Graphics/EnvironmentMapEffect.hpp"
+#include "Microsoft/Xna/Framework/Graphics/IndexBuffer.hpp"
+#include "Microsoft/Xna/Framework/Graphics/IndexElementSize.hpp"
 #include "Microsoft/Xna/Framework/Graphics/PrimitiveType.hpp"
 #include "Microsoft/Xna/Framework/Graphics/RenderTarget2D.hpp"
 #include "Microsoft/Xna/Framework/Graphics/RenderTargetCube.hpp"
 #include "Microsoft/Xna/Framework/Graphics/VertexPositionColor.hpp"
 #include "Microsoft/Xna/Framework/Graphics/VertexPositionColorTexture.hpp"
 #include "Microsoft/Xna/Framework/Graphics/VertexPositionNormalTexture.hpp"
+#include "Microsoft/Xna/Framework/Graphics/VertexBuffer.hpp"
+#include "Microsoft/Xna/Framework/Graphics/VertexBufferBinding.hpp"
+#include "Microsoft/Xna/Framework/Graphics/VertexDeclaration.hpp"
+#include "Microsoft/Xna/Framework/Graphics/VertexElement.hpp"
+#include "Microsoft/Xna/Framework/Graphics/VertexElementFormat.hpp"
+#include "Microsoft/Xna/Framework/Graphics/VertexElementUsage.hpp"
+#include "Rendering/CompiledInstancing.hpp"
 #include "Rendering/LitMesh.hpp"
 #include "Rendering/Probes.hpp"
 #include "Rendering/RenderStates.hpp"
@@ -1190,6 +1199,57 @@ private:
         }
         RenderTarget2D& rt = Target(d, true);
         const Color clearC(0, 0, 0, 255);
+        {   // XNA's hardware-instancing path is driven by an Effect whose vertex shader declares
+            // the per-instance semantics; FNA3D deliberately cannot infer them from BasicEffect.
+            const std::string name = "Compiled Effect consumes a per-instance matrix stream";
+            if (!d.SupportsCapability(CNA::GraphicsCapability::CompiledEffects)) {
+                Skip(name, "compiled XNA effects are unavailable on this renderer");
+            } else if (!d.SupportsCapability(CNA::GraphicsCapability::Instancing)) {
+                Skip(name, "hardware instancing is unavailable on this renderer");
+            } else {
+                Begin(d, rt, clearC);
+                const Vector3 normal(0, 0, 1);
+                const VertexPositionNormalTexture vertices[4] = {
+                    {Vector3(-0.2f,  0.2f, 0.5f), normal, Vector2(0, 0)},
+                    {Vector3( 0.2f,  0.2f, 0.5f), normal, Vector2(1, 0)},
+                    {Vector3( 0.2f, -0.2f, 0.5f), normal, Vector2(1, 1)},
+                    {Vector3(-0.2f, -0.2f, 0.5f), normal, Vector2(0, 1)},
+                };
+                const std::uint16_t indices[6] = {0, 1, 2, 0, 2, 3};
+                const Matrix instances[2] = {
+                    Matrix::CreateTranslation(-0.5f, 0, 0),
+                    Matrix::CreateTranslation(0.5f, 0, 0),
+                };
+                const VertexDeclaration instanceDeclaration(64, {
+                    VertexElement(0, VertexElementFormat::Vector4, VertexElementUsage::BlendWeight, 0),
+                    VertexElement(16, VertexElementFormat::Vector4, VertexElementUsage::BlendWeight, 1),
+                    VertexElement(32, VertexElementFormat::Vector4, VertexElementUsage::BlendWeight, 2),
+                    VertexElement(48, VertexElementFormat::Vector4, VertexElementUsage::BlendWeight, 3),
+                });
+                VertexBuffer geometry(d, VertexPositionNormalTexture::getVertexDeclarationStatic(), 4,
+                                      BufferUsage::None);
+                geometry.SetData(vertices, 0, 4);
+                VertexBuffer instanceData(d, instanceDeclaration, 2, BufferUsage::None);
+                instanceData.SetDataRaw(instances, 2, 64);
+                IndexBuffer indexData(d, IndexElementSize::SixteenBits, 6, BufferUsage::None);
+                indexData.SetData(indices, 6);
+                auto effect = CompiledInstancing::Load(d, S().contentRoot);
+                CompiledInstancing::Apply(*effect, Matrix::getIdentityProperty(),
+                                          Vector4(0.9f, 0.3f, 0.15f, 1.0f));
+                d.SetVertexBuffers({VertexBufferBinding(&geometry, 0, 0),
+                                    VertexBufferBinding(&instanceData, 0, 1)});
+                d.setIndicesProperty(&indexData);
+                d.DrawInstancedPrimitives(PrimitiveType::TriangleList, 0, 0, 4, 0, 2, 2);
+                d.setIndicesProperty(nullptr);
+                d.SetVertexBuffer(nullptr);
+                const auto img = End(d, rt);
+                if (!img) return;
+                const Color left = img->At(16, 32), right = img->At(48, 32);
+                const bool pass = Dist(left, 230, 77, 38) <= 4 && Dist(right, 230, 77, 38) <= 4;
+                Add(name, "two orange quads centred at x=16 and x=48",
+                    Rgb(left) + " / " + Rgb(right), pass, img);
+            }
+        }
         const auto textured = [&](Effect& fx) {
             const Vector3 n(0, 0, 1);
             const std::vector<VertexPositionNormalTexture> quad = {
