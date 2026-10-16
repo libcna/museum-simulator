@@ -128,6 +128,12 @@ After CNA `60019d629`, a focused SOFTWARE pressed tour of `model-pbr`, `model-sk
 no exhibit errors. This verifies the consumer integration but does not replace the pending fresh
 all-room `room_diff.sh` measurement mentioned in the historical row above.
 
+CNA `375c8927e` and `f74e0a8f7` subsequently implemented SOFTWARE shadow reception and split-sum
+IBL. Their deterministic CPU pixel oracles each pass 8/8, and the full SOFTWARE label passes
+194/194 (two expected shader-source skips). After rebuilding this two-renderer MinGW consumer, a
+SOFTWARE/Wine tour through `model-ibl`, `model-pbr` and `model-skinned` exercised every panel and
+finished with 0 exhibit errors. The fresh visual `room_diff.sh` measurement remains pending.
+
 Repeated on 2026-10-14 evening over 284 rooms: OPENGL33 vs OPENGLES3 differed by more than 1 % only in `rs-fill` (wireframe); SOFTWARE vs OPENGLES3 differed by more than 8 % only in `model-instances` (24 %, caused by the old flat PBR fallback), `fx-kernel` and `fx-plasma`. The PBR difference is historical after CNA `SOFTWARE-347`; the shader-dialect boundary remains.
 
 This pass found two real defects that the 30 stored views and the pixel checks had missed, one in the museum and one in CNA. The museum's: `geo-manybuffers` drew black cones on OPENGLES3 and every GPU renderer (only SOFTWARE lit them): all its vertices have texture coordinate (0, 0), so the screen-space derivatives are zero and anisotropic filtering of a zero footprint is undefined (black on Mesa's software GL and Vulkan). It now samples with a linear sampler. CNA's: `rs-blendfactor` was opaque on WEBGPU
