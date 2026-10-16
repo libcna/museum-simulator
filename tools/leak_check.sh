@@ -10,13 +10,18 @@ limit=${LIMIT:-25}
 command -v /usr/bin/time >/dev/null || { echo "needs /usr/bin/time"; exit 2; }
 mapfile -t keys < <("$bin" --list-rooms)
 run() {   # run RENDERER N TAG -> prints "peak_kb textures exhibit_errors"
-  local renderer=$1 tours=$2 tag=$3 script="" r k log script_file peak textures errors
+  local renderer=$1 tours=$2 tag=$3 script="" r k log script_file peak textures errors timeout_seconds
   local -a launch=(/usr/bin/time -v env)
   for ((r = 0; r < tours; ++r)); do for k in "${keys[@]}"; do script+="goto:$k;wait:2;"; done; done
   script+="stats;quit"
   log="${BUILD_DIR:-build}/leak_${tag}_${tours}.log"
   script_file="${BUILD_DIR:-build}/leak_${tag}_${tours}.script"
   printf '%s' "$script" > "$script_file"
+  # run.sh's five-minute default is ample for one tour but can expire near the
+  # end of the three-tour sample on a busy software-rendering host.  Scale the
+  # default with the requested work while preserving an explicit caller limit.
+  timeout_seconds=${MUSEUM_TIMEOUT:-$((300 * tours))}
+  launch+=(MUSEUM_TIMEOUT="$timeout_seconds")
   [ -n "$renderer" ] && launch+=(CNA_GRAPHICS_RENDERER="$renderer")
   launch+=(tools/run.sh "@$script_file" --no-audio)
   if ! "${launch[@]}" > "$log" 2>&1; then
