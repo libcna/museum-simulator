@@ -117,7 +117,7 @@ Rooms whose arrival view differs from OPENGLES3's by more than 2 % of pixels (64
 
 | Renderer | Rooms over 2 % | What they are |
 |---|---|---|
-| OPENGL33 | 1 of 256 | `rs-fill` (it can draw wireframe, OPENGLES3 cannot) |
+| OPENGL33 | 1 of 293 | Fresh 2026-10-16 result: `rs-fill` at 5.98 % (it can draw wireframe, OPENGLES3 cannot) |
 | SOFTWARE | 16 of 293 | Fresh 2026-10-16 result: nine unsupported source-shader views (`fx-kernel`, `fx-plasma`, `fx-edge`, `cx-crt`, `fx-swirl`, `fx-halftone`, `tex-volshader`, `fx-vertexwave`, `fx-crt`), plus `rs-fill`, `rs-depthbias`, `materials` (animation phase), `au-video` (video frame), `cx-shadow` (GLSL-only caster), `pf-dashboard` (live numbers) and `cx-package`. No model/PBR/IBL room exceeds 2 %. |
 | SDL_GPU | 7 | `rs-depthbias` (z-fighting at zero bias resolves differently), `fx-plasma` and `fx-swirl` (floating-point trig in the shader), `rs-fill`, `cx-shadow`, `cx-package`, `pf-dashboard` (live numbers) |
 | WEBGPU | 28 | those, plus `tex-formats` (Bgr565, Bgra4444 and Alpha8 are not offered), `cx-debugdraw`, and about twenty `vec-*`, `mat-*`, `quat-*` rooms whose 1-pixel grid lines sit one pixel off (a rasterisation difference, not a bug) |
