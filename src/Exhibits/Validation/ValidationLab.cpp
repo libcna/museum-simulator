@@ -1182,7 +1182,11 @@ private:
     {
         {   // a CNA extension with no capability flag: ask the renderer by drawing (Rendering/Probes.cpp)
             const Probes::Answer lit = Probes::PunctualLights(d);
-            Add("BasicEffect.PunctualLightEXT lights a surface (CNA extension)", "a point light in front of a white wall lights its centre", Probes::Describe(lit), lit == Probes::Answer::Yes, std::nullopt);
+            if (lit == Probes::Answer::Unavailable) {
+                Skip("BasicEffect.PunctualLightEXT lights a surface (CNA extension)", Probes::Describe(lit));
+            } else {
+                Add("BasicEffect.PunctualLightEXT lights a surface (CNA extension)", "a point light in front of a white wall lights its centre", Probes::Describe(lit), lit == Probes::Answer::Yes, std::nullopt);
+            }
         }
         RenderTarget2D& rt = Target(d, true);
         const Color clearC(0, 0, 0, 255);

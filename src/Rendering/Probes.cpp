@@ -24,6 +24,7 @@
 #include "Microsoft/Xna/Framework/Graphics/SpriteSortMode.hpp"
 #include "Microsoft/Xna/Framework/Rectangle.hpp"
 #include "Rendering/RenderStates.hpp"
+#include "System/NotSupportedException.hpp"
 
 using namespace Microsoft::Xna::Framework;
 using namespace Microsoft::Xna::Framework::Graphics;
@@ -85,10 +86,14 @@ Answer PunctualLights(GraphicsDevice& d)
         cached = centre.getRProperty() > 100 ? Answer::Yes : Answer::No;
         Museum::Log("probe", "PunctualLightEXT: centre pixel %d,%d,%d -> %s", centre.getRProperty(), centre.getGProperty(), centre.getBProperty(),
                     cached == Answer::Yes ? "lights the surface" : "ignored by this renderer");
+    } catch (const System::NotSupportedException& e) {
+        d.SetRenderTarget(nullptr);
+        Museum::Log("probe", "PunctualLightEXT probe unavailable: %s", e.what());
+        cached = Answer::Unavailable;
     } catch (const std::exception& e) {
         d.SetRenderTarget(nullptr);
         Museum::Log("probe", "PunctualLightEXT probe failed: %s", e.what());
-        cached = Answer::No;
+        cached = Answer::Error;
     }
     return cached;
 }
@@ -132,6 +137,8 @@ const char* Describe(Answer answer)
     switch (answer) {
         case Answer::Yes: return "lights surfaces";
         case Answer::No: return "IGNORED by this renderer";
+        case Answer::Unavailable: return "not available: pixel readback is unsupported";
+        case Answer::Error: return "probe failed";
         default: return "not tested yet";
     }
 }

@@ -9,7 +9,7 @@
  */
 namespace Probes {
 
-enum class Answer { Unknown, Yes, No };
+enum class Answer { Unknown, Yes, No, Unavailable, Error };
 
 /** Does BasicEffect.PunctualLightEXT (a point light) actually light a surface on this renderer? */
 Answer PunctualLights(Microsoft::Xna::Framework::Graphics::GraphicsDevice& device);
@@ -17,7 +17,7 @@ Answer PunctualLights(Microsoft::Xna::Framework::Graphics::GraphicsDevice& devic
 /** Does SpriteBatch.Begin(..., ColorMatrixEffect) transform the sprite's colours on this renderer? (A CNA extension: only SOFTWARE runs it.) */
 Answer ColorMatrix(Microsoft::Xna::Framework::Graphics::GraphicsDevice& device);
 
-/** The text for a panel readout: "lights surfaces", "ignored by this renderer" or "not tested". */
+/** The text for a panel readout, including unavailable and failed probes. */
 const char* Describe(Answer answer);
 
 }  // namespace Probes
