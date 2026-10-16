@@ -42,17 +42,18 @@ where filtering makes an exact value meaningless. Rooms: geometry and coverage, 
 interpolation/lighting/fog, sampling, render targets, camera matrices, stock effects. The *Depth* room also reports (as
 information, not pass/fail) the smallest depth gap the renderer resolves at 100 m.
 
-Result on 2026-10-14, with the FNA3D row refreshed on 2026-10-16 after CNA `83c7b324c`
+Result refreshed on 2026-10-16 after CNA `83c7b324c`
 (CNA at the commit shown by `git -C ../cna log -1`; the SOFTWARE renderer is flagged Experimental by CNA):
 
 | Renderer | Checks | Pass | Fail | Info | Skip |
 |---|---|---|---|---|---|
-| OPENGLES3 | 85 | 84 | 0 | 1 | 0 |
-| OPENGL33 | 85 | 84 | 0 | 1 | 0 |
-| SOFTWARE | 85 | 84 | 0 | 1 | 0 |
+| OPENGLES3 | 86 | 85 | 0 | 1 | 0 |
+| OPENGL33 | 86 | 85 | 0 | 1 | 0 |
+| SOFTWARE | 86 | 85 | 0 | 1 | 0 |
 | FNA3D | 86 | 62 | 0 | 1 | 23 (unsupported target/surface-format cases) |
-| WEBGPU | 85 | 63 | 0 | 1 | 21 (the same, fewer: it has Color, HalfVector4 and the float formats' targets) |
-| SDL_GPU | 85 | 84 | 0 | 1 | 0 |
+| WEBGPU | 86 | 64 | 0 | 1 | 21 (the same, fewer: it has Color, HalfVector4 and the float formats' targets) |
+| SDL_GPU | 86 | 85 | 0 | 1 | 0 |
+| HEADLESS | 27 | 1 | 0 | 0 | 26 (rendered-pixel checks are unavailable without a rasterizer) |
 
 The "Surface Formats" room (`rv-formats`) writes 16 values through every uncompressed `SurfaceFormat`, reads them back bit for bit,
 and draws ten of the unsigned formats through SpriteBatch to check what the GPU samples. All of it passes on the three OpenGL-family
@@ -68,16 +69,19 @@ Run `tools/renderer_check.sh` for the current figures; they are not copied anywh
 
 | Renderer | Tour of every room | Screenshot vs OPENGLES3 (lobby) |
 |---|---|---|
-| OPENGLES3 | clean | - |
+| OPENGLES3 | clean, 0 exhibit errors (116 s) | - |
 | OPENGL33 | clean | 0.00 % of pixels differ by more than 15/255 |
 | SOFTWARE | clean (about 25 minutes for the whole museum under Xvfb) | 4.6 % |
-| FNA3D | clean, 0 exhibit errors (132 s after the full conformance follow-up) | Fresh 295-view result plus the targeted IBL recheck: 25 differ from OPENGLES3 by more than 2 %; no model/PBR/IBL room remains |
-| WEBGPU | clean (125 s) | 30 reference views: 26 within 1 %; `debugdraw` 4.7 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
-| SDL_GPU | clean (307 s) | 30 reference views: all within 1 % |
+| FNA3D | clean, 0 exhibit errors (158 s) | Fresh 295-view result plus the targeted IBL recheck: 25 differ from OPENGLES3 by more than 2 %; no model/PBR/IBL room remains |
+| WEBGPU | clean, 0 exhibit errors (264 s) | 30 reference views: 26 within 1 %; `debugdraw` 4.7 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
+| SDL_GPU | clean, 0 exhibit errors (451 s) | 30 reference views: all within 1 % |
+| HEADLESS | clean, 0 exhibit errors (45 s) | no rasterized pixels by design |
 
 Windows build under Wine (MinGW cross build, 2026-10-15, 286 rooms): SOFTWARE `pressall` tour exits 0 with 0 exhibit errors in 1730 s (networking, avatars and video are not built into that tree, so 915 panel controls instead of 998).
 
 Latest (2026-10-16, 295 rooms): after CNA `c8145f60c`, the FNA3D press-all tour and a focused press-all pass over the rigid/skinned PBR, material, variant, IBL and shadow rooms exit 0 with 0 exhibit errors. Follow-up CNA `bafde1fff` closes the three older contracts that the full lane exposed (GraphicsAdapter/MSAA reporting, default depth and the CNA-extension SkinnedEffect vertex-colour route). CNA `ff6f18c08` then adds split-sum IBL to the rigid/skinned compiled PBR effects; its 8/8 pixel oracle, 34/34 compiled-effect tests and source audits pass. CNA `4d3cc6892` additionally flips the complete tangent basis for double-sided back faces, including mirrored world transforms; its shared FNA3D/OpenGL and OPENGLES3 oracle passes 10/10 and two targeted mutations fail the expected ordinary or mirrored cases. CNA `e44369bbe` adds independent UV0/UV1 selection for every rigid/skinned PBR material map; the shared material-map oracle passes 21/21 on FNA3D/OpenGL and OPENGLES3, while its mutation fails exactly the two UV1 discriminators. CNA `83c7b324c` completes single/cascaded directional, point-cube and spot shadow reception across Basic, Skinned, PBR and SkinnedPBR; the shared OpenGL pixel oracle passes 9/9, the Basic/Skinned punctual suites remain 5/5 each, and SOFTWARE's shared shadow oracle still passes. DirectX9's 14 checked shader blobs remain byte-for-byte reproducible with the FNA-only path disabled. The complete 50-test FNA3D label has 48 passes, two documented custom-source-effect skips and 0 failures; all 34 compiled-effect tests pass. The rebuilt museum passes 8,482/8,482 structural checks, and `cx-shadow` press-all reaches final stats with 0 exhibit errors; an inspected capture shows its live depth map and cast shadows. The complete 295-room FNA3D press-all tour reaches final stats in 101 s with 0 exhibit errors and 0 draw errors. The fixed `cx-shadow` arrival view still differs from OPENGLES3 by 4.01%, so it remains in the visual-difference list. The earlier targeted museum diff moves `model-ibl` from 18.46% to 0.000434% and `model-variants` from 13.54% to 0%, both below the 2% list threshold. The validation matrix remains 62 pass, 0 fail, 1 info and 23 skip. After CNA `d73f1aeab`, the HEADLESS tour reaches final stats in 23 s with the same clean result. The preceding multi-renderer run exited 0 with 0 exhibit errors on WEBGPU (125 s) and SDL_GPU (307 s). STUB has no 3D pipeline and is reported as an incomplete tour (exit 4) rather than a pass. The OPENGLES3 nine-step `tools/check_all.sh` battery is green. ASan+UBSan on OPENGLES3 over all 293 rooms exits 0 with no report. The leak harness now accepts multiple renderer names and keeps distinct logs; one versus three complete tours retained 74 textures on all three default-tree renderers, with peak-RSS growth OPENGLES3 691 to 721 MB (4%), OPENGL33 696 to 722 MB (3%), and SOFTWARE 1,204 to 1,252 MB (4%).
+
+Final release sweep (later on 2026-10-16): all 8,483 structural checks pass. The OPENGLES3 nine-step battery covered every room and 1,086 panel controls in 116 s, every elevator/stair route, all 36 references and the leak check (74 textures retained; 691 to 718 MB, 3%). The leak harness now scales its default timeout with the requested tour count so a busy three-tour sample cannot inherit the one-tour five-minute ceiling; it still rejects incomplete Xvfb exits. Fresh full press-all tours were clean on FNA3D (158 s), WEBGPU (264 s), SDL_GPU (451 s) and HEADLESS (45 s). The full validation matrix above has no failure on any runnable Linux backend. HEADLESS now marks the punctual-light pixel probe unavailable instead of falsely failing when rendered-target readback throws `NotSupportedException`. ASan+UBSan passed 8,482 checks and a complete 295-room OPENGLES3 press-all tour in 557 s with no report; the sanitizer build directory was then removed. The subsequent stair usability and leak-harness changes are covered structurally and by their focused runs rather than another sanitizer build.
 
 Earlier (2026-10-14, 280 rooms, after the Online Service wing, Exceptions, Vertex Types, Compiled Effects and the other new rooms): `tools/tour.sh -f 3 -p` exits 0 with 0 exhibit errors on FNA3D (76 s), WEBGPU (133 s) and SDL_GPU (274 s) in the multi-renderer tree (renderer chosen with `CNA_GRAPHICS_RENDERER`); the OPENGLES3 battery (`tools/check_all.sh`) is green.
 
