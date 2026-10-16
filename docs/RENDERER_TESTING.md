@@ -162,7 +162,7 @@ This pass found two real defects that the 30 stored views and the pixel checks h
    test added). CNA `c8722e283` completes the sampling half for the two independent PBR IBL cubes and opt-in source
    `ShaderEffect`; its eight-check witness passes on both GL profiles and is mutation-verified. The historical W1 upload
    asymmetry was already closed by CNA `23c5557f7`; the current readback contract confirms same-order 64/64 on both GL
-   profiles. CNA `6e88ad849` closes the later GLES-only face-edge seam: the face-local row flip now keeps its bilinear
+   profiles. CNA `313cd8ae6` closes the later GLES-only face-edge seam: the face-local row flip now keeps its bilinear
    footprint inside the selected face, and the exact-edge oracle is mutation-verified on both GL profiles.
 8. **FNA3D** reports `Instancing` but its stock effects declare no per-instance stream, so `DrawInstancedPrimitives` with a
    stock effect throws; and it has no PBR shading path, so every glTF model (PbrEffect) throws when drawn. The instancing
