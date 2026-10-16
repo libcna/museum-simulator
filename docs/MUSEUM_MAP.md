@@ -462,7 +462,7 @@ How assets arrive, what the platform reports, and what CNA adds to XNA
 | 8.2.03 | `cx-depth` | Colour Depth Effect | CNA extension | CNA::Graphics::DepthEffect, DepthEffectMode, DitherMode |
 | 8.2.04 | `cx-ascii` | ASCII Post-Process | CNA extension | CNA::Graphics::AsciiPostProcessEffect, AsciiQuantizeMode |
 | 8.2.05 | `cx-package` | Shader Packages | CNA extension | CNA::Graphics::ShaderPackageEXT, ShaderPackageEXT.selectFor, ShaderCodeEXT, ShaderEffect(device, package), ShaderLanguageEXT, ShaderEffect.DeclareUniformBlockEXT |
-| 8.2.06 | `cx-shadow` | Shadow Mapping | CNA extension | IShadowReceiverEXT, BasicEffect.ShadowMapEXT, BasicEffect.LightViewProjectionEXT, BasicEffect.ShadowDepthBiasEXT, BasicEffect.ShadowFilterRadiusEXT, ShadowCascadeStateEXT, BasicEffect.ShadowCascadesEXT, ShaderEffect, Matrix.CreateOrthographic |
+| 8.2.06 | `cx-shadow` | Shadow Mapping | CNA extension | IShadowReceiverEXT, BasicEffect.ShadowMapEXT, BasicEffect.LightViewProjectionEXT, BasicEffect.ShadowDepthBiasEXT, BasicEffect.ShadowFilterRadiusEXT, ShadowCascadeStateEXT, BasicEffect.ShadowCascadesEXT, DynamicVertexBuffer, VertexPositionColor, BasicEffect.VertexColorEnabled, Matrix.CreateOrthographic |
 | 8.2.07 | `cx-stats` | Engine Statistics | CNA extension | CNA::Diagnostics::GetProvider, Snapshot.metrics, Snapshot.resources, SetRuntimeMode |
 | 8.2.08 | `cx-points` | Point Lists | CNA extension | PrimitiveType.PointListEXT, GraphicsDevice.DrawUserPrimitives, GraphicsDevice.SetStringMarkerEXT |
 | 8.2.09 | `cx-devices` | Device Extensions | CNA extension | CNA::Devices::SystemInfo, CNA::Devices::Locale, CNA::Devices::PowerInfo, CNA::Devices::DisplayInfo |

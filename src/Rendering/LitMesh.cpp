@@ -15,7 +15,11 @@ LitMesh::LitMesh(GraphicsDevice& device, const MeshBuilder& builder)
 {
     std::vector<VertexPositionNormalTexture> vertices;
     vertices.reserve(builder.Vertices().size());
-    for (const MeshBuilder::Vertex& v : builder.Vertices()) vertices.emplace_back(v.position, v.normal, v.uv);
+    positions_.reserve(builder.Vertices().size());
+    for (const MeshBuilder::Vertex& v : builder.Vertices()) {
+        vertices.emplace_back(v.position, v.normal, v.uv);
+        positions_.push_back(v.position);
+    }
     vertexBuffer_ = std::make_unique<VertexBuffer>(device, VertexPositionNormalTexture::getVertexDeclarationStatic(),
                                                    vertexCount_, BufferUsage::WriteOnly);
     vertexBuffer_->SetData(vertices.data(), vertexCount_);

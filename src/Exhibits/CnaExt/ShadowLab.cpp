@@ -1,7 +1,7 @@
-// Shadow mapping with CNA's shadow-receiver extension. A caster pass draws the objects from the light into a
-// float render target through a small ShaderEffect (one vertex stage, one fragment stage that writes the light-space
-// depth); BasicEffect then receives the map (setShadowMapEXT, setLightViewProjectionEXT) and darkens what the casters
-// hide, with a bias and a percentage-closer filter of 0, 1 or 2 texels.
+// Shadow mapping with CNA's shadow-receiver extension. A portable caster pass draws the objects from the light into
+// a render target through stock BasicEffect: the CPU writes light-space depth into VertexPositionColor and the
+// orthographic projection makes raster interpolation exact. BasicEffect then receives the map and darkens what the
+// casters hide, with a bias and a percentage-closer filter of 0, 1 or 2 texels.
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -15,8 +15,10 @@
 #include "Exhibits/ExhibitFactories.hpp"
 #include "Exhibits/ScreenExhibit.hpp"
 #include "Microsoft/Xna/Framework/Graphics/BasicEffect.hpp"
+#include "Microsoft/Xna/Framework/Graphics/DynamicVertexBuffer.hpp"
 #include "Microsoft/Xna/Framework/Graphics/RenderTarget2D.hpp"
-#include "Microsoft/Xna/Framework/Graphics/ShaderEffect.hpp"
+#include "Microsoft/Xna/Framework/Graphics/VertexPositionColor.hpp"
+#include "Microsoft/Xna/Framework/Vector4.hpp"
 #include "Rendering/EffectBank.hpp"
 #include "Rendering/LitMesh.hpp"
 #include "Rendering/RenderStates.hpp"
@@ -26,24 +28,6 @@ using namespace Microsoft::Xna::Framework;
 using namespace Microsoft::Xna::Framework::Graphics;
 
 namespace {
-
-const char* kCasterVertex = R"(#version 300 es
-layout(location = 0) in vec3 aPos;
-uniform mat4 uMvp;
-out float vDepth;
-void main() {
-    vec4 p = uMvp * vec4(aPos, 1.0);
-    gl_Position = p;
-    vDepth = p.z / p.w * 0.5 + 0.5;      // the value the receiver compares: light-space depth in 0..1
-}
-)";
-
-const char* kCasterFragment = R"(#version 300 es
-precision highp float;
-in float vDepth;
-out vec4 FragColor;
-void main() { FragColor = vec4(vDepth, vDepth, vDepth, 1.0); }
-)";
 
 class ShadowLab final : public ScreenExhibit {
 public:
@@ -63,29 +47,27 @@ public:
         p.AddReadout("ShadowSampling support", [this] { return std::string(supported_ ? "yes" : "NO on this renderer"); });
         p.AddReadout("Map format", [this] { return format_; });
         p.AddReadout("Cascade splits (m)", [this] { return splitText_; });
-        AddInfoSign(b, "Shadow mapping", {"The shadow map holds light-space depth from a caster pass (a ShaderEffect). BasicEffect, which implements", "IShadowReceiverEXT, compares each surface's depth with the map: hidden means shadowed. PCF softens the edge."});
+        AddInfoSign(b, "Shadow mapping", {"The shadow map holds light-space depth from a portable stock-effect caster. BasicEffect, which implements", "IShadowReceiverEXT, compares each surface's depth with the map: hidden means shadowed. PCF softens the edge."});
     }
 
     void OnScreenLoaded() override
     {
         GraphicsDevice& d = *S().device;
         supported_ = d.SupportsShadowSamplingEXT();
-        // The caster is written in GLSL; a renderer that takes another dialect (WGSL, SPIR-V) or none (FNA3D) cannot run it.
-        const bool glsl = d.SupportsShaderLanguageEXT(CNA::ShaderLanguageEXT::GlslEs, CNA::ShaderStageEXT::Fragment) ||
-                          d.SupportsShaderLanguageEXT(CNA::ShaderLanguageEXT::GlslDesktop, CNA::ShaderStageEXT::Fragment);
-        if (!glsl) {
-            error_ = "ShaderEffect source here is not GLSL (this renderer's dialect id " + std::to_string(static_cast<int>(d.GetShaderDialectEXT())) + ")";
-        } else {
-            try {
-                caster_ = std::make_unique<ShaderEffect>(d, kCasterVertex, kCasterFragment);
-                if (!caster_->IsEffectValid()) {
-                    error_ = caster_->GetCompileErrorEXT();
-                    Museum::Log("shadow", "caster shader: %s", error_.c_str());
-                }
-            } catch (const std::exception& e) {
-                error_ = e.what();
-                Museum::Log("shadow", "caster shader: %s", e.what());
-            }
+        if (supported_) {
+            const int capacity = std::max({S().shapes->Sphere().VertexCount(), S().shapes->Cube().VertexCount(),
+                                           S().shapes->Cylinder().VertexCount(), S().shapes->Cone().VertexCount()});
+            casterVertices_ = std::make_unique<DynamicVertexBuffer>(d, VertexPositionColor::getVertexDeclarationStatic(),
+                                                                    capacity, BufferUsage::WriteOnly);
+            caster_ = std::make_unique<BasicEffect>(d);
+            caster_->setLightingEnabledProperty(false);
+            caster_->setTextureEnabledProperty(false);
+            caster_->setVertexColorEnabledProperty(true);
+            caster_->setFogEnabledProperty(false);
+            caster_->setDiffuseColorProperty(Vector3(1, 1, 1));
+            caster_->setWorldProperty(Matrix::getIdentityProperty());
+            caster_->setViewProperty(Matrix::getIdentityProperty());
+            caster_->setProjectionProperty(Matrix::getIdentityProperty());
         }
         lit_ = std::make_unique<BasicEffect>(d);
         lit_->EnableDefaultLighting();
@@ -102,7 +84,7 @@ public:
 
     void RenderOffscreen(const DrawContext& ctx) override
     {
-        if (!ctx.offscreen && supported_ && caster_ && caster_->IsEffectValid()) RenderShadowMap(ctx.device, ctx.view);
+        if (!ctx.offscreen && supported_ && caster_ && casterVertices_) RenderShadowMap(ctx.device, ctx.view);
         ScreenExhibit::RenderOffscreen(ctx);
     }
 
@@ -151,7 +133,6 @@ protected:
         sb.Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &SamplerState::LinearClamp, nullptr, nullptr);
         sb.DrawString(*S().font, "The shadow map (light-space depth, red channel; cascades side by side)", Vector2(24, 8), Kit::kGold, 0.0f, Vector2(0, 0), 0.8f, SpriteEffects::None, 0.0f);
         if (!supported_) sb.DrawString(*S().font, "This renderer does not support shadow sampling: no shadows are drawn.", Vector2(24, 500), Kit::Rgba(255, 190, 150), 0.0f, Vector2(0, 0), 0.7f, SpriteEffects::None, 0.0f);
-        else if (!error_.empty()) sb.DrawString(*S().font, "caster shader: " + error_.substr(0, 70), Vector2(24, 500), Kit::Rgba(255, 190, 150), 0.0f, Vector2(0, 0), 0.6f, SpriteEffects::None, 0.0f);
         sb.End();
     }
 
@@ -270,19 +251,33 @@ private:
             for (const Item& item : Items()) {
                 if (item.mesh == &S().shapes->Plane()) continue;   // the floor only receives
                 const Matrix mvp = item.world * matrices[static_cast<std::size_t>(c)];
-                caster_->Apply();
-                caster_->SetUniformMat4("uMvp", &mvp.M11);
-                item.mesh->Draw(d);
+                casterColours_.clear();
+                casterColours_.reserve(static_cast<std::size_t>(item.mesh->VertexCount()));
+                for (const Vector3& position : item.mesh->Positions()) {
+                    const Vector4 clip = Vector4::Transform(Vector4(position, 1.0f), mvp);
+                    const float depth = std::clamp(clip.Z / clip.W * 0.5f + 0.5f, 0.0f, 1.0f);
+                    const int channel = static_cast<int>(depth * 255.0f + 0.5f);
+                    casterColours_.emplace_back(position, Kit::Rgba(channel, channel, channel));
+                }
+                casterVertices_->SetData(casterColours_.data(), 0, static_cast<int>(casterColours_.size()), SetDataOptions::Discard);
+                caster_->setWorldProperty(mvp);
+                EffectBank::Apply(*caster_);
+                d.SetVertexBuffer(casterVertices_.get());
+                d.setIndicesProperty(item.mesh->Indices());
+                d.DrawIndexedPrimitives(PrimitiveType::TriangleList, 0, 0, item.mesh->VertexCount(), 0,
+                                        item.mesh->TriangleCount());
             }
         }
         d.SetRenderTarget(nullptr);
         mapReady_ = true;
     }
 
-    std::unique_ptr<ShaderEffect> caster_;
+    std::unique_ptr<BasicEffect> caster_;
+    std::unique_ptr<DynamicVertexBuffer> casterVertices_;
+    std::vector<VertexPositionColor> casterColours_;
     std::unique_ptr<BasicEffect> lit_;
     std::unique_ptr<RenderTarget2D> map_;
-    std::string error_, format_ = "-";
+    std::string format_ = "-";
     Matrix lightVp_ = Matrix::getIdentityProperty();
     ShadowCascadeStateEXT cascadeState_;
     std::string splitText_ = "-";

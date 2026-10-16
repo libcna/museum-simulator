@@ -146,7 +146,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BasicEffect.SpecularPower | `be-material` |
 | BasicEffect.Texture | `pf-state` |
 | BasicEffect.TextureEnabled | `geo-vertextypes`, `be-combos` |
-| BasicEffect.VertexColorEnabled | `geo-vertextypes`, `be-combos`, `rv-shading` |
+| BasicEffect.VertexColorEnabled | `geo-vertextypes`, `be-combos`, `cx-shadow`, `rv-shading` |
 | BasicEffect.World | `grounds-sculpture`, `rv-camera` |
 | BasicEffect.setPunctualLightEXT | `be-punctual` |
 | BasicMaterialContent | `ct-modelimport` |
@@ -410,7 +410,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | DynamicSoundEffectInstance.PendingBufferCount | `au-synth` |
 | DynamicSoundEffectInstance.SubmitBuffer | `au-synth` |
 | DynamicSoundEffectInstance.SubmitFloatBufferEXT | `au-synth` |
-| DynamicVertexBuffer | `sky`, `grounds-fountain`, `particles`, `geo-dynamic`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `rf-garden`, `rf-weather` |
+| DynamicVertexBuffer | `sky`, `grounds-fountain`, `particles`, `geo-dynamic`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `cx-shadow`, `rf-garden`, `rf-weather` |
 | DynamicVertexBuffer.SetData | `pf-buffers` |
 | Effect | `be-model`, `fx-compiled` |
 | Effect(GraphicsDevice, byte[]) | `fx-compiled` |
@@ -1088,7 +1088,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SetRuntimeMode | `cx-stats` |
 | ShaderCodeEXT | `cx-package` |
 | ShaderDiagnosticEXT.parseCompilerLog | `fx-errors` |
-| ShaderEffect | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `fx-errors`, `rt-mrt`, `cx-shadow` |
+| ShaderEffect | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `fx-errors`, `rt-mrt` |
 | ShaderEffect(device, package) | `cx-package` |
 | ShaderEffect.DeclareUniformBlockEXT | `fx-grade`, `fx-blur`, `fx-pixelate`, `fx-ripple`, `fx-edge`, `fx-crt`, `fx-plasma`, `fx-swirl`, `fx-chromatic`, `fx-kernel`, `fx-halftone`, `fx-vertexwave`, `fx-colormatrix`, `cx-package` |
 | ShaderEffect.GetCompileErrorEXT | `fx-errors` |
@@ -1295,7 +1295,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | VertexElement | `geo-vertextypes` |
 | VertexElementFormat | `geo-vertextypes` |
 | VertexElementUsage | `geo-vertextypes` |
-| VertexPositionColor | `geo-triangle`, `geo-vertextypes` |
+| VertexPositionColor | `geo-triangle`, `geo-vertextypes`, `cx-shadow` |
 | VertexPositionColorTexture | `geo-vertextypes`, `tex-uv`, `an-conveyor` |
 | VertexPositionNormalTexture | `geo-vertextypes`, `geo-dynamic`, `geo-terrain` |
 | VertexPositionNormalTextureSkinned | `model-skinfx`, `model-skinext` |

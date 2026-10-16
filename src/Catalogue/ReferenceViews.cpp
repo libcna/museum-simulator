@@ -30,6 +30,7 @@ const std::vector<ReferenceView>& ReferenceViews()
         {"keyboard", "in-keyboard", kExhibitAdvance, "keyboard visualiser (nothing held)"},
         {"formats", "ct-formats", kExhibitAdvance, "loose image formats decoded by ContentManager"},
         {"debugdraw", "cx-debugdraw", kExhibitAdvance, "CNA DebugDraw wire shapes"},
+        {"shadow", "cx-shadow", kExhibitAdvance, "portable stock-effect caster and BasicEffect shadow receiver"},
         {"validation", "rv-geometry", kExhibitAdvance, "renderer self-check results"},
         {"deck", "rf-deck", kExhibitAdvance, "open-air observation deck at the museum clock's hour"},
         {"billboards", "mat-billboard", kExhibitAdvance, "CreateBillboard sprites tilting towards a high camera"},

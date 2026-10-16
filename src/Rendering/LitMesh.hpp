@@ -23,6 +23,8 @@ public:
     [[nodiscard]] const Microsoft::Xna::Framework::BoundingBox& Bounds() const { return bounds_; }
     [[nodiscard]] int TriangleCount() const { return triangles_; }
     [[nodiscard]] int VertexCount() const { return vertexCount_; }
+    /** Original local-space positions, retained for portable CPU-authored passes such as the shadow caster. */
+    [[nodiscard]] const std::vector<Microsoft::Xna::Framework::Vector3>& Positions() const { return positions_; }
     [[nodiscard]] Microsoft::Xna::Framework::Graphics::VertexBuffer* Vertices() const { return vertexBuffer_.get(); }
     [[nodiscard]] Microsoft::Xna::Framework::Graphics::IndexBuffer* Indices() const { return indexBuffer_.get(); }
 
@@ -30,6 +32,7 @@ private:
     std::unique_ptr<Microsoft::Xna::Framework::Graphics::VertexBuffer> vertexBuffer_;
     std::unique_ptr<Microsoft::Xna::Framework::Graphics::IndexBuffer> indexBuffer_;
     Microsoft::Xna::Framework::BoundingBox bounds_;
+    std::vector<Microsoft::Xna::Framework::Vector3> positions_;
     int vertexCount_ = 0;
     int triangles_ = 0;
 };

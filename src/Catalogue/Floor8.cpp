@@ -160,7 +160,7 @@ RoomSpec ShadowRoom()
     r.depth = 15;
     r.height = 5.5f;
     r.theme = "futuristic";
-    r.apis = {"IShadowReceiverEXT", "BasicEffect.ShadowMapEXT", "BasicEffect.LightViewProjectionEXT", "BasicEffect.ShadowDepthBiasEXT", "BasicEffect.ShadowFilterRadiusEXT", "ShadowCascadeStateEXT", "BasicEffect.ShadowCascadesEXT", "ShaderEffect", "Matrix.CreateOrthographic"};
+    r.apis = {"IShadowReceiverEXT", "BasicEffect.ShadowMapEXT", "BasicEffect.LightViewProjectionEXT", "BasicEffect.ShadowDepthBiasEXT", "BasicEffect.ShadowFilterRadiusEXT", "ShadowCascadeStateEXT", "BasicEffect.ShadowCascadesEXT", "DynamicVertexBuffer", "VertexPositionColor", "BasicEffect.VertexColorEnabled", "Matrix.CreateOrthographic"};
     r.origin = ApiOrigin::CnaExtension;
     return r;
 }

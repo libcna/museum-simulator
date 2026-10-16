@@ -399,7 +399,7 @@ Namespaces: Microsoft::Xna::Framework (math, Game), ::Graphics, ::Audio, ::Media
 - Known defects / limitations from handoff.md section 5 (affects what to demo):
   1. VULKAN: RasterizerState.DepthBias is passed unscaled; realistic values (about -1e-4) have no visible effect. Do not demo depth bias on Vulkan.
   2. SDL_RENDERER: ignores TextureAddressMode Wrap/Mirror; 2D only.
-  3. DIRECTX9 cannot compile the museum's GLSL `ShaderEffect` caster source. Its stock-effect shadow receivers work, but `cx-shadow` needs a renderer-native caster before it can show live shadows there.
+  3. The museum's `cx-shadow` caster is portable: it projects orthographic depth on the CPU and writes it through `VertexPositionColor` plus a stock `BasicEffect`. DIRECTX9 and SOFTWARE therefore exercise their real stock-effect shadow receivers without needing a source-shader dialect.
   4. FNA3D: stock effects do not saturate COLOR0 like D3D9 (minor pixel differences).
   5. VULKAN: multi-stream instancing with duplicate usages and OcclusionQuery::IsComplete (no flush) have known bugs; WEBGPU counts only post-Clear draws in an occlusion run. SDL_GPU cannot construct OcclusionQuery.
   6. BoundingFrustum::Intersects(Ray) throws NotImplementedException.
