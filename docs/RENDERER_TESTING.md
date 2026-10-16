@@ -40,6 +40,11 @@ and rendering check, not yet a complete all-room browser tour or the floor 9 val
 continuously for six simulated seconds and requires progress persistence to occur only after a subsequent five-second
 idle period; the verified autosave occurred at frame 112 after 5.1 idle seconds.
 
+Browser-generated signs stay in their mipmapped render targets instead of synchronously crossing from WebGL to
+Wasm for CPU mip generation and then being uploaded again. On the same 20-second Chrome/SwiftShader walking trace,
+this reduced the largest lazy-room-build frame from 3,949.9 ms to 333.3 ms, only modestly above that software
+renderer run's ordinary 100-300 ms frames. Individual room builds fell from 600-1,200 ms to 134-238 ms.
+
 ## The tools
 
 | Tool | What it does |

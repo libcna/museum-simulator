@@ -26,6 +26,26 @@ std::string SignFactory::CreateCustom(int w, int h, const Color& background,
                                       const std::function<void(SpriteBatch&, int, int)>& draw)
 {
     const std::string name = "sign:" + std::to_string(counter_++);
+#ifdef __EMSCRIPTEN__
+    // A browser readback crosses the WebGL/Wasm boundary and can take more than a second for a room card.
+    // Keep the rendered target itself: EasyGL generates its mip chain when the target is unbound, so this
+    // is both the shortest path and the same filtered texture the room will sample afterwards.
+    auto target = std::make_unique<RenderTarget2D>(device_, w, h, true, SurfaceFormat::Color, DepthFormat::None, 0,
+                                                    RenderTargetUsage::PreserveContents);
+    try {
+        device_.SetRenderTarget(target.get());
+        device_.Clear(background);
+        const SamplerState sampler = SamplerState::LinearClamp;
+        sprites_.Begin(SpriteSortMode::Deferred, &BlendState::NonPremultiplied, &sampler, nullptr, nullptr);
+        draw(sprites_, w, h);
+        sprites_.End();
+        device_.SetRenderTarget(nullptr);
+    } catch (const std::exception& e) {
+        device_.SetRenderTarget(nullptr);
+        Museum::Log("signs", "could not render sign: %s", e.what());
+    }
+    textures_.Register(name, std::move(target));
+#else
     std::vector<Color> pixels(static_cast<std::size_t>(w) * static_cast<std::size_t>(h), background);
     try {
         RenderTarget2D target(device_, w, h, false, SurfaceFormat::Color, DepthFormat::None, 0,
@@ -44,6 +64,7 @@ std::string SignFactory::CreateCustom(int w, int h, const Color& background,
     }
     for (Color& c : pixels) c = Color(c.getRProperty(), c.getGProperty(), c.getBProperty(), static_cast<std::uint8_t>(255));
     textures_.Register(name, ImageUtil::CreateMipmapped(device_, pixels, w, h));
+#endif
     if (scope_ != nullptr) scope_->push_back(name);
     return name;
 }
