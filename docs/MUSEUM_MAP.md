@@ -349,7 +349,7 @@ glTF models and their effects, procedural and skeletal animation, particle syste
 | 6.1.11 | `model-morph` | Morph Targets | CNA extension | MorphTargetDataEXT, SetMorphWeightsEXT, EvaluateMorphWeightsEXT, ModelMeshPart.Tag |
 | 6.1.12 | `model-variants` | Material Variants | CNA extension | Model.MaterialVariantEXT, Model.MaterialVariantNamesEXT, PbrEffect |
 | 6.1.13 | `model-ibl` | Image-Based Lighting | CNA extension | ImageBasedLightEXT, PbrEffect.ImageBasedLight, TextureCube, PbrEffect.MetallicFactor, PbrEffect.RoughnessFactor, GraphicsDevice.SupportsImageBasedLightingEXT |
-| 6.1.14 | `model-skinfx` | SkinnedEffect | XNA 4.0 | SkinnedEffect, SkinnedEffect.SetBoneTransforms, SkinnedEffect.WeightsPerVertex, VertexPositionNormalTextureSkinned, VertexBuffer, IndexBuffer |
+| 6.1.14 | `model-skinfx` | SkinnedEffect | XNA 4.0 | SkinnedEffect, SkinnedEffect.SetBoneTransforms, SkinnedEffect.WeightsPerVertex, SkinnedEffect.setPunctualLightEXT, PunctualLightEXT, VertexPositionNormalTextureSkinned, VertexBuffer, IndexBuffer |
 | 6.1.15 | `model-skinext` | Your Own Skinned Model | CNA extension | SkinnedModelEXT, SkinnedModelEXT.ComputeBoneTransformsEXT, SkinnedModelEXT.AttachPartEXT, SkinnedModelEXT.RemovePartEXT, SkinnedModelEXT.AddPartEXT, AnimationClipEXT, BoneTrackEXT, KeyframeEXT, SkinnedEffect.SetBoneTransforms, VertexPositionNormalTextureSkinned |
 | 6.1.16 | `model-cameras` | Cameras in a glTF File | CNA extension | Model.CamerasEXT, ModelCameraEXT, ModelCameraEXT.Projection, ModelCameraEXT.WorldTransform, ModelCameraEXT.IsPerspective, Model.CreateInfinitePerspectiveFieldOfViewEXT, BoundingFrustum, Matrix.Invert |
 

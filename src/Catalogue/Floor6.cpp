@@ -87,7 +87,7 @@ WingSpec ModelWing()
         mo("model-ibl", "Image-Based Lighting", "ImageBasedLightEXT: an irradiance cube, a prefiltered specular cube and a BRDF table lighting a PBR model", "ibl", {"ImageBasedLightEXT", "PbrEffect.ImageBasedLight", "TextureCube", "PbrEffect.MetallicFactor", "PbrEffect.RoughnessFactor", "GraphicsDevice.SupportsImageBasedLightingEXT"}, "sphere"),
         [&] {
             RoomSpec r = mo("model-skinfx", "SkinnedEffect", "XNA's skinning effect: a tube bent by four bone matrices, with one, two or four blend weights per vertex", "",
-                            {"SkinnedEffect", "SkinnedEffect.SetBoneTransforms", "SkinnedEffect.WeightsPerVertex", "VertexPositionNormalTextureSkinned", "VertexBuffer", "IndexBuffer"});
+                            {"SkinnedEffect", "SkinnedEffect.SetBoneTransforms", "SkinnedEffect.WeightsPerVertex", "SkinnedEffect.setPunctualLightEXT", "PunctualLightEXT", "VertexPositionNormalTextureSkinned", "VertexBuffer", "IndexBuffer"});
             r.exhibit = "skinfx-lab";
             r.origin = ApiOrigin::Xna;
             return r;

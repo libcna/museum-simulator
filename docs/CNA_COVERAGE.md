@@ -52,7 +52,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 ## Generated: API names claimed by rooms
 
 <!-- BEGIN COVERAGE -->
-1288 distinct API names are claimed by at least one room.
+1289 distinct API names are claimed by at least one room.
 
 | API | Rooms |
 |---|---|
@@ -999,7 +999,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | PropertyDictionary.Keys | `gs-leaderboards` |
 | PropertyDictionary.SetValue | `gs-leaderboards` |
 | PropertyDictionary.Values | `gs-leaderboards` |
-| PunctualLightEXT | `be-punctual`, `light-types`, `light-many` |
+| PunctualLightEXT | `be-punctual`, `light-types`, `light-many`, `model-skinfx` |
 | PunctualLightEXT.DiffuseColor | `light-coloured` |
 | PunctualLightEXT.OuterAngle | `light-flashlight` |
 | PunctualLightEXT.Range | `light-falloff` |
@@ -1111,6 +1111,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SkinnedEffect | `be-model`, `model-skinfx` |
 | SkinnedEffect.SetBoneTransforms | `model-skinfx`, `model-skinext` |
 | SkinnedEffect.WeightsPerVertex | `model-skinfx` |
+| SkinnedEffect.setPunctualLightEXT | `model-skinfx` |
 | SkinnedModelEXT | `model-skinext` |
 | SkinnedModelEXT.AddPartEXT | `model-skinext` |
 | SkinnedModelEXT.AttachPartEXT | `model-skinext` |

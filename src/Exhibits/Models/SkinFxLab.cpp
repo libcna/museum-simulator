@@ -13,6 +13,7 @@
 #include "Exhibits/ExhibitKit.hpp"
 #include "Exhibits/Math/MathKit.hpp"
 #include "Microsoft/Xna/Framework/Graphics/IndexBuffer.hpp"
+#include "Microsoft/Xna/Framework/Graphics/PunctualLightEXT.hpp"
 #include "Microsoft/Xna/Framework/Graphics/SkinnedEffect.hpp"
 #include "Microsoft/Xna/Framework/Graphics/VertexBuffer.hpp"
 #include "Microsoft/Xna/Framework/Graphics/VertexPositionNormalTextureSkinned.hpp"
@@ -45,6 +46,8 @@ public:
         p.AddSlider("Twist per joint", -60.0f, 60.0f, twist_, [this](float v) { twist_ = v; animate_ = false; }, "%.0f deg", 1.0f);
         p.AddToggle("Animate", true, [this](bool v) { animate_ = v; });
         p.AddToggle("Directional lights (EnableDefaultLighting)", true, [this](bool v) { lighting_ = v; });
+        p.AddChoice("Punctual light", {"None", "Point", "Spot"}, 1,
+                    [this](int v) { punctual_ = v; });
         p.AddToggle("PreferPerPixelLighting", true, [this](bool v) { perPixel_ = v; });
         p.AddToggle("Fog", false, [this](bool v) { fog_ = v; });
         p.AddToggle("Show joints and weights", true, [this](bool v) { joints_ = v; });
@@ -108,6 +111,17 @@ public:
             fx.getDirectionalLight2Property().setEnabledProperty(false);
             fx.setAmbientLightColorProperty(Vector3(0.85f, 0.85f, 0.85f));
         }
+        PunctualLightEXT lamp;
+        if (punctual_ != 0) {
+            lamp.Kind = punctual_ == 1 ? PunctualLightKindEXT::Point : PunctualLightKindEXT::Spot;
+            lamp.Position = R().ToWorld(1.8f, 2.2f, 1.4f);
+            lamp.Direction = Vector3::Normalize(R().ToWorld(0.0f, 1.9f, 0.0f) - lamp.Position);
+            lamp.DiffuseColor = Vector3(4.0f, 2.4f, 1.1f);
+            lamp.Range = 7.0f;
+            lamp.InnerAngle = MathHelper::ToRadians(24.0f);
+            lamp.OuterAngle = MathHelper::ToRadians(38.0f);
+        }
+        fx.setPunctualLightEXT(lamp);
         fx.setFogEnabledProperty(fog_);
         if (fog_) {
             fx.setFogColorProperty(Vector3(0.12f, 0.14f, 0.22f));
@@ -210,7 +224,7 @@ private:
     std::unique_ptr<SkinnedEffect> effect_;
     std::unique_ptr<VertexBuffer> vb_;
     std::unique_ptr<IndexBuffer> ib_;
-    int vertexCount_ = 0, indexCount_ = 0, weights_ = 2;
+    int vertexCount_ = 0, indexCount_ = 0, weights_ = 2, punctual_ = 1;
     float time_ = 0.0f, bend_ = 0.0f, twist_ = 0.0f;
     bool ok_ = false, animate_ = true, lighting_ = true, perPixel_ = true, fog_ = false, joints_ = true;
 };
