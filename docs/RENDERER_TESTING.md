@@ -71,7 +71,7 @@ Run `tools/renderer_check.sh` for the current figures; they are not copied anywh
 | OPENGLES3 | clean | - |
 | OPENGL33 | clean | 0.00 % of pixels differ by more than 15/255 |
 | SOFTWARE | clean (about 25 minutes for the whole museum under Xvfb) | 4.6 % |
-| FNA3D | clean, 0 exhibit errors (132 s after the full conformance follow-up) | Historical pre-fix 30-view result: 22 within 1 %; its former `lights` 7.8 % and `pbr` 9.9 % divergences have since received native punctual/direct-light PBR paths; `shader` 5.6 % remains (no custom source shaders), with the other recorded raster differences unchanged pending a fresh capture |
+| FNA3D | clean, 0 exhibit errors (132 s after the full conformance follow-up) | Fresh 295-view result: 27 differ from OPENGLES3 by more than 2 %; no direct-light PBR room remains, while `model-ibl`/`model-variants` exercise the documented missing IBL term |
 | WEBGPU | clean (125 s) | 30 reference views: 26 within 1 %; `debugdraw` 4.7 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
 | SDL_GPU | clean (307 s) | 30 reference views: all within 1 % |
 
@@ -121,7 +121,7 @@ Rooms whose arrival view differs from OPENGLES3's by more than 2 % of pixels (64
 | SOFTWARE | 16 of 293 | Historical result before the portable shadow caster: nine unsupported source-shader views (`fx-kernel`, `fx-plasma`, `fx-edge`, `cx-crt`, `fx-swirl`, `fx-halftone`, `tex-volshader`, `fx-vertexwave`, `fx-crt`), plus `rs-fill`, `rs-depthbias`, `materials` (animation phase), `au-video` (video frame), `cx-shadow`, `pf-dashboard` (live numbers) and `cx-package`. No model/PBR/IBL room exceeded 2 %. |
 | SDL_GPU | 7 | `rs-depthbias` (z-fighting at zero bias resolves differently), `fx-plasma` and `fx-swirl` (floating-point trig in the shader), `rs-fill`, `cx-shadow`, `cx-package`, `pf-dashboard` (live numbers) |
 | WEBGPU | 28 | those, plus `tex-formats` (Bgr565, Bgra4444 and Alpha8 are not offered), `cx-debugdraw`, and about twenty `vec-*`, `mat-*`, `quat-*` rooms whose 1-pixel grid lines sit one pixel off (a rasterisation difference, not a bug) |
-| FNA3D | 42 | Historical pre-fix result: no custom source shaders (`fx-*`, `cx-crt`, `cx-depth`...), point/spot lights and PBR BasicEffect stand-ins (both now fixed), `tex-formats`, wireframe and the same grid-line offset; remeasure before treating 42 as current |
+| FNA3D | 27 of 295 | Fresh 2026-10-16 result after CNA `c8145f60c`/`bafde1fff`: `tex-formats`; `model-ibl` and metallic `model-variants` (the documented missing IBL term, visually inspected); `rs-fill`, `rs-depthbias`; twelve source/custom-shader views (`fx-kernel`, `fx-plasma`, `fx-edge`, `cx-crt`, `fx-halftone`, `cx-debugdraw`, `fx-swirl`, `tex-volshader`, `fx-vertexwave`, `fx-crt`, `fx-colormatrix`, `cx-package`); and `cx-shadow`, `cx-points`, `geo-vertextypes`, `rt-formats`, `an-walker`, `fx-grade`, `fx-compiled`, `gs-avatar`, `rt-mrt`, `vec-normalize`. No ordinary direct-light PBR room remains in the list. |
 
 After CNA `60019d629`, a focused SOFTWARE pressed tour of `model-pbr`, `model-skinned`,
 `model-instances`, `model-material`, `model-ibl`, `model-morph` and `model-variants` exited 0 with
