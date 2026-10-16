@@ -42,7 +42,7 @@ where filtering makes an exact value meaningless. Rooms: geometry and coverage, 
 interpolation/lighting/fog, sampling, render targets, camera matrices, stock effects. The *Depth* room also reports (as
 information, not pass/fail) the smallest depth gap the renderer resolves at 100 m.
 
-Result on 2026-10-14, with the FNA3D row refreshed on 2026-10-16 after CNA `cb52126f4`
+Result on 2026-10-14, with the FNA3D row refreshed on 2026-10-16 after CNA `c8145f60c`
 (CNA at the commit shown by `git -C ../cna log -1`; the SOFTWARE renderer is flagged Experimental by CNA):
 
 | Renderer | Checks | Pass | Fail | Info | Skip |
@@ -71,13 +71,13 @@ Run `tools/renderer_check.sh` for the current figures; they are not copied anywh
 | OPENGLES3 | clean | - |
 | OPENGL33 | clean | 0.00 % of pixels differ by more than 15/255 |
 | SOFTWARE | clean (about 25 minutes for the whole museum under Xvfb) | 4.6 % |
-| FNA3D | clean, 0 exhibit errors (106 s after punctual-light support) | Historical pre-fix 30-view result: 22 within 1 %; `lights` 7.8 % (point/spot support has since been fixed), `pbr` 9.9 % (BasicEffect stand-in), `shader` 5.6 % (no custom shaders), `debugdraw` 4.6 %, `skinned-effect` 2.1 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
+| FNA3D | clean, 0 exhibit errors (76 s after native direct-light PBR) | Historical pre-fix 30-view result: 22 within 1 %; its former `lights` 7.8 % and `pbr` 9.9 % divergences have since received native punctual/direct-light PBR paths; `shader` 5.6 % remains (no custom source shaders), with the other recorded raster differences unchanged pending a fresh capture |
 | WEBGPU | clean (125 s) | 30 reference views: 26 within 1 %; `debugdraw` 4.7 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
 | SDL_GPU | clean (307 s) | 30 reference views: all within 1 % |
 
 Windows build under Wine (MinGW cross build, 2026-10-15, 286 rooms): SOFTWARE `pressall` tour exits 0 with 0 exhibit errors in 1730 s (networking, avatars and video are not built into that tree, so 915 panel controls instead of 998).
 
-Latest (2026-10-16, 293 rooms): after CNA `cb52126f4`, the FNA3D press-all tour reaches final stats in 106 s, exits 0 and reports 0 exhibit errors; its validation matrix is 62 pass, 0 fail, 1 info and 23 skip. After CNA `d73f1aeab`, the HEADLESS tour reaches final stats in 23 s with the same clean result. The preceding multi-renderer run exited 0 with 0 exhibit errors on WEBGPU (125 s) and SDL_GPU (307 s). STUB has no 3D pipeline and is reported as an incomplete tour (exit 4) rather than a pass. The OPENGLES3 nine-step `tools/check_all.sh` battery is green. ASan+UBSan on OPENGLES3 over all 293 rooms exits 0 with no report. The leak harness now accepts multiple renderer names and keeps distinct logs; one versus three complete tours retained 74 textures on all three default-tree renderers, with peak-RSS growth OPENGLES3 691 to 721 MB (4%), OPENGL33 696 to 722 MB (3%), and SOFTWARE 1,204 to 1,252 MB (4%).
+Latest (2026-10-16, 295 rooms): after CNA `c8145f60c`, the FNA3D press-all tour reaches final stats in 76 s, exits 0 and reports 0 exhibit errors; a focused press-all pass over the rigid/skinned PBR, material, variant, IBL and shadow rooms is also clean, and the validation matrix remains 62 pass, 0 fail, 1 info and 23 skip. The CNA qualification's two new PBR conformance programs pass under OpenGL; across its full 46-test FNA3D label, 41 pass, two documented custom-source-effect cases skip, and three older non-PBR contracts remain red (GraphicsAdapter/MSAA reporting and the CNA-extension SkinnedEffect vertex-colour route). After CNA `d73f1aeab`, the HEADLESS tour reaches final stats in 23 s with the same clean result. The preceding multi-renderer run exited 0 with 0 exhibit errors on WEBGPU (125 s) and SDL_GPU (307 s). STUB has no 3D pipeline and is reported as an incomplete tour (exit 4) rather than a pass. The OPENGLES3 nine-step `tools/check_all.sh` battery is green. ASan+UBSan on OPENGLES3 over all 293 rooms exits 0 with no report. The leak harness now accepts multiple renderer names and keeps distinct logs; one versus three complete tours retained 74 textures on all three default-tree renderers, with peak-RSS growth OPENGLES3 691 to 721 MB (4%), OPENGL33 696 to 722 MB (3%), and SOFTWARE 1,204 to 1,252 MB (4%).
 
 Earlier (2026-10-14, 280 rooms, after the Online Service wing, Exceptions, Vertex Types, Compiled Effects and the other new rooms): `tools/tour.sh -f 3 -p` exits 0 with 0 exhibit errors on FNA3D (76 s), WEBGPU (133 s) and SDL_GPU (274 s) in the multi-renderer tree (renderer chosen with `CNA_GRAPHICS_RENDERER`); the OPENGLES3 battery (`tools/check_all.sh`) is green.
 
@@ -121,7 +121,7 @@ Rooms whose arrival view differs from OPENGLES3's by more than 2 % of pixels (64
 | SOFTWARE | 16 of 293 | Historical result before the portable shadow caster: nine unsupported source-shader views (`fx-kernel`, `fx-plasma`, `fx-edge`, `cx-crt`, `fx-swirl`, `fx-halftone`, `tex-volshader`, `fx-vertexwave`, `fx-crt`), plus `rs-fill`, `rs-depthbias`, `materials` (animation phase), `au-video` (video frame), `cx-shadow`, `pf-dashboard` (live numbers) and `cx-package`. No model/PBR/IBL room exceeded 2 %. |
 | SDL_GPU | 7 | `rs-depthbias` (z-fighting at zero bias resolves differently), `fx-plasma` and `fx-swirl` (floating-point trig in the shader), `rs-fill`, `cx-shadow`, `cx-package`, `pf-dashboard` (live numbers) |
 | WEBGPU | 28 | those, plus `tex-formats` (Bgr565, Bgra4444 and Alpha8 are not offered), `cx-debugdraw`, and about twenty `vec-*`, `mat-*`, `quat-*` rooms whose 1-pixel grid lines sit one pixel off (a rasterisation difference, not a bug) |
-| FNA3D | 42 | Historical pre-`cb52126f4` result: no custom shaders (`fx-*`, `cx-crt`, `cx-depth`...), point/spot lights (now fixed), PBR models drawn as a lit `BasicEffect`, `tex-formats`, wireframe and the same grid-line offset |
+| FNA3D | 42 | Historical pre-fix result: no custom source shaders (`fx-*`, `cx-crt`, `cx-depth`...), point/spot lights and PBR BasicEffect stand-ins (both now fixed), `tex-formats`, wireframe and the same grid-line offset; remeasure before treating 42 as current |
 
 After CNA `60019d629`, a focused SOFTWARE pressed tour of `model-pbr`, `model-skinned`,
 `model-instances`, `model-material`, `model-ibl`, `model-morph` and `model-variants` exited 0 with
@@ -165,9 +165,11 @@ This pass found two real defects that the 30 stored views and the pixel checks h
    profiles. CNA `313cd8ae6` closes the later GLES-only face-edge seam: the face-local row flip now keeps its bilinear
    footprint inside the selected face, and the exact-edge oracle is mutation-verified on both GL profiles.
 8. **FNA3D** reports `Instancing` but its stock effects declare no per-instance stream, so `DrawInstancedPrimitives` with a
-   stock effect throws; and it has no PBR shading path, so every glTF model (PbrEffect) throws when drawn. The instancing
-   rooms fall back to one draw per cube and the model rooms to a lit `BasicEffect`, each saying so on its panel. The
-   shader rooms already used `CustomEffects`. (CNA documents both limits in `docs/fna3d-renderer.md`.)
+   stock effect throws and the instancing rooms fall back to one draw per cube. CNA `c8145f60c` closes the former glTF
+   fallback: CNA-owned rigid/skinned Effect Framework binaries now render direct-light metallic-roughness PBR. IBL,
+   shadow sampling, UV1 selection and double-sided normal flipping remain explicit PBR limits. The shader rooms already
+   used `CustomEffects`, which FNA3D cannot compile from source. (CNA documents these boundaries in
+   `docs/fna3d-renderer.md`.)
 9. **Custom shaders need source in the renderer's own dialect** (`GetShaderDialectEXT`). The shader rooms carry three: GLSL ES 3.00
    (OPENGLES3, OPENGL33 and SOFTWARE-adapted), WGSL (WEBGPU, `Exhibits/Shaders/ShaderSources.cpp`: the same twelve algorithms
    line for line) and Vulkan GLSL 450 (SDL_GPU: the GLSL ES bodies behind another header; the renderer compiles it to SPIR-V

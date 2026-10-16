@@ -356,8 +356,8 @@ private:
         DrawGuarded(world, ctx);
     }
 
-    // FNA3D has no metallic-roughness shading path and throws when asked to draw a PbrEffect part. The room then
-    // swaps every part to a lit BasicEffect (what Effects mode does by hand) and carries on, saying so on the panel.
+    // Keep the room usable on any reduced backend that refuses one of the imported model's effects:
+    // swap every part to a lit BasicEffect (what Effects mode does by hand) and report the boundary.
     void DrawGuarded(const Matrix& world, const DrawContext& ctx)
     {
         try {
