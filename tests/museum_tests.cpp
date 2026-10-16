@@ -191,6 +191,8 @@ void TestEveryFloorIsConnected(const MuseumPlan& m)
     }
     Check(seen.size() == m.rooms.size(), "every cell is reachable on foot from the entrance");
 
+    Check(kStairLandingDepth >= kStairLaneWidth * 0.75f,
+          "the stair half-landing is deep enough for a visitor to turn between flights");
     for (std::size_t floor = 0; floor + 1 < m.floors.size(); ++floor) {
         const RoomDef& stairs = m.Room(m.floors[floor].stairsUp);
         Check(stairs.floor == static_cast<int>(floor), stairs.key + " begins on its lower floor");

@@ -392,19 +392,24 @@ public:
     void BuildStatic(RoomBuilder& b) override
     {
         const int upper = R().params.GetInt("upper-floor", R().floor + 1);
-        SignSpec lower;
-        lower.lines = {{"STAIRS", true, kGold},
-                       {"Floor " + std::to_string(R().floor) + "  →  " + std::to_string(upper), false, kText},
-                       {"Follow the switchback", false, kDim}};
-        lower.border = Accent(R().accent);
-        b.AddWallSign(Wall::West, kStairLaneOffset, 1.7f, 3.0f, 1.15f, lower);
+        const float landingEyeLevel = kFloorPitch * 0.5f + 1.7f;
 
-        SignSpec upperSign;
-        upperSign.lines = {{"FLOOR " + std::to_string(upper), true, kGold},
-                           {"Hall through the door", false, kText},
-                           {"Stairs down to " + std::to_string(R().floor), false, kDim}};
-        upperSign.border = Accent(M(S()).floors[static_cast<std::size_t>(upper)].accent);
-        b.AddWallSign(Wall::West, -kStairLaneOffset, kFloorPitch + 1.7f, 3.0f, 1.15f, upperSign);
+        // Both flights reach the west wall at the half-storey landing.  Signs at
+        // either floor's eye level are below/above the visitor here and cannot
+        // guide the switchback, so put one directly in front of each approach.
+        SignSpec up;
+        up.lines = {{"STAIRS UP  →", true, kGold},
+                    {"Turn right on the landing", false, kText},
+                    {"Continue to floor " + std::to_string(upper), false, kDim}};
+        up.border = Accent(M(S()).floors[static_cast<std::size_t>(upper)].accent);
+        b.AddWallSign(Wall::West, kStairLaneOffset, landingEyeLevel, 3.0f, 1.15f, up);
+
+        SignSpec down;
+        down.lines = {{"←  STAIRS DOWN", true, kGold},
+                      {"Turn left on the landing", false, kText},
+                      {"Continue to floor " + std::to_string(R().floor), false, kDim}};
+        down.border = Accent(R().accent);
+        b.AddWallSign(Wall::West, -kStairLaneOffset, landingEyeLevel, 3.0f, 1.15f, down);
     }
 };
 

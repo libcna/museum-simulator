@@ -148,7 +148,9 @@ void MuseumWorld::BuildCellShell(const RoomDef& r, RoomInstance& inst, MeshSet& 
         steps.AddPatch(Vector3(east, c.Y + kFloorPitch, upperZ + laneHalf), Vector3(kStairLandingDepth, 0, 0),
                        Vector3(0, 0, -kStairLaneWidth), 1.2f, th.floorTint, 0.7f);
 
-        constexpr int treadCount = 18;
+        // With the two-metre landings, 22 treads keep each rise near 20 cm and
+        // leave enough flat space for a first-person visitor to make the turn.
+        constexpr int treadCount = 22;
         const float tread = run / static_cast<float>(treadCount);
         const float treadRise = rise / static_cast<float>(treadCount);
         MeshBuilder& rails = meshes.Opaque("metal");

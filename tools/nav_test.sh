@@ -12,18 +12,24 @@ for ((f = 0; f < floors; ++f)); do
   if [ "$got" = "$f" ]; then echo "ok    ride to floor $f"; else echo "FAIL  ride to floor $f arrived on floor ${got:-?}"; status=1; fi
 done
 
-# Every stair cell has the same local switchback: west up the lower run, north over the landing, east up the upper run.
+# Enter each stair from its lower-floor hall, walk the complete switchback, and
+# leave through the upper-floor hall.  Starting inside the stair would miss a
+# blocked doorway or a landing that a real visitor cannot enter.
 for ((f = 0; f + 1 < floors; ++f)); do
   upper=$((f + 1))
-  tools/run.sh "goto:stairs-$f-$upper;wait:8;walk:1,0,150;look:0,0;walk:1,0,50;look:-90,0;walk:1,0,190;wait:8;stats;quit" --no-audio > "${BUILD_DIR:-build}/nav.out" 2>&1 || { echo "FAIL stairs $f->$upper: the run failed"; status=1; continue; }
+  if ((f % 2 == 0)); then door_z=-2.9; else door_z=6.1; fi
+  tools/run.sh "floor:$f;wait:8;at:-9,$door_z,90,0;wait:3;walk:1,0,210;look:0,0;walk:1,0,55;look:-90,0;walk:1,0,210;wait:8;stats;quit" --no-audio > "${BUILD_DIR:-build}/nav.out" 2>&1 || { echo "FAIL stairs $f->$upper: the run failed"; status=1; continue; }
   got=$(grep -o " floor [0-9]*  exhibit errors" "${BUILD_DIR:-build}/run.log" | tail -1 | grep -o "floor [0-9]*" | grep -o '[0-9]*')
-  if [ "$got" = "$upper" ]; then echo "ok    stairs from floor $f to $upper"; else echo "FAIL  stairs from floor $f to $upper arrived on floor ${got:-?}"; status=1; fi
+  visited=$(grep -o " visited [0-9]*  floor" "${BUILD_DIR:-build}/run.log" | tail -1 | grep -o '[0-9]*')
+  if [ "$got" = "$upper" ] && [ "${visited:-0}" -ge 3 ]; then echo "ok    stairs from floor $f hall to floor $upper hall"; else echo "FAIL  stairs from floor $f to $upper arrived on floor ${got:-?} after visiting ${visited:-?} cells"; status=1; fi
 done
 
-# Reverse traversal exercises descending ground resolution rather than only the ascending profile.
-if tools/run.sh 'goto:stairs-0-1;wait:2;at:4.4,-1.6,90,0;wait:5;walk:1,0,150;look:180,0;walk:1,0,50;look:-90,0;walk:1,0,190;wait:8;stats;quit' --no-audio > "${BUILD_DIR:-build}/nav.out" 2>&1; then
+# Reverse traversal starts in the upper hall too, exercising both doorways as
+# well as descending ground resolution.
+if tools/run.sh 'floor:1;wait:8;at:-9,-6.1,90,0;wait:3;walk:1,0,210;look:180,0;walk:1,0,55;look:-90,0;walk:1,0,210;wait:8;stats;quit' --no-audio > "${BUILD_DIR:-build}/nav.out" 2>&1; then
   got=$(grep -o " floor [0-9]*  exhibit errors" "${BUILD_DIR:-build}/run.log" | tail -1 | grep -o "floor [0-9]*" | grep -o '[0-9]*')
-  if [ "$got" = 0 ]; then echo "ok    stairs from floor 1 to 0"; else echo "FAIL  stairs from floor 1 to 0 arrived on floor ${got:-?}"; status=1; fi
+  visited=$(grep -o " visited [0-9]*  floor" "${BUILD_DIR:-build}/run.log" | tail -1 | grep -o '[0-9]*')
+  if [ "$got" = 0 ] && [ "${visited:-0}" -ge 3 ]; then echo "ok    stairs from floor 1 hall to floor 0 hall"; else echo "FAIL  stairs from floor 1 to 0 arrived on floor ${got:-?} after visiting ${visited:-?} cells"; status=1; fi
 else
   echo "FAIL stairs 1->0: the run failed"
   status=1
