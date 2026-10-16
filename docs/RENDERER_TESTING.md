@@ -42,15 +42,15 @@ where filtering makes an exact value meaningless. Rooms: geometry and coverage, 
 interpolation/lighting/fog, sampling, render targets, camera matrices, stock effects. The *Depth* room also reports (as
 information, not pass/fail) the smallest depth gap the renderer resolves at 100 m.
 
-Result on 2026-10-14 (CNA at the commit shown by `git -C ../cna log -1`; the SOFTWARE renderer is flagged Experimental
-by CNA):
+Result on 2026-10-14, with the FNA3D row refreshed on 2026-10-16 after CNA `cb52126f4`
+(CNA at the commit shown by `git -C ../cna log -1`; the SOFTWARE renderer is flagged Experimental by CNA):
 
 | Renderer | Checks | Pass | Fail | Info | Skip |
 |---|---|---|---|---|---|
 | OPENGLES3 | 85 | 84 | 0 | 1 | 0 |
 | OPENGL33 | 85 | 84 | 0 | 1 | 0 |
 | SOFTWARE | 85 | 84 | 0 | 1 | 0 |
-| FNA3D | 85 | 59 | 1 (`PunctualLightEXT` ignored) | 1 | 24 (half-float targets; 12 surface formats; their sampled twins) |
+| FNA3D | 86 | 62 | 0 | 1 | 23 (unsupported target/surface-format cases) |
 | WEBGPU | 85 | 63 | 0 | 1 | 21 (the same, fewer: it has Color, HalfVector4 and the float formats' targets) |
 | SDL_GPU | 85 | 84 | 0 | 1 | 0 |
 
@@ -71,13 +71,13 @@ Run `tools/renderer_check.sh` for the current figures; they are not copied anywh
 | OPENGLES3 | clean | - |
 | OPENGL33 | clean | 0.00 % of pixels differ by more than 15/255 |
 | SOFTWARE | clean (about 25 minutes for the whole museum under Xvfb) | 4.6 % |
-| FNA3D | clean, 0 exhibit errors (53 s) after two room fallbacks, below | 30 reference views: 22 within 1 %; `lights` 7.8 % (point and spot lights ignored), `pbr` 9.9 % (BasicEffect stand-in), `shader` 5.6 % (no custom shaders), `debugdraw` 4.6 %, `skinned-effect` 2.1 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
+| FNA3D | clean, 0 exhibit errors (106 s after punctual-light support) | Historical pre-fix 30-view result: 22 within 1 %; `lights` 7.8 % (point/spot support has since been fixed), `pbr` 9.9 % (BasicEffect stand-in), `shader` 5.6 % (no custom shaders), `debugdraw` 4.6 %, `skinned-effect` 2.1 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
 | WEBGPU | clean (125 s) | 30 reference views: 26 within 1 %; `debugdraw` 4.7 %, `matrices` 1.6 %, `deck` 1.1 %, `billboards` 1.0 % |
 | SDL_GPU | clean (307 s) | 30 reference views: all within 1 % |
 
 Windows build under Wine (MinGW cross build, 2026-10-15, 286 rooms): SOFTWARE `pressall` tour exits 0 with 0 exhibit errors in 1730 s (networking, avatars and video are not built into that tree, so 915 panel controls instead of 998).
 
-Latest (2026-10-16, 293 rooms): after CNA `d73f1aeab`, `tools/tour.sh -f 3 -p` on HEADLESS reaches final stats in 23 s, exits 0 and reports 0 exhibit errors. The preceding multi-renderer run exited 0 with 0 exhibit errors on FNA3D (53 s), WEBGPU (125 s) and SDL_GPU (307 s). STUB has no 3D pipeline and is reported as an incomplete tour (exit 4) rather than a pass. The OPENGLES3 nine-step `tools/check_all.sh` battery is green. ASan+UBSan on OPENGLES3 over all 293 rooms exits 0 with no report.
+Latest (2026-10-16, 293 rooms): after CNA `cb52126f4`, the FNA3D press-all tour reaches final stats in 106 s, exits 0 and reports 0 exhibit errors; its validation matrix is 62 pass, 0 fail, 1 info and 23 skip. After CNA `d73f1aeab`, the HEADLESS tour reaches final stats in 23 s with the same clean result. The preceding multi-renderer run exited 0 with 0 exhibit errors on WEBGPU (125 s) and SDL_GPU (307 s). STUB has no 3D pipeline and is reported as an incomplete tour (exit 4) rather than a pass. The OPENGLES3 nine-step `tools/check_all.sh` battery is green. ASan+UBSan on OPENGLES3 over all 293 rooms exits 0 with no report.
 
 Earlier (2026-10-14, 280 rooms, after the Online Service wing, Exceptions, Vertex Types, Compiled Effects and the other new rooms): `tools/tour.sh -f 3 -p` exits 0 with 0 exhibit errors on FNA3D (76 s), WEBGPU (133 s) and SDL_GPU (274 s) in the multi-renderer tree (renderer chosen with `CNA_GRAPHICS_RENDERER`); the OPENGLES3 battery (`tools/check_all.sh`) is green.
 
@@ -111,28 +111,27 @@ supplies the elements the chosen shader reads (all 32 BasicEffect shader buckets
 there), and `SetStringMarkerEXT` calls `D3DPERF_SetMarker` instead of throwing. The same tour now has **0 exhibit errors** over 286 rooms
 (72 s) and the `rv-effects` BasicEffect check passes. Two 2026-10-16 follow-ups gave Texture2D, cube and volume resources real native classic-format storage plus live per-resource D3D9 classifiers: `tex-formats` rendered Color, Bgr565, Bgra4444, Alpha8 and HalfVector4; `tex-volume` round-tripped Color, Single and Vector4 with exact boxed reads. The expanded graphics-profile test passed 27/27 and bit-checked every advertised cube and volume format, including compressed cube blocks (`d1a78ca32`, `6da0e4bce`). CNA `829861cd8` then removed the remaining exact-stride gates from DualTextureEffect, EnvironmentMapEffect and SkinnedEffect: explicit compatible declarations at strides 44, 48 and 68 render exactly, the focused Wine test passes 22/22, and the full museum press-all tour has 0 exhibit/draw errors. CNA `0de32e6ba` added unshadowed point/spot `PunctualLightEXT` to the PBR and skinned-PBR shaders; the focused WineD3D pixel test passes 12/12 and was mutation-verified. CNA `86d85198c` then added a CNA-owned SM3 BasicEffect variant selected only for an active point/spot light: the shared test passes 5/5 and its mutation check failed the two illuminated cases, the museum probe reads 255,255,255, and all `rv-effects` checks now pass. CNA `79c513885` completed the matching SkinnedEffect path; its public identity-bone test passes 5/5 and its mutation fails exactly the two illuminated cases. CNA `d3539f3fb` adds directional/cascaded, point-cube and spot shadow reception to all rigid/skinned Basic/PBR paths; the WineD3D pixel oracle passes 29/29 and forcing directional shadows off makes six checks fail. The rebuilt museum reaches `cx-shadow` with 0 exhibit errors, although that room's GLSL-only caster still cannot produce a map on DirectX9.
 
-## Every room against OPENGLES3 (`tools/room_diff.sh`, 2026-10-14)
+## Every room against OPENGLES3 (`tools/room_diff.sh`)
 
 Rooms whose arrival view differs from OPENGLES3's by more than 2 % of pixels (640 x 360, fixed clock and step):
 
 | Renderer | Rooms over 2 % | What they are |
 |---|---|---|
 | OPENGL33 | 1 of 256 | `rs-fill` (it can draw wireframe, OPENGLES3 cannot) |
-| SOFTWARE | 20 | Historical 2026-10-14 result: no shader dialect (`fx-*`, `cx-crt`), the then-current flat `PbrEffect`, `rs-fill`, `rs-depthbias`, `materials`, `cx-shadow`, `pf-dashboard`; and one museum bug the others had hidden. CNA `SOFTWARE-347` has since implemented PBR direct lighting, so the model-room part of this row is stale pending a fresh `room_diff.sh`. |
+| SOFTWARE | 16 of 293 | Fresh 2026-10-16 result: nine unsupported source-shader views (`fx-kernel`, `fx-plasma`, `fx-edge`, `cx-crt`, `fx-swirl`, `fx-halftone`, `tex-volshader`, `fx-vertexwave`, `fx-crt`), plus `rs-fill`, `rs-depthbias`, `materials` (animation phase), `au-video` (video frame), `cx-shadow` (GLSL-only caster), `pf-dashboard` (live numbers) and `cx-package`. No model/PBR/IBL room exceeds 2 %. |
 | SDL_GPU | 7 | `rs-depthbias` (z-fighting at zero bias resolves differently), `fx-plasma` and `fx-swirl` (floating-point trig in the shader), `rs-fill`, `cx-shadow`, `cx-package`, `pf-dashboard` (live numbers) |
 | WEBGPU | 28 | those, plus `tex-formats` (Bgr565, Bgra4444 and Alpha8 are not offered), `cx-debugdraw`, and about twenty `vec-*`, `mat-*`, `quat-*` rooms whose 1-pixel grid lines sit one pixel off (a rasterisation difference, not a bug) |
-| FNA3D | 42 | no custom shaders (`fx-*`, `cx-crt`, `cx-depth`...), no point or spot lights (`light-*`, `be-punctual`), PBR models drawn as a lit `BasicEffect`, `tex-formats`, wireframe and the same grid-line offset |
+| FNA3D | 42 | Historical pre-`cb52126f4` result: no custom shaders (`fx-*`, `cx-crt`, `cx-depth`...), point/spot lights (now fixed), PBR models drawn as a lit `BasicEffect`, `tex-formats`, wireframe and the same grid-line offset |
 
 After CNA `60019d629`, a focused SOFTWARE pressed tour of `model-pbr`, `model-skinned`,
 `model-instances`, `model-material`, `model-ibl`, `model-morph` and `model-variants` exited 0 with
-no exhibit errors. This verifies the consumer integration but does not replace the pending fresh
-all-room `room_diff.sh` measurement mentioned in the historical row above.
+no exhibit errors. The fresh all-room measurement above subsequently confirmed the visual closure.
 
 CNA `375c8927e` and `f74e0a8f7` subsequently implemented SOFTWARE shadow reception and split-sum
 IBL. Their deterministic CPU pixel oracles each pass 8/8, and the full SOFTWARE label passes
 194/194 (two expected shader-source skips). After rebuilding this two-renderer MinGW consumer, a
 SOFTWARE/Wine tour through `model-ibl`, `model-pbr` and `model-skinned` exercised every panel and
-finished with 0 exhibit errors. The fresh visual `room_diff.sh` measurement remains pending.
+finished with 0 exhibit errors. The fresh visual measurement above contains no model/PBR/IBL room.
 
 Repeated on 2026-10-14 evening over 284 rooms: OPENGL33 vs OPENGLES3 differed by more than 1 % only in `rs-fill` (wireframe); SOFTWARE vs OPENGLES3 differed by more than 8 % only in `model-instances` (24 %, caused by the old flat PBR fallback), `fx-kernel` and `fx-plasma`. The PBR difference is historical after CNA `SOFTWARE-347`; the shader-dialect boundary remains.
 
@@ -180,8 +179,10 @@ This pass found two real defects that the 30 stored views and the pixel checks h
 10. **CNA: the SOFTWARE renderer ignored `BasicEffect.PunctualLightEXT`** (point and spot lights): a lit sphere stayed black, and
     there is no capability flag to ask first, so the museum added `Rendering/Probes.cpp`, a one-off render test whose answer
     the light rooms print on their panels and the validation matrix counts. Fixed in CNA (`53aba6ef1`: EasyGL's falloff and
-    cone, no shadow map; shared example test). **FNA3D still ignores it** (its stock effects are compiled XNA binaries with no
-    point light; open, listed in `docs/KNOWN_ISSUES.md`), which is the one FAIL in the FNA3D row.
+    cone, no shadow map; shared example test). CNA `cb52126f4` closes FNA3D with a CNA-owned,
+    preshader-free compiled Effect selected only while the extension is active. BasicEffect and
+    identity-bone SkinnedEffect pixel witnesses each pass 5/5; ordinary draws retain Microsoft's
+    untouched stock bytecode.
 11. **CNA: WEBGPU applied the blend factor current at the flush to every queued 3D draw**, so a draw made with `Blend.BlendFactor` and
     followed by `BlendState.Opaque` (which resets the factor to white) came out opaque. Found by `room_diff` (the render-state room
     looked right on every other renderer), reproduced by a new validation check, fixed in CNA (`09c3108e5`: each queued draw carries
