@@ -9,7 +9,7 @@ given; anything unverified says so. Counts are not repeated below the first sect
 where every room demonstrates real CNA/XNA API with live controls. Branch `develop` of this repository. Related repositories (separate git repos, all under
 `/rv/data/development/github.com/libcna/`): `cna`, `sharp-runtime`, `xna4-decomp` (XNA docs XML), `xna4-spec`. Never create a second engine above CNA; CNA defects are fixed in CNA.
 
-**Numbers now** (run `build/bin/cna-3d-museum --validate`; generated docs carry them): 10 floors, 293 exhibit rooms, 368 walkable cells, 1,292 API names, `museum_tests` 8,406 checks.
+**Numbers now** (run `build/bin/cna-3d-museum --validate`; generated docs carry them): 10 floors, 293 exhibit rooms, 368 walkable cells, 1,292 API names, `museum_tests` 8,422 checks.
 
 **Rules that bind every session** (from `../CLAUDE.md` and the user): 
 - compile with **at most 2 CPU cores** (`JOBS=2`, `--parallel 2`, `ninja -j2`; lowered from 3 by the user on 2026-10-15: "pouzivej 2 cpu jadra na kompilaci max"); museum runs under Mesa keep `LP_NUM_THREADS=3`; do not run two heavy jobs together. To stop a stray build use `kill <pid>` (from `ps -eo pid,args | grep ninja`), never `pkill -f '...build-asan...'`: the pattern also matches the calling shell and kills it;
@@ -87,6 +87,7 @@ draws (757924d35: it broke `cx-shadow`). Earlier in the campaign: DirectX9 layou
 29. Every adjacent pair of floors now has a genuinely walkable switchback stair cell. The catalogue carries height-aware doors and a cross-floor door graph; maps show the stair shafts, halls sign the up/down doors, and the player follows the same analytic two-ramp/landing profile as the rendered treads. This also fixed a pre-existing collision defect: upper-floor colliders were tested against a hard-coded ground-floor body span and therefore did not block the visitor. Structural coverage now proves every one of the 368 cells is reachable on foot from the entrance, checks all nine stair height profiles and upper-storey collision, and passes 8,113/8,113. The expanded navigation test passed ten elevator destinations, all nine upward stair routes and a reverse descent; the 293-room press-all tour remained clean in 142 s, renderer checks stayed at 85 pass/0 fail/1 info, all 33 reference scenes pass after inspecting and intentionally refreshing the widened lobby, and the three-tour memory check retained 74 textures with 11 % peak growth (686 to 768 MB).
 30. The reported `vec-cross` "marble parallelogram z-fighting" is not present in the current implementation and was removed from the polish backlog. `DrawCross` draws only arrows and line segments; the marble stage has one top surface, so there is no coplanar pair. Fresh 960 x 540 OPENGLES3 and OPENGL33 reference-view images were both inspected and show a clean plinth. Their maximum channel difference is 16/255, with zero pixels over the visual-regression threshold of 24/255.
 31. Quick travel and scripted `goto` now place visitors 3.6 m inside exhibit rooms instead of 1.6 m, making far-wall screens materially larger at the ordinary arrival pose; circulation cells retain the shorter inset beside their exit door. All 293 room spawns have an exact structural assertion, bringing `museum_tests` to 8,406/8,406. The named reference views reduced their extra advance by the same 2 m, so all 33 established cameras still pass (32 at 0.00 %, `formats` at 0.03 %). A direct old/new 960 x 540 `rv-geometry` comparison was inspected: the validation screen is visibly larger and its rows can be read without first walking forward, while the room remains clear of furniture. The full 293-room press-all tour then exercised every new arrival pose in 149 s with 0 exhibit errors.
+32. The exact exception policy behind `MuseumWorld::Guard` is now shared with a device-free structural test instead of being duplicated. The test proves that a healthy hook runs, each failure updates the room/global counters and newest HUD error, the third failure disables the room, and later hooks are skipped; production still performs the render-target reset through the same handler when a device is present. All 8,422 checks pass, and a short OPENGLES3 `rv-geometry` run passed its seven render validations with 0 exhibit errors.
 
 **Open items and next steps, in priority order**
 1. The 2026-10-16 public-header/member audit is complete, including the previously open `NetworkMachine` and advanced `ContentReader` surfaces. Keep re-running it after CNA changes. Remaining class-name gaps are deliberate or hardware/service-bound: media library classes (deliberately not shown), and exceptions that cannot be provoked here (`NoAudioHardwareException`, `InstancePlayLimitException`, `DeviceLostException`; `Microphone.Default` does not throw here).
@@ -95,7 +96,7 @@ draws (757924d35: it broke `cx-shadow`). Earlier in the campaign: DirectX9 layou
 4. Mesa llvmpipe quirk worth knowing: a textured draw whose vertices all share one texture coordinate is black with a mip-mapped sampler on OPENGLES3/OPENGL33 (see KNOWN_ISSUES); rooms drawing models without UVs use `LinearClamp`.
 5. Never stop at "nothing left": run another audit (headers, CNA examples/tests/docs), another multi-renderer tour after any CNA change by other sessions (they changed stock-effect validation twice this stretch), and the full `tools/check_all.sh`.
 
-**Current report numbers**: floors 10, rooms 293, walkable cells 368, API names 1,292, museum_tests 8,406 checks; renderers exercised: OPENGLES3, OPENGL33, SOFTWARE, FNA3D, WEBGPU, SDL_GPU, HEADLESS, STUB (startup refusal), DIRECTX9 and SOFTWARE under Wine.
+**Current report numbers**: floors 10, rooms 293, walkable cells 368, API names 1,292, museum_tests 8,422 checks; renderers exercised: OPENGLES3, OPENGL33, SOFTWARE, FNA3D, WEBGPU, SDL_GPU, HEADLESS, STUB (startup refusal), DIRECTX9 and SOFTWARE under Wine.
 
 ## State (checked 2026-10-13, extended 2026-10-14 and 2026-10-15)
 
@@ -276,7 +277,7 @@ texture is bound (`RenderStates::UnbindTextures`).
    2026-10-15, `d3f1a9e51`: 0 exhibit errors under Wine). REMED-GFX-137 row orientation is fixed across upload/readback, EnvironmentMapEffect, PBR IBL and opt-in source shaders; only the separate GLES cube-edge filtering seam remains.
 3. **Outdoors**: floor 0 has the lawn and forecourt (they darken with the museum clock); the observation deck is on floor 9.
    More outdoor rooms (courtyard, sculpture park, fountain plaza) and exterior lamps are not done.
-4. More tests: a unit test for `MuseumWorld::Guard` (needs a device), a leak check over the multi-renderer tours.
+4. More tests: a leak check over the multi-renderer tours.
 
 ## Intentionally not implemented
 

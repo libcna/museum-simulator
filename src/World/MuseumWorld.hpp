@@ -1,5 +1,6 @@
 #pragma once
 
+#include <exception>
 #include <memory>
 #include <optional>
 #include <string>
@@ -58,6 +59,27 @@ struct WorldStats {
     int controlsSeen = 0;          // sliders, toggles, choices and buttons on control panels, plus plain interactables
     int roomsLoadedEver = 0;       // distinct cells that have been loaded at least once
     int exhibitErrors = 0;         // exceptions caught from exhibit hooks (a room that throws does not take the museum down)
+};
+
+/** Exact exception policy used around every exhibit hook, split out so it can be unit-tested without a window. */
+class ExhibitHookGuard {
+public:
+    template <typename Fn>
+    static void Run(RoomInstance& inst, const RoomDef& room, WorldStats& stats, std::string& newestError,
+                    Microsoft::Xna::Framework::Graphics::GraphicsDevice* device, const char* hook, Fn&& fn)
+    {
+        if (inst.disabled) return;
+        try {
+            fn();
+        } catch (const std::exception& e) {
+            HandleFailure(inst, room, stats, newestError, device, hook, e);
+        }
+    }
+
+private:
+    static void HandleFailure(RoomInstance& inst, const RoomDef& room, WorldStats& stats, std::string& newestError,
+                              Microsoft::Xna::Framework::Graphics::GraphicsDevice* device, const char* hook,
+                              const std::exception& error);
 };
 
 /**

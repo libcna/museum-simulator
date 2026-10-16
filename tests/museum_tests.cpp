@@ -6,6 +6,7 @@
 #include <sstream>
 #include <queue>
 #include <set>
+#include <stdexcept>
 #include <string>
 
 #include "Catalogue/CatalogueBuilder.hpp"
@@ -15,6 +16,7 @@
 #include "Exhibits/Shaders/ShaderSources.hpp"
 #include "World/Catalogue.hpp"
 #include "World/CollisionWorld.hpp"
+#include "World/MuseumWorld.hpp"
 
 using Microsoft::Xna::Framework::BoundingBox;
 using Microsoft::Xna::Framework::Vector3;
@@ -216,6 +218,36 @@ void TestCollisionUsesFloorHeight()
     Check(stopped.X < -1.4f, "upper-floor movement cannot pass through its wall");
 }
 
+void TestExhibitHookGuard()
+{
+    RoomInstance inst;
+    RoomDef room;
+    room.key = "guard-test";
+    WorldStats stats;
+    std::string newestError;
+    int calls = 0;
+
+    ExhibitHookGuard::Run(inst, room, stats, newestError, nullptr, "Update", [&] { ++calls; });
+    Check(calls == 1, "a healthy exhibit hook runs");
+    Check(inst.failures == 0 && stats.exhibitErrors == 0, "a healthy exhibit hook changes no error counters");
+
+    for (int failure = 1; failure <= 3; ++failure) {
+        ExhibitHookGuard::Run(inst, room, stats, newestError, nullptr, "Update", [&] {
+            ++calls;
+            throw std::runtime_error("synthetic failure " + std::to_string(failure));
+        });
+        Check(inst.failures == failure, "the guard counts exhibit failure " + std::to_string(failure));
+        Check(stats.exhibitErrors == failure, "the guard counts global exhibit error " + std::to_string(failure));
+        Check(newestError == "guard-test: synthetic failure " + std::to_string(failure),
+              "the guard publishes exhibit error " + std::to_string(failure));
+        Check(inst.disabled == (failure == 3), "the guard disables the room exactly on failure " + std::to_string(failure));
+    }
+
+    ExhibitHookGuard::Run(inst, room, stats, newestError, nullptr, "Update", [&] { ++calls; });
+    Check(calls == 4, "a disabled exhibit hook is skipped");
+    Check(inst.failures == 3 && stats.exhibitErrors == 3, "a skipped exhibit hook changes no counters");
+}
+
 void TestReferenceViews(const MuseumPlan& m)
 {
     std::set<std::string> names;
@@ -278,6 +310,7 @@ int main()
     TestInventory(m);
     TestEveryFloorIsConnected(m);
     TestCollisionUsesFloorHeight();
+    TestExhibitHookGuard();
     TestReferenceViews(m);
     TestGeneratedDocumentsMentionEveryRoom(m);
     TestToursPointAtRealRooms(m);

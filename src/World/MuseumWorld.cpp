@@ -79,21 +79,24 @@ InteractionSystem* MuseumWorld::CurrentInteraction()
 template <typename Fn>
 void MuseumWorld::Guard(RoomInstance& inst, const char* hook, Fn&& fn)
 {
-    if (inst.disabled) return;
+    ExhibitHookGuard::Run(inst, museum_.Room(inst.index), stats_, exhibitError_, services_.device, hook,
+                          std::forward<Fn>(fn));
+}
+
+void ExhibitHookGuard::HandleFailure(RoomInstance& inst, const RoomDef& room, WorldStats& stats,
+                                     std::string& newestError, GraphicsDevice* device, const char* hook,
+                                     const std::exception& error)
+{
+    ++inst.failures;
+    ++stats.exhibitErrors;
+    Museum::Log("exhibit-error", "%s %s threw: %s%s", room.key.c_str(), hook, error.what(),
+                inst.failures >= 3 ? " (room switched off)" : "");
+    newestError = room.key + ": " + error.what();
+    if (inst.failures >= 3) inst.disabled = true;
+    // A hook that threw may have left a render target bound; the frame goes on drawing to the back buffer.
     try {
-        fn();
-    } catch (const std::exception& e) {
-        ++inst.failures;
-        ++stats_.exhibitErrors;
-        const std::string& key = museum_.Room(inst.index).key;
-        Museum::Log("exhibit-error", "%s %s threw: %s%s", key.c_str(), hook, e.what(), inst.failures >= 3 ? " (room switched off)" : "");
-        exhibitError_ = key + ": " + e.what();
-        if (inst.failures >= 3) inst.disabled = true;
-        // A hook that threw may have left a render target bound; the frame goes on drawing to the back buffer.
-        try {
-            if (services_.device != nullptr) services_.device->SetRenderTarget(nullptr);
-        } catch (const std::exception&) {
-        }
+        if (device != nullptr) device->SetRenderTarget(nullptr);
+    } catch (const std::exception&) {
     }
 }
 
