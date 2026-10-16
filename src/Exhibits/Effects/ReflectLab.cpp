@@ -119,6 +119,22 @@ protected:
     }
 
 private:
+    // CNA's stock SkinnedEffect exposes its 72 Bones matrices through the array getters, but its
+    // hand-built reflection metadata predates the compiled-effect Elements collection and records
+    // the array length in RowCount instead. Keep the room honest on both representations: compiled
+    // effects use Elements.Count, while the stock Bones parameter is the sole matrix whose row
+    // count is larger than a matrix can be.
+    static int ArrayCount(const EffectParameter& p)
+    {
+        const int reflected = p.getElementsProperty().getCountProperty();
+        if (reflected > 0) return reflected;
+        if (p.getParameterTypeProperty() == EffectParameterType::Single &&
+            p.getParameterClassProperty() == EffectParameterClass::Matrix &&
+            p.getRowCountProperty() > 4 && p.getColumnCountProperty() == 4)
+            return p.getRowCountProperty();
+        return 0;
+    }
+
     void Select(int i)
     {
         index_ = std::clamp(i, 0, 5);
@@ -152,11 +168,11 @@ private:
         try {
             const int rows = p.getRowCountProperty(), cols = p.getColumnCountProperty();
             // An array parameter has its own getters, one per element type (and a transposed form for matrices).
-            const int elementCount = p.getElementsProperty().getCountProperty();
+            const int elementCount = ArrayCount(p);
             if (elementCount > 0 && p.getParameterTypeProperty() == EffectParameterType::Single) {
-                if (p.getParameterClassProperty() == EffectParameterClass::Matrix && rows == 4 && cols == 4) {
+                if (p.getParameterClassProperty() == EffectParameterClass::Matrix && cols == 4) {
                     const Matrix first = p.GetValueMatrixArray(elementCount)[0], transposed = p.GetValueMatrixTransposeArray(elementCount)[0];
-                    std::snprintf(b, sizeof b, "Matrix[%d]: [0].M41 %.2f, transposed M14 %.2f", elementCount, static_cast<double>(first.M41), static_cast<double>(transposed.M14));
+                    std::snprintf(b, sizeof b, "M[%d]: M41 %.2f / T.M14 %.2f", elementCount, static_cast<double>(first.M41), static_cast<double>(transposed.M14));
                     return b;
                 }
                 if (p.getParameterClassProperty() == EffectParameterClass::Scalar) { std::snprintf(b, sizeof b, "float[%d]: [0] = %.2f", elementCount, static_cast<double>(p.GetValueSingleArray(elementCount)[0])); return b; }
@@ -173,7 +189,7 @@ private:
                     if (p.getParameterClassProperty() == EffectParameterClass::Matrix && rows == 4 && cols == 4) {
                         const Matrix m = p.GetValueMatrix();
                         const Matrix t = p.GetValueMatrixTranspose();
-                        std::snprintf(b, sizeof b, "Matrix, M11 %.2f M44 %.2f, transposed M41 %.2f", static_cast<double>(m.M11), static_cast<double>(m.M44), static_cast<double>(t.M41));
+                        std::snprintf(b, sizeof b, "M11 %.2f M44 %.2f / T.M41 %.2f", static_cast<double>(m.M11), static_cast<double>(m.M44), static_cast<double>(t.M41));
                         return b;
                     }
                     if (p.getParameterClassProperty() == EffectParameterClass::Vector && cols == 2) { const Vector2 v = p.GetValueVector2(); std::snprintf(b, sizeof b, "(%.2f, %.2f)", static_cast<double>(v.X), static_cast<double>(v.Y)); return b; }
@@ -197,12 +213,15 @@ private:
             EffectParameter* p = params[i];
             if (p == nullptr) continue;
             char size[24];
-            std::snprintf(size, sizeof size, "%d x %d", p->getRowCountProperty(), p->getColumnCountProperty());
+            const int arrayCount = ArrayCount(*p);
+            if (arrayCount > 0 && p->getParameterClassProperty() == EffectParameterClass::Matrix)
+                std::snprintf(size, sizeof size, "4 x %d [%d]", p->getColumnCountProperty(), arrayCount);
+            else
+                std::snprintf(size, sizeof size, "%d x %d", p->getRowCountProperty(), p->getColumnCountProperty());
             std::string extra = p->getSemanticProperty();
             const int ann = p->getAnnotationsProperty().getCountProperty();
             if (ann > 0) extra += (extra.empty() ? "" : ", ") + std::to_string(ann) + " annotations";
-            const int elements = p->getElementsProperty().getCountProperty();
-            if (elements > 0) extra += (extra.empty() ? "" : ", ") + std::to_string(elements) + " elements";
+            if (arrayCount > 0) extra += (extra.empty() ? "" : ", ") + std::to_string(arrayCount) + " elements";
             rows_.push_back({p->getNameProperty(), ClassName(p->getParameterClassProperty()), TypeName(p->getParameterTypeProperty()), size,
                              ValueText(*p), extra.empty() ? "-" : extra});
         }

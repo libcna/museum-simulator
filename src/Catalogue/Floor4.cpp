@@ -108,7 +108,7 @@ WingSpec BasicEffectWing()
             RoomSpec r = fx("be-model", "The Effect Object Model", "Parameters (class, type, size, annotations), techniques and passes of six stock effects, the IEffect interfaces and Effect.Clone", "",
                             {"Effect", "EffectParameter", "EffectParameterClass", "EffectParameterType", "EffectParameterCollection", "EffectAnnotation", "EffectTechnique", "EffectPass",
                              "IEffectMatrices", "IEffectLights", "IEffectFog", "Effect.Clone", "SpriteEffect", "SkinnedEffect",
-                             "EffectParameter.GetValueBoolean", "EffectParameter.GetValueInt32", "EffectParameter.GetValueString", "EffectParameter.GetValueMatrix", "EffectParameter.GetValueVector3", "EffectParameter.GetValueVector4", "EffectParameter.GetValueTexture2D", "EffectParameter.GetValueTextureCube"});
+                             "EffectParameter.GetValueBoolean", "EffectParameter.GetValueInt32", "EffectParameter.GetValueString", "EffectParameter.GetValueMatrix", "EffectParameter.GetValueMatrixArray", "EffectParameter.GetValueMatrixTranspose", "EffectParameter.GetValueMatrixTransposeArray", "EffectParameter.GetValueVector3", "EffectParameter.GetValueVector4", "EffectParameter.GetValueTexture2D", "EffectParameter.GetValueTextureCube"});
             r.exhibit = "reflect-lab";
             return r;
         }(),

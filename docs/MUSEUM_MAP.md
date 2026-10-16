@@ -257,7 +257,7 @@ BasicEffect, the stock effects, lighting and custom shaders
 | 4.1.06 | `be-alpha` | Alpha and Sorting | XNA 4.0 | BasicEffect.Alpha, BlendState.NonPremultiplied, DepthStencilState.DepthRead |
 | 4.1.07 | `be-punctual` | Point and Spot Lights | CNA extension | PunctualLightEXT, BasicEffect.setPunctualLightEXT |
 | 4.1.08 | `be-dual` | DualTextureEffect | XNA 4.0 | DualTextureEffect, DualTextureEffect.Texture2 |
-| 4.1.09 | `be-model` | The Effect Object Model | XNA 4.0 | Effect, EffectParameter, EffectParameterClass, EffectParameterType, EffectParameterCollection, EffectAnnotation, EffectTechnique, EffectPass, IEffectMatrices, IEffectLights, IEffectFog, Effect.Clone, SpriteEffect, SkinnedEffect, EffectParameter.GetValueBoolean, EffectParameter.GetValueInt32, EffectParameter.GetValueString, EffectParameter.GetValueMatrix, EffectParameter.GetValueVector3, EffectParameter.GetValueVector4, EffectParameter.GetValueTexture2D, EffectParameter.GetValueTextureCube |
+| 4.1.09 | `be-model` | The Effect Object Model | XNA 4.0 | Effect, EffectParameter, EffectParameterClass, EffectParameterType, EffectParameterCollection, EffectAnnotation, EffectTechnique, EffectPass, IEffectMatrices, IEffectLights, IEffectFog, Effect.Clone, SpriteEffect, SkinnedEffect, EffectParameter.GetValueBoolean, EffectParameter.GetValueInt32, EffectParameter.GetValueString, EffectParameter.GetValueMatrix, EffectParameter.GetValueMatrixArray, EffectParameter.GetValueMatrixTranspose, EffectParameter.GetValueMatrixTransposeArray, EffectParameter.GetValueVector3, EffectParameter.GetValueVector4, EffectParameter.GetValueTexture2D, EffectParameter.GetValueTextureCube |
 
 **Lighting Laboratory** - Directional, point and spot lights, attenuation, colour, many lights, flashlight, emissive
 
