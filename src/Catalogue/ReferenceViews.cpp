@@ -7,6 +7,8 @@ const std::vector<ReferenceView>& ReferenceViews()
     constexpr float kExhibitAdvance = 1.0f;
     static const std::vector<ReferenceView> views = {
         {"lobby", "hub-0", 0.0f, "the entrance hall: glass wall, rug, kiosk, floor plan"},
+        {"sculpture-garden", "grounds-sculpture", kExhibitAdvance, "open-air kinetic sculptures and exterior lamps"},
+        {"fountain-plaza", "grounds-fountain", kExhibitAdvance, "particle fountain, trees and wind-blown leaves"},
         {"vectors", "vec-cross", kExhibitAdvance, "Vector3 cross product with arrows and labels"},
         {"matrices", "mat-perspective", kExhibitAdvance, "projection matrix and view frustum"},
         {"collision", "col-ray-box", kExhibitAdvance, "ray against bounding box intersection"},

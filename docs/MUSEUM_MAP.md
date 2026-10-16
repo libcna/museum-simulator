@@ -39,7 +39,7 @@ catalogue by `tools/gen_docs.sh`; the plan below (hand-written) explains the sha
 ## The rooms
 
 <!-- BEGIN MAP -->
-10 floors, 36 wings, 293 exhibit rooms (5 open to the sky), 368 walkable cells in all.
+10 floors, 36 wings, 295 exhibit rooms (7 open to the sky), 370 walkable cells in all.
 
 ### Floor 0: Lobby and Introductory Tour
 
@@ -54,6 +54,8 @@ Start here: a first look at what CNA can do
 | 0.1.03 | `materials` | Materials & Textures | XNA 4.0 | Texture2D, SamplerState, SamplerStateCollection |
 | 0.1.04 | `lighting` | Lighting Room | XNA 4.0 | BasicEffect, DirectionalLight, EnableDefaultLighting, PreferPerPixelLighting |
 | 0.1.05 | `sky` | Sky Courtyard | XNA 4.0 | DynamicVertexBuffer, BlendState, DepthStencilState |
+| 0.1.06 | `grounds-sculpture` | Sculpture Garden | XNA 4.0 | BasicEffect.World, BasicEffect.EmissiveColor, Matrix.CreateRotationY, Matrix.CreateScale |
+| 0.1.07 | `grounds-fountain` | Fountain Plaza | XNA 4.0 | DynamicVertexBuffer, BlendState.NonPremultiplied, Texture2D, SoundEffectInstance |
 
 **Showcases** - Render state, render targets, particles, animation and audio
 

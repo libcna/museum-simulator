@@ -1,5 +1,5 @@
-// The observation deck: four open-air rooms under the museum's sky. They use the museum clock (TimeOfDay: sun,
-// moon, daylight, ambient), a particle fountain and drifting leaves, a telescope that renders the sky and a distant
+// Open-air exhibits under the museum's sky. They use the museum clock (TimeOfDay: sun, moon, daylight, ambient),
+// animated sculptures, a particle fountain and drifting leaves, a telescope that renders the sky and a distant
 // skyline through a narrow field of view into a render target, and a weather station with rain and snow.
 #include <algorithm>
 #include <cmath>
@@ -30,11 +30,12 @@ using namespace Microsoft::Xna::Framework::Graphics;
 
 namespace {
 
-enum class Mode { Deck, Garden, Telescope, Weather };
+enum class Mode { Deck, Garden, Sculpture, Telescope, Weather };
 
 Mode ParseMode(const std::string& s)
 {
-    static const std::pair<const char*, Mode> table[] = {{"garden", Mode::Garden}, {"telescope", Mode::Telescope}, {"weather", Mode::Weather}};
+    static const std::pair<const char*, Mode> table[] = {
+        {"garden", Mode::Garden}, {"sculpture", Mode::Sculpture}, {"telescope", Mode::Telescope}, {"weather", Mode::Weather}};
     for (const auto& [name, mode] : table)
         if (s == name) return mode;
     return Mode::Deck;
@@ -78,6 +79,12 @@ public:
                 p.AddReadout("Water particles", [this] { return std::to_string(water_ ? water_->Size() : 0); });
                 p.AddReadout("Leaves", [this] { return std::to_string(leaves_ ? leaves_->Size() : 0); });
                 break;
+            case Mode::Sculpture:
+                p.AddSlider("Rotation speed", -2.0f, 2.0f, sculptureSpeed_, [this](float v) { sculptureSpeed_ = v; }, "%.2f");
+                p.AddChoice("Finish", {"Bronze", "Marble", "Painted"}, 0, [this](int v) { sculptureFinish_ = v; });
+                p.AddToggle("Rotate sculptures", true, [this](bool v) { sculpturesRotate_ = v; });
+                p.AddReadout("Garden lamps", [this] { return S().timeOfDay->Daylight() < 0.35f ? std::string("on") : std::string("off until dusk"); });
+                break;
             case Mode::Telescope:
                 p.AddSlider("Heading (degrees)", 0.0f, 360.0f, heading_, [this](float v) { heading_ = v; }, "%.0f", 1.0f);
                 p.AddSlider("Elevation (degrees)", -10.0f, 80.0f, elevation_, [this](float v) { elevation_ = v; }, "%.0f", 1.0f);
@@ -107,14 +114,14 @@ public:
             b.AddBox(Vector3(-5.2f, 0.0f, -1.4f), Vector3(-4.5f, 1.0f, 1.4f), "hedge", 1.0f, Vector3(1, 1, 1));
             b.AddBox(Vector3(4.5f, 0.0f, -1.4f), Vector3(5.2f, 1.0f, 1.4f), "hedge", 1.0f, Vector3(1, 1, 1));
         }
-        if (mode_ == Mode::Deck) {
-            for (int i = 0; i < 4; ++i) {
-                const float x = (i % 2 == 0 ? -1.0f : 1.0f) * 5.2f, z = (i < 2 ? -1.0f : 1.0f) * 5.2f;
-                b.Meshes().Opaque("metal").AddCylinder(b.World(x, 0.0f, z), 0.07f, 2.8f, 8, 1.0f, Vector3(0.25f, 0.27f, 0.3f), true);
-                b.AddCollider(BoundingBox(b.World(x - 0.1f, 0, z - 0.1f), b.World(x + 0.1f, 2.8f, z + 0.1f)));
-                lamps_.push_back(R().ToWorld(x, 2.95f, z));
-            }
+        if (mode_ == Mode::Sculpture) {
+            sculptureBases_.push_back(b.AddPedestal(-3.4f, -2.5f, 2.2f, 0.55f, "stone"));
+            sculptureBases_.push_back(b.AddPedestal(3.4f, -2.5f, 2.2f, 0.55f, "stone"));
+            sculptureBases_.push_back(b.AddPedestal(0.0f, 0.6f, 2.2f, 0.55f, "stone"));
+            b.AddBox(Vector3(-6.8f, 0.0f, -0.7f), Vector3(-6.2f, 1.0f, 3.8f), "hedge", 1.0f, Vector3(1, 1, 1));
+            b.AddBox(Vector3(6.2f, 0.0f, -0.7f), Vector3(6.8f, 1.0f, 3.8f), "hedge", 1.0f, Vector3(1, 1, 1));
         }
+        if (mode_ == Mode::Deck || mode_ == Mode::Garden || mode_ == Mode::Sculpture) AddLampPosts(b);
         if (mode_ == Mode::Telescope) {
             telescopeBase_ = b.AddPedestal(0.0f, 0.0f, 0.5f, 1.2f, "metal");
         }
@@ -157,7 +164,8 @@ public:
     void Update(const UpdateContext& ctx) override
     {
         if (!ctx.nearby) return;
-        time_ += ctx.dt;
+        if (mode_ != Mode::Sculpture) time_ += ctx.dt;
+        else if (sculpturesRotate_) time_ += ctx.dt * sculptureSpeed_;
         const float dt = std::min(ctx.dt, 0.05f);
         if (mode_ == Mode::Garden) StepGarden(dt);
         if (mode_ == Mode::Weather) StepWeather(dt);
@@ -179,7 +187,14 @@ public:
     void DrawExtra(const DrawContext& ctx) override
     {
         if (mode_ == Mode::Deck) DrawDeck(ctx);
-        if (mode_ == Mode::Garden) DrawGarden(ctx);
+        if (mode_ == Mode::Garden) {
+            DrawGarden(ctx);
+            DrawLamps(ctx);
+        }
+        if (mode_ == Mode::Sculpture) {
+            DrawSculptures(ctx);
+            DrawLamps(ctx);
+        }
         if (mode_ == Mode::Telescope) DrawTelescope(ctx);
         if (mode_ == Mode::Weather) DrawWeather(ctx);
     }
@@ -223,6 +238,11 @@ protected:
                 text("Water: " + std::to_string(water_ ? water_->Size() : 0) + " particles under gravity, killed on the basin floor", 30, 130, Kit::kText, 0.7f);
                 text("Leaves: " + std::to_string(leaves_ ? leaves_->Size() : 0) + " particles pushed sideways by the wind and spun", 30, 165, Kit::kText, 0.7f);
                 text("Both systems are drawn together as camera-facing quads in one call.", 30, 215, Kit::kDim, 0.65f);
+            } else if (mode_ == Mode::Sculpture) {
+                static const char* finishes[] = {"bronze", "marble", "painted"};
+                text(std::string("Three sculptures, finish: ") + finishes[sculptureFinish_], 30, 90, Kit::kText, 0.8f);
+                text("Their world matrices combine scale, local animation, the room frame and a pedestal translation.", 30, 135, Kit::kText, 0.7f);
+                text("The four exterior lamps share the museum clock and become emissive after dusk.", 30, 175, Kit::kDim, 0.65f);
             } else {
                 const char* names[] = {"Clear", "Rain", "Snow", "Storm"};
                 text(std::string("Conditions: ") + names[weather_] + ", wind " + Num(static_cast<double>(wind_)) + " m/s, intensity " + Num(static_cast<double>(intensity_), "%.2f"), 30, 90, Kit::kText, 0.8f);
@@ -239,7 +259,7 @@ private:
 
     [[nodiscard]] std::string Title() const
     {
-        static const char* t[] = {"Sun, moon and the museum clock", "Terrace garden", "Telescope", "Weather station"};
+        static const char* t[] = {"Sun, moon and the museum clock", "Terrace garden", "Sculpture garden", "Telescope", "Weather station"};
         return t[static_cast<int>(mode_)];
     }
     [[nodiscard]] std::vector<std::string> Explanation() const
@@ -247,6 +267,7 @@ private:
         switch (mode_) {
             case Mode::Deck: return {"TimeOfDay is the museum's clock: it turns the hour into a sun direction, daylight and ambient colours that", "light the sky, the window views and these lamps, which come on at dusk. Move the slider or press T and Y anywhere."};
             case Mode::Garden: return {"A fountain and drifting leaves are two ParticleSystems drawn by one ParticleRenderer: camera-facing quads in a", "DynamicVertexBuffer. The wind pushes the leaves sideways; the water falls back into the basin and dies on its floor."};
+            case Mode::Sculpture: return {"Three animated sculptures combine primitive meshes with world matrices and material colours; each sits on a", "collidable stone plinth. The garden lamps become emissive when the shared museum clock reaches dusk."};
             case Mode::Telescope: return {"The telescope renders the real sky dome and a far skyline into a render target through a very narrow field of", "view: a small FOV is magnification. Aim it at the sun or the moon, then zoom in."};
             default: return {"Rain is one line per drop in a dynamic vertex buffer, snow and splashes are particles, lightning flashes the", "screen. Intensity and wind change the count and the slant; the sky and lamps keep following the museum clock."};
         }
@@ -295,7 +316,6 @@ private:
     }
     void DrawDeck(const DrawContext& ctx)
     {
-        const bool night = S().timeOfDay->Daylight() < 0.35f;
         const Vector3 c = R().centre;
         // Compass rose on the floor: N is -Z of the museum.
         const Vector3 o = c + Vector3(0, 0.03f, 0);
@@ -313,7 +333,26 @@ private:
         gizmos_.Arrow(c + Vector3(0, 1.4f, 0), c + Vector3(0, 1.4f, 0) + sun * 2.2f, Color(255, 220, 90, 255));
         gizmos_.Label(c + Vector3(0, 1.4f, 0) + sun * 2.5f, sun.Y > 0 ? "sun" : "sun (below the horizon)", Color(255, 230, 140, 255), 0.55f);
         gizmos_.Flush(ctx);
-        // Lamps: a glowing head that comes on after dusk.
+        DrawLamps(ctx);
+    }
+
+    void AddLampPosts(RoomBuilder& b)
+    {
+        const float x = R().halfW - 2.3f, z = R().halfD - 2.3f;
+        for (int i = 0; i < 4; ++i) {
+            const float lx = (i % 2 == 0 ? -1.0f : 1.0f) * x;
+            const float lz = (i < 2 ? -1.0f : 1.0f) * z;
+            b.Meshes().Opaque("metal").AddCylinder(b.World(lx, 0.0f, lz), 0.07f, 2.8f, 8, 1.0f,
+                                                    Vector3(0.25f, 0.27f, 0.3f), true);
+            b.AddCollider(BoundingBox(b.World(lx - 0.1f, 0, lz - 0.1f), b.World(lx + 0.1f, 2.8f, lz + 0.1f)));
+            lamps_.push_back(R().ToWorld(lx, 2.95f, lz));
+        }
+    }
+
+    void DrawLamps(const DrawContext& ctx)
+    {
+        // A glowing head that comes on after dusk.
+        const bool night = S().timeOfDay->Daylight() < 0.35f;
         RenderStates::SetOpaque3D(ctx.device);
         for (const Vector3& p : lamps_) {
             BasicEffect& fx = ctx.fx.BeginLit(nullptr);
@@ -326,6 +365,46 @@ private:
             S().shapes->Sphere().Draw(ctx.device);
             fx.setEmissiveColorProperty(Vector3(0, 0, 0));
         }
+    }
+
+    void DrawSculptures(const DrawContext& ctx)
+    {
+        if (sculptureBases_.size() != 3) return;
+        static const Vector3 palettes[3][3] = {
+            {{0.55f, 0.32f, 0.12f}, {0.75f, 0.48f, 0.18f}, {0.42f, 0.24f, 0.10f}},
+            {{0.86f, 0.86f, 0.82f}, {0.70f, 0.74f, 0.78f}, {0.94f, 0.91f, 0.84f}},
+            {{0.88f, 0.22f, 0.16f}, {0.18f, 0.48f, 0.88f}, {0.95f, 0.72f, 0.12f}},
+        };
+        const Vector3* colours = palettes[sculptureFinish_];
+        const Matrix roomFrame = Matrix::CreateRotationY(R().frameYaw);
+        const auto draw = [&](const LitMesh& mesh, const Matrix& world, const Vector3& colour) {
+            BasicEffect& fx = ctx.fx.BeginLit(S().textures->White());
+            fx.setWorldProperty(world);
+            fx.setViewProperty(ctx.view.view);
+            fx.setProjectionProperty(ctx.view.projection);
+            fx.setDiffuseColorProperty(colour);
+            fx.setAmbientLightColorProperty(Vector3(0.42f, 0.42f, 0.46f));
+            fx.setEmissiveColorProperty(colour * 0.12f);
+            EffectBank::Apply(fx);
+            mesh.Draw(ctx.device);
+        };
+        RenderStates::SetOpaque3D(ctx.device);
+
+        const float spin = time_;
+        for (int level = 0; level < 4; ++level) {
+            const float y = 0.32f + static_cast<float>(level) * 0.55f;
+            draw(S().shapes->Cube(), Matrix::CreateScale(1.25f, 0.32f, 0.42f) *
+                                             Matrix::CreateRotationY(spin + static_cast<float>(level) * 0.72f) * roomFrame *
+                                             Matrix::CreateTranslation(sculptureBases_[0] + Vector3(0, y, 0)), colours[0]);
+        }
+        draw(S().shapes->Sphere(), Matrix::CreateScale(1.75f, 0.55f, 1.75f) * Matrix::CreateRotationY(-spin * 0.7f) * roomFrame *
+                                         Matrix::CreateTranslation(sculptureBases_[1] + Vector3(0, 1.15f, 0)), colours[1]);
+        draw(S().shapes->Sphere(), Matrix::CreateScale(0.65f) *
+                                         Matrix::CreateTranslation(sculptureBases_[1] + R().Rotate(Vector3(std::cos(spin) * 1.25f, 2.05f,
+                                                                                                        std::sin(spin) * 1.25f))), colours[2]);
+        draw(S().shapes->Cone(), Matrix::CreateScale(1.25f, 2.55f, 1.25f) * Matrix::CreateRotationY(spin * 0.45f) * roomFrame *
+                                       Matrix::CreateTranslation(sculptureBases_[2]), colours[2]);
+        draw(S().shapes->Sphere(), Matrix::CreateScale(0.68f) * Matrix::CreateTranslation(sculptureBases_[2] + Vector3(0, 2.55f, 0)), colours[0]);
     }
 
     // --- garden -------------------------------------------------------------------------------------
@@ -522,6 +601,11 @@ private:
     Gizmos gizmos_;
     float time_ = 0.0f;
     std::vector<Vector3> lamps_;
+    // sculpture garden
+    std::vector<Vector3> sculptureBases_;
+    float sculptureSpeed_ = 0.55f;
+    int sculptureFinish_ = 0;
+    bool sculpturesRotate_ = true;
     // garden
     std::unique_ptr<ParticleSystem> water_, leaves_, snow_, splashes_;
     std::unique_ptr<ParticleRenderer> renderer_;

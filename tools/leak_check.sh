@@ -23,7 +23,7 @@ run() {   # run RENDERER N TAG -> prints "peak_kb textures exhibit_errors"
     echo "leak check $tag run $tours failed before comparison (log: $log)" >&2
     return 1
   fi
-  read -r peak textures < <(awk '
+  read -r peak textures errors < <(awk '
     /\[museum\]\[stats\]/ {
       for (i = 1; i <= NF; ++i) {
         if ($i == "textures") textures = $(i + 1)

@@ -39,6 +39,12 @@ FloorSpec MakeFloor0()
         {.key = "sky", .title = "Sky Courtyard", .subtitle = "A sky dome, day-night cycle and directional sunlight",
          .exhibit = "sky", .width = 16, .depth = 16, .height = 4.6f, .theme = "courtyard",
          .apis = {"DynamicVertexBuffer", "BlendState", "DepthStencilState"}, .openRoof = true},
+        {.key = "grounds-sculpture", .title = "Sculpture Garden", .subtitle = "Animated outdoor sculpture and lamps that come on at dusk",
+         .exhibit = "roof-lab", .params = {{"mode", "sculpture"}}, .width = 18, .depth = 18, .height = 5.0f, .theme = "courtyard",
+         .apis = {"BasicEffect.World", "BasicEffect.EmissiveColor", "Matrix.CreateRotationY", "Matrix.CreateScale"}, .openRoof = true},
+        {.key = "grounds-fountain", .title = "Fountain Plaza", .subtitle = "Water jets, wind-blown leaves and exterior lamps under the sky",
+         .exhibit = "roof-lab", .params = {{"mode", "garden"}}, .width = 18, .depth = 18, .height = 5.0f, .theme = "garden",
+         .apis = {"DynamicVertexBuffer", "BlendState.NonPremultiplied", "Texture2D", "SoundEffectInstance"}, .openRoof = true},
     };
     f.wings.push_back(first);
 

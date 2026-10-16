@@ -129,7 +129,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BasicEffect.AmbientLightColor | `be-lights` |
 | BasicEffect.DiffuseColor | `be-combos` |
 | BasicEffect.DirectionalLight0 | `be-lights`, `rv-shading` |
-| BasicEffect.EmissiveColor | `be-material`, `light-emissive`, `rf-deck` |
+| BasicEffect.EmissiveColor | `grounds-sculpture`, `be-material`, `light-emissive`, `rf-deck` |
 | BasicEffect.EnableDefaultLighting | `be-lights` |
 | BasicEffect.FogColor | `be-fog` |
 | BasicEffect.FogEnabled | `be-fog`, `rv-shading`, `rf-telescope` |
@@ -147,7 +147,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BasicEffect.Texture | `pf-state` |
 | BasicEffect.TextureEnabled | `geo-vertextypes`, `be-combos` |
 | BasicEffect.VertexColorEnabled | `geo-vertextypes`, `be-combos`, `rv-shading` |
-| BasicEffect.World | `rv-camera` |
+| BasicEffect.World | `grounds-sculpture`, `rv-camera` |
 | BasicEffect.setPunctualLightEXT | `be-punctual` |
 | BasicMaterialContent | `ct-modelimport` |
 | BasicMaterialContent.DiffuseColor | `ct-modelimport` |
@@ -170,7 +170,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | BlendState.ColorWriteChannels2 | `rt-mrt` |
 | BlendState.ColorWriteChannels3 | `rt-mrt` |
 | BlendState.MultiSampleMask | `rt-msaa` |
-| BlendState.NonPremultiplied | `sprite-tint`, `tex-alpha`, `be-alpha`, `pf-overdraw`, `rf-garden` |
+| BlendState.NonPremultiplied | `grounds-fountain`, `sprite-tint`, `tex-alpha`, `be-alpha`, `pf-overdraw`, `rf-garden` |
 | BoneTrackEXT | `model-skinext` |
 | BoundingBox | `col-ray-box`, `col-pick`, `an-conveyor`, `sim-balls` |
 | BoundingBox.Contains | `col-box-box` |
@@ -410,7 +410,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | DynamicSoundEffectInstance.PendingBufferCount | `au-synth` |
 | DynamicSoundEffectInstance.SubmitBuffer | `au-synth` |
 | DynamicSoundEffectInstance.SubmitFloatBufferEXT | `au-synth` |
-| DynamicVertexBuffer | `sky`, `particles`, `geo-dynamic`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `rf-garden`, `rf-weather` |
+| DynamicVertexBuffer | `sky`, `grounds-fountain`, `particles`, `geo-dynamic`, `pt-fire`, `pt-smoke`, `pt-sparks`, `pt-snow`, `pt-rain`, `pt-fountain`, `pt-dust`, `pt-fireworks`, `pt-bubbles`, `pt-leaves`, `pt-magic`, `rf-garden`, `rf-weather` |
 | DynamicVertexBuffer.SetData | `pf-buffers` |
 | Effect | `be-model`, `fx-compiled` |
 | Effect(GraphicsDevice, byte[]) | `fx-compiled` |
@@ -778,9 +778,9 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | Matrix.CreatePerspectiveOffCenter | `mat-offcenter` |
 | Matrix.CreateReflection | `mat-reflection` |
 | Matrix.CreateRotationX | `quat-euler`, `an-gyroscope` |
-| Matrix.CreateRotationY | `mat-order`, `an-gears`, `an-gyroscope` |
+| Matrix.CreateRotationY | `grounds-sculpture`, `mat-order`, `an-gears`, `an-gyroscope` |
 | Matrix.CreateRotationZ | `sprite-camera`, `an-clock`, `an-kinetic`, `an-gyroscope`, `an-walker` |
-| Matrix.CreateScale | `mat-order`, `sprite-camera`, `sprite-tilemap`, `sim-flock` |
+| Matrix.CreateScale | `grounds-sculpture`, `mat-order`, `sprite-camera`, `sprite-tilemap`, `sim-flock` |
 | Matrix.CreateShadow | `rs-shadow` |
 | Matrix.CreateTranslation | `mat-order`, `sprite-camera`, `sim-flock` |
 | Matrix.CreateWorld | `cam-transition` |
@@ -1151,7 +1151,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | SoundEffect.Play | `au-basics` |
 | SoundEffect.SpeedOfSound | `au-spatial`, `au-master` |
 | SoundEffectContent | `ct-audiopipeline` |
-| SoundEffectInstance | `audio`, `au-layers`, `rf-garden` |
+| SoundEffectInstance | `grounds-fountain`, `audio`, `au-layers`, `rf-garden` |
 | SoundEffectInstance.Apply3D | `au-spatial` |
 | SoundEffectInstance.IsLooped | `au-layers` |
 | SoundEffectInstance.Pitch | `au-layers` |
@@ -1221,7 +1221,7 @@ calls. Rooms are labelled **XNA 4.0** (a feature XNA 4.0 has) or **CNA extension
 | TextInputEXT.StartTextInputWithTypeEXT | `in-text` |
 | TextInputEXT.TextInput | `in-text` |
 | TextInputTypeEXT | `in-text` |
-| Texture2D | `materials`, `app-content`, `tex-mip`, `rf-garden` |
+| Texture2D | `materials`, `grounds-fountain`, `app-content`, `tex-mip`, `rf-garden` |
 | Texture2D.DDSFromStreamEXT | `ct-formats` |
 | Texture2D.FromStream | `tex-io` |
 | Texture2D.GetData | `sprite-atlas`, `sprite-hit`, `sprite-tilemap`, `geo-terrain`, `tex-dynamic`, `ct-formats`, `rv-targets`, `rv-formats` |
