@@ -86,6 +86,13 @@ endif()
 
 add_subdirectory("${CNA_ROOT_DIR}" cna EXCLUDE_FROM_ALL)
 
+# CNA discovers SDL inside its subdirectory. Imported package targets are directory-scoped, so
+# create the Emscripten SDL target in the application's directory as well before linking the
+# final browser executable.
+if(EMSCRIPTEN)
+    find_package(SDL3 REQUIRED CONFIG)
+endif()
+
 # --- the application -------------------------------------------------------------
 # Everything except main() is a static library so tests link the code the
 # application runs.
@@ -125,10 +132,15 @@ execute_process(COMMAND git -C "${CNA_ROOT_DIR}" describe --always --dirty
 if(NOT MUSEUM_CNA_REVISION)
     set(MUSEUM_CNA_REVISION "unknown")
 endif()
+if(EMSCRIPTEN)
+    set(_museum_source_content_dir "/Content")
+else()
+    set(_museum_source_content_dir "${CMAKE_CURRENT_SOURCE_DIR}/Content")
+endif()
 target_compile_definitions(museum_core PUBLIC
     MUSEUM_CNA_REVISION="${MUSEUM_CNA_REVISION}"
     MUSEUM_VERSION="${PROJECT_VERSION}"
-    MUSEUM_SOURCE_CONTENT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/Content")
+    MUSEUM_SOURCE_CONTENT_DIR="${_museum_source_content_dir}")
 
 # Warnings apply to the museum's own code only. CNA's and sharp-runtime's public
 # headers are not warning-clean under -Wextra/-Wpedantic, so their include
@@ -147,6 +159,22 @@ endif()
 
 add_executable(cna-3d-museum src/Main.cpp)
 target_link_libraries(cna-3d-museum PRIVATE museum_core)
+if(EMSCRIPTEN)
+    target_link_libraries(cna-3d-museum PRIVATE SDL3::SDL3-static CNA::EmscriptenAsyncify)
+    set_target_properties(cna-3d-museum PROPERTIES
+        SUFFIX ".html"
+        LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html")
+    target_link_options(cna-3d-museum PRIVATE
+        -sALLOW_MEMORY_GROWTH=1
+        -sSTACK_SIZE=4194304
+        -sINITIAL_MEMORY=268435456
+        -sFORCE_FILESYSTEM=1
+        -sEXIT_RUNTIME=1
+        "SHELL:--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/Content@/Content"
+        "SHELL:--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/Content/GamerServices@/GamerServices"
+        "SHELL:--shell-file ${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html")
+    cna_apply_emscripten_renderer_link_contract(cna-3d-museum)
+endif()
 if(TARGET SDL3::SDL3main)
     target_link_libraries(cna-3d-museum PRIVATE SDL3::SDL3main)
 endif()
@@ -154,24 +182,30 @@ if(COMMAND cna_copy_renderer_runtime)
     cna_copy_renderer_runtime(cna-3d-museum)
 endif()
 
-# Put Content/ next to the executable so the build tree is self-contained.
-add_custom_command(TARGET cna-3d-museum POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-        "${CMAKE_CURRENT_SOURCE_DIR}/Content" "$<TARGET_FILE_DIR:cna-3d-museum>/Content"
-    COMMENT "Copying Content next to cna-3d-museum")
+if(NOT EMSCRIPTEN)
+    # Put Content/ next to the executable so the build tree is self-contained. Web builds preload it
+    # into Emscripten's virtual filesystem as /Content before main() starts.
+    add_custom_command(TARGET cna-3d-museum POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/Content" "$<TARGET_FILE_DIR:cna-3d-museum>/Content"
+        COMMENT "Copying Content next to cna-3d-museum")
 
-# CNA's offline achievement catalog is read from the title directory (next to the executable), not from Content/.
-add_custom_command(TARGET cna-3d-museum POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-        "${CMAKE_CURRENT_SOURCE_DIR}/Content/GamerServices" "$<TARGET_FILE_DIR:cna-3d-museum>/GamerServices"
-    COMMENT "Copying GamerServices/Achievements.json next to cna-3d-museum")
+    # CNA's offline achievement catalog is read from the title directory (next to the executable), not from Content/.
+    add_custom_command(TARGET cna-3d-museum POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/Content/GamerServices" "$<TARGET_FILE_DIR:cna-3d-museum>/GamerServices"
+        COMMENT "Copying GamerServices/Achievements.json next to cna-3d-museum")
+endif()
 
 # Run the Content/Pipeline sources through CNA's own content compiler, once as .cnb (CNA's format) and once as
 # .xnb (XNA's), next to the executable. The Content Pipeline rooms load the results and compare them with the
 # loose source files. If the tool is not available the rooms say so instead of failing. When cross-compiling the tool is a
 # foreign executable: it only runs here if CMAKE_CROSSCOMPILING_EMULATOR is set (for example to wine); otherwise the step is
-# skipped and Content/Compiled can be copied from a native build tree (the files are the same on every platform).
-if(TARGET cna_content_tool AND (NOT CMAKE_CROSSCOMPILING OR CMAKE_CROSSCOMPILING_EMULATOR))
+# skipped and Content/Compiled can be copied from a native build tree (the files are the same on every platform). Emscripten's
+# Node emulator does not expose host paths in its virtual filesystem, so browser builds exercise the in-game pipeline but do
+# not run the cross-built command-line compiler as a post-build host tool.
+if(TARGET cna_content_tool AND NOT EMSCRIPTEN AND
+   (NOT CMAKE_CROSSCOMPILING OR CMAKE_CROSSCOMPILING_EMULATOR))
     add_dependencies(cna-3d-museum cna_content_tool)
     foreach(_fmt cnb xnb)
         add_custom_command(TARGET cna-3d-museum POST_BUILD

@@ -9,9 +9,9 @@ MUSEUM_RENDERERS="OPENGLES3;OPENGL33;SOFTWARE" tools/build.sh     # first entry 
 CNA_GRAPHICS_RENDERER=OPENGL33 build/bin/cna-3d-museum
 ```
 
-Six renderers have run the museum here: OPENGLES3, OPENGL33, SOFTWARE, and (since 2026-10-14) FNA3D, WEBGPU and SDL_GPU
-(the last two on Mesa's llvmpipe software Vulkan driver, `VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json`).
-Direct3D 9 runs only through Wine (below); Metal and WebGL2 are untested (no suitable device). Two non-visual renderers were tried for robustness: **STUB**
+Seven visual renderers have run the museum here: OPENGLES3, OPENGL33, SOFTWARE, FNA3D, WEBGPU, SDL_GPU and WEBGL2
+(WEBGPU and SDL_GPU on Mesa's llvmpipe software Vulkan driver, `VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json`).
+WEBGL2 runs as an Emscripten browser build (below). Direct3D 9 runs only through Wine; Metal remains untested. Two non-visual renderers were tried for robustness: **STUB**
 (no 3D pipeline: the museum says so and exits 0 before executing a tour; `tools/tour.sh` therefore returns 4 for the missing final stats) and **HEADLESS** (all 293 rooms run cleanly; plain cube maps retain caller-authored CPU data while rendered pixels remain unavailable).
 VULKAN was retired from CNA on 2026-10-13 and has been removed from the museum's documentation and build lines.
 
@@ -24,6 +24,20 @@ BUILD_DIR=build-probe MUSEUM_RENDERERS="OPENGLES3;FNA3D;WEBGPU;SDL_GPU" \
 CNA_GRAPHICS_RENDERER=WEBGPU VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json BUILD_DIR=build-probe tools/tour.sh -f 3 -p
 ```
 
+The browser build is a separate Emscripten cross-compilation tree and emits an HTML loader, JavaScript, WebAssembly
+and a preloaded data file:
+
+```bash
+tools/build_web.sh
+python3 -m http.server 8000 --directory build-consumer/bin
+# open http://127.0.0.1:8000/cna-3d-museum.html
+tools/web_smoke.sh
+```
+
+The 2026-10-16 Chrome/SwiftShader smoke created an OpenGL ES 3.0 / WebGL 2.0 context, rendered 122 frames of the
+lobby at 50 FPS, reported 28,526 triangles, 66 textures and 0 exhibit errors, then exited cleanly. This is a startup
+and rendering check, not yet a complete all-room browser tour or the floor 9 validation matrix.
+
 ## The tools
 
 | Tool | What it does |
@@ -33,6 +47,7 @@ CNA_GRAPHICS_RENDERER=WEBGPU VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.js
 | `tools/room_diff.sh RENDERER [-b BASE]` | the arrival view of every room on two renderers, ranked by differing pixels: the quickest way to find a renderer divergence among all 257 rooms (below) |
 | `tools/reference.sh capture\|compare` | stored images for 30 named views (OPENGLES3 only) (`tests/reference/<R>`) |
 | `tools/roomshots.sh`, `tools/shot.sh` | contact sheets and single screenshots for comparing renderers by eye |
+| `tools/web_smoke.sh` | serves and runs the Emscripten bundle in Chrome, requiring a WebGL 2 context, final statistics and zero exhibit errors |
 
 ## The Renderer Validation rooms (floor 9)
 
